@@ -1,369 +1,489 @@
 """
-Audit Analyzer
-Orchestrates per-control analysis using existing assess_evidence_with_kb()
-Queries pre-loaded KB1 (global) and KB2 (company)
-NO API CODE - pure analysis orchestration
+Audit Analyzer — fixed
+Orchestrates per-control analysis using assess_evidence_with_kb().
+
+ROOT-CAUSE FIX (BUG 8)
+=======================
+_assess_single_evidence() returns a Pydantic Assessment serialised to JSON.
+The previous parse_assessment_result() ran naïve keyword searches on the raw
+JSON string, which caused:
+
+  • ALL results = PARTIAL  — because "PARTIALLY COMPLIANT" contains "partial"
+    and was matched before the PASS/FAIL checks.
+  • Observation / Recommendation / Exceptions cells filled with raw JSON blobs.
+  • Exceptions list = JSON fragments ('{' triggered the gap-keyword scan).
+
+Fix: parse_structured_assessments() reads the Assessment JSON schema directly:
+  assessment_result.Compliance_Status  → PASS / FAIL / PARTIAL
+  assessment_result.Risk_Level         → HIGH / MEDIUM / LOW
+  assessment_rationale.*               → clean narrative for Observation
+  improvement_recommendation.*         → clean text for Recommendation
+  Gap_analysis / Why_it_failed         → genuine exception strings (not JSON)
+
+When multiple evidence chunks are assessed, results are aggregated by
+"most severe wins" so a single failed chunk correctly propagates to FAIL.
+
+Other fixes carried forward
+===========================
+BUG 3  importlib-based lazy-load for llm_chain.
+BUG 4  'impact' key always present in return dict.
+BUG 5  FileWrapper.close() no-op added.
 """
 
+import importlib
+import json
 import os
-from typing import Dict, List, Any, Optional
-from pathlib import Path
+import re
+from typing import Any, Dict, List, Optional
 import logging
 
 logger = logging.getLogger(__name__)
 
-# Lazy load dependencies
-_llm_chain = None
-_file_handlers = None
+# ── Lazy module reference ──────────────────────────────────────────────────────
+_llm_chain_module = None
+
 
 def get_llm_chain():
-    """Lazy load llm_chain module."""
-    global _llm_chain
-    if _llm_chain is None:
-        from utils import llm_chain as _llm_chain
-    return _llm_chain
+    global _llm_chain_module
+    if _llm_chain_module is None:
+        _llm_chain_module = importlib.import_module("utils.llm_chain")
+    return _llm_chain_module
 
-def get_file_wrapper_class():
-    """Get FileWrapper class from main module."""
-    # FileWrapper is defined in main.py, not file_handlers
-    # We'll create a simple wrapper here instead
-    class FileWrapper:
-        def __init__(self, filepath, filename):
-            self.name = filename
-            self._path = filepath
-        
-        def read(self):
-            with open(self._path, 'rb') as f:
-                return f.read()
-    
-    return FileWrapper
 
+# ── FileWrapper ────────────────────────────────────────────────────────────────
+
+class FileWrapper:
+    def __init__(self, filepath: str, filename: str):
+        self.name = filename
+        self._path = filepath
+
+    def read(self) -> bytes:
+        with open(self._path, "rb") as f:
+            return f.read()
+
+    def close(self) -> None:   # BUG 5 fix
+        pass
+
+
+# ── Severity helpers ───────────────────────────────────────────────────────────
+
+_RESULT_RANK  = {"PASS": 1, "PARTIAL": 2, "FAIL": 3, "NO_EVIDENCE": 3}
+_IMPACT_RANK  = {"LOW": 1, "MEDIUM": 2, "HIGH": 3, "CRITICAL": 3}
+
+
+def _worse_result(a: str, b: str) -> str:
+    return a if _RESULT_RANK.get(a, 0) >= _RESULT_RANK.get(b, 0) else b
+
+
+def _worse_impact(a: str, b: str) -> str:
+    return a if _IMPACT_RANK.get(a, 0) >= _IMPACT_RANK.get(b, 0) else b
+
+
+# ── Assessment JSON parser ─────────────────────────────────────────────────────
+
+def _try_parse_assessment_json(raw: Any) -> Optional[Dict]:
+    """
+    Attempt to parse one assessment item into an Assessment schema dict.
+    Returns None on failure (error strings, malformed JSON, wrong schema).
+    """
+    if not raw:
+        return None
+
+    # assess_evidence_with_kb may return the parsed dict directly (if the
+    # Pydantic .json() was already decoded), or a JSON string.
+    if isinstance(raw, dict):
+        obj = raw
+    elif isinstance(raw, str):
+        if raw.startswith(("Error:", "ValidationError:")):
+            return None
+        text = re.sub(r"```(?:json)?|```", "", raw, flags=re.IGNORECASE).strip()
+        try:
+            obj = json.loads(text)
+        except json.JSONDecodeError:
+            m = re.search(r"\{.*\}", text, re.DOTALL)
+            if m:
+                try:
+                    obj = json.loads(m.group(0))
+                except json.JSONDecodeError:
+                    return None
+            else:
+                return None
+    else:
+        return None
+
+    # Must match the Assessment schema
+    if isinstance(obj, dict) and "assessment_result" in obj:
+        return obj
+    return None
+
+
+def _compliance_to_result(status: str) -> str:
+    s = (status or "").upper().strip()
+    if s == "COMPLIANT":
+        return "PASS"
+    if "NON" in s:
+        return "FAIL"
+    return "PARTIAL"
+
+
+def _risk_to_impact(level: str) -> str:
+    l = (level or "").upper().strip()
+    if l in ("CRITICAL", "HIGH"):
+        return "HIGH"
+    if l == "LOW":
+        return "LOW"
+    return "MEDIUM"
+
+
+def parse_structured_assessments(
+    assessment_items: List[Dict[str, Any]],
+    control: Dict[str, Any],
+) -> Dict[str, Any]:
+    """
+    BUG 8 FIX — replaces the old keyword-scan parse_assessment_result().
+
+    Consumes the list returned by assess_evidence_with_kb():
+        [{"assessment": "<JSON string or error>"}, ...]
+
+    Parses every chunk, aggregates results, and returns clean human-readable
+    strings ready to be written straight into the workpaper cells.
+    """
+    parsed_chunks: List[Dict] = []
+    fallback_texts: List[str] = []
+
+    for item in assessment_items:
+        raw = item.get("assessment", "")
+        obj = _try_parse_assessment_json(raw)
+        if obj:
+            parsed_chunks.append(obj)
+        elif isinstance(raw, str) and raw.strip():
+            fallback_texts.append(raw)
+
+    # ── No valid JSON at all — use prose keyword fallback ─────────────────────
+    if not parsed_chunks:
+        return _keyword_fallback("\n\n".join(fallback_texts), control)
+
+    # ── Aggregate across all parsed chunks ────────────────────────────────────
+    agg_result  = "PASS"
+    agg_impact  = "LOW"
+    observations: List[str] = []
+    mandatory:    List[str] = []
+    enhancements: List[str] = []
+    exceptions:   List[str] = []
+
+    for chunk in parsed_chunks:
+        ar       = chunk.get("assessment_result", {})
+        rationale = chunk.get("assessment_rationale", {})
+        recs     = chunk.get("improvement_recommendation", {})
+
+        status   = ar.get("Compliance_Status", "PARTIALLY COMPLIANT")
+        risk     = ar.get("Risk_Level", "MEDIUM")
+
+        c_result = _compliance_to_result(status)
+        c_impact = _risk_to_impact(risk)
+
+        agg_result = _worse_result(agg_result, c_result)
+        agg_impact = _worse_impact(agg_impact, c_impact)
+
+        # ── Build observation sentence for this chunk ─────────────────────────
+        obs_parts: List[str] = []
+
+        if c_result == "PASS":
+            for key in ("Evidence_of_compliance", "Effectiveness_assessment"):
+                val = rationale.get(key, "").strip()
+                if val:
+                    obs_parts.append(val)
+        else:
+            for key in ("Why_it_failed", "Gap_analysis"):
+                val = rationale.get(key, "").strip()
+                if val:
+                    obs_parts.append(val)
+                    # Genuine exception text (not JSON)
+                    if len(val) > 15 and val not in exceptions:
+                        exceptions.append(val[:200])
+            # Also include partial compliance evidence
+            ev = rationale.get("Evidence_of_compliance", "").strip()
+            if ev:
+                obs_parts.append(f"Partial compliance: {ev}")
+
+        if obs_parts:
+            observations.append("  ".join(obs_parts))
+
+        # ── Collect recommendations ───────────────────────────────────────────
+        for r in recs.get("Mandatory_Improvements", []):
+            r = r.strip()
+            if r and r not in mandatory:
+                mandatory.append(r)
+        for r in recs.get("Enhancement_Opportunities", []):
+            r = r.strip()
+            if r and r not in enhancements:
+                enhancements.append(r)
+
+    # ── De-duplicate observations ─────────────────────────────────────────────
+    unique_obs: List[str] = []
+    seen: set = set()
+    for o in observations:
+        if o not in seen:
+            seen.add(o)
+            unique_obs.append(o)
+
+    observation_text = "\n\n".join(unique_obs).strip() or (
+        f"Control tested: {control.get('control_description', 'N/A')}"
+    )
+
+    # ── Build recommendation ──────────────────────────────────────────────────
+    if mandatory:
+        rec_text = "; ".join(mandatory[:3])
+    elif enhancements:
+        rec_text = "; ".join(enhancements[:2])
+    else:
+        rec_text = {
+            "FAIL":       "Address identified deficiencies immediately and retest.",
+            "PARTIAL":    "Remediate identified gaps to achieve full compliance.",
+            "PASS":       "Continue monitoring and periodic review of this control.",
+            "NO_EVIDENCE":"Obtain required evidence and retest.",
+        }.get(agg_result, "Review this control.")
+
+    return {
+        "result":         agg_result,
+        "observation":    observation_text[:1500],
+        "kb1_reference":  None,   # not extractable from Assessment schema
+        "kb2_reference":  None,
+        "recommendation": rec_text[:600],
+        "exceptions":     exceptions[:5],
+        "impact":         agg_impact,    # BUG 4 fix: always present
+    }
+
+
+def _keyword_fallback(raw_text: str, control: Dict[str, Any]) -> Dict[str, Any]:
+    """Prose-based fallback used when the LLM did not return valid Assessment JSON."""
+    text_lower = raw_text.lower()
+
+    is_neg     = any(w in text_lower for w in ["fail","non-compliant","ineffective","deficiency","exception"])
+    is_pos     = any(w in text_lower for w in ["pass","compliant","effective","satisfactory"])
+    is_partial = "partial" in text_lower
+
+    result = "PARTIAL" if is_partial else ("FAIL" if is_neg else ("PASS" if is_pos else "PARTIAL"))
+
+    high   = any(p in text_lower for p in ["critical","high risk","risk: high","impact: high"])
+    medium = any(p in text_lower for p in ["medium risk","risk: medium","impact: medium"])
+    low    = any(p in text_lower for p in ["low risk","risk: low","impact: low"])
+
+    impact = "HIGH" if high else ("LOW" if low else ("MEDIUM" if medium else
+             ("HIGH" if result == "FAIL" else ("MEDIUM" if result == "PARTIAL" else "LOW"))))
+
+    return {
+        "result":         result,
+        "observation":    raw_text[:800],
+        "kb1_reference":  None,
+        "kb2_reference":  None,
+        "recommendation": "Address identified deficiencies and retest." if result == "FAIL" else "Review control.",
+        "exceptions":     [],
+        "impact":         impact,
+    }
+
+
+# ── Per-control orchestration ──────────────────────────────────────────────────
 
 def analyze_control_evidence(
     control: Dict[str, Any],
     evidence_files: List[Dict[str, str]],
     kb1_vectorstore,
     kb2_vectorstore,
-    model: str
+    model: str,
 ) -> Dict[str, Any]:
-    """
-    Analyze evidence for a single control against knowledge bases.
-    
-    Args:
-        control: Control dict from test script
-        evidence_files: List of dicts with {filename, tmp_path}
-        kb1_vectorstore: Global knowledge base (FAISS)
-        kb2_vectorstore: Company knowledge base (FAISS)
-        model: LLM model name
-    
-    Returns:
-        Analysis result dict with:
-        {
-            "control_id": str,
-            "result": "PASS" | "FAIL" | "PARTIAL" | "NO_EVIDENCE",
-            "observation": str,
-            "kb1_reference": str,
-            "kb2_reference": str,
-            "recommendation": str,
-            "exceptions": [str, ...],
-            "evidence_analyzed": [str, ...]
-        }
-    """
     control_id = control.get("control_id", "UNKNOWN")
-    
     logger.info(f"Analyzing control: {control_id}")
-    
-    # If no evidence, return NO_EVIDENCE
+
     if not evidence_files:
-        return {
-            "control_id": control_id,
-            "result": "NO_EVIDENCE",
-            "observation": "No evidence provided for this control",
-            "kb1_reference": None,
-            "kb2_reference": None,
-            "recommendation": "Evidence must be provided to complete testing",
-            "exceptions": ["No evidence uploaded"],
-            "evidence_analyzed": []
-        }
-    
+        return _no_evidence_result(control_id)
+
     try:
         llm_chain = get_llm_chain()
-        FileWrapper = get_file_wrapper_class()
-        
-        # Load evidence files as FileWrapper objects
-        evidence_wrappers = []
-        evidence_filenames = []
-        
+
+        evidence_wrappers: List[FileWrapper] = []
+        evidence_filenames: List[str] = []
         for ef in evidence_files:
             try:
-                wrapper = FileWrapper(
-                    filepath=ef['tmp_path'],
-                    filename=ef['filename']
-                )
-                evidence_wrappers.append(wrapper)
-                evidence_filenames.append(ef['filename'])
-            except Exception as e:
-                logger.error(f"Failed to load evidence {ef['filename']}: {e}")
-        
-        if not evidence_wrappers:
-            return {
-                "control_id": control_id,
-                "result": "NO_EVIDENCE",
-                "observation": "Evidence files could not be loaded",
-                "kb1_reference": None,
-                "kb2_reference": None,
-                "recommendation": "Verify evidence file format and accessibility",
-                "exceptions": ["Evidence load failed"],
-                "evidence_analyzed": []
-            }
-        
-        # Build evidence context from test script
-        evidence_context = build_evidence_context(control)
-        
-        # Call existing assess_evidence_with_kb
-        assessment_result = llm_chain.assess_evidence_with_kb(
-            evidence_files=evidence_wrappers,
-            kb_vectorstore=kb1_vectorstore,                # ✅ Correct
-            company_kb_vectorstore=kb2_vectorstore,       # ✅ Correct
-            evidence_context=evidence_context,
-            selected_model=model 
-        )
-        
-        # assess_evidence_with_kb returns a list of per-chunk dicts; flatten to string for parsing
-        if isinstance(assessment_result, list):
-            result_text = "\n\n".join(
-                item["assessment"] if isinstance(item.get("assessment"), str) else str(item.get("assessment", ""))
-                for item in assessment_result
-            )
-        else:
-            result_text = str(assessment_result)
+                w = FileWrapper(filepath=ef["tmp_path"], filename=ef["filename"])
+                evidence_wrappers.append(w)
+                evidence_filenames.append(ef["filename"])
+            except Exception as exc:
+                logger.error(f"Failed to wrap {ef.get('filename')}: {exc}")
 
-        # Parse assessment result
-        parsed = parse_assessment_result(result_text, control)
-        
-        parsed["control_id"] = control_id
+        if not evidence_wrappers:
+            return _no_evidence_result(control_id, "Evidence files could not be loaded.")
+
+        evidence_context = build_evidence_context(control)
+
+        if kb1_vectorstore is None and kb2_vectorstore is None:
+            logger.warning(f"Both KBs None for {control_id} — direct assessment.")
+            return _assess_without_kb(control, evidence_wrappers, evidence_filenames, model)
+
+        assessment_items = llm_chain.assess_evidence_with_kb(
+            evidence_files=evidence_wrappers,
+            kb_vectorstore=kb1_vectorstore,
+            company_kb_vectorstore=kb2_vectorstore,
+            selected_model=model,
+            evidence_context=evidence_context,
+        )
+
+        if not assessment_items:
+            return _no_evidence_result(control_id, "LLM returned no assessment output.")
+
+        # BUG 8 FIX: parse structured JSON instead of keyword-scanning
+        parsed = parse_structured_assessments(assessment_items, control)
+        parsed["control_id"]        = control_id
         parsed["evidence_analyzed"] = evidence_filenames
-        
-        logger.info(f"Control {control_id}: {parsed['result']}")
-        
+
+        logger.info(f"{control_id}: result={parsed['result']}, impact={parsed['impact']}")
         return parsed
-        
-    except Exception as e:
-        logger.error(f"Analysis failed for control {control_id}: {e}")
+
+    except Exception as exc:
+        logger.error(f"Analysis failed for {control_id}: {exc}")
         return {
-            "control_id": control_id,
-            "result": "FAIL",
-            "observation": f"Analysis error: {str(e)}",
-            "kb1_reference": None,
-            "kb2_reference": None,
-            "recommendation": "Review control manually due to analysis error",
-            "exceptions": [f"Analysis error: {str(e)}"],
-            "evidence_analyzed": [ef['filename'] for ef in evidence_files]
+            "control_id":        control_id,
+            "result":            "FAIL",
+            "observation":       f"Analysis error: {exc}",
+            "kb1_reference":     None,
+            "kb2_reference":     None,
+            "recommendation":    "Review this control manually — analysis error occurred.",
+            "exceptions":        [str(exc)],
+            "evidence_analyzed": [ef["filename"] for ef in evidence_files],
+            "impact":            "HIGH",
         }
 
 
-def build_evidence_context(control: Dict[str, Any]) -> str:
-    """
-    Build evidence context string from control details.
-    This provides context to the LLM about what we're testing.
-    """
-    parts = []
-    
-    parts.append(f"Control ID: {control.get('control_id', 'N/A')}")
-    parts.append(f"Control Description: {control.get('control_description', 'N/A')}")
-    parts.append(f"Risk Statement: {control.get('risk_statement', 'N/A')}")
-    parts.append(f"Test Objective: {control.get('test_objective', 'N/A')}")
-    parts.append(f"Test Steps: {control.get('test_steps', 'N/A')}")
-    parts.append(f"Evidence Required: {control.get('evidence_required', 'N/A')}")
-    parts.append(f"Sample Size: {control.get('sample_size', 'N/A')}")
-    parts.append(f"Control Owner: {control.get('control_owner', 'N/A')}")
-    parts.append(f"Frequency: {control.get('frequency', 'N/A')}")
-    
-    return "\n".join(parts)
-
-
-def parse_assessment_result(raw_result: str, control: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Parse assessment result from assess_evidence_with_kb.
-    
-    The function returns a markdown/text result. We need to extract:
-    - Overall pass/fail conclusion
-    - Key observations
-    - KB references
-    - Recommendations
-    - Exceptions
-    """
-    result_lower = raw_result.lower()
-    
-    # Determine result
-    result = "PARTIAL"  # Default
-    
-    if any(word in result_lower for word in ["pass", "compliant", "effective", "satisfactory"]):
-        if not any(word in result_lower for word in ["not pass", "non-compliant", "ineffective", "exception", "deficiency"]):
-            result = "PASS"
-    
-    if any(word in result_lower for word in ["fail", "non-compliant", "ineffective", "deficiency", "exception"]):
-        result = "FAIL"
-    
-    if "partial" in result_lower or "partially" in result_lower:
-        result = "PARTIAL"
-    
-    # Extract key sections
-    kb1_ref = extract_section(raw_result, ["global policy", "global standard", "kb1", "industry standard"])
-    kb2_ref = extract_section(raw_result, ["company policy", "company standard", "kb2", "internal policy"])
-    
-    # Extract recommendations
-    recommendation = extract_section(raw_result, ["recommendation", "suggest", "improve", "should"])
-    if not recommendation:
-        if result == "FAIL":
-            recommendation = "Address identified deficiencies and retest"
-        elif result == "PARTIAL":
-            recommendation = "Complete remaining requirements to achieve full compliance"
-        else:
-            recommendation = "Continue monitoring control effectiveness"
-    
-    # Extract exceptions
-    exceptions = extract_exceptions(raw_result)
-    
+def _no_evidence_result(control_id: str, reason: str = "No evidence provided.") -> Dict[str, Any]:
     return {
-        "result": result,
-        "observation": raw_result[:500],  # First 500 chars as summary
-        "kb1_reference": kb1_ref,
-        "kb2_reference": kb2_ref,
-        "recommendation": recommendation,
-        "exceptions": exceptions
+        "control_id":        control_id,
+        "result":            "NO_EVIDENCE",
+        "observation":       reason,
+        "kb1_reference":     None,
+        "kb2_reference":     None,
+        "recommendation":    "Evidence must be provided to complete testing.",
+        "exceptions":        ["No evidence uploaded"],
+        "evidence_analyzed": [],
+        "impact":            "HIGH",
     }
 
 
-def extract_section(text: str, keywords: List[str]) -> Optional[str]:
-    """Extract section from text based on keywords."""
-    text_lower = text.lower()
-    lines = text.split('\n')
-    
-    for idx, line in enumerate(lines):
-        line_lower = line.lower()
-        if any(kw in line_lower for kw in keywords):
-            # Found keyword, collect next 2-3 lines
-            section_lines = []
-            for i in range(idx, min(idx + 3, len(lines))):
-                if lines[i].strip():
-                    section_lines.append(lines[i].strip())
-            if section_lines:
-                return " ".join(section_lines)[:200]
-    
-    return None
+def _assess_without_kb(
+    control: Dict[str, Any],
+    evidence_wrappers: List[FileWrapper],
+    evidence_filenames: List[str],
+    model: str,
+) -> Dict[str, Any]:
+    control_id = control.get("control_id", "UNKNOWN")
+    try:
+        from langchain_ollama import OllamaLLM
+        llm = OllamaLLM(model=model, base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"))
+
+        parts = []
+        for w in evidence_wrappers:
+            try:
+                parts.append(w.read().decode("utf-8", errors="ignore")[:4000])
+            except Exception:
+                pass
+
+        evidence_text = "\n\n---\n\n".join(parts) or "No readable evidence."
+        prompt = (
+            f"You are a senior cybersecurity auditor.\n\n"
+            f"CONTROL:\n{build_evidence_context(control)}\n\n"
+            f"EVIDENCE:\n{evidence_text}\n\n"
+            "Assess: PASS / FAIL / PARTIAL, Risk: HIGH / MEDIUM / LOW, "
+            "observations, and recommendations."
+        )
+        response = llm.invoke(prompt)
+        base = _keyword_fallback(response, control)
+        base.update({
+            "control_id":        control_id,
+            "evidence_analyzed": evidence_filenames,
+            "kb1_reference":     None,
+            "kb2_reference":     None,
+            "observation":       response[:800],
+        })
+        return base
+    except Exception as exc:
+        return {
+            "control_id":        control_id,
+            "result":            "FAIL",
+            "observation":       f"Direct assessment failed: {exc}",
+            "kb1_reference":     None,
+            "kb2_reference":     None,
+            "recommendation":    "Both KBs unavailable — perform manual review.",
+            "exceptions":        [str(exc)],
+            "evidence_analyzed": evidence_filenames,
+            "impact":            "HIGH",
+        }
 
 
-def extract_exceptions(text: str) -> List[str]:
-    """Extract exception/deficiency statements from text."""
-    exceptions = []
-    lines = text.split('\n')
-    
-    exception_keywords = ["exception", "deficiency", "issue", "gap", "missing", "not found", "does not"]
-    
-    for line in lines:
-        line_lower = line.lower()
-        if any(kw in line_lower for kw in exception_keywords):
-            cleaned = line.strip().lstrip('-•*').strip()
-            if cleaned and len(cleaned) > 10:
-                exceptions.append(cleaned[:150])
-    
-    return exceptions[:5]  # Max 5 exceptions
+# ── Context builder ────────────────────────────────────────────────────────────
 
+def build_evidence_context(control: Dict[str, Any]) -> str:
+    return "\n".join([
+        f"Control ID       : {control.get('control_id', 'N/A')}",
+        f"Description      : {control.get('control_description', 'N/A')}",
+        f"Risk Statement   : {control.get('risk_statement', 'N/A')}",
+        f"Test Objective   : {control.get('test_objective', 'N/A')}",
+        f"Test Steps       : {control.get('test_steps', 'N/A')}",
+        f"Evidence Required: {control.get('evidence_required', 'N/A')}",
+        f"Sample Size      : {control.get('sample_size', 'N/A')}",
+        f"Control Owner    : {control.get('control_owner', 'N/A')}",
+        f"Frequency        : {control.get('frequency', 'N/A')}",
+    ])
+
+
+# ── Session-level orchestration ───────────────────────────────────────────────
 
 def analyze_all_controls(
     session_data: Dict[str, Any],
     kb1_vectorstore,
     kb2_vectorstore,
-    model: str
+    model: str,
 ) -> List[Dict[str, Any]]:
-    """
-    Analyze all controls in a session.
-    
-    Args:
-        session_data: Full session dict from AuditSessionStore
-        kb1_vectorstore: Global KB
-        kb2_vectorstore: Company KB
-        model: LLM model name
-    
-    Returns:
-        List of analysis results (one per control)
-    """
-    controls = session_data.get("controls", [])
+    controls      = session_data.get("controls", [])
     uploaded_files = session_data.get("uploaded_files", {})
-    
-    logger.info(f"Analyzing {len(controls)} controls")
-    
+
+    logger.info(f"Starting analysis of {len(controls)} controls")
     results = []
-    
+
     for control in controls:
-        control_id = control.get("control_id")
-        
-        # Find evidence files for this control
-        evidence_for_control = []
-        for filename, file_data in uploaded_files.items():
-            if control_id in file_data.get("satisfies_controls", []):
-                evidence_for_control.append({
-                    "filename": filename,
-                    "tmp_path": file_data["tmp_path"]
-                })
-        
-        # Analyze
-        result = analyze_control_evidence(
-            control=control,
-            evidence_files=evidence_for_control,
-            kb1_vectorstore=kb1_vectorstore,
-            kb2_vectorstore=kb2_vectorstore,
-            model=model
-        )
-        
-        results.append(result)
-    
+        cid = control.get("control_id")
+        evidence = [
+            {"filename": fname, "tmp_path": fdata["tmp_path"]}
+            for fname, fdata in uploaded_files.items()
+            if cid in fdata.get("satisfies_controls", [])
+        ]
+        results.append(analyze_control_evidence(control, evidence, kb1_vectorstore, kb2_vectorstore, model))
+
+    logger.info(f"Analysis complete: {len(results)} results")
     return results
 
 
 def generate_overall_summary(analysis_results: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Generate overall summary from all control analysis results.
-    
-    Returns:
-        {
-            "controls_tested": int,
-            "controls_with_evidence": int,
-            "controls_without_evidence": int,
-            "overall_result": str,
-            "pass_count": int,
-            "fail_count": int,
-            "partial_count": int,
-            "no_evidence_count": int
-        }
-    """
-    total = len(analysis_results)
-    
-    pass_count = sum(1 for r in analysis_results if r["result"] == "PASS")
-    fail_count = sum(1 for r in analysis_results if r["result"] == "FAIL")
-    partial_count = sum(1 for r in analysis_results if r["result"] == "PARTIAL")
+    total             = len(analysis_results)
+    pass_count        = sum(1 for r in analysis_results if r["result"] == "PASS")
+    fail_count        = sum(1 for r in analysis_results if r["result"] == "FAIL")
+    partial_count     = sum(1 for r in analysis_results if r["result"] == "PARTIAL")
     no_evidence_count = sum(1 for r in analysis_results if r["result"] == "NO_EVIDENCE")
-    
-    controls_with_evidence = total - no_evidence_count
-    
-    # Determine overall result
+
     if no_evidence_count == total:
-        overall_result = "NO_EVIDENCE"
+        overall = "NO_EVIDENCE"
     elif fail_count > 0:
-        overall_result = "NON_COMPLIANT"
+        overall = "NON_COMPLIANT"
     elif partial_count > 0:
-        overall_result = "PARTIALLY_COMPLIANT"
+        overall = "PARTIALLY_COMPLIANT"
     else:
-        overall_result = "COMPLIANT"
-    
+        overall = "COMPLIANT"
+
     return {
-        "controls_tested": total,
-        "controls_with_evidence": controls_with_evidence,
+        "controls_tested":           total,
+        "controls_with_evidence":    total - no_evidence_count,
         "controls_without_evidence": no_evidence_count,
-        "overall_result": overall_result,
-        "pass_count": pass_count,
-        "fail_count": fail_count,
-        "partial_count": partial_count,
-        "no_evidence_count": no_evidence_count
+        "overall_result":            overall,
+        "pass_count":                pass_count,
+        "fail_count":                fail_count,
+        "partial_count":             partial_count,
+        "no_evidence_count":         no_evidence_count,
     }

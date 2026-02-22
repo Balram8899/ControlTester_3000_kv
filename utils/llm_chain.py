@@ -10,26 +10,18 @@ from langchain.schema import Document
 from langchain.prompts import PromptTemplate
 import re
 from langchain.output_parsers import PydanticOutputParser
-from langchain.prompts import PromptTemplate
 from pydantic import ValidationError
 import os
 import warnings
-import json
-import re
 import json
 import io
 from PIL import Image, ImageDraw, ImageFont
 
 warnings.filterwarnings("ignore", category=UserWarning, module="openpyxl")
 
-# Get Ollama base URL from environment variable
 OLLAMA_BASE_URL = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
 OLLAMA_EMBEDDING_MODEL = os.getenv('OLLAMA_EMBEDDING_MODEL', 'nomic-embed-text:latest')
 
-# embeddings = OllamaEmbeddings(model="nomic-embed-text:latest",base_url=OLLAMA_BASE_URL)  # Ensure faiss-gpu is installed for GPU usage
-# llm = OllamaLLM(model="nomic-embed-text:latest", base_url=OLLAMA_BASE_URL, temperature = 0)
-
-# Setup Logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -37,38 +29,32 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
 def initialize(selected_model: str, embedding_model: str | None = None):
     """
     Initialize LLM (and optionally embeddings) using provided models.
-
-    - LLM uses `selected_model` (chat/inference model like gemma3, llama3, etc.).
-    - Embeddings use `embedding_model` if provided, otherwise default from env `OLLAMA_EMBEDDING_MODEL`.
-      Note: Vectorstores carry their own embedding object; global embeddings are not required
-      for similarity once a store is created/loaded.
     """
     global llm
     global embeddings
     llm = OllamaLLM(model=selected_model, base_url=OLLAMA_BASE_URL)
-    # Provide a sensible embeddings default without coupling to the LLM model
     embed_name = embedding_model or OLLAMA_EMBEDDING_MODEL
     embeddings = OllamaEmbeddings(model=embed_name, base_url=OLLAMA_BASE_URL)
-    
-# LangChain components
+
+
 text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=800,  # Larger chunks for policy context
+    chunk_size=800,
     chunk_overlap=100,
-    length_function=len,    
+    length_function=len,
     add_start_index=True,
-    separators=["\n\n", "\n", ". ", "! ", "? ", " ", ""]    
+    separators=["\n\n", "\n", ". ", "! ", "? ", " ", ""]
 )
 
-# ----------------- BASE KNOWLEDGE BASE BUILDER -----------------------
+
+# ─────────────────────────────────────────────────────────────────────────────
+# KNOWLEDGE BASE BUILDER
+# ─────────────────────────────────────────────────────────────────────────────
 
 def enrich_chunk_with_metadata(text: str, metadata: dict) -> str:
-    """
-    Injects file-level metadata directly into the text
-    so embeddings carry document identity & purpose.
-    """
     header = f"""
     [DOCUMENT METADATA]
     File Name: {metadata.get("file_name", metadata.get("source", "Unknown"))}
@@ -84,6 +70,7 @@ def enrich_chunk_with_metadata(text: str, metadata: dict) -> str:
     """
     return header.strip() + "\n\n[CONTENT]\n" + text.strip()
 
+
 def build_knowledge_base(
     files,
     source,
@@ -93,11 +80,6 @@ def build_knowledge_base(
     max_retries=3,
     embedding_model: str | None = None,
 ):
-    """
-    Build a FAISS vectorstore from a list of documents with timeout handling.
-    This is a drop-in replacement for your existing function.
-    """
-    # Use a dedicated embeddings-capable model (do not use chat model)
     embed_name = embedding_model or OLLAMA_EMBEDDING_MODEL
     embedding_obj = OllamaEmbeddings(model=embed_name, base_url=OLLAMA_BASE_URL)
     start = time.time()
@@ -105,24 +87,18 @@ def build_knowledge_base(
 
     docs = save_and_load_files(files, source)
 
-    # Extract and split texts into Document objects
     for i, doc in enumerate(docs):
         try:
             if not doc.page_content.strip():
                 continue
             splits = text_splitter.split_text(doc.page_content)
             meta = getattr(doc, "metadata", {}) if hasattr(doc, "metadata") else {}
-            
+
             for split in splits:
                 enriched_text = enrich_chunk_with_metadata(split, meta)
-
                 all_documents.append(
-                    Document(
-                        page_content=enriched_text,  # 🔥 metadata is now embedded
-                        metadata=meta                 # keep raw metadata for filtering
-                    )
+                    Document(page_content=enriched_text, metadata=meta)
                 )
-                
         except Exception as e:
             logger.error(f"Error processing document {i}: {e}")
 
@@ -131,53 +107,41 @@ def build_knowledge_base(
 
     logger.info(f"Processing {len(all_documents)} documents in batches of {batch_size}")
 
-    # Process in batches to avoid timeouts
     try:
         kb_vectorstore = None
         total_batches = (len(all_documents) + batch_size - 1) // batch_size
-        
+
         for batch_idx in range(0, len(all_documents), batch_size):
             batch_docs = all_documents[batch_idx:batch_idx + batch_size]
-            current_batch_num= (batch_idx // batch_size) + 1
-            
+            current_batch_num = (batch_idx // batch_size) + 1
+
             logger.info(f"Processing batch {current_batch_num}/{total_batches} ({len(batch_docs)} documents)")
-            
-            # Retry logic for each batch
+
             batch_success = False
             for attempt in range(max_retries):
                 try:
                     if kb_vectorstore is None:
-                        # Create initial vectorstore from first batch
                         kb_vectorstore = FAISS.from_documents(batch_docs, embedding_obj)
                     else:
-                        # Create temporary vectorstore for this batch and merge
                         temp_vectorstore = FAISS.from_documents(batch_docs, embedding_obj)
                         kb_vectorstore.merge_from(temp_vectorstore)
-                    
                     batch_success = True
-                    break  # Success, exit retry loop
-                    
+                    break
                 except Exception as e:
                     logger.warning(f"Batch {current_batch_num} attempt {attempt + 1} failed: {e}")
                     if attempt < max_retries - 1:
-                        # Exponential backoff
                         wait_time = delay_between_batches * (2 ** attempt)
                         logger.info(f"Retrying in {wait_time:.1f} seconds...")
                         time.sleep(wait_time)
                     else:
                         logger.error(f"Batch {current_batch_num} failed after {max_retries} attempts")
                         raise
-            
+
             if not batch_success:
                 raise Exception(f"Failed to process batch {current_batch_num}")
-            
-            # Delay between batches (except for the last one)
-            # if current_batch_num < total_batches:
-            #     logger.debug(f"Waiting {delay_between_batches}s before next batch...")
-            #     time.sleep(delay_between_batches)
 
         logger.info(f"Vector store built successfully with {kb_vectorstore.index.ntotal} vectors.")
-        
+
     except Exception as e:
         logger.critical(f"Vector store creation failed: {e}")
         raise
@@ -187,45 +151,94 @@ def build_knowledge_base(
     return kb_vectorstore
 
 
-# ----------------- ASSESS EVIDENCE WITH KNOWLEDGE BASE -----------------
+# ─────────────────────────────────────────────────────────────────────────────
+# EVIDENCE ASSESSMENT
+# ─────────────────────────────────────────────────────────────────────────────
 
 def extract_and_validate_json(text):
-    """
-    Extracts the first JSON object from text and tries to fix common LLM mistakes.
-    Returns a Python dict if successful, else raises ValueError.
-    """
-    # Extract the first {...} block
     match = re.search(r'\{.*\}', text, re.DOTALL)
     if not match:
         raise ValueError("No JSON object found in LLM output.")
     json_str = match.group(0)
-
-    # Remove trailing commas before } or ]
     json_str = re.sub(r',(\s*[}\]])', r'\1', json_str)
-
-    # Replace single quotes with double quotes (if any)
     json_str = json_str.replace("'", '"')
-
-    # Try to parse
     try:
         return json.loads(json_str)
     except Exception as e:
         raise ValueError(f"Could not parse JSON after cleaning: {e}")
 
-def _assess_single_evidence(evid_text, kb_vectorstore, company_kb_vectorstore, selected_model, chunk_index=0, doc_index=0, filename="N/A", evidence_context=None):
+
+def _assess_single_evidence(
+    evid_text: str,
+    kb_vectorstore,
+    company_kb_vectorstore,
+    selected_model: str,
+    chunk_index: int = 0,
+    doc_index: int = 0,
+    filename: str = "N/A",
+    evidence_context: str | None = None,
+):
+    """
+    Assess a single evidence chunk against the knowledge bases.
+
+    BUG FIX (BUG 1):
+    evidence_context was accepted as a parameter but NEVER used in the prompt
+    template.  The LLM therefore had no idea which specific control was being
+    tested and could only perform a generic assessment.
+
+    Now the prompt includes a dedicated "CONTROL BEING TESTED" section when
+    evidence_context is provided (i.e. called from the audit workflow).
+    The existing generic assessment path (evidence_context=None) is unchanged
+    for backward compatibility.
+
+    BUG FIX (BUG 2):
+    Both kb_vectorstore and company_kb_vectorstore were dereferenced without
+    null checks.  Added guards so a missing KB returns an empty context string
+    instead of raising AttributeError.
+    """
     initialize(selected_model)
+
     try:
-        parser = PydanticOutputParser(pydantic_object=Assessment)        
+        parser = PydanticOutputParser(pydantic_object=Assessment)
 
-        base_contexts = kb_vectorstore.similarity_search(evid_text, k=5)
-        knowledge_base_context = "\n\n".join([getattr(c, "page_content", str(c)) for c in base_contexts])
+        # ── BUG 2 FIX: guard against None vectorstores ─────────────────────
+        if kb_vectorstore is not None:
+            base_contexts = kb_vectorstore.similarity_search(evid_text, k=5)
+            knowledge_base_context = "\n\n".join(
+                getattr(c, "page_content", str(c)) for c in base_contexts
+            )
+        else:
+            logger.warning(f"Global KB vectorstore is None (chunk {chunk_index}). "
+                           "Proceeding without global policy context.")
+            knowledge_base_context = "Global policy knowledge base not available."
 
-        company_contexts = company_kb_vectorstore.similarity_search(evid_text, k=5)
-        company_knowledge_base_context = "\n\n".join([getattr(c, "page_content", str(c)) for c in company_contexts])
+        if company_kb_vectorstore is not None:
+            company_contexts = company_kb_vectorstore.similarity_search(evid_text, k=5)
+            company_knowledge_base_context = "\n\n".join(
+                getattr(c, "page_content", str(c)) for c in company_contexts
+            )
+        else:
+            logger.warning(f"Company KB vectorstore is None (chunk {chunk_index}). "
+                           "Proceeding without company policy context.")
+            company_knowledge_base_context = "Company-specific knowledge base not available."
+
+        # ── BUG 1 FIX: build control-context section when available ────────
+        control_context_section = ""
+        if evidence_context:
+            control_context_section = f"""
+            ### CONTROL BEING TESTED
+            The following control definition describes exactly what you must assess.
+            Map your findings directly to this control's objectives and evidence requirements.
+
+            {evidence_context}
+
+            ---
+            """
 
         prompt = PromptTemplate(
-            template = """
-            You are a cybersecurity audit analyst responsible for creating audit workbooks and performing evidence-based risk and control assessments.
+            template="""
+            You are a cybersecurity audit analyst responsible for creating audit workbooks
+            and performing evidence-based risk and control assessments.
 
             You have access to the following context sources:
 
@@ -234,6 +247,8 @@ def _assess_single_evidence(evid_text, kb_vectorstore, company_kb_vectorstore, s
 
             ### COMPANY-SPECIFIC RISK AND CONTROL STANDARDS (CRI PROFILE)
             {company_knowledge_base_context}
+
+            {control_context_section}
 
             You must assess the following evidence snippet:
 
@@ -245,140 +260,171 @@ def _assess_single_evidence(evid_text, kb_vectorstore, company_kb_vectorstore, s
             ## INSTRUCTIONS
 
             ### 1. CONTROL FRAMEWORK ALIGNMENT
-            - Compare global standards with company-specific controls
-            - Identify gaps, overlaps, or conflicts
-            - Prioritize based on criticality and regulatory impact
-            - Create a unified control testing matrix
+            - Compare global standards with company-specific controls.
+            - Identify gaps, overlaps, or conflicts.
+            - Prioritize based on criticality and regulatory impact.
+            - Create a unified control testing matrix.
 
             ### 2. EVIDENCE ANALYSIS
-            - Categorize the evidence by control domain (e.g., access control, data protection)
-            - Map evidence to specific control objectives
-            - Assess completeness, implementation, and effectiveness
-            - Highlight any missing or insufficient documentation
+            - Categorize the evidence by control domain
+              (e.g., access control, data protection).
+            - Map evidence to specific control objectives.
+            - Assess completeness, implementation, and effectiveness.
+            - Highlight any missing or insufficient documentation.
 
             ### 3. LOG ANALYSIS FOCUS
-            - Identify relevant control testing statements from the COMPANY-SPECIFIC RISK AND CONTROL STANDARDS (CRI PROFILE)
-            - Evaluate whether the relevant policies are being enforced effectively
-            - Match log entries to expected behaviors based on standards
-            - Determine compliance status and associated risk
-            - Provide a clear rationale and suggest improvements
+            - Identify relevant control testing statements from the
+              COMPANY-SPECIFIC RISK AND CONTROL STANDARDS (CRI PROFILE).
+            - Evaluate whether the relevant policies are being enforced effectively.
+            - Match log entries to expected behaviours based on standards.
+            - Determine compliance status and associated risk.
+            - Provide a clear rationale and suggest improvements.
 
             ### 4. CONTROL TESTING METHODOLOGY
-            - **Design Adequacy**: Does the policy/control meet expectations?
-            - **Implementation**: Has it been applied correctly?
-            - **Effectiveness**: Is it working consistently?
-            - **Compensating Controls**: If gaps exist, what alternatives are in place?
+            - Design Adequacy: Does the policy/control meet expectations?
+            - Implementation: Has it been applied correctly?
+            - Effectiveness: Is it working consistently?
+            - Compensating Controls: If gaps exist, what alternatives are in place?
 
             ### 5. RISK ASSESSMENT STRATEGY
-            - Use quantitative metrics if available
-            - Apply qualitative judgment where metrics are missing
-            - Consider interdependent risks and the current threat landscape
+            - Use quantitative metrics if available.
+            - Apply qualitative judgment where metrics are missing.
+            - Consider interdependent risks and the current threat landscape.
 
             ### 6. WHEN FACED WITH CONFLICT OR INSUFFICIENT EVIDENCE
-            - Prefer regulatory/global standards over internal policy
-            - Escalate major interpretation issues
-            - Document limitations if evidence is incomplete
-            - Suggest additional evidence or compensating controls
+            - Prefer regulatory/global standards over internal policy.
+            - Escalate major interpretation issues.
+            - Document limitations if evidence is incomplete.
+            - Suggest additional evidence or compensating controls.
 
             ---
 
             ## OUTPUT FORMAT (REQUIRED)
 
-            Return your answer strictly as a JSON object matching the following schema:
+            Return your answer strictly as a JSON object matching the schema:
 
             {format_instructions}
 
             ### FIELD-BY-FIELD OUTPUT EXPECTATIONS
 
             **1. CONTROL STATEMENT**
-            - Extract the exact control statement (verbatim) from the COMPANY-SPECIFIC RISK AND CONTROL STANDARDS (CRI PROFILE) that is most relevant to the evidence.
+            - Extract the exact control statement (verbatim) from the
+              COMPANY-SPECIFIC RISK AND CONTROL STANDARDS (CRI PROFILE)
+              most relevant to the evidence.
+              If the control being tested is provided above, use that.
 
             **2. ASSESSMENT RESULT**
-            - Compliance Status: One of COMPLIANT, NON-COMPLIANT, PARTIALLY COMPLIANT
-            - Risk Level: One of CRITICAL, HIGH, MEDIUM, LOW
+            - Compliance Status: COMPLIANT | NON-COMPLIANT | PARTIALLY COMPLIANT
+            - Risk Level: CRITICAL | HIGH | MEDIUM | LOW
 
             **3. LOG EVIDENCE**
-            - Source File: Name of the evidence log file which is being assessed
-            - Relevant Log Entries: Copy log lines (with timestamps) that support the assessment
+            - Source File: Name of the evidence file being assessed.
+            - Relevant Log Entries: Log lines (with timestamps) supporting the
+              assessment.
 
             **4. ASSESSMENT RATIONALE**
-            - For NON-COMPLIANT: Provide 'Why it failed', 'Gap analysis', and 'Impact'
-            - For COMPLIANT: Provide 'Evidence of compliance' and 'Effectiveness assessment'
+            - For NON-COMPLIANT: provide Why_it_failed, Gap_analysis, Impact.
+            - For COMPLIANT: provide Evidence_of_compliance and
+              Effectiveness_assessment.
 
             **5. IMPROVEMENT RECOMMENDATIONS**
-            - Mandatory Improvements (if non-compliant): List of corrective actions with references and timelines
-            - Enhancement Opportunities: Optional improvements even if compliant, referencing global best practices
+            - Mandatory Improvements (if non-compliant): corrective actions with
+              references and timelines.
+            - Enhancement Opportunities: optional improvements even if compliant,
+              referencing global best practices.
 
             ---
 
             ### IMPORTANT:
+            - Respond ONLY with a valid JSON object matching the schema exactly.
+            - Do NOT include explanations, markdown, or commentary.
+            - Use "" for any missing string and [] for any missing list.
+            - Ensure the object can be parsed directly into the Pydantic model.
 
-            - Respond only with a **valid JSON object**, matching the schema exactly.
-            - Do **not** include explanations, markdown, or commentary.
-            - Use `""` for any missing string, and `[]` for any missing list values.
-            - Ensure the object can be parsed directly into the Pydantic model without transformation.
-
-            ### Perform an exhaustive and comprehensive assessment based on the above.
+            Perform an exhaustive and comprehensive assessment.
             """,
-            input_variables=["knowledge_base_context", "company_knowledge_base_context", "evid_text"],
-            partial_variables={"format_instructions": parser.get_format_instructions()}
+            input_variables=[
+                "knowledge_base_context",
+                "company_knowledge_base_context",
+                "evid_text",
+                "control_context_section",   # ← new variable (BUG 1 fix)
+            ],
+            partial_variables={"format_instructions": parser.get_format_instructions()},
         )
 
         formatted_prompt = prompt.format(
             knowledge_base_context=knowledge_base_context,
             company_knowledge_base_context=company_knowledge_base_context,
-            evid_text=evid_text
+            evid_text=evid_text,
+            control_context_section=control_context_section,   # ← BUG 1 fix
         )
 
         response = llm.invoke(formatted_prompt)
         parsed = parser.parse(response)
-        
-        return {
-            "assessment": parsed.json()
-        }
+
+        return {"assessment": parsed.json()}
+
     except ValidationError as ve:
         logging.error(f"Validation failed for chunk {chunk_index} (doc {doc_index}): {ve}")
-        return {
-            "assessment": f"ValidationError: {ve}"
-        }
+        return {"assessment": f"ValidationError: {ve}"}
     except Exception as e:
         logging.error(f"Assessment failed for chunk {chunk_index} (doc {doc_index}): {e}")
-        return {
-            "assessment": f"Error: {e}"
-        }
+        return {"assessment": f"Error: {e}"}
+
 
 def render_text_to_image(evidence_docs, font_size=14, width=1200, bg_color="white", text_color="black"):
+    evidence_docs_content = "\n\n".join(
+        f"Doc {i}:\n{getattr(doc, 'page_content', str(doc))[:2000]}"
+        for i, doc in enumerate(evidence_docs)
+    )
 
-        
+    try:
+        font = ImageFont.truetype("DejaVuSansMono.ttf", font_size)
+    except Exception:
+        font = ImageFont.load_default()
 
-        # Prepare the text content for the screenshot
-        evidence_docs_content = "\n\n".join(
-            f"Doc {i}:\n{getattr(doc, 'page_content', str(doc))[:2000]}"  # Limit to 2000 chars per doc for brevity
-            for i, doc in enumerate(evidence_docs)
-        ) 
+    lines = evidence_docs_content.splitlines()
+    bbox = font.getbbox("A")
+    line_height = (bbox[3] - bbox[1]) + 2
+    img_height = line_height * (len(lines) + 2)
+    img = Image.new("RGB", (width, img_height), color=bg_color)
+    draw = ImageDraw.Draw(img)
+    y = 5
+    for line in lines:
+        draw.text((5, y), line, font=font, fill=text_color)
+        y += line_height
+    return img
 
-        # Use a monospace font for clarity
-        try:
-            font = ImageFont.truetype("DejaVuSansMono.ttf", font_size)
-        except Exception:
-            font = ImageFont.load_default()
-        # Estimate height
-        lines = evidence_docs_content.splitlines()
-        # Use getbbox to determine line height (compatible with Pillow >= 10)
-        bbox = font.getbbox("A")
-        line_height = (bbox[3] - bbox[1]) + 2
-        img_height = line_height * (len(lines) + 2)
-        img = Image.new("RGB", (width, img_height), color=bg_color)
-        draw = ImageDraw.Draw(img)
-        y = 5
-        for line in lines:
-            draw.text((5, y), line, font=font, fill=text_color)
-            y += line_height
-        return img
 
-def assess_evidence_with_kb(evidence_files, kb_vectorstore, company_kb_vectorstore, selected_model, max_workers=4, evidence_context=None):
+def assess_evidence_with_kb(
+    evidence_files,
+    kb_vectorstore,
+    company_kb_vectorstore,
+    selected_model: str,
+    max_workers: int = 4,
+    evidence_context: str | None = None,
+):
+    """
+    Split evidence files into chunks and assess each chunk against the KBs.
+
+    BUG FIX (BUG 1):
+    evidence_context was received here but never forwarded to the thread
+    workers.  executor.submit() was called WITHOUT passing evidence_context,
+    so _assess_single_evidence always received None and the control-specific
+    context section was never included in the prompt.
+
+    Fixed by adding evidence_context as the last positional argument in every
+    executor.submit() call.
+
+    BUG FIX (BUG 2):
+    Both vectorstores can legitimately be None (e.g. when called from the
+    audit workflow where only one KB is loaded).  Null checks now live inside
+    _assess_single_evidence, so this function no longer crashes when a
+    vectorstore is missing.
+    """
     start = time.time()
-    evid_texts, chunk_origin = [], []  
+    evid_texts, chunk_origin = [], []
+
     evidence_docs = save_and_load_files(evidence_files, "Evidence Assessment result")
     for i, doc in enumerate(evidence_docs):
         try:
@@ -396,11 +442,22 @@ def assess_evidence_with_kb(evidence_files, kb_vectorstore, company_kb_vectorsto
         logger.warning("No valid evidence found.")
         return []
 
-    logger.info(f"Assessing {len(evid_texts)} evidence chunks using {max_workers} threads...")
+    logger.info(f"Assessing {len(evid_texts)} evidence chunks using {max_workers} threads…")
+
     results = []
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = [
-            executor.submit(_assess_single_evidence, evid_texts[i], kb_vectorstore, company_kb_vectorstore, selected_model, i, chunk_origin[i])
+            executor.submit(
+                _assess_single_evidence,
+                evid_texts[i],          # evid_text
+                kb_vectorstore,         # kb_vectorstore       (may be None — BUG 2 fix)
+                company_kb_vectorstore, # company_kb_vectorstore (may be None — BUG 2 fix)
+                selected_model,         # selected_model
+                i,                      # chunk_index
+                chunk_origin[i],        # doc_index
+                "N/A",                  # filename
+                evidence_context,       # ← BUG 1 FIX: was previously omitted
+            )
             for i in range(len(evid_texts))
         ]
         for future in as_completed(futures):
@@ -409,26 +466,33 @@ def assess_evidence_with_kb(evidence_files, kb_vectorstore, company_kb_vectorsto
     logger.info(f"Assessment completed in {time.time() - start:.2f} seconds.")
     return results
 
-#------------------ Generate Executive summary -----------------
+
+# ─────────────────────────────────────────────────────────────────────────────
+# EXECUTIVE SUMMARY
+# ─────────────────────────────────────────────────────────────────────────────
 
 def generate_executive_summary(assessments, selected_model):
     all_text = "\n\n".join(
-        json.dumps(a["assessment"], indent=2) if isinstance(a["assessment"], dict) else str(a["assessment"])
-        for a in assessments if "assessment" in a
+        json.dumps(a["assessment"], indent=2)
+        if isinstance(a["assessment"], dict)
+        else str(a["assessment"])
+        for a in assessments
+        if "assessment" in a
     )
     initialize(selected_model)
     prompt = f"""
-            You are a cybersecurity audit assistant. Given the following detailed control assessments, produce an Executive Summary section for an audit report. Your summary must include:
-            - Overall risk assessment and control maturity rating
-            - Key findings summary with high/medium/low risk classifications
-            - Critical recommendations requiring immediate attention
+You are a cybersecurity audit assistant. Given the following detailed control
+assessments, produce an Executive Summary section for an audit report.
+Your summary must include:
+- Overall risk assessment and control maturity rating
+- Key findings summary with high/medium/low risk classifications
+- Critical recommendations requiring immediate attention
 
-            Assessments:
-            {all_text}
+Assessments:
+{all_text}
 
-            Write the summary in clear, professional language. Do not include your thought statements
-            """
+Write the summary in clear, professional language.
+Do not include your thought statements.
+"""
     summary = llm.invoke(prompt)
-    return {
-        "executive_summary": summary
-    }
+    return {"executive_summary": summary}

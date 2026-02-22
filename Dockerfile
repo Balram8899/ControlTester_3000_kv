@@ -5,7 +5,7 @@ WORKDIR /app
 RUN mkdir -p /app/workbooks /app/temp_files
 RUN chmod 755 /app/workbooks /app/temp_files
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --progress-bar off -vvv -r requirements.txt
 
 COPY . .
 
