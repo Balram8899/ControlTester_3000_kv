@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 
-type ComparisonMode = "regulation" | "rcm";
+type ComparisonMode = "regulation" | "rcm" | "library";
 
 export interface DocumentAnalysis {
   framework_name: string;
@@ -61,6 +61,39 @@ export interface StringencyAnalysis {
   total_groups: number;
 }
 
+export interface DomainCoverageItem {
+  present_in: string[];
+  absent_in: string[];
+  coverage_pct: number;
+}
+
+export interface DocumentGapItem {
+  covered_domains: string[];
+  missing_domains: string[];
+  domain_coverage_pct: number;
+  unique_controls: { domain: string; control_statement: string; risk_addressed: string }[];
+}
+
+export interface SharedControlItem {
+  domain: string;
+  group_size: number;
+  docs_present: string[];
+  representative_statement: string;
+}
+
+export interface GapAnalysis {
+  domain_coverage: Record<string, DomainCoverageItem>;
+  document_gaps: Record<string, DocumentGapItem>;
+  shared_controls: SharedControlItem[];
+  gap_summary: {
+    most_gaps_in: string | null;
+    best_covered: string | null;
+    domains_with_universal_coverage: string[];
+    total_domains_found: number;
+    shared_control_groups: number;
+  };
+}
+
 export interface ComparisonResultsData {
   success: boolean;
   request_id: string;
@@ -71,11 +104,13 @@ export interface ComparisonResultsData {
   extracted_controls?: number;
   control_groups?: number;
   stringency_analysis?: StringencyAnalysis;
+  gap_analysis?: GapAnalysis;
   final_report?: string;
   metadata?: {
     chunks_processed: number;
     pages_analyzed: number;
     similarity_threshold: number;
+    kb_enriched?: boolean;
   };
   artifacts_location?: string;
   error?: string;
@@ -85,6 +120,35 @@ export interface ComparisonResultsData {
   executive_summary?: string;
   domain_reports?: Record<string, string>;
 }
+
+// ── Regulatory Library types ──────────────────────────────────────────────────
+
+export interface LibraryObligation {
+  obligation_id: string;
+  section_reference: string;
+  obligation_text: string;
+  domain: string;
+  enforcement_level: string;
+  obligation_type: string;
+  keywords: string[];
+  specificity_level: string;
+  has_metric: boolean;
+  has_frequency: boolean;
+}
+
+export interface LibraryDocument {
+  document_id: string;
+  framework_name: string;
+  issuing_authority: string;
+  source_filename: string;
+  upload_timestamp: string;
+  model_used?: string;
+  total_obligations: number;
+  obligations_by_domain?: Record<string, number>;
+  obligations?: LibraryObligation[];
+}
+
+// ── Internal mode state ───────────────────────────────────────────────────────
 
 interface ModeState {
   regulationFiles: File[];
@@ -107,6 +171,11 @@ interface RegulatoryTestingState {
   setComparisonResults: (results: ComparisonResultsData | null) => void;
   resetState: () => void;
   resetForNewComparison: () => void;
+  // Library state
+  libraryDocuments: LibraryDocument[];
+  setLibraryDocuments: (docs: LibraryDocument[]) => void;
+  libraryLoading: boolean;
+  setLibraryLoading: (v: boolean) => void;
 }
 
 const RegulatoryTestingContext = createContext<RegulatoryTestingState | undefined>(undefined);
@@ -120,9 +189,13 @@ const initialModeState: ModeState = {
 
 export function RegulatoryTestingProvider({ children }: { children: ReactNode }) {
   const [mode, setModeInternal] = useState<ComparisonMode>("regulation");
-  
+
   const [regulationModeState, setRegulationModeState] = useState<ModeState>({ ...initialModeState });
   const [rcmModeState, setRcmModeState] = useState<ModeState>({ ...initialModeState });
+
+  // Library-specific state (independent of comparison modes)
+  const [libraryDocuments, setLibraryDocuments] = useState<LibraryDocument[]>([]);
+  const [libraryLoading, setLibraryLoading] = useState(false);
 
   const currentState = mode === "regulation" ? regulationModeState : rcmModeState;
   const setCurrentState = mode === "regulation" ? setRegulationModeState : setRcmModeState;
@@ -177,6 +250,10 @@ export function RegulatoryTestingProvider({ children }: { children: ReactNode })
         setComparisonResults,
         resetState,
         resetForNewComparison,
+        libraryDocuments,
+        setLibraryDocuments,
+        libraryLoading,
+        setLibraryLoading,
       }}
     >
       {children}

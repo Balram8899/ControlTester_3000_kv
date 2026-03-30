@@ -8,8 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import type { Message } from "@/types";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
-
 export default function ChatPage() {
   const { 
     messages, 
@@ -34,7 +32,7 @@ export default function ChatPage() {
 
       files.forEach((file) => formData.append("files", file));
 
-      const response = await fetch(`${API_URL}/build-knowledge-base`, {
+      const response = await fetch(`/api/build-knowledge-base`, {
         method: "POST",
         body: formData,
       });
@@ -51,7 +49,7 @@ export default function ChatPage() {
         saveFormData.append("kb_type", "chat");
         saveFormData.append("dir_path", "chat_attachment_vectorstore");
 
-        await fetch(`${API_URL}/save-vectorstore`, {
+        await fetch(`/api/save-vectorstore`, {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: saveFormData.toString(),
@@ -88,7 +86,7 @@ export default function ChatPage() {
         payload.chat_kb_path = "chat_attachment_vectorstore";
       }
 
-      const response = await fetch(`${API_URL}/chat`, {
+      const response = await fetch(`/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -195,7 +193,7 @@ export default function ChatPage() {
       formData.append("kb_type", kb_type);
       formData.append("model_name", selectedModel);
 
-      const response = await fetch(`${API_URL}/load-vectorstore`, {
+      const response = await fetch(`/api/load-vectorstore`, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: formData.toString(),
@@ -270,7 +268,7 @@ export default function ChatPage() {
       const errorMessage: Message = {
         id: loadingMessageId,
         role: "assistant",
-        content: "❌ Failed to get response. Please ensure the external API is running at http://localhost:8000",
+        content: "❌ Failed to get response. Please ensure the FastAPI backend is running.",
         timestamp: new Date().toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",

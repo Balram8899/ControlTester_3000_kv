@@ -14,6 +14,7 @@ import SettingsPage from "@/pages/settings";
 import EvidenceAssessmentPage from "@/pages/evidence-assessment";
 import ControlTestingPage from "@/pages/control-testing";
 import RegulatoryTestingPage from "@/pages/regulatory-testing";
+import RegulatoryLibraryPage from "@/pages/regulatory-library";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -25,6 +26,7 @@ function Router() {
         <Route path="/evidence-assessment" component={EvidenceAssessmentPage} />
         <Route path="/control-testing" component={ControlTestingPage} />
         <Route path="/chat" component={ChatPage} />
+        <Route path="/regulatory-library" component={RegulatoryLibraryPage} />
       </Switch>
     </AppLayout>
   );

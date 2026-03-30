@@ -1,6 +1,6 @@
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { useDropzone } from "react-dropzone";
-import { Upload, FileText, X, Play, RotateCcw, Download, Scale, FileCheck, ChevronRight, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Upload, FileText, X, Play, Download, RotateCcw, Scale, FileCheck, ChevronRight, AlertCircle, CheckCircle2, GitMerge } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Button } from "@/components/ui/button";
@@ -114,8 +114,6 @@ export default function RegulatoryTestingPage() {
       });
 
       const selectedModel = localStorage.getItem("selectedModel") || "llama3";
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
-
       const formData = new FormData();
       formData.append("selected_model", selectedModel);
       formData.append("save_artifacts", "false");
@@ -124,7 +122,7 @@ export default function RegulatoryTestingPage() {
       let endpoint: string;
 
       if (mode === "rcm") {
-        endpoint = `${apiUrl}/rcm_compliance`;
+        endpoint = `/api/rcm_compliance`;
         regulationFiles.forEach((file) => {
           formData.append("regulation_files", file);
         });
@@ -132,7 +130,7 @@ export default function RegulatoryTestingPage() {
           formData.append("rcm_file", rcmFile);
         }
       } else {
-        endpoint = `${apiUrl}/compare-regulations`;
+        endpoint = `/api/compare-regulations`;
         formData.append("max_workers", "4");
         regulationFiles.forEach((file) => {
           formData.append("regulation_files", file);
@@ -262,7 +260,7 @@ export default function RegulatoryTestingPage() {
           </p>
         </div>
 
-        <div className="flex justify-center gap-2 mb-6">
+        <div className="flex justify-center gap-2 mb-6 flex-wrap">
           <Button
             variant={mode === "regulation" ? "default" : "outline"}
             onClick={() => handleModeSwitch("regulation")}
@@ -283,6 +281,7 @@ export default function RegulatoryTestingPage() {
           </Button>
         </div>
 
+        {/* ── Regulation Comparison / RCM Mode ─────────────────────────────── */}
         {!isProcessing && !comparisonResults && (
           <>
             <Card>
@@ -626,10 +625,11 @@ export default function RegulatoryTestingPage() {
               </Tabs>
             ) : (
               <Tabs defaultValue="summary" className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
+                <TabsList className="grid w-full grid-cols-5">
                   <TabsTrigger value="summary" data-testid="tab-summary">Summary</TabsTrigger>
                   <TabsTrigger value="frameworks" data-testid="tab-frameworks">Frameworks</TabsTrigger>
                   <TabsTrigger value="controls" data-testid="tab-controls">Controls</TabsTrigger>
+                  <TabsTrigger value="gaps" data-testid="tab-gaps">Gap Analysis</TabsTrigger>
                   <TabsTrigger value="report" data-testid="tab-report">Report</TabsTrigger>
                 </TabsList>
 
@@ -837,6 +837,191 @@ export default function RegulatoryTestingPage() {
                       </Card>
                     )}
                   </ScrollArea>
+                </TabsContent>
+
+                <TabsContent value="gaps" className="space-y-4">
+                  {comparisonResults.gap_analysis ? (
+                    <>
+                      {/* Gap Summary */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <GitMerge className="h-5 w-5 text-orange-500" />
+                            Gap Analysis Summary
+                          </CardTitle>
+                          <CardDescription>
+                            {comparisonResults.gap_analysis.gap_summary.total_domains_found} domains identified across {comparisonResults.documents?.length || 0} documents
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            <div className="p-3 bg-muted/50 rounded-lg text-center">
+                              <p className="text-2xl font-bold text-primary">
+                                {comparisonResults.gap_analysis.gap_summary.total_domains_found}
+                              </p>
+                              <p className="text-xs text-muted-foreground">Total Domains</p>
+                            </div>
+                            <div className="p-3 bg-muted/50 rounded-lg text-center">
+                              <p className="text-2xl font-bold text-green-500">
+                                {comparisonResults.gap_analysis.gap_summary.domains_with_universal_coverage.length}
+                              </p>
+                              <p className="text-xs text-muted-foreground">Universal Coverage</p>
+                            </div>
+                            <div className="p-3 bg-muted/50 rounded-lg text-center">
+                              <p className="text-2xl font-bold text-blue-500">
+                                {comparisonResults.gap_analysis.gap_summary.shared_control_groups}
+                              </p>
+                              <p className="text-xs text-muted-foreground">Shared Control Groups</p>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                            {comparisonResults.gap_analysis.gap_summary.most_gaps_in && (
+                              <div className="p-3 border border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/30 rounded-lg">
+                                <p className="text-xs text-muted-foreground mb-1">Most gaps in</p>
+                                <p className="font-medium truncate">{comparisonResults.gap_analysis.gap_summary.most_gaps_in}</p>
+                              </div>
+                            )}
+                            {comparisonResults.gap_analysis.gap_summary.best_covered && (
+                              <div className="p-3 border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/30 rounded-lg">
+                                <p className="text-xs text-muted-foreground mb-1">Best covered</p>
+                                <p className="font-medium truncate">{comparisonResults.gap_analysis.gap_summary.best_covered}</p>
+                              </div>
+                            )}
+                          </div>
+                          {comparisonResults.gap_analysis.gap_summary.domains_with_universal_coverage.length > 0 && (
+                            <div>
+                              <p className="text-sm font-medium mb-2">Domains covered by all documents</p>
+                              <div className="flex flex-wrap gap-1">
+                                {comparisonResults.gap_analysis.gap_summary.domains_with_universal_coverage.map((d, i) => (
+                                  <Badge key={i} variant="default" className="bg-green-600 hover:bg-green-700 text-white text-xs capitalize">
+                                    {d.replace(/_/g, " ")}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+
+                      {/* Domain Coverage Heatmap */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-base">Domain Coverage by Document</CardTitle>
+                          <CardDescription>Green = covered, Red = absent</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-xs border-collapse">
+                              <thead>
+                                <tr>
+                                  <th className="text-left p-2 border border-border bg-muted/50 font-medium min-w-[140px]">Domain</th>
+                                  {(comparisonResults.documents || []).map((doc, i) => (
+                                    <th key={i} className="p-2 border border-border bg-muted/50 font-medium text-center max-w-[100px]">
+                                      <span className="block truncate" title={doc}>{doc}</span>
+                                    </th>
+                                  ))}
+                                  <th className="p-2 border border-border bg-muted/50 font-medium text-center">Coverage</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {Object.entries(comparisonResults.gap_analysis.domain_coverage).map(([domain, info], i) => (
+                                  <tr key={i} className="even:bg-muted/20">
+                                    <td className="p-2 border border-border capitalize font-medium">{domain.replace(/_/g, " ")}</td>
+                                    {(comparisonResults.documents || []).map((doc, j) => (
+                                      <td key={j} className="p-2 border border-border text-center">
+                                        {info.present_in.includes(doc) ? (
+                                          <CheckCircle2 className="h-4 w-4 text-green-500 mx-auto" />
+                                        ) : (
+                                          <X className="h-4 w-4 text-red-400 mx-auto" />
+                                        )}
+                                      </td>
+                                    ))}
+                                    <td className="p-2 border border-border text-center font-mono">
+                                      {info.coverage_pct.toFixed(0)}%
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Per-document unique controls */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-base">Unique Controls per Document</CardTitle>
+                          <CardDescription>Controls present in only one document (potential gaps in others)</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          {Object.entries(comparisonResults.gap_analysis.document_gaps).map(([doc, info], i) => (
+                            <Collapsible key={i}>
+                              <div className="border rounded-lg">
+                                <CollapsibleTrigger className="w-full">
+                                  <div className="flex items-center justify-between p-3">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      <ChevronRight className="h-4 w-4 shrink-0 transition-transform duration-200" />
+                                      <span className="text-sm font-medium truncate">{doc}</span>
+                                    </div>
+                                    <div className="flex gap-2 shrink-0">
+                                      <Badge variant="outline" className="text-xs">
+                                        {info.domain_coverage_pct.toFixed(0)}% domain coverage
+                                      </Badge>
+                                      {info.unique_controls.length > 0 && (
+                                        <Badge variant="secondary" className="text-xs">
+                                          {info.unique_controls.length} unique
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </div>
+                                </CollapsibleTrigger>
+                                <CollapsibleContent>
+                                  <div className="px-3 pb-3 space-y-2 border-t">
+                                    {info.missing_domains.length > 0 && (
+                                      <div className="pt-2">
+                                        <p className="text-xs font-medium text-muted-foreground mb-1">Missing domains</p>
+                                        <div className="flex flex-wrap gap-1">
+                                          {info.missing_domains.map((d, j) => (
+                                            <Badge key={j} variant="outline" className="text-xs border-red-300 text-red-600 capitalize">
+                                              {d.replace(/_/g, " ")}
+                                            </Badge>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                    {info.unique_controls.length > 0 && (
+                                      <div className="pt-2">
+                                        <p className="text-xs font-medium text-muted-foreground mb-2">Controls unique to this document</p>
+                                        <div className="space-y-2">
+                                          {info.unique_controls.map((uc, j) => (
+                                            <div key={j} className="p-2 bg-muted/30 rounded text-xs">
+                                              <Badge variant="outline" className="capitalize text-xs mb-1">
+                                                {uc.domain.replace(/_/g, " ")}
+                                              </Badge>
+                                              <p className="text-muted-foreground mt-1">{uc.control_statement}</p>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                    {info.missing_domains.length === 0 && info.unique_controls.length === 0 && (
+                                      <p className="pt-2 text-xs text-muted-foreground">No unique controls or missing domains</p>
+                                    )}
+                                  </div>
+                                </CollapsibleContent>
+                              </div>
+                            </Collapsible>
+                          ))}
+                        </CardContent>
+                      </Card>
+                    </>
+                  ) : (
+                    <Card>
+                      <CardContent className="py-8 text-center text-muted-foreground">
+                        No gap analysis available
+                      </CardContent>
+                    </Card>
+                  )}
                 </TabsContent>
 
                 <TabsContent value="report" className="space-y-4">

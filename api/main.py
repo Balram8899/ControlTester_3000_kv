@@ -19,6 +19,7 @@ import json
 import time
 import logging
 import traceback
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from utils.file_handlers import save_faiss_vectorstore, load_faiss_vectorstore
 from utils.audit_session_store import audit_session_store
@@ -38,6 +39,7 @@ from datetime import datetime
 import uuid
 
 from utils.regulatory_comparision import compare_regulatory_documents, save_analysis_artifacts
+from utils.regulatory_library import ingest_regulatory_document, MongoLibraryStore
 from utils.rcm_compliance_analyzer import (
     load_document,
     get_text_splitter,
@@ -230,6 +232,9 @@ def _req_id() -> str:
 # ----------------------------------------------------------------------------
 VECTORSTORE_CACHE: Dict[str, Any] = {"global": None, "company": None, "evidence": None, "chat": None}
 
+# Graph-RAG: Knowledge Graph cache (mirrors VECTORSTORE_CACHE)
+GRAPH_CACHE: Dict[str, Any] = {"global": None, "company": None, "evidence": None, "chat": None}
+
 # ----------------------------------------------------------------------------
 # Pydantic models
 # ----------------------------------------------------------------------------
@@ -258,6 +263,8 @@ class KBResp(BaseModel):
     vector_count: Optional[int] = None
     error_details: Optional[str] = None
     files_processed: Optional[List[FileResult]] = None
+    graph_node_count: Optional[int] = None
+    graph_edge_count: Optional[int] = None
 
 class AssessmentRequest(BaseModel):
     selected_model: str = Field(..., description="Ollama model for assessment")
@@ -705,7 +712,7 @@ async def build_kb(
                 processing_time=time.time() - start
             ))
 
-        vectorstore = build_knowledge_base(
+        vectorstore, knowledge_graph = build_knowledge_base(
             files=file_objs,
             source=files_source,
             selected_model=selected_model,
@@ -715,20 +722,27 @@ async def build_kb(
         )
 
         VECTORSTORE_CACHE[kb_type] = vectorstore
+        GRAPH_CACHE[kb_type] = knowledge_graph  # may be None if graph build failed
 
         vec_count = getattr(vectorstore.index, "ntotal", None)
+        graph_stats = knowledge_graph.get_graph_stats() if knowledge_graph else {}
         summary = {
             "files": len(file_objs),
             "vectors": vec_count,
             "processing_seconds": time.time() - t0,
-            "model": selected_model
+            "model": selected_model,
+            "graph_nodes": graph_stats.get("nodes", 0),
+            "graph_edges": graph_stats.get("edges", 0),
+            "graph_chunks": graph_stats.get("chunk_nodes", 0),
         }
         return KBResp(
-            success=True, 
-            message="Knowledge base built", 
-            processing_summary=summary, 
-            vector_count=vec_count, 
-            files_processed=file_results
+            success=True,
+            message="Knowledge base built",
+            processing_summary=summary,
+            vector_count=vec_count,
+            files_processed=file_results,
+            graph_node_count=graph_stats.get("nodes"),
+            graph_edge_count=graph_stats.get("edges"),
         )
     except Exception as e:
         return KBResp(
@@ -806,7 +820,7 @@ async def assess_evidence(
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "company vectorstores are required")
         VECTORSTORE_CACHE["company"] = saved_company_vectorstore
 
-        evidence_vectorstore = build_knowledge_base(
+        evidence_vectorstore, _ = build_knowledge_base(
             files=evidence_objs,
             source="Evidence Upload",
             selected_model=selected_model,
@@ -816,13 +830,19 @@ async def assess_evidence(
         )
         VECTORSTORE_CACHE["evidence"] = evidence_vectorstore
 
+        # Graph-RAG: load graphs from cache (populated by load-vectorstore calls above)
+        global_graph = GRAPH_CACHE.get("global")
+        company_graph = GRAPH_CACHE.get("company")
+
         # Get assessment results
         assessment_results = assess_evidence_with_kb(
             evidence_files=evidence_objs,
             kb_vectorstore=saved_global_vectorstore,
             company_kb_vectorstore=saved_company_vectorstore,
             selected_model=selected_model,
-            max_workers=max_workers
+            max_workers=max_workers,
+            kb_graph=global_graph,
+            company_kb_graph=company_graph,
         )
 
         assessment_summary = generate_executive_summary(assessment_results,selected_model)
@@ -913,7 +933,26 @@ async def save_vectorstore_api(
         if vs is None:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, f"No vectorstore cached for {kb_type}")
         saved_path = save_faiss_vectorstore(vs, dir_path)
-        return {"success": True, "path": saved_path, "kb_type": kb_type}
+
+        # Graph-RAG: also save knowledge graph alongside FAISS files
+        graph_saved = False
+        graph_path = None
+        graph = GRAPH_CACHE.get(kb_type)
+        if graph is not None:
+            try:
+                from utils.graph_rag import KnowledgeGraph
+                graph_path = graph.save(dir_path)
+                graph_saved = True
+            except Exception as graph_exc:
+                logger.warning(f"Graph save failed for {kb_type} (non-fatal): {graph_exc}")
+
+        return {
+            "success": True,
+            "path": saved_path,
+            "kb_type": kb_type,
+            "graph_saved": graph_saved,
+            "graph_path": graph_path,
+        }
     except HTTPException:
         raise
     except Exception as e:
@@ -930,7 +969,33 @@ async def load_vectorstore_api(
         embeddings = OllamaEmbeddings(model=model_name, base_url=base_url)
         vs = load_faiss_vectorstore(dir_path, embeddings)
         VECTORSTORE_CACHE[kb_type] = vs
-        return {"success": True,"path": dir_path,"kb_type": kb_type,"ntotal": getattr(vs.index, "ntotal", None)}
+
+        # Graph-RAG: attempt to load knowledge graph (graceful fallback)
+        graph_loaded = False
+        graph_stats: Dict[str, Any] = {}
+        try:
+            from utils.graph_rag import KnowledgeGraph
+            if KnowledgeGraph.exists(dir_path):
+                GRAPH_CACHE[kb_type] = KnowledgeGraph.load(dir_path)
+                graph_loaded = True
+                graph_stats = GRAPH_CACHE[kb_type].get_graph_stats()
+            else:
+                GRAPH_CACHE[kb_type] = None
+        except Exception as graph_exc:
+            logger.warning(
+                f"Graph load failed for {kb_type} (falling back to FAISS-only): {graph_exc}"
+            )
+            GRAPH_CACHE[kb_type] = None
+
+        return {
+            "success": True,
+            "path": dir_path,
+            "kb_type": kb_type,
+            "ntotal": getattr(vs.index, "ntotal", None),
+            "graph_loaded": graph_loaded,
+            "graph_nodes": graph_stats.get("nodes", 0),
+            "graph_edges": graph_stats.get("edges", 0),
+        }
     except FileNotFoundError as fe:
         raise HTTPException(status.HTTP_404_NOT_FOUND, str(fe))
     except Exception as e:
@@ -1014,12 +1079,20 @@ async def compare_regulations(
             
             logger.info(f"[{rid}] Uploaded: {uf.filename} ({len(content)} bytes)")
 
-        # Run enhanced comparison
+        # Run enhanced comparison (pass global KB if loaded)
+        kb_vs = VECTORSTORE_CACHE.get("global")
+        kb_g = GRAPH_CACHE.get("global")
+        if kb_vs is not None:
+            logger.info(f"[{rid}] Using global KB vectorstore for enriched control extraction")
+        else:
+            logger.info(f"[{rid}] No global KB loaded — running without KB enrichment")
         logger.info(f"[{rid}] Starting analysis...")
         result = compare_regulatory_documents(
             file_paths=tmp_paths,
             filenames=filenames,
-            selected_model=selected_model
+            selected_model=selected_model,
+            kb_vectorstore=kb_vs,
+            kb_graph=kb_g,
         )
         
         # Check for errors
@@ -1223,6 +1296,188 @@ async def rcm_compliance(
                 os.unlink(p)
             except Exception:
                 pass
+
+#-----------------------------------------------------------------------------
+# Regulatory Library Endpoints
+#-----------------------------------------------------------------------------
+
+@app.post(
+    "/regulatory-library/ingest",
+    tags=["regulatory-library"],
+    summary="Upload regulatory documents and extract all obligations into the library",
+)
+async def library_ingest(
+    selected_model: str = Form(..., description="LLM model to use"),
+    regulation_files: List[UploadFile] = File(..., description="Regulatory documents (PDF, TXT, MD) — up to 10"),
+):
+    rid = _req_id()
+    logger.info(f"[{rid}] Library ingest — {len(regulation_files)} file(s), model={selected_model}")
+
+    if not regulation_files:
+        raise HTTPException(status_code=400, detail="At least one file is required")
+    if len(regulation_files) > 10:
+        raise HTTPException(status_code=400, detail="Maximum 10 files per request")
+
+    tmp_paths: List[str] = []
+    # Collect (tmp_path, filename) for valid files; build errors list for invalid ones
+    file_jobs: List[tuple] = []
+    errors = []
+
+    try:
+        # --- Phase 1: read uploads and validate (must be async, so sequential here) ---
+        for uf in regulation_files:
+            if not uf.filename.lower().endswith((".pdf", ".txt", ".md")):
+                errors.append({"filename": uf.filename, "error": "Unsupported file type. Use PDF, TXT, or MD."})
+                continue
+
+            content = await uf.read()
+            if len(content) == 0:
+                errors.append({"filename": uf.filename, "error": "Empty file"})
+                continue
+
+            ext = Path(uf.filename).suffix or ".tmp"
+            tmp = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
+            tmp.write(content)
+            tmp.close()
+            tmp_paths.append(tmp.name)
+            file_jobs.append((tmp.name, uf.filename))
+            logger.info(f"[{rid}] Queued for ingest: {uf.filename} ({len(content)} bytes)")
+
+        # --- Phase 2: ingest all files in parallel (each is CPU/LLM-bound) ---
+        kb_vs = VECTORSTORE_CACHE.get("global")
+        kb_g  = GRAPH_CACHE.get("global")
+
+        def _ingest(tmp_path: str, filename: str) -> dict:
+            return ingest_regulatory_document(
+                file_path=tmp_path,
+                filename=filename,
+                selected_model=selected_model,
+                kb_vectorstore=kb_vs,
+                kb_graph=kb_g,
+            )
+
+        ingested = []
+        if file_jobs:
+            with ThreadPoolExecutor(max_workers=min(len(file_jobs), 4)) as pool:
+                future_map = {pool.submit(_ingest, p, n): n for p, n in file_jobs}
+                for fut in as_completed(future_map):
+                    fname = future_map[fut]
+                    try:
+                        result = fut.result()
+                    except Exception as exc:
+                        logger.error(f"[{rid}] Ingest failed for {fname}: {exc}")
+                        errors.append({"filename": fname, "error": str(exc)})
+                        continue
+
+                    if result.get("success"):
+                        ingested.append({
+                            "document_id": result["document_id"],
+                            "framework_name": result["framework_name"],
+                            "issuing_authority": result.get("issuing_authority", ""),
+                            "filename": result["source_filename"],
+                            "total_obligations": result["total_obligations"],
+                            "obligations_by_domain": result.get("obligations_by_domain", {}),
+                            "mongo_saved": result.get("mongo_saved", False),
+                        })
+                    else:
+                        errors.append({"filename": fname, "error": result.get("error", "Unknown error")})
+
+        return JSONResponse({
+            "success": True,
+            "request_id": rid,
+            "ingested": ingested,
+            "errors": errors,
+            "total_ingested": len(ingested),
+        })
+
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error(f"[{rid}] Library ingest failed: {exc}\n{traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail={"error": str(exc), "request_id": rid})
+    finally:
+        for p in tmp_paths:
+            try:
+                os.unlink(p)
+            except Exception:
+                pass
+
+
+@app.get(
+    "/regulatory-library/documents",
+    tags=["regulatory-library"],
+    summary="List all documents stored in the regulatory library",
+)
+async def library_list_documents():
+    try:
+        store = MongoLibraryStore()
+        docs = store.list_documents()
+        return JSONResponse({"success": True, "documents": docs, "total": len(docs)})
+    except Exception as exc:
+        logger.error(f"Library list failed: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.get(
+    "/regulatory-library/documents/{document_id}",
+    tags=["regulatory-library"],
+    summary="Get a single library document with all its obligations",
+)
+async def library_get_document(document_id: str):
+    try:
+        store = MongoLibraryStore()
+        doc = store.get_document(document_id)
+        if doc is None:
+            raise HTTPException(status_code=404, detail=f"Document {document_id} not found")
+        return JSONResponse({"success": True, "document": doc})
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error(f"Library get failed: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.delete(
+    "/regulatory-library/documents/{document_id}",
+    tags=["regulatory-library"],
+    summary="Remove a document from the regulatory library",
+)
+async def library_delete_document(document_id: str):
+    try:
+        store = MongoLibraryStore()
+        deleted = store.delete_document(document_id)
+        if not deleted:
+            raise HTTPException(status_code=404, detail=f"Document {document_id} not found")
+        return JSONResponse({"success": True, "deleted": document_id})
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error(f"Library delete failed: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.get(
+    "/regulatory-library/search",
+    tags=["regulatory-library"],
+    summary="Search obligations across all library documents",
+)
+async def library_search(
+    domain: Optional[str] = None,
+    enforcement_level: Optional[str] = None,
+    keyword: Optional[str] = None,
+):
+    try:
+        store = MongoLibraryStore()
+        results = store.search_obligations(
+            domain=domain,
+            enforcement_level=enforcement_level,
+            keyword=keyword,
+        )
+        return JSONResponse({"success": True, "obligations": results, "total": len(results)})
+    except Exception as exc:
+        logger.error(f"Library search failed: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
+
 
 #-----------------------------------------------------------------------------
 # AI Control Testing Endpoint

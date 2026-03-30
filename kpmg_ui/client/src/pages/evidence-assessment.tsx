@@ -5,8 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { useEvidenceContext, AgentStatus } from "@/contexts/EvidenceContext";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
-
 function AgentCard({ 
   icon: Icon, 
   title, 
@@ -172,13 +170,13 @@ export default function EvidenceAssessmentPage() {
 
       let assessResponse;
       try {
-        assessResponse = await fetch(`${API_URL}/assess-evidence`, {
+        assessResponse = await fetch(`/api/assess-evidence`, {
           method: "POST",
           body: formData,
         });
       } catch (fetchError) {
         setAgentStates(prev => ({ ...prev, assessor: "error" }));
-        throw new Error(`Cannot connect to API at ${API_URL}. Please ensure the external API is running.`);
+        throw new Error(`Cannot connect to the FastAPI backend. Please ensure it is running.`);
       }
 
       if (!assessResponse.ok) {
@@ -205,7 +203,7 @@ export default function EvidenceAssessmentPage() {
       
       let summaryResult = { success: true, executive_summary: "" };
       try {
-        const summaryResponse = await fetch(`${API_URL}/generate-summary?selected_model=${encodeURIComponent(selectedModel)}`, {
+        const summaryResponse = await fetch(`/api/generate-summary?selected_model=${encodeURIComponent(selectedModel)}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -230,7 +228,7 @@ export default function EvidenceAssessmentPage() {
         console.log("Downloading report:", filename);
         
         try {
-          const downloadResponse = await fetch(`${API_URL}/download-report?filename=${encodeURIComponent(filename)}`);
+          const downloadResponse = await fetch(`/api/download-report?filename=${encodeURIComponent(filename)}`);
           
           if (downloadResponse.ok) {
             const blob = await downloadResponse.blob();

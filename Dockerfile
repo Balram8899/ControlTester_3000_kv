@@ -4,8 +4,8 @@ WORKDIR /app
 # Create directories for files with proper permissions
 RUN mkdir -p /app/workbooks /app/temp_files
 RUN chmod 755 /app/workbooks /app/temp_files
-COPY requirements.txt .
-RUN pip install --no-cache-dir --progress-bar off -vvv -r requirements.txt
+COPY streamlit_requirements.txt .
+RUN pip install --no-cache-dir --progress-bar off -r streamlit_requirements.txt
 
 COPY . .
 

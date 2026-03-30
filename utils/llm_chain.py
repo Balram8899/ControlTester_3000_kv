@@ -16,6 +16,7 @@ import warnings
 import json
 import io
 from PIL import Image, ImageDraw, ImageFont
+from typing import Optional, Tuple
 
 warnings.filterwarnings("ignore", category=UserWarning, module="openpyxl")
 
@@ -79,7 +80,8 @@ def build_knowledge_base(
     delay_between_batches=0.2,
     max_retries=3,
     embedding_model: str | None = None,
-):
+    build_graph: bool = True,
+) -> Tuple[FAISS, Optional[object]]:
     embed_name = embedding_model or OLLAMA_EMBEDDING_MODEL
     embedding_obj = OllamaEmbeddings(model=embed_name, base_url=OLLAMA_BASE_URL)
     start = time.time()
@@ -148,7 +150,19 @@ def build_knowledge_base(
 
     total_time = time.time() - start
     logger.info(f"Knowledge base built in {total_time:.2f} seconds.")
-    return kb_vectorstore
+
+    # ── Graph-RAG: build knowledge graph (no LLM, pure regex) ────────────────
+    knowledge_graph = None
+    if build_graph and all_documents:
+        try:
+            from utils.graph_rag import build_knowledge_graph_from_documents
+            knowledge_graph = build_knowledge_graph_from_documents(all_documents)
+        except Exception as graph_exc:
+            logger.warning(
+                f"Knowledge graph build failed (non-fatal, falling back to FAISS-only): {graph_exc}"
+            )
+
+    return kb_vectorstore, knowledge_graph
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -177,6 +191,8 @@ def _assess_single_evidence(
     doc_index: int = 0,
     filename: str = "N/A",
     evidence_context: str | None = None,
+    kb_graph=None,
+    company_kb_graph=None,
 ):
     """
     Assess a single evidence chunk against the knowledge bases.
@@ -202,8 +218,13 @@ def _assess_single_evidence(
         parser = PydanticOutputParser(pydantic_object=Assessment)
 
         # ── BUG 2 FIX: guard against None vectorstores ─────────────────────
+        # Graph-RAG: use GraphRAGRetriever when a graph is available; fall
+        # back transparently to similarity_search when graph is None.
+        from utils.graph_rag import GraphRAGRetriever
+
         if kb_vectorstore is not None:
-            base_contexts = kb_vectorstore.similarity_search(evid_text, k=5)
+            retriever = GraphRAGRetriever(kb_vectorstore, kb_graph, seed_k=5, final_k=8)
+            base_contexts = retriever.retrieve(evid_text)
             knowledge_base_context = "\n\n".join(
                 getattr(c, "page_content", str(c)) for c in base_contexts
             )
@@ -213,7 +234,10 @@ def _assess_single_evidence(
             knowledge_base_context = "Global policy knowledge base not available."
 
         if company_kb_vectorstore is not None:
-            company_contexts = company_kb_vectorstore.similarity_search(evid_text, k=5)
+            company_retriever = GraphRAGRetriever(
+                company_kb_vectorstore, company_kb_graph, seed_k=5, final_k=8
+            )
+            company_contexts = company_retriever.retrieve(evid_text)
             company_knowledge_base_context = "\n\n".join(
                 getattr(c, "page_content", str(c)) for c in company_contexts
             )
@@ -403,6 +427,8 @@ def assess_evidence_with_kb(
     selected_model: str,
     max_workers: int = 4,
     evidence_context: str | None = None,
+    kb_graph=None,
+    company_kb_graph=None,
 ):
     """
     Split evidence files into chunks and assess each chunk against the KBs.
@@ -457,6 +483,8 @@ def assess_evidence_with_kb(
                 chunk_origin[i],        # doc_index
                 "N/A",                  # filename
                 evidence_context,       # ← BUG 1 FIX: was previously omitted
+                kb_graph,               # Graph-RAG: global KB graph
+                company_kb_graph,       # Graph-RAG: company KB graph
             )
             for i in range(len(evid_texts))
         ]

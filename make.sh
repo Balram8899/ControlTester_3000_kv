@@ -183,14 +183,18 @@ fi
 # ══════════════════════════════════════════════════════════════════════════════
 log_step "STEP 6 — Pulling Ollama models"
 separator
-
 log_info "Pulling  llama3:8b"
 log_cmd  "docker exec ollama ollama pull llama3:8b"
 log_verbose "Model will be streamed from the Ollama registry into the container..."
 docker exec ollama ollama pull llama3:8b
 log_ok "llama3:8b pulled successfully  [+$(elapsed)]"
 
-# docker exec ollama ollama pull qwen3:8b
+separator
+log_info "Pulling  qwen3.5:4b"
+log_cmd  "docker exec ollama ollama pull qwen3.5:4b"
+log_verbose "Model will be streamed from the Ollama registry into the container..."
+docker exec ollama ollama pull qwen3.5:4b
+log_ok "qwen3.5:4b pulled successfully  [+$(elapsed)]"
 
 separator
 log_info "Pulling  nomic-embed-text:latest"

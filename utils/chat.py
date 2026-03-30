@@ -5,7 +5,10 @@
 
 import os
 import logging
-import streamlit as st
+try:
+    import streamlit as st
+except ImportError:
+    st = None  # Not available in FastAPI container — only needed for Streamlit UI functions
 from langchain_ollama import OllamaLLM, OllamaEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain.schema import Document
@@ -426,21 +429,21 @@ def render_pending_request_ui(kb_vectorstore, company_kb_vectorstore, evid_vecto
 
                 if missing_type == 'policy_documents':
                     from utils.llm_chain import build_knowledge_base
-                    kb_vectorstore = build_knowledge_base(uploaded_files, selected_model)
+                    kb_vectorstore, _ = build_knowledge_base(uploaded_files, selected_model)
                     st.session_state['kb_vectorstore'] = kb_vectorstore
                     st.session_state['kb_ready'] = True
                     st.success("✅ Policy documents processed!")
 
                 elif missing_type == 'evidence_files':
                     from utils.llm_chain import build_knowledge_base
-                    evid_vectorstore = build_knowledge_base(uploaded_files, selected_model)
+                    evid_vectorstore, _ = build_knowledge_base(uploaded_files, selected_model)
                     st.session_state['evid_vectorstore'] = evid_vectorstore
                     st.session_state['evidence_kb_ready'] = True
                     st.success("✅ Evidence files processed!")
 
                 elif missing_type == 'company_documents':
                     from utils.llm_chain import build_knowledge_base
-                    company_kb_vectorstore = build_knowledge_base(uploaded_files, selected_model)
+                    company_kb_vectorstore, _ = build_knowledge_base(uploaded_files, selected_model)
                     st.session_state['company_kb_vectorstore'] = company_kb_vectorstore
                     st.session_state['company_files_ready'] = True
                     st.success("✅ Company documents processed!")

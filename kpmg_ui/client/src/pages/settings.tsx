@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Network } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import ContextFileUpload from "@/components/ContextFileUpload";
@@ -31,6 +31,9 @@ interface VectorstoreInfo {
   path?: string;
   vector_count?: number;
   last_modified?: string;
+  graph_loaded?: boolean;
+  graph_nodes?: number;
+  graph_edges?: number;
 }
 
 export default function SettingsPage() {
@@ -58,7 +61,7 @@ export default function SettingsPage() {
       formData.append("kb_type", "global");
       formData.append("model_name", selectedModel);
 
-      const response = await fetch("http://localhost:8000/load-vectorstore", {
+      const response = await fetch("/api/load-vectorstore", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: formData.toString(),
@@ -72,10 +75,13 @@ export default function SettingsPage() {
             path: "saved_global_vectorstore",
             vector_count: data.ntotal ?? data.vector_count ?? 0,
             last_modified: new Date().toISOString(),
+            graph_loaded: data.graph_loaded ?? false,
+            graph_nodes: data.graph_nodes ?? 0,
+            graph_edges: data.graph_edges ?? 0,
           };
         }
       }
-      
+
       return { exists: false, path: "saved_global_vectorstore", vector_count: 0 };
     },
     enabled: !!selectedModel,
@@ -93,7 +99,7 @@ export default function SettingsPage() {
       formData.append("kb_type", "company");
       formData.append("model_name", selectedModel);
 
-      const response = await fetch("http://localhost:8000/load-vectorstore", {
+      const response = await fetch("/api/load-vectorstore", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: formData.toString(),
@@ -107,10 +113,13 @@ export default function SettingsPage() {
             path: "saved_company_vectorstore",
             vector_count: data.ntotal ?? data.vector_count ?? 0,
             last_modified: new Date().toISOString(),
+            graph_loaded: data.graph_loaded ?? false,
+            graph_nodes: data.graph_nodes ?? 0,
+            graph_edges: data.graph_edges ?? 0,
           };
         }
       }
-      
+
       return { exists: false, path: "saved_company_vectorstore", vector_count: 0 };
     },
     enabled: !!selectedModel,
@@ -174,7 +183,7 @@ export default function SettingsPage() {
         formData.append("files", file);
       });
 
-      const response = await fetch("http://localhost:8000/build-knowledge-base", {
+      const response = await fetch("/api/build-knowledge-base", {
         method: "POST",
         body: formData,
       });
@@ -192,7 +201,7 @@ export default function SettingsPage() {
         formData.append("kb_type", "global");
         formData.append("dir_path", "saved_global_vectorstore");
 
-        const saveResponse = await fetch("http://localhost:8000/save-vectorstore", {
+        const saveResponse = await fetch("/api/save-vectorstore", {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: formData.toString(),
@@ -244,7 +253,7 @@ export default function SettingsPage() {
         formData.append("files", file);
       });
 
-      const response = await fetch("http://localhost:8000/build-knowledge-base", {
+      const response = await fetch("/api/build-knowledge-base", {
         method: "POST",
         body: formData,
       });
@@ -262,7 +271,7 @@ export default function SettingsPage() {
         formData.append("kb_type", "company");
         formData.append("dir_path", "saved_company_vectorstore");
 
-        const saveResponse = await fetch("http://localhost:8000/save-vectorstore", {
+        const saveResponse = await fetch("/api/save-vectorstore", {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: formData.toString(),
@@ -342,13 +351,23 @@ export default function SettingsPage() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <CardTitle>General Context</CardTitle>
                     {globalVectorstore?.exists && (
-                      <Badge 
-                        variant="default" 
+                      <Badge
+                        variant="default"
                         className="bg-green-600 hover:bg-green-700 text-white"
                         data-testid="badge-global-vectorstore-ready"
                       >
                         <CheckCircle2 className="h-3 w-3 mr-1" />
                         Vectorstore Ready
+                      </Badge>
+                    )}
+                    {globalVectorstore?.graph_loaded && (
+                      <Badge
+                        variant="outline"
+                        className="border-blue-400 text-blue-600"
+                        data-testid="badge-global-graph-ready"
+                      >
+                        <Network className="h-3 w-3 mr-1" />
+                        Graph: {globalVectorstore.graph_nodes} nodes / {globalVectorstore.graph_edges} edges
                       </Badge>
                     )}
                   </div>
@@ -383,13 +402,23 @@ export default function SettingsPage() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <CardTitle>Company Policy Context</CardTitle>
                     {companyVectorstore?.exists && (
-                      <Badge 
-                        variant="default" 
+                      <Badge
+                        variant="default"
                         className="bg-green-600 hover:bg-green-700 text-white"
                         data-testid="badge-company-vectorstore-ready"
                       >
                         <CheckCircle2 className="h-3 w-3 mr-1" />
                         Vectorstore Ready
+                      </Badge>
+                    )}
+                    {companyVectorstore?.graph_loaded && (
+                      <Badge
+                        variant="outline"
+                        className="border-blue-400 text-blue-600"
+                        data-testid="badge-company-graph-ready"
+                      >
+                        <Network className="h-3 w-3 mr-1" />
+                        Graph: {companyVectorstore.graph_nodes} nodes / {companyVectorstore.graph_edges} edges
                       </Badge>
                     )}
                   </div>

@@ -270,7 +270,7 @@ with st.expander("1️⃣ Upload training documents", expanded=True):
         with st.spinner("Processing and indexing knowledge base..."):
             # kb_docs = save_and_load_files(policy_files)
             # kb_vectorstore = build_knowledge_base(kb_docs,selected_model)
-            kb_vectorstore = build_knowledge_base(policy_files,selected_model)            
+            kb_vectorstore, _ = build_knowledge_base(policy_files,selected_model)
             st.session_state['kb_vectorstore'] = kb_vectorstore
             st.session_state['kb_ready'] = True
             st.session_state['bot_trained_success'] = True  # <-- enable Save on next rerun!
@@ -375,7 +375,7 @@ with st.expander("2️⃣ Upload company documents", expanded=True):
         with st.spinner("Processing company resources..."):
             # Here you can process the company files if needed            
             # company_docs =  save_and_load_files(company_files)
-            company_kb_vectorstore = build_knowledge_base(company_files,selected_model)
+            company_kb_vectorstore, _ = build_knowledge_base(company_files,selected_model)
             st.session_state['company_kb_vectorstore'] = company_kb_vectorstore           
             st.session_state['company_files_ready'] = True
             st.session_state['company_kb_loaded_from_saved'] = False
@@ -433,7 +433,7 @@ with st.expander("3️⃣ Upload files for assessment", expanded=True):
         with st.spinner("Processing files..."):
             # evidence_docs = save_and_load_files(evidence_files)
             evidence_docs_screenshot = llm_chain.render_text_to_image(evidence_files)
-            evid_vectorstore = build_knowledge_base(evidence_files,selected_model)
+            evid_vectorstore, _ = build_knowledge_base(evidence_files,selected_model)
             st.session_state['evid_vectorstore'] = evid_vectorstore
             st.session_state['evidence_kb_ready'] = True
             st.toast("✅ Files Uploaded Successfully!")

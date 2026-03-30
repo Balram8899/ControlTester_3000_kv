@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /home/subho/Projects/AI_Agents/Langchain/ControlTester_3000 log --oneline -10)",
+      "Bash(git -C /home/subho/Projects/AI_Agents/Langchain/ControlTester_3000 branch -a)"
+    ]
+  }
+}

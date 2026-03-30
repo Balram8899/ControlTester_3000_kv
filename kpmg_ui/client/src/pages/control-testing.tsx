@@ -10,8 +10,6 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useControlTesting } from "@/contexts/ControlTestingContext";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
-
 const CHECKLIST_PAGE_SIZE = 5;
 
 export default function ControlTestingPage() {
@@ -111,7 +109,7 @@ export default function ControlTestingPage() {
       formData.append("selected_model", selectedModel);
       formData.append("test_script", testScriptFile);
 
-      const response = await fetch(`${API_URL}/audit/start`, {
+      const response = await fetch(`/api/audit/start`, {
         method: "POST",
         body: formData,
       });
@@ -159,7 +157,7 @@ export default function ControlTestingPage() {
         formData.append("evidence_files", file);
       });
 
-      const response = await fetch(`${API_URL}/audit/upload-evidence`, {
+      const response = await fetch(`/api/audit/upload-evidence`, {
         method: "POST",
         body: formData,
       });
@@ -211,7 +209,7 @@ export default function ControlTestingPage() {
         formData.append("force_generate", "true");
       }
 
-      const response = await fetch(`${API_URL}/audit/generate-workpaper`, {
+      const response = await fetch(`/api/audit/generate-workpaper`, {
         method: "POST",
         body: formData,
       });
@@ -246,7 +244,7 @@ export default function ControlTestingPage() {
   const handleDownloadWorkpaper = async () => {
     if (!downloadUrl) return;
     try {
-      const response = await fetch(`${API_URL}${downloadUrl}`);
+      const response = await fetch(`/api${downloadUrl}`);
       if (!response.ok) throw new Error("Download failed");
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);

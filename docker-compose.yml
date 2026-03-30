@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   ollama:
-    image: ollama/ollama:latest
+    image: ollama/ollama:0.19.0
     container_name: ollama
     restart: unless-stopped
     ports:
@@ -71,6 +71,17 @@ services:
           memory: 512m
           cpus: '0.5'
   
+  mongodb:
+    image: mongo:7
+    container_name: mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    networks:
+      - appnet
+    volumes:
+      - mongodb_data:/data/db
+
   fastapi_api:
     build:
       context: .                    # must be root of repo
@@ -79,10 +90,13 @@ services:
       - "8000:8000"
     environment:
       - OLLAMA_BASE_URL=http://ollama:11434
+      - MONGO_URI=mongodb://mongodb:27017
     depends_on:
       ollama:
         condition: service_healthy
-      
+      mongodb:
+        condition: service_started
+
     networks:
       - appnet
 
@@ -123,6 +137,8 @@ services:
 
 volumes:
   ollama_data:
+    driver: local
+  mongodb_data:
     driver: local
 
 networks:
