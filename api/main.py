@@ -39,7 +39,8 @@ from datetime import datetime
 import uuid
 
 from utils.regulatory_comparision import compare_regulatory_documents, save_analysis_artifacts
-from utils.regulatory_library import ingest_regulatory_document, MongoLibraryStore
+from utils.regulatory_library import ingest_regulatory_document, MongoLibraryStore, merge_similar_obligations
+from utils.controls_library import ingest_controls_document, MongoControlsStore, merge_similar_controls, remap_obligations_for_all
 from utils.rcm_compliance_analyzer import (
     load_document,
     get_text_splitter,
@@ -1456,6 +1457,21 @@ async def library_delete_document(document_id: str):
         raise HTTPException(status_code=500, detail=str(exc))
 
 
+@app.delete(
+    "/regulatory-library/all",
+    tags=["regulatory-library"],
+    summary="Delete ALL documents from the regulatory library",
+)
+async def library_delete_all():
+    try:
+        store = MongoLibraryStore()
+        count = store.delete_all()
+        return JSONResponse({"success": True, "deleted_count": count})
+    except Exception as exc:
+        logger.error(f"Library delete-all failed: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
 @app.get(
     "/regulatory-library/search",
     tags=["regulatory-library"],
@@ -1476,6 +1492,449 @@ async def library_search(
         return JSONResponse({"success": True, "obligations": results, "total": len(results)})
     except Exception as exc:
         logger.error(f"Library search failed: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.get(
+    "/regulatory-library/all-obligations",
+    tags=["regulatory-library"],
+    summary="Return all obligations across all library documents (flat list)",
+)
+async def library_all_obligations():
+    try:
+        store = MongoLibraryStore()
+        obligations = store.search_obligations()  # no filters = all
+        return JSONResponse({"success": True, "obligations": obligations, "total": len(obligations)})
+    except Exception as exc:
+        logger.error(f"Library all-obligations failed: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.get(
+    "/regulatory-library/merged-obligations",
+    tags=["regulatory-library"],
+    summary="Return deduplicated obligations across all library documents",
+)
+async def library_merged_obligations():
+    try:
+        store = MongoLibraryStore()
+        all_obls = store.search_obligations()
+        merged = merge_similar_obligations(all_obls)
+        return JSONResponse({
+            "success": True,
+            "merged_obligations": merged,
+            "total_raw": len(all_obls),
+            "total_merged": len(merged),
+        })
+    except Exception as exc:
+        logger.error(f"Library merged-obligations failed: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+class LibraryGapAnalysisRequest(BaseModel):
+    document_ids: List[str]
+
+
+@app.post(
+    "/regulatory-library/gap-analysis",
+    tags=["regulatory-library"],
+    summary="Similarity, differences and gap analysis across selected library documents",
+)
+async def library_gap_analysis(request: LibraryGapAnalysisRequest):
+    if len(request.document_ids) < 2:
+        raise HTTPException(status_code=400, detail="At least 2 documents are required for gap analysis")
+
+    try:
+        store = MongoLibraryStore()
+
+        docs_data: Dict[str, Any] = {}
+        for doc_id in request.document_ids:
+            doc = store.get_document(doc_id)
+            if doc:
+                docs_data[doc_id] = doc
+
+        if len(docs_data) < 2:
+            raise HTTPException(status_code=404, detail="Could not find at least 2 documents in the library")
+
+        # Build per-doc domain → obligations mapping
+        doc_domain_map: Dict[str, Dict[str, List]] = {}
+        all_domains: set = set()
+
+        for doc_id, doc in docs_data.items():
+            obligations = doc.get("obligations", [])
+            by_domain: Dict[str, List] = {}
+            for obl in obligations:
+                domain = obl.get("domain", "general")
+                by_domain.setdefault(domain, []).append(obl)
+            doc_domain_map[doc_id] = by_domain
+            all_domains.update(by_domain.keys())
+
+        # ── Domain coverage matrix ───────────────────────────────────────────
+        domain_coverage: Dict[str, Any] = {}
+        for domain in sorted(all_domains):
+            present_in = [d for d in docs_data if domain in doc_domain_map[d]]
+            absent_in  = [d for d in docs_data if domain not in doc_domain_map[d]]
+            domain_coverage[domain] = {
+                "present_in":  present_in,
+                "absent_in":   absent_in,
+                "coverage_pct": round(len(present_in) / len(docs_data) * 100, 1),
+                "obligation_counts": {
+                    d: len(doc_domain_map[d].get(domain, []))
+                    for d in present_in
+                },
+            }
+
+        # ── Similarities (domains present in ALL selected docs) ──────────────
+        similarities: List[Dict] = []
+        for domain, info in domain_coverage.items():
+            if info["absent_in"]:
+                continue  # skip domains not universally covered
+            entry: Dict[str, Any] = {"domain": domain, "docs": {}}
+            for doc_id in docs_data:
+                obls = doc_domain_map[doc_id].get(domain, [])
+                # Pick top 3 most keyword-rich obligations as representatives
+                top = sorted(obls, key=lambda o: len(o.get("keywords", [])), reverse=True)[:3]
+                entry["docs"][doc_id] = {
+                    "count": len(obls),
+                    "enforcement_breakdown": {
+                        lvl: sum(1 for o in obls if o.get("enforcement_level") == lvl)
+                        for lvl in ("mandatory", "recommended", "optional")
+                    },
+                    "sample_obligations": [
+                        {
+                            "text": o["obligation_text"][:250],
+                            "section": o.get("section_reference", ""),
+                            "enforcement": o.get("enforcement_level", ""),
+                            "keywords": o.get("keywords", [])[:5],
+                        }
+                        for o in top
+                    ],
+                }
+            similarities.append(entry)
+
+        # ── Unique obligations per doc (domains not covered by any other doc) ─
+        unique_by_doc: Dict[str, Any] = {}
+        for doc_id in docs_data:
+            other_domains = set().union(
+                *(doc_domain_map[other].keys() for other in docs_data if other != doc_id)
+            )
+            unique_domains = set(doc_domain_map[doc_id].keys()) - other_domains
+            partial_domains = set(doc_domain_map[doc_id].keys()) - unique_domains  # covered elsewhere too
+
+            sample: List[Dict] = []
+            for domain in list(unique_domains)[:5]:
+                for obl in doc_domain_map[doc_id].get(domain, [])[:2]:
+                    sample.append({
+                        "domain": domain,
+                        "text": obl["obligation_text"][:250],
+                        "section": obl.get("section_reference", ""),
+                        "enforcement": obl.get("enforcement_level", ""),
+                    })
+
+            unique_by_doc[doc_id] = {
+                "unique_domains": list(unique_domains),
+                "unique_domain_count": len(unique_domains),
+                "unique_obligation_count": sum(
+                    len(doc_domain_map[doc_id].get(d, [])) for d in unique_domains
+                ),
+                "shared_domain_count": len(partial_domains),
+                "sample_obligations": sample,
+            }
+
+        # ── Differences (domains present in some but not all docs) ──────────
+        differences: List[Dict] = []
+        for domain, info in domain_coverage.items():
+            if not info["absent_in"]:
+                continue  # already in similarities
+            differences.append({
+                "domain": domain,
+                "coverage_pct": info["coverage_pct"],
+                "present_in": info["present_in"],
+                "absent_in": info["absent_in"],
+                "obligation_counts": info["obligation_counts"],
+            })
+        differences.sort(key=lambda x: x["coverage_pct"], reverse=True)
+
+        # ── Gap summary ──────────────────────────────────────────────────────
+        most_unique_doc = max(unique_by_doc, key=lambda k: unique_by_doc[k]["unique_obligation_count"]) if unique_by_doc else None
+        best_covered_doc = max(docs_data, key=lambda k: len(doc_domain_map[k])) if docs_data else None
+
+        gap_summary = {
+            "total_documents": len(docs_data),
+            "total_domains": len(all_domains),
+            "shared_domain_count": len(similarities),
+            "shared_domains": [s["domain"] for s in similarities],
+            "partial_coverage_domain_count": len(differences),
+            "most_unique_doc": most_unique_doc,
+            "best_covered_doc": best_covered_doc,
+            "doc_domain_counts": {d: len(doc_domain_map[d]) for d in docs_data},
+        }
+
+        return JSONResponse({
+            "success": True,
+            "documents": {
+                doc_id: {
+                    "framework_name": doc.get("framework_name", doc_id),
+                    "source_filename": doc.get("source_filename", ""),
+                    "total_obligations": doc.get("total_obligations", 0),
+                    "domains_count": len(doc_domain_map[doc_id]),
+                }
+                for doc_id, doc in docs_data.items()
+            },
+            "domain_coverage": domain_coverage,
+            "similarities": similarities,
+            "differences": differences,
+            "unique_by_doc": unique_by_doc,
+            "gap_summary": gap_summary,
+        })
+
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error(f"Library gap analysis failed: {exc}\n{traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+#-----------------------------------------------------------------------------
+# Controls Library Endpoints
+#-----------------------------------------------------------------------------
+
+@app.post(
+    "/controls-library/ingest",
+    tags=["controls-library"],
+    summary="Upload company policy documents and extract controls into the controls library",
+)
+async def controls_library_ingest(
+    selected_model: str = Form(..., description="LLM model to use"),
+    policy_files: List[UploadFile] = File(..., description="Policy documents (PDF, DOCX, TXT, MD) — up to 10"),
+):
+    rid = _req_id()
+    logger.info(f"[{rid}] Controls library ingest — {len(policy_files)} file(s), model={selected_model}")
+
+    if not policy_files:
+        raise HTTPException(status_code=400, detail="At least one file is required")
+
+    tmp_paths: List[str] = []
+    file_jobs: List[tuple] = []
+    errors = []
+
+    try:
+        for uf in policy_files:
+            if not uf.filename.lower().endswith((".pdf", ".docx", ".doc", ".txt", ".md")):
+                errors.append({"filename": uf.filename, "error": "Unsupported file type. Use PDF, DOCX, TXT, or MD."})
+                continue
+
+            content = await uf.read()
+            if len(content) == 0:
+                errors.append({"filename": uf.filename, "error": "Empty file"})
+                continue
+
+            ext = Path(uf.filename).suffix or ".tmp"
+            tmp = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
+            tmp.write(content)
+            tmp.close()
+            tmp_paths.append(tmp.name)
+            file_jobs.append((tmp.name, uf.filename))
+            logger.info(f"[{rid}] Queued for controls ingest: {uf.filename} ({len(content)} bytes)")
+
+        # Provide the regulatory store so controls get mapped to obligations
+        reg_store = MongoLibraryStore()
+        # Pass global KB vectorstore + graph for GraphRAG-enriched extraction
+        kb_vs = VECTORSTORE_CACHE.get("global")
+        kb_g  = GRAPH_CACHE.get("global")
+
+        def _ingest(tmp_path: str, filename: str) -> dict:
+            return ingest_controls_document(
+                file_path=tmp_path,
+                filename=filename,
+                selected_model=selected_model,
+                regulatory_store=reg_store,
+                kb_vectorstore=kb_vs,
+                kb_graph=kb_g,
+            )
+
+        ingested = []
+        if file_jobs:
+            with ThreadPoolExecutor(max_workers=min(len(file_jobs), 8)) as pool:
+                future_map = {pool.submit(_ingest, p, n): n for p, n in file_jobs}
+                for fut in as_completed(future_map):
+                    fname = future_map[fut]
+                    try:
+                        result = fut.result()
+                    except Exception as exc:
+                        logger.error(f"[{rid}] Controls ingest failed for {fname}: {exc}")
+                        errors.append({"filename": fname, "error": str(exc)})
+                        continue
+
+                    if result.get("success"):
+                        ingested.append({
+                            "document_id": result["document_id"],
+                            "filename": result["source_filename"],
+                            "total_controls": result["total_controls"],
+                            "controls_by_domain": result.get("controls_by_domain", {}),
+                            "mongo_saved": result.get("mongo_saved", False),
+                        })
+                    else:
+                        errors.append({"filename": fname, "error": result.get("error", "Unknown error")})
+
+        # Compute cross-doc merged count for response metadata
+        merged_count = 0
+        try:
+            ctrl_store = MongoControlsStore()
+            all_ctrls = ctrl_store.all_controls()
+            merged = merge_similar_controls(all_ctrls)
+            merged_count = len(merged)
+        except Exception as exc:
+            logger.warning(f"[{rid}] Merge count computation failed (non-fatal): {exc}")
+
+        return JSONResponse({
+            "success": True,
+            "request_id": rid,
+            "ingested": ingested,
+            "errors": errors,
+            "total_ingested": len(ingested),
+            "merged_count": merged_count,
+        })
+
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error(f"[{rid}] Controls library ingest failed: {exc}\n{traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail={"error": str(exc), "request_id": rid})
+    finally:
+        for p in tmp_paths:
+            try:
+                os.unlink(p)
+            except Exception:
+                pass
+
+
+@app.get(
+    "/controls-library/documents",
+    tags=["controls-library"],
+    summary="List all documents in the controls library",
+)
+async def controls_list_documents():
+    try:
+        store = MongoControlsStore()
+        docs = store.list_documents()
+        return JSONResponse({"success": True, "documents": docs, "total": len(docs)})
+    except Exception as exc:
+        logger.error(f"Controls library list failed: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.get(
+    "/controls-library/documents/{document_id}",
+    tags=["controls-library"],
+    summary="Get a single controls document with all its controls",
+)
+async def controls_get_document(document_id: str):
+    try:
+        store = MongoControlsStore()
+        doc = store.get_document(document_id)
+        if doc is None:
+            raise HTTPException(status_code=404, detail=f"Document {document_id} not found")
+        return JSONResponse({"success": True, "document": doc})
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error(f"Controls library get failed: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.delete(
+    "/controls-library/documents/{document_id}",
+    tags=["controls-library"],
+    summary="Remove a document from the controls library",
+)
+async def controls_delete_document(document_id: str):
+    try:
+        store = MongoControlsStore()
+        deleted = store.delete_document(document_id)
+        if not deleted:
+            raise HTTPException(status_code=404, detail=f"Document {document_id} not found")
+        return JSONResponse({"success": True, "deleted": document_id})
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error(f"Controls library delete failed: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.delete(
+    "/controls-library/all",
+    tags=["controls-library"],
+    summary="Delete ALL documents from the controls library",
+)
+async def controls_delete_all():
+    try:
+        store = MongoControlsStore()
+        count = store.delete_all()
+        return JSONResponse({"success": True, "deleted_count": count})
+    except Exception as exc:
+        logger.error(f"Controls library delete-all failed: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.post(
+    "/controls-library/remap-obligations",
+    tags=["controls-library"],
+    summary="Re-map all stored controls against the current regulatory obligations library",
+)
+async def controls_remap_obligations():
+    try:
+        controls_store = MongoControlsStore()
+        reg_store = MongoLibraryStore()
+        if not controls_store.is_connected:
+            raise HTTPException(status_code=503, detail="Controls DB unavailable")
+        if not reg_store.is_connected:
+            raise HTTPException(status_code=503, detail="Regulatory DB unavailable")
+        result = remap_obligations_for_all(controls_store, reg_store)
+        return JSONResponse({"success": True, **result})
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error(f"[CONTROLS] Remap obligations failed: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.get(
+    "/controls-library/all-controls",
+    tags=["controls-library"],
+    summary="Return all raw extracted controls across all documents, with source filename injected",
+)
+async def controls_get_all():
+    try:
+        store = MongoControlsStore()
+        controls = store.all_controls()
+        # Strip internal-only keys before sending to client
+        for c in controls:
+            c.pop("_document_id", None)
+        return JSONResponse({"success": True, "controls": controls, "total": len(controls)})
+    except Exception as exc:
+        logger.error(f"Controls library all-controls failed: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.get(
+    "/controls-library/merged",
+    tags=["controls-library"],
+    summary="Get deduplicated merged controls across all documents in the controls library",
+)
+async def controls_get_merged():
+    try:
+        store = MongoControlsStore()
+        all_ctrls = store.all_controls()
+        merged = merge_similar_controls(all_ctrls)
+        return JSONResponse({
+            "success": True,
+            "merged_controls": merged,
+            "total_raw": len(all_ctrls),
+            "total_merged": len(merged),
+        })
+    except Exception as exc:
+        logger.error(f"Controls library merged failed: {exc}")
         raise HTTPException(status_code=500, detail=str(exc))
 
 

@@ -343,6 +343,13 @@ class MongoLibraryStore:
         result = self._col.delete_one({"document_id": document_id})
         return result.deleted_count > 0
 
+    def delete_all(self) -> int:
+        """Delete all documents from the regulatory library. Returns count deleted."""
+        self._require_connection()
+        result = self._col.delete_many({})
+        logger.info(f"Deleted all {result.deleted_count} regulatory library documents")
+        return result.deleted_count
+
     def search_obligations(
         self,
         domain: Optional[str] = None,
@@ -368,11 +375,11 @@ class MongoLibraryStore:
 
         match_conditions: Dict[str, Any] = {}
         if domain:
-            match_conditions["obligation.domain"] = domain
+            match_conditions["obligations.domain"] = domain
         if enforcement_level:
-            match_conditions["obligation.enforcement_level"] = enforcement_level
+            match_conditions["obligations.enforcement_level"] = enforcement_level
         if keyword:
-            match_conditions["obligation.obligation_text"] = {
+            match_conditions["obligations.obligation_text"] = {
                 "$regex": keyword,
                 "$options": "i",
             }
@@ -506,3 +513,78 @@ def ingest_regulatory_document(
         "obligations_by_domain": obligations_by_domain,
         "mongo_saved": mongo_ok,
     }
+
+
+# ------------------------------------------------------------------
+# OBLIGATION DEDUPLICATION
+# ------------------------------------------------------------------
+SIM_THRESHOLD_OBLIGATIONS = 0.35  # Jaccard threshold for grouping similar obligations
+
+
+def merge_similar_obligations(obligations: List[Dict]) -> List[Dict]:
+    """
+    Group similar obligations using Jaccard keyword overlap within the same domain.
+    Primary = obligation with the longest obligation_text.
+    Each merged obligation gains:
+      merged_from_count: int
+      source_documents: [{framework_name, section_reference, document_id, is_primary}]
+    """
+    if not obligations:
+        return []
+
+    n = len(obligations)
+    kw_sets: List[set] = []
+    for obl in obligations:
+        raw_kw = obl.get("keywords", [])
+        if not raw_kw:
+            raw_kw = obl.get("obligation_text", "").lower().split()[:10]
+        kw_sets.append(set(k.lower() for k in raw_kw))
+
+    # Union-Find
+    parent = list(range(n))
+
+    def find(x: int) -> int:
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    def union(x: int, y: int) -> None:
+        rx, ry = find(x), find(y)
+        if rx != ry:
+            parent[ry] = rx
+
+    for i in range(n):
+        for j in range(i + 1, n):
+            if obligations[i].get("domain") != obligations[j].get("domain"):
+                continue
+            a, b = kw_sets[i], kw_sets[j]
+            union_ab = a | b
+            sim = len(a & b) / len(union_ab) if union_ab else 0.0
+            if sim >= SIM_THRESHOLD_OBLIGATIONS:
+                union(i, j)
+
+    groups: Dict[int, List[int]] = {}
+    for i in range(n):
+        groups.setdefault(find(i), []).append(i)
+
+    merged: List[Dict] = []
+    for members in groups.values():
+        primary_idx = max(members, key=lambda i: len(obligations[i].get("obligation_text", "")))
+        primary = dict(obligations[primary_idx])
+        sources = [
+            {
+                "framework_name": obligations[i].get("framework_name", ""),
+                "source_filename": obligations[i].get("source_filename", ""),
+                "section_reference": obligations[i].get("section_reference", ""),
+                "document_id": obligations[i].get("document_id", ""),
+                "is_primary": i == primary_idx,
+            }
+            for i in members
+        ]
+        primary["merged_from_count"] = len(members)
+        primary["source_documents"] = sources
+        merged.append(primary)
+
+    logger.info(f"[LIBRARY] Obligation deduplication: {n} raw → {len(merged)} merged")
+    return merged

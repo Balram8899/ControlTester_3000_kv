@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { Moon, Sun, User, LogOut, MessageSquare, FileSearch, Settings, TestTube, Scale, Library } from "lucide-react";
+import { Moon, Sun, User, LogOut, MessageSquare, FileSearch, Settings, TestTube, Scale, Library, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -21,6 +21,7 @@ const tabs = [
   { title: "AI Control Testing", path: "/control-testing", icon: TestTube },
   { title: "Chat", path: "/chat", icon: MessageSquare },
   { title: "Regulatory Library", path: "/regulatory-library", icon: Library },
+  { title: "Controls Library", path: "/controls-library", icon: ShieldCheck },
   { title: "Settings", path: "/settings", icon: Settings },
 ];
 
