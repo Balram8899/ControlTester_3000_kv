@@ -376,8 +376,8 @@ def _assess_without_kb(
 ) -> Dict[str, Any]:
     control_id = control.get("control_id", "UNKNOWN")
     try:
-        from langchain_ollama import OllamaLLM
-        llm = OllamaLLM(model=model, base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"))
+        from utils.llm_chain import _make_llm
+        llm = _make_llm(model)
 
         parts = []
         for w in evidence_wrappers:

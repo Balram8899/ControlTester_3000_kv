@@ -9,7 +9,7 @@ from fastapi import FastAPI, File, UploadFile, Form, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.responses import FileResponse
-from langchain_ollama import OllamaLLM, OllamaEmbeddings
+from utils.llm_chain import _make_embeddings
 from langchain_community.vectorstores import FAISS
 from pydantic import BaseModel, Field, validator
 from typing import List, Optional, Dict, Any
@@ -30,7 +30,7 @@ from utils.workpaper_filler import fill_workpaper_template
 
 # utils imports
 from utils.llm_chain import build_knowledge_base, assess_evidence_with_kb, generate_executive_summary
-from utils.find_llm import get_ollama_model_names
+from utils.find_llm import get_google_model_names
 from langchain.schema import Document
 from utils.pdf_generator import generate_workbook
 
@@ -362,10 +362,10 @@ async def health():
         "active_sessions": len(session_manager.sessions)
     }
 
-@app.get("/models", tags=["models"], summary="Available Ollama models")
+@app.get("/models", tags=["models"], summary="Available Gemini models")
 async def models():
     try:
-        names = [m for m in get_ollama_model_names() if "embed" not in m]
+        names = get_google_model_names()
         return {"models": names, "count": len(names)}
     except Exception as e:
         raise HTTPException(500, f"Failed fetching models: {e}")
@@ -570,9 +570,7 @@ async def chat_with_memory(request: ChatRequest):
     request.company_kb_path = request.company_kb_path or "saved_company_vectorstore"
     request.chat_kb_path = request.chat_kb_path or "chat_attachment_vectorstore"
 
-    base_url = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
-    embed_name = request.embedding_model or os.getenv('OLLAMA_EMBEDDING_MODEL', 'nomic-embed-text:latest')
-    embeddings_for_load = OllamaEmbeddings(model=embed_name, base_url=base_url)
+    embeddings_for_load = _make_embeddings(request.embedding_model or None)
 
     # Load vectorstores
     loaded_stores: Dict[str, Any] = {"global": None, "company": None, "evidence": None, "chat": None}
@@ -787,11 +785,9 @@ async def assess_evidence(
     evidence_objs: List[Any] = []
     tmp_paths: List[str] = []       
     file_results: List[FileResult] = []
-    base_url = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
-    embed_name = os.getenv('OLLAMA_EMBEDDING_MODEL', 'nomic-embed-text:latest')
-    embeddings_for_load = OllamaEmbeddings(model=embed_name, base_url=base_url)
+    embeddings_for_load = _make_embeddings()
 
-    try:  
+    try:
         for uf in evidence_files:           
 
             start = time.time()
@@ -966,8 +962,7 @@ async def load_vectorstore_api(
     model_name: str = Form(...)
 ):
     try:
-        base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-        embeddings = OllamaEmbeddings(model=model_name, base_url=base_url)
+        embeddings = _make_embeddings()
         vs = load_faiss_vectorstore(dir_path, embeddings)
         VECTORSTORE_CACHE[kb_type] = vs
 
@@ -2174,9 +2169,7 @@ async def audit_generate_workpaper(
     try:
         # Load knowledge bases
         # Initialize embeddings for loading vectorstores
-        base_url = os.getenv('OLLAMA_BASE_URL', 'http://ollama:11434')
-        embed_name = os.getenv('OLLAMA_EMBEDDING_MODEL', 'nomic-embed-text:latest')
-        embeddings_for_load = OllamaEmbeddings(model=embed_name, base_url=base_url)
+        embeddings_for_load = _make_embeddings()
 
         kb1_path = os.getenv("KB1_PATH", "saved_global_vectorstore")
         kb2_path = os.getenv("KB2_PATH", "saved_company_vectorstore")

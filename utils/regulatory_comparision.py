@@ -7,8 +7,8 @@ from typing import List, Dict, Tuple, Optional
 from collections import defaultdict
 from datetime import datetime
 
-from langchain_community.llms import Ollama
-from langchain_community.embeddings import OllamaEmbeddings
+from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+from langchain_core.output_parsers import StrOutputParser
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from sklearn.metrics.pairwise import cosine_similarity
@@ -20,8 +20,25 @@ from sklearn.metrics.pairwise import cosine_similarity
 SIM_THRESHOLD = 0.68  # Lowered slightly for better grouping
 CHUNK_SIZE = 3000     # Increased for better context
 CHUNK_OVERLAP = 600   # Increased overlap
-OLLAMA_BASE_URL = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
-OLLAMA_EMBEDDING_MODEL = os.getenv('OLLAMA_EMBEDDING_MODEL', 'nomic-embed-text:latest')
+GOOGLE_LLM_MODEL = os.getenv('GOOGLE_LLM_MODEL', 'gemini-3-flash-preview')
+GOOGLE_EMBEDDING_MODEL = os.getenv('GOOGLE_EMBEDDING_MODEL', 'models/text-embedding-004')
+
+
+def _make_llm(model: str | None = None, temperature: float = 0.1):
+    """Return a string-producing LLM (drop-in for OllamaLLM / Ollama)."""
+    return ChatGoogleGenerativeAI(
+        model=model or GOOGLE_LLM_MODEL,
+        google_api_key=os.getenv("GOOGLE_API_KEY"),
+        temperature=temperature,
+    ) | StrOutputParser()
+
+
+def _make_embeddings(model: str | None = None):
+    """Return a GoogleGenerativeAIEmbeddings instance (drop-in for OllamaEmbeddings)."""
+    return GoogleGenerativeAIEmbeddings(
+        model=model or GOOGLE_EMBEDDING_MODEL,
+        google_api_key=os.getenv("GOOGLE_API_KEY"),
+    )
 
 # Control domain taxonomy - expanded to match analysis
 CONTROL_DOMAINS = {
@@ -99,7 +116,7 @@ class DocumentAnalyzerAgent:
     """Analyzes document structure and regulatory framework."""
     
     def __init__(self, model: str):
-        self.llm = Ollama(model=model, base_url=OLLAMA_BASE_URL, temperature=0.1)
+        self.llm = _make_llm(model, temperature=0.1)
 
     def run(self, chunks: List, filenames: List[str]) -> Dict:
         # Sample chunks from each document
@@ -151,7 +168,7 @@ class ControlExtractorAgent:
     """Extracts risk controls with enhanced metadata, optionally enriched by KB context."""
 
     def __init__(self, model: str, kb_vectorstore=None, kb_graph=None):
-        self.llm = Ollama(model=model, base_url=OLLAMA_BASE_URL, temperature=0.1)
+        self.llm = _make_llm(model, temperature=0.1)
         self.batch_size = 3  # Process multiple chunks together for context
         self.kb_vectorstore = kb_vectorstore
         self.kb_graph = kb_graph
@@ -242,11 +259,8 @@ Return ONLY the JSON array."""
 class StringencyAnalyzerAgent:
     """Enhanced stringency analysis with multiple dimensions."""
     
-    def __init__(self, embed_model=OLLAMA_EMBEDDING_MODEL):
-        self.embedder = OllamaEmbeddings(
-            model=embed_model,
-            base_url=OLLAMA_BASE_URL
-        )
+    def __init__(self, embed_model=None):
+        self.embedder = _make_embeddings(embed_model)
 
     def calculate_stringency(self, control: Dict) -> Dict[str, float]:
         """Calculate multi-dimensional stringency score."""
@@ -565,7 +579,7 @@ class ReportGeneratorAgent:
     """Generates comprehensive comparison report."""
     
     def __init__(self, model: str):
-        self.llm = Ollama(model=model, base_url=OLLAMA_BASE_URL, temperature=0.3)
+        self.llm = _make_llm(model, temperature=0.3)
 
     def run(self,
             document_analyses: Dict,

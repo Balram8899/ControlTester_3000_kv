@@ -4,7 +4,8 @@ from utils.assessment_schema import Assessment
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
-from langchain_ollama import OllamaEmbeddings, OllamaLLM
+from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+from langchain_core.output_parsers import StrOutputParser
 import logging
 from langchain.schema import Document
 from langchain.prompts import PromptTemplate
@@ -20,8 +21,25 @@ from typing import Optional, Tuple
 
 warnings.filterwarnings("ignore", category=UserWarning, module="openpyxl")
 
-OLLAMA_BASE_URL = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
-OLLAMA_EMBEDDING_MODEL = os.getenv('OLLAMA_EMBEDDING_MODEL', 'nomic-embed-text:latest')
+GOOGLE_LLM_MODEL = os.getenv('GOOGLE_LLM_MODEL', 'gemini-3-flash-preview')
+GOOGLE_EMBEDDING_MODEL = os.getenv('GOOGLE_EMBEDDING_MODEL', 'models/text-embedding-004')
+
+
+def _make_llm(model: str | None = None, temperature: float = 0.1):
+    """Return a string-producing LLM (drop-in for OllamaLLM)."""
+    return ChatGoogleGenerativeAI(
+        model=model or GOOGLE_LLM_MODEL,
+        google_api_key=os.getenv("GOOGLE_API_KEY"),
+        temperature=temperature,
+    ) | StrOutputParser()
+
+
+def _make_embeddings(model: str | None = None):
+    """Return GoogleGenerativeAIEmbeddings (drop-in for OllamaEmbeddings)."""
+    return GoogleGenerativeAIEmbeddings(
+        model=model or GOOGLE_EMBEDDING_MODEL,
+        google_api_key=os.getenv("GOOGLE_API_KEY"),
+    )
 
 logging.basicConfig(
     level=logging.INFO,
@@ -37,9 +55,9 @@ def initialize(selected_model: str, embedding_model: str | None = None):
     """
     global llm
     global embeddings
-    llm = OllamaLLM(model=selected_model, base_url=OLLAMA_BASE_URL)
-    embed_name = embedding_model or OLLAMA_EMBEDDING_MODEL
-    embeddings = OllamaEmbeddings(model=embed_name, base_url=OLLAMA_BASE_URL)
+    llm = _make_llm(selected_model)
+    embed_name = embedding_model or GOOGLE_EMBEDDING_MODEL
+    embeddings = _make_embeddings(embed_name)
 
 
 text_splitter = RecursiveCharacterTextSplitter(
@@ -82,8 +100,8 @@ def build_knowledge_base(
     embedding_model: str | None = None,
     build_graph: bool = True,
 ) -> Tuple[FAISS, Optional[object]]:
-    embed_name = embedding_model or OLLAMA_EMBEDDING_MODEL
-    embedding_obj = OllamaEmbeddings(model=embed_name, base_url=OLLAMA_BASE_URL)
+    embed_name = embedding_model or GOOGLE_EMBEDDING_MODEL
+    embedding_obj = _make_embeddings(embed_name)
     start = time.time()
     all_documents = []
 

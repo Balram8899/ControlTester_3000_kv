@@ -14,7 +14,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from typing import List, Dict, Optional, Any, Tuple
 
-from langchain_community.llms import Ollama
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
 
@@ -23,10 +22,10 @@ from utils.regulatory_comparision import (
     safe_json_loads,
     classify_domain,
     CONTROL_DOMAINS,
-    OLLAMA_BASE_URL,
     CHUNK_SIZE,
     CHUNK_OVERLAP,
     DocumentAnalyzerAgent,
+    _make_llm as _google_make_llm,
 )
 
 logger = logging.getLogger(__name__)
@@ -66,9 +65,9 @@ class ObligationExtractorAgent:
         self.kb_vectorstore = kb_vectorstore
         self.kb_graph = kb_graph
 
-    def _make_llm(self) -> Ollama:
-        """Each worker thread needs its own Ollama instance (not thread-safe to share)."""
-        return Ollama(model=self.model, base_url=OLLAMA_BASE_URL, temperature=0.1)
+    def _make_llm(self):
+        """Each worker thread gets its own LLM instance."""
+        return _google_make_llm(self.model, temperature=0.1)
 
     def _get_kb_context(self, batch_text: str) -> str:
         """Retrieve relevant KB context for a batch. Returns empty string on failure."""

@@ -14,17 +14,15 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-
 # Lazy load LLM
 _llm_cache = None
 
 def get_llm(model: str):
-    """Lazy load Ollama LLM."""
+    """Lazy load Google Gemini LLM."""
     global _llm_cache
     if _llm_cache is None or _llm_cache[0] != model:
-        from langchain_community.llms import Ollama
-        _llm_cache = (model, Ollama(model=model, base_url=OLLAMA_BASE_URL, temperature=0.1))
+        from utils.llm_chain import _make_llm
+        _llm_cache = (model, _make_llm(model, temperature=0.1))
     return _llm_cache[1]
 
 

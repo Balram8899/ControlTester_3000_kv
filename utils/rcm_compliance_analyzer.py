@@ -26,12 +26,11 @@ logger = logging.getLogger(__name__)
 _llm_cache = None
 
 def get_llm(model: str):
-    """Lazy load Ollama LLM."""
+    """Lazy load Google Gemini LLM."""
     global _llm_cache
     if _llm_cache is None or _llm_cache[0] != model:
-        from langchain_community.llms import Ollama
-        ollama_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-        _llm_cache = (model, Ollama(model=model, base_url=ollama_url, temperature=0.1))
+        from utils.llm_chain import _make_llm
+        _llm_cache = (model, _make_llm(model, temperature=0.1))
     return _llm_cache[1]
 
 

@@ -9,7 +9,7 @@ try:
     import streamlit as st
 except ImportError:
     st = None  # Not available in FastAPI container — only needed for Streamlit UI functions
-from langchain_ollama import OllamaLLM, OllamaEmbeddings
+from utils.llm_chain import _make_llm, _make_embeddings, GOOGLE_LLM_MODEL, GOOGLE_EMBEDDING_MODEL
 from langchain_community.vectorstores import FAISS
 from langchain.schema import Document
 from datetime import datetime
@@ -311,11 +311,7 @@ def chat_with_bot(kb_vectorstore, company_kb_vectorstore, assessment,
         export_conversation_history()
 
     if send_clicked and user_input.strip() != "":
-        embed_name = os.getenv('OLLAMA_EMBEDDING_MODEL', 'nomic-embed-text:latest')
-        embedding_model = OllamaEmbeddings(
-            model=embed_name,
-            base_url=os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
-        )
+        embedding_model = _make_embeddings()
 
         # PHASE 2: Analyze query before proceeding
         needs = analyze_query_needs(
@@ -454,11 +450,7 @@ def render_pending_request_ui(kb_vectorstore, company_kb_vectorstore, evid_vecto
             # Now process the original query
             st.info("Files processed! Now answering your original question...")
 
-            embed_name = os.getenv('OLLAMA_EMBEDDING_MODEL', 'nomic-embed-text:latest')
-            embedding_model = OllamaEmbeddings(
-                model=embed_name,
-                base_url=os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
-            )
+            embedding_model = _make_embeddings()
 
             # Get updated vectorstores
             kb_vectorstore = st.session_state.get('kb_vectorstore')
@@ -517,11 +509,7 @@ def render_pending_request_ui(kb_vectorstore, company_kb_vectorstore, evid_vecto
             st.session_state['agent_pending_request'] = None
             st.session_state['original_query'] = None
 
-            embed_name = os.getenv('OLLAMA_EMBEDDING_MODEL', 'nomic-embed-text:latest')
-            embedding_model = OllamaEmbeddings(
-                model=embed_name,
-                base_url=os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
-            )
+            embedding_model = _make_embeddings()
 
             response = chat_with_ai_with_memory(
                 kb_vectorstore,
@@ -579,13 +567,11 @@ def chat_with_ai_with_memory(
     Returns:
         str: LLM response
     """
-    ollama_base_url = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
-    llm = OllamaLLM(model=selected_model, base_url=ollama_base_url)
+    llm = _make_llm(selected_model)
 
     # Default embedding model
     if embedding_model is None:
-        embed_name = os.getenv('OLLAMA_EMBEDDING_MODEL', 'nomic-embed-text:latest')
-        embedding_model = OllamaEmbeddings(model=embed_name, base_url=ollama_base_url)
+        embedding_model = _make_embeddings()
 
     # ========== GET SESSION CONTEXT ==========
     session = session_manager.get_session(session_id)

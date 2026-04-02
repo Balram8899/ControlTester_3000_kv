@@ -14,7 +14,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from typing import List, Dict, Optional, Any, Tuple
 
-from langchain_community.llms import Ollama
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
 
@@ -22,9 +21,9 @@ from utils.regulatory_comparision import (
     safe_json_loads,
     classify_domain,
     CONTROL_DOMAINS,
-    OLLAMA_BASE_URL,
     CHUNK_SIZE,
     CHUNK_OVERLAP,
+    _make_llm as _google_make_llm,
 )
 
 logger = logging.getLogger(__name__)
@@ -59,8 +58,8 @@ class ControlExtractorAgent:
         self.kb_vectorstore = kb_vectorstore
         self.kb_graph = kb_graph
 
-    def _make_llm(self) -> Ollama:
-        return Ollama(model=self.model, base_url=OLLAMA_BASE_URL, temperature=0.1)
+    def _make_llm(self):
+        return _google_make_llm(self.model, temperature=0.1)
 
     def _get_kb_context(self, batch_text: str) -> str:
         """Retrieve relevant KB context using GraphRAG. Falls back to pure FAISS, then empty."""
