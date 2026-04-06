@@ -33,9 +33,13 @@ export interface PendingControl {
 
 export interface WorkpaperSummary {
   controls_tested: number;
+  controls_with_evidence: number;
+  controls_without_evidence: number;
+  overall_result: string;
   pass_count: number;
   fail_count: number;
-  [key: string]: unknown;
+  partial_count: number;
+  no_evidence_count: number;
 }
 
 export interface AuditSessionState {

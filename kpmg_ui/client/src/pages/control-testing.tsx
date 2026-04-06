@@ -723,26 +723,34 @@ export default function ControlTestingPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {workpaperSummary && (
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    <div className="p-4 bg-muted/50 rounded-lg text-center">
-                      <p className="text-2xl font-bold">{workpaperSummary.controls_tested}</p>
-                      <p className="text-xs text-muted-foreground mt-1">Controls Tested</p>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <span>{workpaperSummary.controls_tested} controls tested</span>
+                      <Badge variant="outline" className={
+                        workpaperSummary.overall_result === "COMPLIANT" ? "border-green-400 text-green-500 dark:text-green-400"
+                        : workpaperSummary.overall_result === "NON_COMPLIANT" ? "border-red-400 text-red-500 dark:text-red-400"
+                        : "border-yellow-400 text-yellow-500 dark:text-yellow-400"
+                      }>
+                        {(workpaperSummary.overall_result ?? "").replace(/_/g, " ")}
+                      </Badge>
                     </div>
-                    <div className="p-4 bg-green-500/10 rounded-lg text-center">
-                      <p className="text-2xl font-bold text-green-600 dark:text-green-400">{workpaperSummary.pass_count}</p>
-                      <p className="text-xs text-muted-foreground mt-1">Passed</p>
-                    </div>
-                    <div className="p-4 bg-destructive/10 rounded-lg text-center">
-                      <p className="text-2xl font-bold text-destructive">{workpaperSummary.fail_count}</p>
-                      <p className="text-xs text-muted-foreground mt-1">Failed</p>
-                    </div>
-                    <div className="p-4 bg-primary/10 rounded-lg text-center">
-                      <p className="text-2xl font-bold text-primary">
-                        {workpaperSummary.controls_tested > 0
-                          ? Math.round((workpaperSummary.pass_count / workpaperSummary.controls_tested) * 100)
-                          : 0}%
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">Pass Rate</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div className="p-4 bg-green-500/10 rounded-lg text-center">
+                        <p className="text-2xl font-bold text-green-600 dark:text-green-400">{workpaperSummary.pass_count}</p>
+                        <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">Pass</p>
+                      </div>
+                      <div className="p-4 bg-destructive/10 rounded-lg text-center">
+                        <p className="text-2xl font-bold text-destructive">{workpaperSummary.fail_count}</p>
+                        <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">Fail</p>
+                      </div>
+                      <div className="p-4 bg-yellow-500/10 rounded-lg text-center">
+                        <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{workpaperSummary.partial_count}</p>
+                        <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">Partial</p>
+                      </div>
+                      <div className="p-4 bg-muted/50 rounded-lg text-center">
+                        <p className="text-2xl font-bold text-muted-foreground">{workpaperSummary.no_evidence_count}</p>
+                        <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">No Evidence</p>
+                      </div>
                     </div>
                   </div>
                 )}

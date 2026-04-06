@@ -88,6 +88,53 @@ class RCMReportStore:
         logger.info(f"Saved RCM report {report_id} (rcm={rcm_filename})")
         return report_id
 
+    def save_control_testing_report(
+        self,
+        report_data: Dict[str, Any],
+        workpaper_bytes: bytes,
+        workpaper_filename: str,
+    ) -> str:
+        """Save a control testing workpaper and its summary. Returns report_id."""
+        self._require_connection()
+        report_id = uuid.uuid4().hex
+        gridfs_file_id = self._fs.put(
+            workpaper_bytes,
+            filename=workpaper_filename,
+            report_id=report_id,
+        )
+        doc = {
+            "report_id": report_id,
+            "report_type": "control_testing",
+            "created_at": datetime.utcnow().isoformat(),
+            "model_used": report_data.get("model_used", ""),
+            "status": "success",
+            "error_message": None,
+            # Control-testing-specific
+            "session_id": report_data.get("session_id", ""),
+            "controls_tested": report_data.get("controls_tested", 0),
+            "workpaper_filename": workpaper_filename,
+            "gridfs_file_id": gridfs_file_id,
+            "rcm_filename": workpaper_filename,
+            "summary": report_data.get("summary", {}),
+            "analysis": report_data.get("analysis", {}),
+            # Empty / N/A for other record types' fields
+            "regulation_document_ids": [],
+            "regulation_names": [],
+            "document_names": [],
+            "document_count": 0,
+            "compliance_stats": {},
+            "executive_summary": "",
+            "domain_reports": {},
+            "suggestions_summary_counts": {},
+            "gap_summary": None,
+            "graph_context_used": False,
+            "graph_stats": None,
+            "final_report": "",
+        }
+        self._col.insert_one(doc)
+        logger.info(f"Saved control testing report {report_id} ({report_data.get('controls_tested', 0)} controls)")
+        return report_id
+
     def save_gap_analysis_report(self, report_data: Dict[str, Any]) -> str:
         """Save a regulatory gap analysis report (no attached file). Returns report_id."""
         self._require_connection()
@@ -137,6 +184,7 @@ class RCMReportStore:
                 "document_names": 1,
                 "document_count": 1,
                 "rcm_filename": 1,
+                "workpaper_filename": 1,
                 "model_used": 1,
                 "status": 1,
                 "error_message": 1,
@@ -144,6 +192,9 @@ class RCMReportStore:
                 "suggestions_summary_counts": 1,
                 "gap_summary": 1,
                 "graph_context_used": 1,
+                "controls_tested": 1,
+                "summary": 1,
+                "session_id": 1,
             },
         ).sort("created_at", -1)
         return list(cursor)

@@ -2709,17 +2709,31 @@ async def audit_generate_workpaper(
             logger.info(f"[{rid}] Loaded KB2 from {kb2_path}")
         except Exception as e:
             logger.warning(f"[{rid}] Could not load KB2: {e}")
-        
+
+        # Load Control Library knowledge graph (non-fatal if absent)
+        kb1_graph = None
+        try:
+            from utils.graph_rag import KnowledgeGraph
+            from utils.controls_library import LIBRARY_GRAPH_DIR as CONTROLS_GRAPH_DIR
+            if KnowledgeGraph.exists(CONTROLS_GRAPH_DIR):
+                kb1_graph = KnowledgeGraph.load(CONTROLS_GRAPH_DIR)
+                logger.info(f"[{rid}] Loaded control library graph from {CONTROLS_GRAPH_DIR}")
+            else:
+                logger.info(f"[{rid}] No control library graph at {CONTROLS_GRAPH_DIR} — graph-RAG skipped.")
+        except Exception as graph_exc:
+            logger.warning(f"[{rid}] Could not load control library graph (non-fatal): {graph_exc}")
+
         # Analyze all controls
         model = session["model"]
-        
+
         logger.info(f"[{rid}] Starting analysis of {len(session['controls'])} controls")
-        
+
         analysis_results = analyze_all_controls(
             session_data=session,
             kb1_vectorstore=kb1_vectorstore,
             kb2_vectorstore=kb2_vectorstore,
-            model=model
+            model=model,
+            kb1_graph=kb1_graph,
         )
         
         logger.info(f"[{rid}] Analysis complete. Generating workpaper.")
@@ -2743,7 +2757,29 @@ async def audit_generate_workpaper(
         )
         
         logger.info(f"[{rid}] Workpaper generated: {workpaper_path}")
-        
+
+        # Save to Reports page (non-fatal)
+        try:
+            from utils.rcm_report_store import RCMReportStore
+            rpt_store = RCMReportStore()
+            if rpt_store.is_connected:
+                with open(workpaper_path, "rb") as _f:
+                    wp_bytes = _f.read()
+                rpt_store.save_control_testing_report(
+                    report_data={
+                        "session_id": session_id,
+                        "model_used": model,
+                        "controls_tested": len(session.get("controls", [])),
+                        "summary": summary,
+                        "analysis": {r["control_id"]: r for r in analysis_results},
+                    },
+                    workpaper_bytes=wp_bytes,
+                    workpaper_filename=workpaper_filename,
+                )
+                logger.info(f"[{rid}] Saved control testing report to Records")
+        except Exception as rpt_exc:
+            logger.warning(f"[{rid}] Failed to save control testing report (non-fatal): {rpt_exc}")
+
         # Mark session complete
         audit_session_store.mark_analysis_complete(
             session_id=session_id,

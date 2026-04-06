@@ -3,7 +3,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
   FileBarChart, RefreshCw, Download, Trash2, ChevronRight, AlertCircle,
-  CheckCircle2, FileText, GitCompare, Network,
+  CheckCircle2, FileText, GitCompare, Network, ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,15 +19,27 @@ interface GapSummary {
   partial_coverage_domain_count: number;
 }
 
+interface ControlTestSummary {
+  controls_tested: number;
+  controls_with_evidence: number;
+  controls_without_evidence: number;
+  overall_result: string;
+  pass_count: number;
+  fail_count: number;
+  partial_count: number;
+  no_evidence_count: number;
+}
+
 interface ReportSummary {
   report_id: string;
-  report_type?: string;          // "rcm_compliance" | "regulatory_gap_analysis" | undefined
+  report_type?: string;          // "rcm_compliance" | "regulatory_gap_analysis" | "control_testing" | undefined
   created_at: string;
   regulation_document_ids: string[];
   regulation_names: string[];
-  document_names?: string[];     // gap analysis: human-readable framework names
+  document_names?: string[];
   document_count?: number;
   rcm_filename: string;
+  workpaper_filename?: string;
   model_used: string;
   status: string;
   error_message?: string | null;
@@ -43,6 +55,9 @@ interface ReportSummary {
   suggestions_summary_counts?: Record<string, number>;
   gap_summary?: GapSummary;
   graph_context_used?: boolean;
+  controls_tested?: number;
+  summary?: ControlTestSummary;
+  session_id?: string;
 }
 
 interface FullReport extends ReportSummary {
@@ -205,6 +220,7 @@ export default function ReportsPage() {
   };
 
   const isGapReport = (r: ReportSummary) => r.report_type === "regulatory_gap_analysis";
+  const isControlTest = (r: ReportSummary) => r.report_type === "control_testing";
 
   return (
     <div className="h-full flex flex-col">
@@ -219,7 +235,7 @@ export default function ReportsPage() {
         <FileBarChart className="h-6 w-6 text-blue-400 flex-shrink-0" />
         <div className="flex-1 min-w-0">
           <h1 className="text-lg font-bold text-foreground leading-tight">Reports</h1>
-          <p className="text-xs text-muted-foreground">RCM compliance assessments and regulatory gap analyses</p>
+          <p className="text-xs text-muted-foreground">Control testing workpapers, RCM compliance assessments, and regulatory gap analyses</p>
         </div>
         <Button
           variant="ghost"
@@ -251,16 +267,18 @@ export default function ReportsPage() {
               <FileBarChart className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
               <p className="text-sm font-medium text-muted-foreground">No reports yet</p>
               <p className="text-xs text-muted-foreground mt-1">
-                Run an RCM compliance analysis or a Regulatory Library gap analysis to see records here
+                Run a Control Testing workpaper, RCM compliance analysis, or Regulatory Library gap analysis to see records here
               </p>
             </div>
           ) : (
             reports.map((report) => {
               const gap = isGapReport(report);
+              const ctTest = isControlTest(report);
               const isExpanded = expandedReport === report.report_id;
               const full = fullReports[report.report_id];
               const stats = report.compliance_stats;
               const gapSum = report.gap_summary;
+              const ctSum = report.summary;
               const names = gap
                 ? (report.document_names ?? report.regulation_names ?? [])
                 : report.regulation_names;
@@ -283,6 +301,11 @@ export default function ReportsPage() {
                                   <GitCompare className="h-3 w-3" />
                                   Gap Analysis
                                 </Badge>
+                              ) : ctTest ? (
+                                <Badge variant="outline" className="text-[10px] gap-1 border-amber-400 text-amber-500 dark:text-amber-400">
+                                  <ShieldCheck className="h-3 w-3" />
+                                  AI Control Testing
+                                </Badge>
                               ) : (
                                 <Badge variant="outline" className="text-[10px] gap-1 border-blue-400 text-blue-500 dark:text-blue-400">
                                   <FileBarChart className="h-3 w-3" />
@@ -293,6 +316,8 @@ export default function ReportsPage() {
                               <CardTitle className="text-sm font-semibold">
                                 {gap
                                   ? `${names.length} framework${names.length !== 1 ? "s" : ""} compared`
+                                  : ctTest
+                                  ? report.workpaper_filename ?? report.rcm_filename
                                   : report.rcm_filename}
                               </CardTitle>
 
@@ -307,9 +332,19 @@ export default function ReportsPage() {
                                 )}
                               </Badge>
 
-                              {!gap && stats?.risk_level && (
+                              {!gap && !ctTest && stats?.risk_level && (
                                 <Badge variant="outline" className={`text-[10px] ${riskColor(stats.risk_level)}`}>
                                   {stats.risk_level} Risk
+                                </Badge>
+                              )}
+
+                              {ctTest && ctSum?.overall_result && (
+                                <Badge variant="outline" className={`text-[10px] ${
+                                  ctSum.overall_result === "COMPLIANT" ? "border-green-400 text-green-500 dark:text-green-400"
+                                  : ctSum.overall_result === "NON_COMPLIANT" ? "border-red-400 text-red-500 dark:text-red-400"
+                                  : "border-yellow-400 text-yellow-500 dark:text-yellow-400"
+                                }`}>
+                                  {ctSum.overall_result.replace(/_/g, " ")}
                                 </Badge>
                               )}
 
@@ -321,22 +356,27 @@ export default function ReportsPage() {
                               )}
                             </div>
 
-                            {/* Framework / regulation name pills */}
-                            <div className="flex flex-wrap gap-1.5">
-                              {names.map((name, i) => (
-                                <Badge key={i} variant="secondary" className="text-[10px]">
-                                  {name}
-                                </Badge>
-                              ))}
-                            </div>
+                            {/* Framework / regulation name pills (not shown for control testing) */}
+                            {!ctTest && (
+                              <div className="flex flex-wrap gap-1.5">
+                                {names.map((name, i) => (
+                                  <Badge key={i} variant="secondary" className="text-[10px]">
+                                    {name}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
 
                             <div className="flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap">
                               <span>{formatDate(report.created_at)}</span>
-                              {!gap && stats?.overall_compliance_score != null && (
+                              {!gap && !ctTest && stats?.overall_compliance_score != null && (
                                 <span>Score: {stats.overall_compliance_score}%</span>
                               )}
-                              {!gap && stats?.controls_analyzed != null && (
+                              {!gap && !ctTest && stats?.controls_analyzed != null && (
                                 <span>{stats.controls_analyzed} controls analyzed</span>
+                              )}
+                              {ctTest && ctSum && (
+                                <span>{ctSum.controls_tested} controls tested</span>
                               )}
                               {gap && gapSum && (
                                 <>
@@ -355,8 +395,25 @@ export default function ReportsPage() {
 
                     <CollapsibleContent>
                       <CardContent className="pt-0 space-y-4">
+                        {/* ── Control Testing KPI row ── */}
+                        {ctTest && ctSum && (
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            {[
+                              { label: "Pass", value: ctSum.pass_count, color: "text-green-400" },
+                              { label: "Fail", value: ctSum.fail_count, color: "text-red-400" },
+                              { label: "Partial", value: ctSum.partial_count, color: "text-yellow-400" },
+                              { label: "No Evidence", value: ctSum.no_evidence_count, color: "text-muted-foreground" },
+                            ].map((kpi) => (
+                              <div key={kpi.label} className="rounded-lg bg-muted/30 p-3 text-center">
+                                <p className={`text-lg font-bold ${kpi.color}`}>{kpi.value}</p>
+                                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{kpi.label}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
                         {/* ── RCM compliance KPI row ── */}
-                        {!gap && stats && (
+                        {!gap && !ctTest && stats && (
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                             {[
                               { label: "Compliant", value: stats.compliant ?? 0, color: "text-green-400" },
@@ -401,7 +458,7 @@ export default function ReportsPage() {
                               </ReactMarkdown>
                             </div>
                           </ScrollArea>
-                        ) : !gap && full?.executive_summary ? (
+                        ) : !gap && !ctTest && full?.executive_summary ? (
                           <ScrollArea className="max-h-80 rounded-lg border bg-muted/20 p-4">
                             <pre className="text-xs text-foreground whitespace-pre-wrap font-mono leading-relaxed">
                               {full.executive_summary}
@@ -417,8 +474,20 @@ export default function ReportsPage() {
 
                         {/* ── Action buttons ── */}
                         <div className="flex flex-wrap gap-2">
+                          {/* Control Testing: download workpaper */}
+                          {ctTest && report.rcm_filename && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => { e.stopPropagation(); handleDownloadRcm(report.report_id, report.rcm_filename); }}
+                              className="gap-1.5 text-xs"
+                            >
+                              <Download className="h-3 w-3" /> Download Workpaper
+                            </Button>
+                          )}
+
                           {/* RCM-only: download source file */}
-                          {!gap && report.rcm_filename && (
+                          {!gap && !ctTest && report.rcm_filename && (
                             <Button
                               variant="outline"
                               size="sm"
@@ -429,8 +498,8 @@ export default function ReportsPage() {
                             </Button>
                           )}
 
-                          {/* MD export — gap uses final_report, RCM uses executive_summary */}
-                          {full && (full.final_report || full.executive_summary) && (
+                          {/* MD export — gap uses final_report, RCM uses executive_summary (not for control testing) */}
+                          {!ctTest && full && (full.final_report || full.executive_summary) && (
                             <Button
                               variant="outline"
                               size="sm"
