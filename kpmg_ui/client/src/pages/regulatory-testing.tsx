@@ -1,6 +1,6 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { Upload, FileText, X, Play, Download, RotateCcw, Scale, FileCheck, ChevronRight, AlertCircle, CheckCircle2, GitMerge } from "lucide-react";
+import { Upload, FileText, X, Play, Download, RotateCcw, Scale, FileCheck, ChevronRight, AlertCircle, CheckCircle2, GitMerge, Library, Check } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,28 @@ export default function RegulatoryTestingPage() {
     comparisonResults,
     setComparisonResults,
     resetForNewComparison,
+    libraryDocuments,
+    setLibraryDocuments,
+    selectedLibraryDocIds,
+    toggleLibraryDoc,
+    setSelectedLibraryDocIds,
   } = useRegulatoryTesting();
+
+  // Fetch library documents for RCM mode selection
+  const [libraryFetched, setLibraryFetched] = useState(false);
+  useEffect(() => {
+    if (mode === "rcm" && !libraryFetched && libraryDocuments.length === 0) {
+      fetch("/api/regulatory-library/documents")
+        .then(r => r.json())
+        .then(data => {
+          if (data.success && data.documents) {
+            setLibraryDocuments(data.documents);
+          }
+          setLibraryFetched(true);
+        })
+        .catch(() => setLibraryFetched(true));
+    }
+  }, [mode, libraryFetched, libraryDocuments.length, setLibraryDocuments]);
 
   const onDropRegulations = useCallback(
     (acceptedFiles: File[]) => {
@@ -82,7 +103,7 @@ export default function RegulatoryTestingPage() {
   };
 
   const canRunRegulationComparison = regulationFiles.length >= 2;
-  const canRunRcmComparison = regulationFiles.length >= 1 && rcmFile !== null;
+  const canRunRcmComparison = selectedLibraryDocIds.length >= 1 && rcmFile !== null;
 
   const handleRunComparison = async () => {
     if (mode === "regulation" && !canRunRegulationComparison) {
@@ -96,8 +117,8 @@ export default function RegulatoryTestingPage() {
 
     if (mode === "rcm" && !canRunRcmComparison) {
       toast({
-        title: "Insufficient files",
-        description: "Please upload regulation file(s) and an RCM document",
+        title: "Insufficient input",
+        description: "Please select at least one regulation from the library and upload an RCM document",
         variant: "destructive",
       });
       return;
@@ -122,10 +143,8 @@ export default function RegulatoryTestingPage() {
       let endpoint: string;
 
       if (mode === "rcm") {
-        endpoint = `/api/rcm_compliance`;
-        regulationFiles.forEach((file) => {
-          formData.append("regulation_files", file);
-        });
+        endpoint = `/api/rcm_compliance_v2`;
+        formData.append("document_ids", JSON.stringify(selectedLibraryDocIds));
         if (rcmFile) {
           formData.append("rcm_file", rcmFile);
         }
@@ -249,16 +268,16 @@ export default function RegulatoryTestingPage() {
   };
 
   return (
-    <div className="h-full overflow-auto p-6">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-            Regulatory Testing
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Compare regulations or assess RCM documents against regulatory requirements
-          </p>
+    <div className="h-full flex flex-col">
+      <div className="flex-shrink-0 px-6 py-3 flex items-center gap-3" style={{ background: "linear-gradient(135deg, hsl(262 80% 20% / 0.4), hsl(217 91% 20% / 0.3))", borderBottom: "1px solid hsl(217 91% 55% / 0.2)" }}>
+        <Scale className="h-6 w-6 text-blue-400 flex-shrink-0" />
+        <div>
+          <h1 className="text-lg font-bold text-foreground">Regulatory Testing</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Compare regulations or assess RCM documents against regulatory requirements</p>
         </div>
+      </div>
+      <div className="flex-1 overflow-auto p-6">
+      <div className="max-w-4xl mx-auto space-y-6">
 
         <div className="flex justify-center gap-2 mb-6 flex-wrap">
           <Button
@@ -284,78 +303,154 @@ export default function RegulatoryTestingPage() {
         {/* ── Regulation Comparison / RCM Mode ─────────────────────────────── */}
         {!isProcessing && !comparisonResults && (
           <>
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Upload Regulation Files
-                  {mode === "regulation" && (
+            {/* ── Regulation file upload (regulation comparison mode only) ── */}
+            {mode === "regulation" && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Upload Regulation Files
                     <Badge variant="secondary" className="ml-2">
                       Min. 2 files required
                     </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div
+                    {...getRegulationRootProps()}
+                    className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+                      isRegulationDragActive
+                        ? "border-primary bg-primary/5"
+                        : "border-muted-foreground/25 hover:border-primary/50"
+                    }`}
+                    data-testid="dropzone-regulations"
+                  >
+                    <input {...getRegulationInputProps()} data-testid="input-regulation-files" />
+                    <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    {isRegulationDragActive ? (
+                      <p className="text-primary font-medium">Drop regulation files here...</p>
+                    ) : (
+                      <>
+                        <p className="text-foreground font-medium">
+                          Drag & drop regulation files here
+                        </p>
+                        <p className="text-muted-foreground text-sm mt-1">
+                          or click to browse (PDF, DOCX, TXT)
+                        </p>
+                      </>
+                    )}
+                  </div>
+
+                  {regulationFiles.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">
+                        Regulation Files ({regulationFiles.length})
+                      </p>
+                      <div className="space-y-2 max-h-48 overflow-auto">
+                        {regulationFiles.map((file, index) => (
+                          <div
+                            key={`${file.name}-${index}`}
+                            className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                            data-testid={`regulation-file-${index}`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <FileText className="h-4 w-4 text-primary" />
+                              <span className="text-sm truncate max-w-xs">{file.name}</span>
+                              <Badge variant="secondary" className="text-xs">
+                                {(file.size / 1024).toFixed(1)} KB
+                              </Badge>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => removeRegulationFile(index)}
+                              data-testid={`button-remove-regulation-${index}`}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   )}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div
-                  {...getRegulationRootProps()}
-                  className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-                    isRegulationDragActive
-                      ? "border-primary bg-primary/5"
-                      : "border-muted-foreground/25 hover:border-primary/50"
-                  }`}
-                  data-testid="dropzone-regulations"
-                >
-                  <input {...getRegulationInputProps()} data-testid="input-regulation-files" />
-                  <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  {isRegulationDragActive ? (
-                    <p className="text-primary font-medium">Drop regulation files here...</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* ── Library document selection (RCM mode only) ── */}
+            {mode === "rcm" && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Library className="h-5 w-5" />
+                    Select Regulations from Library
+                    <Badge variant="secondary" className="ml-2">
+                      {selectedLibraryDocIds.length} selected
+                    </Badge>
+                  </CardTitle>
+                  <CardDescription>
+                    Choose one or more ingested regulation documents to assess your RCM against
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {libraryDocuments.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Library className="h-10 w-10 mx-auto text-muted-foreground/30 mb-2" />
+                      <p className="text-sm text-muted-foreground">
+                        No regulations in library. Ingest documents in the Regulatory Library tab first.
+                      </p>
+                    </div>
                   ) : (
                     <>
-                      <p className="text-foreground font-medium">
-                        Drag & drop regulation files here
-                      </p>
-                      <p className="text-muted-foreground text-sm mt-1">
-                        or click to browse (PDF, DOCX, TXT)
-                      </p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs text-muted-foreground">
+                          {libraryDocuments.length} document{libraryDocuments.length !== 1 ? "s" : ""} available
+                        </p>
+                        {selectedLibraryDocIds.length > 0 && (
+                          <button
+                            onClick={() => setSelectedLibraryDocIds([])}
+                            className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
+                          >
+                            Clear selection
+                          </button>
+                        )}
+                      </div>
+                      <div className="space-y-1.5 max-h-56 overflow-auto">
+                        {libraryDocuments.map((doc) => {
+                          const isSelected = selectedLibraryDocIds.includes(doc.document_id);
+                          return (
+                            <button
+                              key={doc.document_id}
+                              onClick={() => toggleLibraryDoc(doc.document_id)}
+                              className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors ${
+                                isSelected
+                                  ? "bg-primary/10 border border-primary/30"
+                                  : "bg-muted/30 border border-transparent hover:bg-muted/60"
+                              }`}
+                            >
+                              <div className={`h-5 w-5 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${
+                                isSelected ? "bg-primary border-primary" : "border-muted-foreground/40"
+                              }`}>
+                                {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium truncate">{doc.framework_name}</p>
+                                <p className="text-xs text-muted-foreground truncate">
+                                  {doc.issuing_authority} &middot; {doc.total_obligations} obligations
+                                </p>
+                              </div>
+                              <Badge variant="secondary" className="text-[10px] flex-shrink-0">
+                                {doc.total_obligations}
+                              </Badge>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </>
                   )}
-                </div>
-
-                {regulationFiles.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">
-                      Regulation Files ({regulationFiles.length})
-                    </p>
-                    <div className="space-y-2 max-h-48 overflow-auto">
-                      {regulationFiles.map((file, index) => (
-                        <div
-                          key={`${file.name}-${index}`}
-                          className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
-                          data-testid={`regulation-file-${index}`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <FileText className="h-4 w-4 text-primary" />
-                            <span className="text-sm truncate max-w-xs">{file.name}</span>
-                            <Badge variant="secondary" className="text-xs">
-                              {(file.size / 1024).toFixed(1)} KB
-                            </Badge>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => removeRegulationFile(index)}
-                            data-testid={`button-remove-regulation-${index}`}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
 
             {mode === "rcm" && (
               <Card>
@@ -443,7 +538,7 @@ export default function RegulatoryTestingPage() {
                 <p className="text-sm text-muted-foreground">
                   {mode === "regulation"
                     ? `Analyzing ${regulationFiles.length} regulation files`
-                    : `Comparing RCM against ${regulationFiles.length} regulation(s)`}
+                    : `Comparing RCM against ${selectedLibraryDocIds.length} library regulation(s)`}
                 </p>
               </div>
             </CardContent>
@@ -1091,6 +1186,7 @@ export default function RegulatoryTestingPage() {
             </div>
           </>
         )}
+      </div>
       </div>
     </div>
   );

@@ -41,6 +41,12 @@ import uuid
 from utils.regulatory_comparision import compare_regulatory_documents, save_analysis_artifacts
 from utils.regulatory_library import ingest_regulatory_document, MongoLibraryStore, merge_similar_obligations
 from utils.controls_library import ingest_controls_document, MongoControlsStore, merge_similar_controls, remap_obligations_for_all
+from utils.frameworks_library import (
+    ingest_framework_document, MongoFrameworksStore, merge_similar_framework_elements,
+    build_and_save_library_graph as build_frameworks_graph,
+    load_library_graph as load_frameworks_graph,
+    LIBRARY_GRAPH_DIR as FRAMEWORKS_GRAPH_DIR,
+)
 from utils.rcm_compliance_analyzer import (
     load_document,
     get_text_splitter,
@@ -49,7 +55,9 @@ from utils.rcm_compliance_analyzer import (
     ComplianceAnalyzer,
     RemediationSuggester,
     ComplianceReportGenerator,
+    analyze_rcm_against_obligations,
 )
+from utils.rcm_report_store import RCMReportStore
 
 # ----------------------------------------------------------------------------
 # Logging
@@ -1294,6 +1302,208 @@ async def rcm_compliance(
                 pass
 
 #-----------------------------------------------------------------------------
+# RCM Compliance V2 — library-backed analysis
+#-----------------------------------------------------------------------------
+
+@app.post(
+    "/rcm_compliance_v2",
+    tags=["analysis"],
+    summary="Analyze RCM against Regulatory Library obligations (v2 — no file upload for regulations)",
+)
+async def rcm_compliance_v2(
+    selected_model: str = Form(..., description="LLM model to use"),
+    document_ids: str = Form(..., description="JSON array of regulatory library document IDs"),
+    rcm_file: UploadFile = File(..., description="Organization RCM file (Excel/PDF)"),
+    save_report: bool = Form(True, description="Persist report to MongoDB"),
+):
+    rid = _req_id()
+    logger.info(f"[{rid}] RCM compliance v2 request — model={selected_model}")
+
+    # Parse document IDs
+    try:
+        doc_ids = json.loads(document_ids)
+        if not isinstance(doc_ids, list) or len(doc_ids) < 1:
+            raise ValueError("Need at least one document ID")
+    except (json.JSONDecodeError, ValueError) as exc:
+        raise HTTPException(status_code=400, detail=f"Invalid document_ids: {exc}")
+
+    tmp_path = None
+    try:
+        # Fetch obligations from Regulatory Library
+        store = MongoLibraryStore()
+        all_obligations = []
+        regulation_names = []
+
+        for doc_id in doc_ids:
+            doc = store.get_document(doc_id)
+            if not doc:
+                raise HTTPException(status_code=404, detail=f"Library document not found: {doc_id}")
+            regulation_names.append(doc.get("framework_name", doc.get("source_filename", doc_id)))
+            for obl in doc.get("obligations", []):
+                obl["framework_name"] = doc.get("framework_name", "")
+                all_obligations.append(obl)
+
+        if not all_obligations:
+            raise HTTPException(status_code=400, detail="Selected documents contain no obligations")
+
+        logger.info(f"[{rid}] Collected {len(all_obligations)} obligations from {len(doc_ids)} documents")
+
+        # Save RCM file to temp
+        ext = Path(rcm_file.filename).suffix or ".tmp"
+        tmp = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
+        rcm_content = await rcm_file.read()
+        if len(rcm_content) == 0:
+            raise HTTPException(status_code=400, detail=f"Empty RCM file: {rcm_file.filename}")
+        tmp.write(rcm_content)
+        tmp.close()
+        tmp_path = tmp.name
+
+        # Run analysis
+        result = analyze_rcm_against_obligations(
+            rcm_file_path=tmp_path,
+            obligations=all_obligations,
+            model_name=selected_model,
+        )
+
+        if not result.get("success"):
+            error_msg = result.get("error", "Analysis failed")
+            # Still save report with error status
+            if save_report:
+                try:
+                    report_store = RCMReportStore()
+                    report_store.save_report(
+                        {
+                            "regulation_document_ids": doc_ids,
+                            "regulation_names": regulation_names,
+                            "model_used": selected_model,
+                            "status": "error",
+                            "error_message": error_msg,
+                        },
+                        rcm_content,
+                        rcm_file.filename,
+                    )
+                except Exception:
+                    pass
+            raise HTTPException(status_code=500, detail={"error": error_msg, "request_id": rid})
+
+        # Save report to MongoDB
+        report_id = None
+        if save_report:
+            try:
+                report_store = RCMReportStore()
+                analysis = result.get("compliance_analysis", {})
+                report_id = report_store.save_report(
+                    {
+                        "regulation_document_ids": doc_ids,
+                        "regulation_names": regulation_names,
+                        "model_used": selected_model,
+                        "status": "success",
+                        "compliance_stats": analysis.get("overall_metrics", {}),
+                        "analysis": analysis,
+                        "executive_summary": result.get("final_report", ""),
+                        "domain_reports": {},  # v2 uses final_report as single report
+                    },
+                    rcm_content,
+                    rcm_file.filename,
+                )
+                logger.info(f"[{rid}] Report saved as {report_id}")
+            except Exception as exc:
+                logger.warning(f"[{rid}] Failed to save report: {exc}")
+
+        return JSONResponse({
+            "success": True,
+            "request_id": rid,
+            "report_id": report_id,
+            "model_used": selected_model,
+            "filenames": [rcm_file.filename] + regulation_names,
+            "analysis": result.get("compliance_analysis", {}),
+            "executive_summary": result.get("final_report", ""),
+            "domain_reports": {},
+            "suggestions_summary_counts": {},
+        })
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"[{rid}] RCM compliance v2 failed: {e}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail={"error": str(e), "request_id": rid})
+    finally:
+        if tmp_path:
+            try:
+                os.unlink(tmp_path)
+            except Exception:
+                pass
+
+
+#-----------------------------------------------------------------------------
+# RCM Reports CRUD
+#-----------------------------------------------------------------------------
+
+@app.get("/rcm-reports", tags=["rcm-reports"], summary="List all RCM compliance reports")
+async def list_rcm_reports():
+    try:
+        store = RCMReportStore()
+        reports = store.list_reports()
+        return JSONResponse({"success": True, "reports": reports, "total": len(reports)})
+    except Exception as e:
+        logger.error(f"Failed to list RCM reports: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/rcm-reports/{report_id}", tags=["rcm-reports"], summary="Get a full RCM report")
+async def get_rcm_report(report_id: str):
+    try:
+        store = RCMReportStore()
+        report = store.get_report(report_id)
+        if not report:
+            raise HTTPException(status_code=404, detail="Report not found")
+        return JSONResponse({"success": True, "report": report})
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get RCM report {report_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/rcm-reports/{report_id}/rcm-file", tags=["rcm-reports"], summary="Download the RCM file for a report")
+async def download_rcm_file(report_id: str):
+    from fastapi.responses import StreamingResponse
+    import io
+    try:
+        store = RCMReportStore()
+        result = store.get_rcm_file(report_id)
+        if not result:
+            raise HTTPException(status_code=404, detail="Report or file not found")
+        file_bytes, filename = result
+        return StreamingResponse(
+            io.BytesIO(file_bytes),
+            media_type="application/octet-stream",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to download RCM file for {report_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/rcm-reports/{report_id}", tags=["rcm-reports"], summary="Delete an RCM report")
+async def delete_rcm_report(report_id: str):
+    try:
+        store = RCMReportStore()
+        deleted = store.delete_report(report_id)
+        if not deleted:
+            raise HTTPException(status_code=404, detail="Report not found")
+        return JSONResponse({"success": True, "deleted": report_id})
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to delete RCM report {report_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+#-----------------------------------------------------------------------------
 # Regulatory Library Endpoints
 #-----------------------------------------------------------------------------
 
@@ -1528,6 +1738,13 @@ async def library_merged_obligations():
 
 class LibraryGapAnalysisRequest(BaseModel):
     document_ids: List[str]
+    selected_model: str = ""   # empty → use default GOOGLE_LLM_MODEL
+    generate_report: bool = True
+
+
+class GapReportPdfRequest(BaseModel):
+    final_report: str
+    title: str = "Regulatory Gap Analysis Report"
 
 
 @app.post(
@@ -1665,6 +1882,69 @@ async def library_gap_analysis(request: LibraryGapAnalysisRequest):
             "doc_domain_counts": {d: len(doc_domain_map[d]) for d in docs_data},
         }
 
+        # ── LLM-generated report (non-fatal if it fails) ────────────────────
+        final_report = ""
+        graph_context_used = False
+        graph_stats = None
+        if request.generate_report:
+            try:
+                from utils.graph_rag import KnowledgeGraph
+                from utils.regulatory_library import (
+                    generate_library_gap_report,
+                    LIBRARY_GRAPH_DIR as REG_LIB_GRAPH_DIR,
+                )
+                kb_graph_local = None
+                if KnowledgeGraph.exists(REG_LIB_GRAPH_DIR):
+                    kb_graph_local = KnowledgeGraph.load(REG_LIB_GRAPH_DIR)
+                    graph_stats = kb_graph_local.get_graph_stats()
+                    graph_context_used = True
+                final_report = generate_library_gap_report(
+                    gap_data={
+                        "domain_coverage": domain_coverage,
+                        "similarities": similarities,
+                        "differences": differences,
+                        "unique_by_doc": unique_by_doc,
+                        "gap_summary": gap_summary,
+                    },
+                    docs_data=docs_data,
+                    selected_model=request.selected_model,
+                    kb_graph=kb_graph_local,
+                )
+            except Exception as exc:
+                logger.warning(f"Gap report generation failed (non-fatal): {exc}")
+
+        # ── Persist record in Reports store (non-fatal) ─────────────────────
+        saved_report_id = None
+        try:
+            from utils.rcm_report_store import RCMReportStore
+            rpt_store = RCMReportStore()
+            if rpt_store.is_connected:
+                doc_names = [d.get("framework_name", did) for did, d in docs_data.items()]
+                saved_report_id = rpt_store.save_gap_analysis_report({
+                    "regulation_document_ids": list(docs_data.keys()),
+                    "document_names": doc_names,
+                    "document_count": len(docs_data),
+                    "model_used": request.selected_model,
+                    "final_report": final_report,
+                    "gap_summary": gap_summary,
+                    "graph_context_used": graph_context_used,
+                    "graph_stats": graph_stats,
+                    "gap_analysis_data": {
+                        "domain_coverage": domain_coverage,
+                        "similarities": [
+                            {k: v for k, v in s.items() if k != "docs"} for s in similarities
+                        ],
+                        "differences": differences,
+                        "unique_by_doc": {
+                            did: {k: v for k, v in u.items() if k != "sample_obligations"}
+                            for did, u in unique_by_doc.items()
+                        },
+                    },
+                })
+                logger.info(f"Gap analysis report saved to store: {saved_report_id}")
+        except Exception as exc:
+            logger.warning(f"Failed to persist gap analysis report (non-fatal): {exc}")
+
         return JSONResponse({
             "success": True,
             "documents": {
@@ -1681,12 +1961,48 @@ async def library_gap_analysis(request: LibraryGapAnalysisRequest):
             "differences": differences,
             "unique_by_doc": unique_by_doc,
             "gap_summary": gap_summary,
+            "final_report": final_report,
+            "graph_context_used": graph_context_used,
+            "graph_stats": graph_stats,
+            "saved_report_id": saved_report_id,
         })
 
     except HTTPException:
         raise
     except Exception as exc:
         logger.error(f"Library gap analysis failed: {exc}\n{traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.post(
+    "/regulatory-library/gap-analysis-pdf",
+    tags=["regulatory-library"],
+    summary="Generate PDF from a regulatory gap analysis markdown report",
+)
+async def library_gap_analysis_pdf(body: GapReportPdfRequest):
+    """Accept a markdown report string and return a formatted PDF file."""
+    if not body.final_report.strip():
+        raise HTTPException(status_code=400, detail="final_report is empty")
+    try:
+        from utils.regulatory_library import generate_gap_report_pdf
+        from fastapi.responses import Response
+        tmp = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
+        tmp.close()
+        ok = generate_gap_report_pdf(body.final_report, tmp.name)
+        if not ok:
+            raise HTTPException(status_code=500, detail="PDF generation failed")
+        with open(tmp.name, "rb") as f:
+            pdf_bytes = f.read()
+        os.unlink(tmp.name)
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": "attachment; filename=\"regulatory_gap_analysis.pdf\""},
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error(f"Gap analysis PDF generation failed: {exc}\n{traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=str(exc))
 
 
@@ -1930,6 +2246,208 @@ async def controls_get_merged():
         })
     except Exception as exc:
         logger.error(f"Controls library merged failed: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+#-----------------------------------------------------------------------------
+# Frameworks Library Endpoints
+#-----------------------------------------------------------------------------
+
+@app.post(
+    "/frameworks-library/ingest",
+    tags=["frameworks-library"],
+    summary="Upload and extract framework elements from one or more framework documents",
+)
+async def frameworks_ingest(
+    selected_model: str = Form(...),
+    framework_files: List[UploadFile] = File(...),
+):
+    if not framework_files:
+        raise HTTPException(status_code=400, detail="No files provided")
+    if len(framework_files) > 10:
+        raise HTTPException(status_code=400, detail="Maximum 10 files per request")
+
+    ALLOWED_EXT = {".pdf", ".docx", ".doc", ".txt", ".md"}
+    results = []
+
+    for upload in framework_files:
+        ext = Path(upload.filename).suffix.lower()
+        if ext not in ALLOWED_EXT:
+            results.append({
+                "success": False,
+                "source_filename": upload.filename,
+                "error": f"Unsupported file type: {ext}",
+            })
+            continue
+
+        tmp = None
+        try:
+            tmp = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
+            tmp.write(await upload.read())
+            tmp.close()
+
+            # Pass global kb context if available
+            kb_vs = VECTORSTORE_CACHE.get("global")
+            kb_g = GRAPH_CACHE.get("global")
+
+            result = ingest_framework_document(
+                file_path=tmp.name,
+                filename=upload.filename,
+                selected_model=selected_model,
+                kb_vectorstore=kb_vs,
+                kb_graph=kb_g,
+            )
+            results.append(result)
+        except Exception as exc:
+            logger.error(f"Frameworks ingest failed for {upload.filename}: {exc}")
+            results.append({"success": False, "source_filename": upload.filename, "error": str(exc)})
+        finally:
+            if tmp and os.path.exists(tmp.name):
+                os.unlink(tmp.name)
+
+    succeeded = sum(1 for r in results if r.get("success"))
+    return JSONResponse({
+        "success": succeeded > 0,
+        "processed": len(results),
+        "succeeded": succeeded,
+        "failed": len(results) - succeeded,
+        "results": results,
+    })
+
+
+@app.get(
+    "/frameworks-library/documents",
+    tags=["frameworks-library"],
+    summary="List all documents in the frameworks library",
+)
+async def frameworks_list_documents():
+    try:
+        store = MongoFrameworksStore()
+        docs = store.list_documents()
+        return JSONResponse({"success": True, "documents": docs, "total": len(docs)})
+    except Exception as exc:
+        logger.error(f"Frameworks list documents failed: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.get(
+    "/frameworks-library/documents/{document_id}",
+    tags=["frameworks-library"],
+    summary="Get a single frameworks library document with all elements",
+)
+async def frameworks_get_document(document_id: str):
+    try:
+        store = MongoFrameworksStore()
+        doc = store.get_document(document_id)
+        if not doc:
+            raise HTTPException(status_code=404, detail=f"Document {document_id} not found")
+        return JSONResponse({"success": True, "document": doc})
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error(f"Frameworks get document failed: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.delete(
+    "/frameworks-library/documents/{document_id}",
+    tags=["frameworks-library"],
+    summary="Delete a single document from the frameworks library",
+)
+async def frameworks_delete_document(document_id: str):
+    try:
+        store = MongoFrameworksStore()
+        deleted = store.delete_document(document_id)
+        if not deleted:
+            raise HTTPException(status_code=404, detail=f"Document {document_id} not found")
+        # Rebuild graph after deletion
+        try:
+            build_frameworks_graph(store, FRAMEWORKS_GRAPH_DIR)
+        except Exception as _exc:
+            pass
+        return JSONResponse({"success": True, "document_id": document_id})
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error(f"Frameworks delete document failed: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.delete(
+    "/frameworks-library/all",
+    tags=["frameworks-library"],
+    summary="Delete all documents from the frameworks library",
+)
+async def frameworks_delete_all():
+    try:
+        store = MongoFrameworksStore()
+        count = store.delete_all()
+        return JSONResponse({"success": True, "deleted_count": count})
+    except Exception as exc:
+        logger.error(f"Frameworks delete all failed: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.get(
+    "/frameworks-library/all-elements",
+    tags=["frameworks-library"],
+    summary="Return all raw extracted elements across all framework documents",
+)
+async def frameworks_get_all_elements():
+    try:
+        store = MongoFrameworksStore()
+        elements = store.all_elements()
+        for e in elements:
+            e.pop("_document_id", None)
+        return JSONResponse({"success": True, "elements": elements, "total": len(elements)})
+    except Exception as exc:
+        logger.error(f"Frameworks all-elements failed: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.get(
+    "/frameworks-library/merged",
+    tags=["frameworks-library"],
+    summary="Get deduplicated merged framework elements across all documents",
+)
+async def frameworks_get_merged():
+    try:
+        store = MongoFrameworksStore()
+        all_elems = store.all_elements()
+        merged = merge_similar_framework_elements(all_elems)
+        return JSONResponse({
+            "success": True,
+            "merged_elements": merged,
+            "total_raw": len(all_elems),
+            "total_merged": len(merged),
+        })
+    except Exception as exc:
+        logger.error(f"Frameworks merged failed: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.get(
+    "/frameworks-library/graph-stats",
+    tags=["frameworks-library"],
+    summary="Return stats for the saved frameworks library knowledge graph",
+)
+async def frameworks_graph_stats():
+    try:
+        from utils.graph_rag import KnowledgeGraph
+        if KnowledgeGraph.exists(FRAMEWORKS_GRAPH_DIR):
+            graph = KnowledgeGraph.load(FRAMEWORKS_GRAPH_DIR)
+            stats = graph.get_graph_stats()
+            graph_path = os.path.join(FRAMEWORKS_GRAPH_DIR, "graph.json")
+            graph_mtime = os.path.getmtime(graph_path) if os.path.exists(graph_path) else None
+            import datetime as _dt
+            last_updated = (
+                _dt.datetime.utcfromtimestamp(graph_mtime).isoformat() + "Z"
+                if graph_mtime else None
+            )
+            return JSONResponse({"success": True, "graph_exists": True, "stats": stats, "last_updated": last_updated})
+        return JSONResponse({"success": True, "graph_exists": False, "stats": {}, "last_updated": None})
+    except Exception as exc:
+        logger.error(f"Frameworks graph-stats failed: {exc}")
         raise HTTPException(status_code=500, detail=str(exc))
 
 

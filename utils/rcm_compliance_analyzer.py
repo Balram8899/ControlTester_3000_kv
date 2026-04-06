@@ -1531,3 +1531,253 @@ def save_compliance_artifacts(
         import traceback
         logger.error(traceback.format_exc())
         return {}
+
+
+# ============================================================================
+# V2: LIBRARY-BACKED RCM COMPLIANCE (uses pre-extracted obligations)
+# ============================================================================
+
+def analyze_rcm_against_obligations(
+    rcm_file_path: str,
+    obligations: List[Dict[str, Any]],
+    model_name: str,
+) -> Dict[str, Any]:
+    """
+    Analyze an RCM document against pre-extracted library obligations.
+
+    Unlike ``analyze_rcm_compliance`` which loads regulation PDFs and extracts
+    obligations via LLM, this function uses obligations already stored in the
+    Regulatory Library (MongoDB).  It also builds a knowledge graph on-the-fly
+    for cross-domain context enrichment.
+
+    Args:
+        rcm_file_path: Path to the RCM Excel/PDF file.
+        obligations:   List of obligation dicts from the Regulatory Library,
+                       each containing at minimum ``obligation_text`` and ``domain``.
+        model_name:    LLM model identifier.
+
+    Returns:
+        Same result shape as ``analyze_rcm_compliance`` for UI compatibility.
+    """
+    from collections import defaultdict
+    from langchain.schema import Document as LCDocument
+
+    logger.info(
+        f"Starting library-backed RCM compliance analysis: "
+        f"{len(obligations)} obligations, model={model_name}"
+    )
+
+    try:
+        # ── Step 1: Parse RCM ──────────────────────────────────────────
+        rcm_controls_by_sheet = parse_rcm_excel(rcm_file_path)
+        all_controls: List[Dict[str, Any]] = []
+        for sheet_name, controls in rcm_controls_by_sheet.items():
+            for ctrl in controls:
+                ctrl["sheet"] = sheet_name
+                all_controls.append(ctrl)
+
+        if not all_controls:
+            raise ValueError("No controls found in RCM file.")
+
+        # ── Step 2: Build knowledge graph from obligations ─────────────
+        obligation_docs = [
+            LCDocument(
+                page_content=obl.get("obligation_text", ""),
+                metadata={
+                    "source": obl.get("framework_name", ""),
+                    "domain": obl.get("domain", ""),
+                    "section_reference": obl.get("section_reference", ""),
+                    "obligation_id": obl.get("obligation_id", ""),
+                },
+            )
+            for obl in obligations
+            if obl.get("obligation_text")
+        ]
+
+        kg = None
+        try:
+            from utils.graph_rag import build_knowledge_graph_from_documents
+            kg = build_knowledge_graph_from_documents(obligation_docs)
+            logger.info(f"Built knowledge graph with {kg.graph.number_of_nodes()} nodes")
+        except Exception as exc:
+            logger.warning(f"Knowledge graph construction failed (non-fatal): {exc}")
+
+        # ── Step 3: Group obligations & controls by domain ─────────────
+        obligations_by_domain: Dict[str, List[Dict]] = defaultdict(list)
+        controls_by_domain: Dict[str, List[Dict]] = defaultdict(list)
+
+        for obl in obligations:
+            domain = obl.get("domain", "General")
+            obligations_by_domain[domain].append(obl)
+
+        for ctrl in all_controls:
+            domain = ctrl.get("domain", "General")
+            controls_by_domain[domain].append(ctrl)
+
+        # ── Step 4: Domain-level compliance analysis ───────────────────
+        llm = get_llm(model_name)
+        compliance_results: List[Dict[str, Any]] = []
+        domain_scores: Dict[str, float] = {}
+
+        for domain, reqs in obligations_by_domain.items():
+            controls = controls_by_domain.get(domain, [])
+
+            # Build enriched requirement text with graph context
+            req_lines = []
+            for r in reqs:
+                text = r.get("obligation_text", r.get("requirement", ""))
+                ref = r.get("section_reference", "")
+                src = r.get("framework_name", r.get("source", ""))
+                prefix = f"[{src} {ref}] " if ref else (f"[{src}] " if src else "")
+                req_lines.append(f"- {prefix}{text}")
+
+            req_text = "\n".join(req_lines)
+            ctrl_text = "\n".join(
+                f"- {c.get('reference')} : {c.get('description', '')}"
+                for c in controls
+            )
+
+            # Optionally pull cross-domain context from graph
+            graph_context = ""
+            if kg is not None:
+                try:
+                    from utils.graph_rag import GraphRAGRetriever
+                    from langchain_community.embeddings import OllamaEmbeddings
+                    from langchain_community.vectorstores import FAISS
+
+                    embeddings = OllamaEmbeddings(model="nomic-embed-text")
+                    if obligation_docs:
+                        vs = FAISS.from_documents(obligation_docs[:200], embeddings)
+                        retriever = GraphRAGRetriever(vs, kg, seed_k=3, final_k=5)
+                        sample_query = f"{domain} compliance requirements"
+                        related = retriever.retrieve(sample_query)
+                        if related:
+                            graph_context = (
+                                "\nCross-domain context from knowledge graph:\n"
+                                + "\n".join(d.page_content[:200] for d in related[:3])
+                            )
+                except Exception as exc:
+                    logger.warning(f"Graph context retrieval failed for {domain}: {exc}")
+
+            prompt = f"""
+You are a senior IT auditor.
+
+Domain: {domain}
+
+Regulatory Requirements (from library):
+{req_text[:6000]}
+{graph_context}
+
+RCM Controls:
+{ctrl_text[:4000]}
+
+Tasks:
+1. Map requirements to controls.
+2. Identify missing requirements.
+3. Identify weak or partial controls.
+4. Calculate compliance score (0-100).
+5. Provide remediation recommendations.
+
+Return STRICT JSON:
+{{
+  "score": 0-100,
+  "missing_requirements": [],
+  "weak_controls": [],
+  "recommendations": []
+}}
+"""
+            response = llm.invoke(prompt)
+
+            try:
+                import json
+                domain_analysis = json.loads(response)
+            except Exception:
+                domain_analysis = {
+                    "score": 50,
+                    "missing_requirements": [],
+                    "weak_controls": [],
+                    "recommendations": [],
+                }
+
+            domain_scores[domain] = domain_analysis.get("score", 50)
+
+            for ctrl in controls:
+                status = "COMPLIANT"
+                if ctrl.get("reference") in domain_analysis.get("weak_controls", []):
+                    status = "PARTIAL"
+
+                compliance_results.append({
+                    "control_reference": ctrl.get("reference"),
+                    "control_title": ctrl.get("title"),
+                    "control_description": ctrl.get("description", "")[:200],
+                    "domain": domain,
+                    "subdomain": ctrl.get("subdomain"),
+                    "sheet": ctrl.get("sheet"),
+                    "compliance_status": status,
+                    "gaps": ", ".join(domain_analysis.get("missing_requirements", []))[:300],
+                    "recommendation": ", ".join(domain_analysis.get("recommendations", []))[:300],
+                    "regulatory_matches": len(reqs),
+                })
+
+        # ── Step 5: Summary metrics ────────────────────────────────────
+        total = len(compliance_results)
+        compliant = sum(1 for r in compliance_results if r["compliance_status"] == "COMPLIANT")
+        partial = sum(1 for r in compliance_results if r["compliance_status"] == "PARTIAL")
+        non_compliant = total - compliant - partial
+
+        overall_score = (
+            sum(domain_scores.values()) / len(domain_scores)
+            if domain_scores
+            else 0
+        )
+
+        summary = {
+            "total_controls": len(all_controls),
+            "controls_analyzed": total,
+            "compliant": compliant,
+            "partial_compliant": partial,
+            "non_compliant": non_compliant,
+            "unable_to_assess": 0,
+            "errors": 0,
+            "overall_compliance_score": round(overall_score, 2),
+            "risk_level": (
+                "HIGH" if overall_score < 50
+                else "MEDIUM" if overall_score < 80
+                else "LOW"
+            ),
+        }
+
+        # ── Step 6: Generate report ────────────────────────────────────
+        regulation_names = list({
+            obl.get("framework_name", obl.get("source", "Unknown"))
+            for obl in obligations
+        })
+
+        final_report = generate_compliance_report(
+            rcm_controls=rcm_controls_by_sheet,
+            compliance_results=compliance_results,
+            summary=summary,
+            regulatory_docs=regulation_names,
+        )
+
+        return {
+            "success": True,
+            "rcm_structure": {s: len(c) for s, c in rcm_controls_by_sheet.items()},
+            "compliance_analysis": {
+                "overall_metrics": summary,
+                "risk_score": round(100 - overall_score, 2),
+                "detailed_results": compliance_results,
+            },
+            "final_report": final_report,
+            "timestamp": datetime.now().isoformat(),
+        }
+
+    except Exception as e:
+        logger.error(f"Library-backed RCM compliance analysis failed: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat(),
+        }

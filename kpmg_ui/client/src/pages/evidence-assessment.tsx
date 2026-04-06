@@ -299,8 +299,16 @@ export default function EvidenceAssessmentPage() {
   };
 
   return (
-    <div className="h-full overflow-auto">
-      <div className="container mx-auto p-6 max-w-5xl">
+    <div className="h-full flex flex-col">
+      <div className="flex-shrink-0 px-6 py-3 flex items-center gap-3" style={{ background: "linear-gradient(135deg, hsl(262 80% 20% / 0.4), hsl(217 91% 20% / 0.3))", borderBottom: "1px solid hsl(217 91% 55% / 0.2)" }}>
+        <Search className="h-6 w-6 text-blue-400 flex-shrink-0" />
+        <div>
+          <h1 className="text-lg font-bold text-foreground">Final Report</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Upload evidence files for AI-powered multi-agent risk assessment</p>
+        </div>
+      </div>
+      <div className="flex-1 overflow-auto">
+      <div className="max-w-5xl mx-auto p-6">
         {!showAgents ? (
           <Card>
             <CardHeader>
@@ -441,6 +449,7 @@ export default function EvidenceAssessmentPage() {
             )}
           </div>
         )}
+      </div>
       </div>
     </div>
   );

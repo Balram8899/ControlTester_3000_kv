@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   Upload, FileText, X, Play, RotateCcw, BookOpen, Search, Trash2, Library,
   LayoutDashboard, GitCompare, ChevronRight, AlertTriangle, CheckCircle2, Minus, Layers, Link2,
-  PanelLeftClose, PanelLeftOpen,
+  PanelLeftClose, PanelLeftOpen, Download, Network,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useRegulatoryTesting, LibraryDocument } from "@/contexts/RegulatoryTestingContext";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const ENFORCEMENT_COLOR: Record<string, string> = {
   mandatory:    "bg-red-100 text-red-700 border-red-300 dark:bg-red-950 dark:text-red-300",
@@ -68,6 +71,9 @@ interface GapResults {
     best_covered_doc: string | null;
     doc_domain_counts: Record<string, number>;
   };
+  final_report?: string;
+  graph_context_used?: boolean;
+  graph_stats?: { nodes: number; edges: number; chunk_nodes: number; domain_nodes: number; standard_nodes: number } | null;
 }
 
 export default function RegulatoryLibraryPage() {
@@ -339,10 +345,15 @@ export default function RegulatoryLibraryPage() {
     setGapResults(null);
     setGapExpandedDomain(null);
     try {
+      const selectedModel = localStorage.getItem("selectedModel") || "";
       const res = await fetch(`/api/regulatory-library/gap-analysis`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ document_ids: Array.from(gapSelectedIds) }),
+        body: JSON.stringify({
+          document_ids: Array.from(gapSelectedIds),
+          selected_model: selectedModel,
+          generate_report: true,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || "Gap analysis failed");
@@ -351,6 +362,65 @@ export default function RegulatoryLibraryPage() {
       toast({ title: "Error", description: err instanceof Error ? err.message : "Gap analysis failed", variant: "destructive" });
     } finally {
       setGapLoading(false);
+    }
+  };
+
+  const handleExportGapJson = () => {
+    if (!gapResults) return;
+    const blob = new Blob([JSON.stringify(gapResults, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "regulatory_gap_analysis.json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast({ title: "Exported", description: "Results downloaded as JSON" });
+  };
+
+  const handleExportGapMarkdown = () => {
+    if (!gapResults?.final_report) return;
+    const blob = new Blob([gapResults.final_report], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "regulatory_gap_analysis.md";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast({ title: "Exported", description: "Report downloaded as Markdown" });
+  };
+
+  const [pdfExporting, setPdfExporting] = useState(false);
+  const handleExportGapPdf = async () => {
+    if (!gapResults?.final_report) return;
+    setPdfExporting(true);
+    try {
+      const res = await fetch("/api/regulatory-library/gap-analysis-pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ final_report: gapResults.final_report }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: "PDF generation failed" }));
+        throw new Error(err.detail || "PDF generation failed");
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "regulatory_gap_analysis.pdf";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast({ title: "Exported", description: "Report downloaded as PDF" });
+    } catch (err) {
+      toast({ title: "Error", description: err instanceof Error ? err.message : "PDF export failed", variant: "destructive" });
+    } finally {
+      setPdfExporting(false);
     }
   };
 
@@ -388,7 +458,15 @@ export default function RegulatoryLibraryPage() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="h-full flex overflow-hidden select-none">
+    <div className="h-full flex flex-col overflow-hidden select-none">
+      <div className="flex-shrink-0 px-6 py-3 flex items-center gap-3" style={{ background: "linear-gradient(135deg, hsl(262 80% 20% / 0.4), hsl(217 91% 20% / 0.3))", borderBottom: "1px solid hsl(217 91% 55% / 0.2)" }}>
+        <Library className="h-5 w-5 text-blue-400 flex-shrink-0" />
+        <div>
+          <h1 className="text-base font-bold text-foreground">Regulatory Library</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Browse and analyse regulatory frameworks and obligations</p>
+        </div>
+      </div>
+      <div className="flex-1 flex overflow-hidden">
 
       {/* ── LEFT PANEL ─────────────────────────────────────────────────────── */}
       <div className="shrink-0 flex flex-col bg-background/50 overflow-hidden transition-[width] duration-200" style={{ width: leftPanelOpen ? panelWidth : 0 }}>
@@ -1204,6 +1282,42 @@ export default function RegulatoryLibraryPage() {
                   </Button>
                 </div>
 
+                {/* Export buttons row */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {gapResults.graph_context_used && (
+                    <Badge variant="outline" className="text-xs gap-1 border-emerald-400 text-emerald-600 dark:text-emerald-400">
+                      <Network className="h-3 w-3" />
+                      Graph-enriched
+                    </Badge>
+                  )}
+                  <Button size="sm" variant="outline" className="text-xs gap-1.5 h-7" onClick={handleExportGapJson}>
+                    <Download className="h-3 w-3" />
+                    JSON
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-xs gap-1.5 h-7"
+                    onClick={handleExportGapMarkdown}
+                    disabled={!gapResults.final_report}
+                  >
+                    <Download className="h-3 w-3" />
+                    Report (MD)
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-xs gap-1.5 h-7"
+                    onClick={handleExportGapPdf}
+                    disabled={!gapResults.final_report || pdfExporting}
+                  >
+                    {pdfExporting
+                      ? <><span className="animate-spin rounded-full h-3 w-3 border-b-2 border-current mr-1" />Generating…</>
+                      : <><Download className="h-3 w-3" />Report (PDF)</>
+                    }
+                  </Button>
+                </div>
+
                 {/* Documents compared strip */}
                 <div className="flex gap-2 flex-wrap">
                   {Object.values(gapResults.documents).map((doc, i) => (
@@ -1539,10 +1653,30 @@ export default function RegulatoryLibraryPage() {
                   </CardContent>
                 </Card>
 
+                {/* Full LLM-generated report viewer */}
+                {gapResults.final_report && (
+                  <Collapsible>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="outline" size="sm" className="w-full gap-2 text-xs">
+                        <FileText className="h-3.5 w-3.5" />
+                        View Full Analysis Report
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="mt-3 p-5 rounded-xl border bg-card text-sm prose prose-sm dark:prose-invert max-w-none leading-relaxed">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {gapResults.final_report}
+                        </ReactMarkdown>
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                )}
+
               </div>
             </ScrollArea>
           )
         )}
+      </div>
       </div>
     </div>
   );

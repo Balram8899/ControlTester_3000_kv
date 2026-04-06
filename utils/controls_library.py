@@ -32,6 +32,8 @@ MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 DB_NAME = "controltester_db"
 COLLECTION_NAME = "controls_library"
 
+LIBRARY_GRAPH_DIR = "data/library_graphs/controls"
+
 SIM_THRESHOLD_CONTROLS = 0.35  # Jaccard threshold for grouping similar controls
 
 CONTROL_TYPES = [
@@ -456,6 +458,55 @@ class MongoControlsStore:
 
 
 # ------------------------------------------------------------------
+# LIBRARY KNOWLEDGE GRAPH
+# ------------------------------------------------------------------
+def build_and_save_library_graph(store: "MongoControlsStore", graph_dir: str) -> Dict:
+    """
+    Rebuild the combined controls library knowledge graph from all stored controls
+    and save it to graph_dir/graph.json. Returns graph stats dict.
+    """
+    try:
+        from langchain.schema import Document
+        from utils.graph_rag import build_knowledge_graph_from_documents
+
+        all_ctrls = store.all_controls()
+        if not all_ctrls:
+            logger.info("[CONTROLS] No controls in store — skipping graph build")
+            return {"nodes": 0, "edges": 0, "graph_saved": False}
+
+        documents = []
+        for ctrl in all_ctrls:
+            text = (
+                f"{ctrl.get('control_name', '')}: {ctrl.get('description', '')}"
+            ).strip()
+            if len(text) < 30:
+                continue
+            doc = Document(
+                page_content=text,
+                metadata={
+                    "control_id": ctrl.get("control_id", ""),
+                    "domain": ctrl.get("domain", ""),
+                    "control_type": ctrl.get("control_type", ""),
+                    "source": ctrl.get("_source_filename", ""),
+                },
+            )
+            documents.append(doc)
+
+        if not documents:
+            return {"nodes": 0, "edges": 0, "graph_saved": False}
+
+        graph = build_knowledge_graph_from_documents(documents)
+        os.makedirs(graph_dir, exist_ok=True)
+        graph.save(graph_dir)
+        stats = graph.get_graph_stats()
+        logger.info(f"[CONTROLS] Controls library graph saved to {graph_dir}: {stats}")
+        return {**stats, "graph_saved": True, "graph_path": os.path.join(graph_dir, "graph.json")}
+    except Exception as exc:
+        logger.warning(f"[CONTROLS] Library graph build failed (non-fatal): {exc}")
+        return {"nodes": 0, "edges": 0, "graph_saved": False, "error": str(exc)}
+
+
+# ------------------------------------------------------------------
 # TOP-LEVEL INGEST FUNCTION
 # ------------------------------------------------------------------
 def ingest_controls_document(
@@ -473,6 +524,15 @@ def ingest_controls_document(
         success, document_id, source_filename, total_controls, controls_by_domain, error
     """
     logger.info(f"[CONTROLS] Ingesting: {filename} | model: {selected_model}")
+
+    # Load existing library graph for context enrichment of this new doc
+    if kb_graph is None:
+        try:
+            from utils.graph_rag import KnowledgeGraph
+            if KnowledgeGraph.exists(LIBRARY_GRAPH_DIR):
+                kb_graph = KnowledgeGraph.load(LIBRARY_GRAPH_DIR)
+        except Exception as _exc:
+            pass
 
     # 1. Load document
     try:
@@ -541,13 +601,22 @@ def ingest_controls_document(
         "controls": controls,
     }
 
+    store = None
+    mongo_ok = False
     try:
         store = MongoControlsStore()
         store.save_document(store_doc)
         mongo_ok = True
     except Exception as exc:
         logger.error(f"[CONTROLS] MongoDB save failed for {filename}: {exc}")
-        mongo_ok = False
+
+    # 8. Rebuild and save library knowledge graph (non-fatal)
+    graph_result: Dict = {"graph_saved": False}
+    if mongo_ok and store is not None:
+        try:
+            graph_result = build_and_save_library_graph(store, LIBRARY_GRAPH_DIR)
+        except Exception as exc:
+            logger.warning(f"[CONTROLS] Library graph save failed (non-fatal): {exc}")
 
     return {
         "success": True,
@@ -556,4 +625,5 @@ def ingest_controls_document(
         "total_controls": len(controls),
         "controls_by_domain": controls_by_domain,
         "mongo_saved": mongo_ok,
+        **{k: v for k, v in graph_result.items()},
     }

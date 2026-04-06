@@ -176,6 +176,10 @@ interface RegulatoryTestingState {
   setLibraryDocuments: (docs: LibraryDocument[]) => void;
   libraryLoading: boolean;
   setLibraryLoading: (v: boolean) => void;
+  // Library selection for RCM mode
+  selectedLibraryDocIds: string[];
+  setSelectedLibraryDocIds: (ids: string[]) => void;
+  toggleLibraryDoc: (docId: string) => void;
 }
 
 const RegulatoryTestingContext = createContext<RegulatoryTestingState | undefined>(undefined);
@@ -196,6 +200,13 @@ export function RegulatoryTestingProvider({ children }: { children: ReactNode })
   // Library-specific state (independent of comparison modes)
   const [libraryDocuments, setLibraryDocuments] = useState<LibraryDocument[]>([]);
   const [libraryLoading, setLibraryLoading] = useState(false);
+  const [selectedLibraryDocIds, setSelectedLibraryDocIds] = useState<string[]>([]);
+
+  const toggleLibraryDoc = (docId: string) => {
+    setSelectedLibraryDocIds(prev =>
+      prev.includes(docId) ? prev.filter(id => id !== docId) : [...prev, docId]
+    );
+  };
 
   const currentState = mode === "regulation" ? regulationModeState : rcmModeState;
   const setCurrentState = mode === "regulation" ? setRegulationModeState : setRcmModeState;
@@ -254,6 +265,9 @@ export function RegulatoryTestingProvider({ children }: { children: ReactNode })
         setLibraryDocuments,
         libraryLoading,
         setLibraryLoading,
+        selectedLibraryDocIds,
+        setSelectedLibraryDocIds,
+        toggleLibraryDoc,
       }}
     >
       {children}

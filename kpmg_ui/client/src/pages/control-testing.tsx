@@ -273,16 +273,16 @@ export default function ControlTestingPage() {
     : 3;
 
   return (
-    <div className="h-full overflow-auto p-6">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-            AI Control Testing
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Upload a control test script, provide evidence, and generate audit workpapers
-          </p>
+    <div className="h-full flex flex-col">
+      <div className="flex-shrink-0 px-6 py-3 flex items-center gap-3" style={{ background: "linear-gradient(135deg, hsl(262 80% 20% / 0.4), hsl(217 91% 20% / 0.3))", borderBottom: "1px solid hsl(217 91% 55% / 0.2)" }}>
+        <Shield className="h-6 w-6 text-blue-400 flex-shrink-0" />
+        <div>
+          <h1 className="text-lg font-bold text-foreground">AI Control Testing</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Upload a control test script, provide evidence, and generate audit workpapers</p>
         </div>
+      </div>
+      <div className="flex-1 overflow-auto p-6">
+      <div className="max-w-4xl mx-auto space-y-6">
 
         <div className="flex items-center justify-center gap-2 mb-6">
           {[
@@ -772,6 +772,7 @@ export default function ControlTestingPage() {
             </div>
           </>
         )}
+      </div>
       </div>
     </div>
   );

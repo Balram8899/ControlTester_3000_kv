@@ -533,7 +533,15 @@ export default function ControlsLibraryPage() {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="h-full flex overflow-hidden select-none">
+    <div className="h-full flex flex-col overflow-hidden select-none">
+      <div className="flex-shrink-0 px-6 py-3 flex items-center gap-3" style={{ background: "linear-gradient(135deg, hsl(262 80% 20% / 0.4), hsl(217 91% 20% / 0.3))", borderBottom: "1px solid hsl(217 91% 55% / 0.2)" }}>
+        <ShieldCheck className="h-5 w-5 text-blue-400 flex-shrink-0" />
+        <div>
+          <h1 className="text-base font-bold text-foreground">Controls Library</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Browse, filter, and analyse enterprise security controls</p>
+        </div>
+      </div>
+      <div className="flex-1 flex overflow-hidden">
 
       {/* ── LEFT PANEL ───────────────────────────────────────────────────────── */}
       <div className="shrink-0 flex flex-col bg-background/50 overflow-hidden transition-[width] duration-200" style={{ width: leftPanelOpen ? panelWidth : 0 }}>
@@ -1113,6 +1121,7 @@ export default function ControlsLibraryPage() {
             </ScrollArea>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

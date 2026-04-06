@@ -24,6 +24,7 @@ from utils.regulatory_comparision import (
     CONTROL_DOMAINS,
     CHUNK_SIZE,
     CHUNK_OVERLAP,
+    GOOGLE_LLM_MODEL,
     DocumentAnalyzerAgent,
     _make_llm as _google_make_llm,
 )
@@ -33,6 +34,8 @@ logger = logging.getLogger(__name__)
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 DB_NAME = "controltester_db"
 COLLECTION_NAME = "regulatory_library"
+
+LIBRARY_GRAPH_DIR = "data/library_graphs/regulatory"
 
 OBLIGATION_TYPES = [
     "technical_control",
@@ -417,6 +420,15 @@ def ingest_regulatory_document(
     """
     logger.info(f"[LIBRARY] Ingesting: {filename} | model: {selected_model}")
 
+    # Load existing library graph for context enrichment of this new doc
+    if kb_graph is None:
+        try:
+            from utils.graph_rag import KnowledgeGraph
+            if KnowledgeGraph.exists(LIBRARY_GRAPH_DIR):
+                kb_graph = KnowledgeGraph.load(LIBRARY_GRAPH_DIR)
+        except Exception as _exc:
+            pass
+
     # 1. Load document
     try:
         if file_path.lower().endswith(".pdf"):
@@ -494,13 +506,22 @@ def ingest_regulatory_document(
         "document_metadata": meta,
     }
 
+    store = None
+    mongo_ok = False
     try:
         store = MongoLibraryStore()
         store.save_document(library_doc)
         mongo_ok = True
     except Exception as exc:
         logger.error(f"[LIBRARY] MongoDB save failed for {filename}: {exc}")
-        mongo_ok = False
+
+    # 8. Rebuild and save library knowledge graph (non-fatal)
+    graph_result: Dict = {"graph_saved": False}
+    if mongo_ok and store is not None:
+        try:
+            graph_result = build_and_save_library_graph(store, LIBRARY_GRAPH_DIR)
+        except Exception as exc:
+            logger.warning(f"[LIBRARY] Library graph save failed (non-fatal): {exc}")
 
     return {
         "success": True,
@@ -511,7 +532,62 @@ def ingest_regulatory_document(
         "total_obligations": len(obligations),
         "obligations_by_domain": obligations_by_domain,
         "mongo_saved": mongo_ok,
+        **{k: v for k, v in graph_result.items()},
     }
+
+
+# ------------------------------------------------------------------
+# LIBRARY KNOWLEDGE GRAPH
+# ------------------------------------------------------------------
+def build_and_save_library_graph(store: "MongoLibraryStore", graph_dir: str) -> Dict:
+    """
+    Rebuild the combined regulatory library knowledge graph from all stored
+    obligations and save it to graph_dir/graph.json. Returns graph stats dict.
+    """
+    try:
+        from langchain.schema import Document
+        from utils.graph_rag import build_knowledge_graph_from_documents
+
+        summaries = store.list_documents()
+        if not summaries:
+            logger.info("[LIBRARY] No documents in store — skipping graph build")
+            return {"nodes": 0, "edges": 0, "graph_saved": False}
+
+        documents = []
+        for summary in summaries:
+            full = store.get_document(summary["document_id"])
+            if not full:
+                continue
+            for obl in full.get("obligations", []):
+                text = (
+                    f"{obl.get('section_reference', '')}: {obl.get('obligation_text', '')}"
+                ).strip()
+                if len(text) < 30:
+                    continue
+                doc = Document(
+                    page_content=text,
+                    metadata={
+                        "obligation_id": obl.get("obligation_id", ""),
+                        "domain": obl.get("domain", ""),
+                        "enforcement_level": obl.get("enforcement_level", ""),
+                        "source": full.get("source_filename", ""),
+                        "framework_name": full.get("framework_name", ""),
+                    },
+                )
+                documents.append(doc)
+
+        if not documents:
+            return {"nodes": 0, "edges": 0, "graph_saved": False}
+
+        graph = build_knowledge_graph_from_documents(documents)
+        os.makedirs(graph_dir, exist_ok=True)
+        graph.save(graph_dir)
+        stats = graph.get_graph_stats()
+        logger.info(f"[LIBRARY] Regulatory library graph saved to {graph_dir}: {stats}")
+        return {**stats, "graph_saved": True, "graph_path": os.path.join(graph_dir, "graph.json")}
+    except Exception as exc:
+        logger.warning(f"[LIBRARY] Library graph build failed (non-fatal): {exc}")
+        return {"nodes": 0, "edges": 0, "graph_saved": False, "error": str(exc)}
 
 
 # ------------------------------------------------------------------
@@ -587,3 +663,285 @@ def merge_similar_obligations(obligations: List[Dict]) -> List[Dict]:
 
     logger.info(f"[LIBRARY] Obligation deduplication: {n} raw → {len(merged)} merged")
     return merged
+
+
+# ------------------------------------------------------------------
+# GAP ANALYSIS REPORT GENERATION
+# ------------------------------------------------------------------
+
+def generate_library_gap_report(
+    gap_data: Dict,
+    docs_data: Dict,
+    selected_model: str,
+    kb_graph=None,
+) -> str:
+    """
+    Use an LLM to generate a comprehensive markdown gap analysis report.
+
+    Parameters
+    ----------
+    gap_data : dict with keys domain_coverage, similarities, differences,
+               unique_by_doc, gap_summary
+    docs_data : {doc_id: full_doc_dict} loaded from MongoDB
+    selected_model : LLM model name (empty string = use GOOGLE_LLM_MODEL default)
+    kb_graph : optional KnowledgeGraph — if provided, graph stats + domain
+               nodes are included in the prompt as context
+
+    Returns
+    -------
+    str — markdown report, or empty string if LLM call fails
+    """
+    import json
+
+    try:
+        # Build human-readable document summary
+        doc_summaries = []
+        for doc_id, doc in docs_data.items():
+            doc_summaries.append({
+                "framework_name": doc.get("framework_name", doc_id),
+                "issuing_authority": doc.get("issuing_authority", ""),
+                "source_filename": doc.get("source_filename", ""),
+                "total_obligations": doc.get("total_obligations", 0),
+                "domains_covered": list((doc.get("obligations_by_domain") or {}).keys()),
+            })
+
+        gap_summary = gap_data.get("gap_summary", {})
+        shared_domains = gap_summary.get("shared_domains", [])
+        differences = gap_data.get("differences", [])
+        unique_by_doc = gap_data.get("unique_by_doc", {})
+
+        # Build per-doc name map for readability
+        doc_name_map = {
+            doc_id: docs_data[doc_id].get("framework_name", doc_id)
+            for doc_id in docs_data
+        }
+
+        # Build readable differences summary
+        diff_summary = [
+            {
+                "domain": d["domain"],
+                "coverage_pct": d["coverage_pct"],
+                "present_in": [doc_name_map.get(i, i) for i in d["present_in"]],
+                "absent_in": [doc_name_map.get(i, i) for i in d["absent_in"]],
+            }
+            for d in differences
+        ]
+
+        # Build readable unique summary
+        unique_summary = {
+            doc_name_map.get(doc_id, doc_id): {
+                "unique_domains": u["unique_domains"],
+                "unique_domain_count": u["unique_domain_count"],
+                "unique_obligation_count": u["unique_obligation_count"],
+            }
+            for doc_id, u in unique_by_doc.items()
+        }
+
+        # Knowledge graph context
+        graph_section = ""
+        if kb_graph is not None:
+            try:
+                stats = kb_graph.get_graph_stats()
+                domain_nodes = sorted([
+                    n for n, d in kb_graph.graph.nodes(data=True)
+                    if d.get("type") == "domain"
+                ])
+                graph_section = f"""
+KNOWLEDGE GRAPH CONTEXT (built from all library documents):
+- Total nodes: {stats.get('nodes', 0)} | Edges: {stats.get('edges', 0)}
+- Chunk nodes: {stats.get('chunk_nodes', 0)} | Domain nodes: {stats.get('domain_nodes', 0)} | Standard nodes: {stats.get('standard_nodes', 0)}
+- Domains indexed in graph: {json.dumps(domain_nodes[:30])}
+
+Use this knowledge graph context to enrich your analysis with cross-document regulatory relationships.
+"""
+            except Exception:
+                pass
+
+        most_unique = doc_name_map.get(gap_summary.get("most_unique_doc", ""), gap_summary.get("most_unique_doc", "N/A"))
+        best_covered = doc_name_map.get(gap_summary.get("best_covered_doc", ""), gap_summary.get("best_covered_doc", "N/A"))
+
+        prompt = f"""You are a senior regulatory compliance expert generating a detailed gap analysis report.
+
+Based on the analysis data below, write a comprehensive markdown report with these sections:
+
+# Executive Summary
+- What frameworks/regulations were compared
+- Key finding: which document has the broadest coverage and which has the most gaps
+- Overall compliance landscape snapshot
+
+# Documents Analyzed
+- For each document: framework name, issuing authority, total obligations, domains covered
+
+# Domain Coverage Matrix
+- Clearly explain shared domains (present in ALL documents) vs. partial domains (present in only SOME)
+- State the total domain count and shared vs. partial split
+
+# Shared Coverage (Domains in All Documents)
+- List and explain the {len(shared_domains)} shared domain(s): {json.dumps(shared_domains)}
+- What this overlap means for compliance
+
+# Coverage Gaps (Partial Domains)
+- For each partially-covered domain: which documents cover it and which don't
+- Prioritize gaps by business impact
+
+# Unique Coverage Per Document
+- What each document uniquely contributes that others lack
+- Whether these unique areas are critical
+
+# Compliance Implications
+- If an organization must comply with ALL selected frameworks, what are the combined requirements?
+- Which gaps represent the highest risk?
+
+# Strategic Recommendations
+- Priority areas to address first
+- For organizations subject to multiple frameworks, which framework provides better base coverage
+- Practical next steps
+{graph_section}
+ANALYSIS DATA:
+Documents: {json.dumps(doc_summaries, indent=2)}
+
+Gap Summary:
+- Total documents: {gap_summary.get('total_documents', 0)}
+- Total domains found: {gap_summary.get('total_domains', 0)}
+- Shared domains (all docs): {gap_summary.get('shared_domain_count', 0)} — {json.dumps(shared_domains)}
+- Partially covered domains: {gap_summary.get('partial_coverage_domain_count', 0)}
+- Best covered document: {best_covered}
+- Most unique coverage: {most_unique}
+
+Partial domain coverage:
+{json.dumps(diff_summary, indent=2)}
+
+Unique coverage per document:
+{json.dumps(unique_summary, indent=2)}
+
+Write a professional, detailed report in markdown format. Be specific — reference actual framework names, domain names, and obligation counts from the data. Avoid generic filler text."""
+
+        model = selected_model or GOOGLE_LLM_MODEL
+        llm = _google_make_llm(model, temperature=0.1)
+        report = llm.invoke(prompt)
+        logger.info(f"[LIBRARY] Gap analysis report generated ({len(report)} chars)")
+        return report
+
+    except Exception as exc:
+        logger.warning(f"[LIBRARY] Gap report LLM call failed (non-fatal): {exc}")
+        return ""
+
+
+def generate_gap_report_pdf(markdown_text: str, output_path: str) -> bool:
+    """
+    Convert a markdown gap analysis report to PDF using reportlab.
+
+    Handles:
+      # H1, ## H2, ### H3 headings
+      - / * bullet points
+      --- horizontal rules
+      **bold** inline markup
+      `code` inline markup
+      Regular paragraphs
+
+    Returns True on success, False on failure.
+    """
+    try:
+        import re as _re
+        from reportlab.lib.pagesizes import letter
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import inch
+        from reportlab.lib.enums import TA_LEFT, TA_CENTER
+        from reportlab.platypus import (
+            SimpleDocTemplate, Paragraph, Spacer, HRFlowable,
+        )
+        from reportlab.lib import colors
+
+        styles = getSampleStyleSheet()
+
+        # Custom styles
+        h1_style = ParagraphStyle(
+            "H1Gap", parent=styles["Heading1"],
+            fontSize=18, spaceAfter=10, spaceBefore=16,
+            textColor=colors.HexColor("#1a2e5a"),
+        )
+        h2_style = ParagraphStyle(
+            "H2Gap", parent=styles["Heading2"],
+            fontSize=14, spaceAfter=6, spaceBefore=12,
+            textColor=colors.HexColor("#2d4a8a"),
+        )
+        h3_style = ParagraphStyle(
+            "H3Gap", parent=styles["Heading3"],
+            fontSize=12, spaceAfter=4, spaceBefore=8,
+            textColor=colors.HexColor("#3d5fa0"),
+        )
+        body_style = ParagraphStyle(
+            "BodyGap", parent=styles["Normal"],
+            fontSize=10, spaceAfter=5, leading=14,
+        )
+        bullet_style = ParagraphStyle(
+            "BulletGap", parent=styles["Normal"],
+            fontSize=10, spaceAfter=3, leading=13,
+            leftIndent=18, firstLineIndent=-10,
+        )
+        title_style = ParagraphStyle(
+            "TitleGap", parent=styles["Title"],
+            fontSize=22, spaceAfter=20, alignment=TA_CENTER,
+            textColor=colors.HexColor("#1a2e5a"),
+        )
+
+        def _escape_xml(text: str) -> str:
+            return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+        def _apply_inline(text: str) -> str:
+            """Convert markdown inline markup to reportlab XML."""
+            text = _escape_xml(text)
+            # **bold**
+            text = _re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", text)
+            # *italic*
+            text = _re.sub(r"\*(.+?)\*", r"<i>\1</i>", text)
+            # `code`
+            text = _re.sub(r"`(.+?)`", r"<font name='Courier'>\1</font>", text)
+            return text
+
+        story = []
+        story.append(Paragraph("Regulatory Gap Analysis Report", title_style))
+        story.append(Spacer(1, 0.1 * inch))
+
+        lines = markdown_text.split("\n")
+        i = 0
+        while i < len(lines):
+            line = lines[i]
+            stripped = line.strip()
+
+            if not stripped:
+                story.append(Spacer(1, 0.06 * inch))
+                i += 1
+                continue
+
+            if stripped.startswith("### "):
+                story.append(Paragraph(_apply_inline(stripped[4:]), h3_style))
+            elif stripped.startswith("## "):
+                story.append(Paragraph(_apply_inline(stripped[3:]), h2_style))
+            elif stripped.startswith("# "):
+                story.append(Paragraph(_apply_inline(stripped[2:]), h1_style))
+            elif stripped in ("---", "___", "***"):
+                story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#cccccc"), spaceAfter=6, spaceBefore=6))
+            elif stripped.startswith("- ") or stripped.startswith("* "):
+                bullet_text = "• " + _apply_inline(stripped[2:])
+                story.append(Paragraph(bullet_text, bullet_style))
+            else:
+                story.append(Paragraph(_apply_inline(stripped), body_style))
+
+            i += 1
+
+        doc = SimpleDocTemplate(
+            output_path,
+            pagesize=letter,
+            rightMargin=0.75 * inch,
+            leftMargin=0.75 * inch,
+            topMargin=0.9 * inch,
+            bottomMargin=0.9 * inch,
+        )
+        doc.build(story)
+        logger.info(f"[LIBRARY] Gap analysis PDF saved to {output_path}")
+        return True
+
+    except Exception as exc:
+        logger.error(f"[LIBRARY] PDF generation failed: {exc}")
+        return False

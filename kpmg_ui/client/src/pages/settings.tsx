@@ -306,7 +306,15 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="h-full overflow-auto">
+    <div className="h-full flex flex-col">
+      <div className="flex-shrink-0 px-6 py-3 flex items-center gap-3" style={{ background: "linear-gradient(135deg, hsl(262 80% 20% / 0.4), hsl(217 91% 20% / 0.3))", borderBottom: "1px solid hsl(217 91% 55% / 0.2)" }}>
+        <Network className="h-6 w-6 text-blue-400 flex-shrink-0" />
+        <div>
+          <h1 className="text-lg font-bold text-foreground">Settings</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Configure AI models and application preferences</p>
+        </div>
+      </div>
+      <div className="flex-1 overflow-auto">
       <div className="max-w-4xl mx-auto p-8">
         <div className="space-y-8">
           <Card>
@@ -446,6 +454,7 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         </div>
+      </div>
       </div>
     </div>
   );
