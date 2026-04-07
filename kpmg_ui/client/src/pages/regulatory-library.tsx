@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useRegulatoryTesting, LibraryDocument } from "@/contexts/RegulatoryTestingContext";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const ENFORCEMENT_COLOR: Record<string, string> = {
   mandatory:    "bg-red-100 text-red-700 border-red-300 dark:bg-red-950 dark:text-red-300",
@@ -185,6 +186,320 @@ function MappedControlsSection({ controls, onControlClick }: { controls: MappedC
   );
 }
 
+// ── DialogOblRow — obligation row inside the cross-library metric popup ────────
+function DialogOblRow({
+  obl, mappedCtrls, onControlClick, onObligationClick,
+}: {
+  obl: any;
+  mappedCtrls: MappedControlEntry[];
+  onControlClick: (id: string) => void;
+  onObligationClick: (id: string) => void;
+}) {
+  const [ctrlsExpanded, setCtrlsExpanded] = useState(false);
+
+  return (
+    <div className="px-5 py-3 hover:bg-muted/30 transition-colors">
+      {/* Header row */}
+      <div className="flex items-start gap-2 flex-wrap mb-1">
+        <button
+          type="button"
+          title="Jump to this obligation in the library"
+          className="text-[10px] font-mono text-[var(--pacific)] bg-[var(--pacific)]/10 hover:bg-[var(--pacific)]/20 border border-[var(--pacific)]/30 rounded px-1.5 py-0.5 shrink-0 transition-colors cursor-pointer"
+          onClick={() => obl.obligation_id && onObligationClick(obl.obligation_id)}
+        >
+          {obl.obligation_id}
+        </button>
+        {obl.domain && (
+          <span className="text-[10px] capitalize text-muted-foreground bg-muted rounded px-1.5 py-0.5">{obl.domain.replace(/_/g, " ")}</span>
+        )}
+        {obl.enforcement_level && (
+          <span className={`text-[10px] px-1.5 py-0.5 rounded border ${ENFORCEMENT_COLOR[obl.enforcement_level] ?? "border-muted text-muted-foreground"}`}>
+            {obl.enforcement_level}
+          </span>
+        )}
+        {obl.framework_name && (
+          <span className="text-[10px] text-muted-foreground ml-auto shrink-0">{obl.framework_name}</span>
+        )}
+      </div>
+
+      {/* Obligation text */}
+      <p className="text-sm text-foreground leading-relaxed mb-1.5">{obl.obligation_text}</p>
+
+      {/* Section reference */}
+      {obl.section_reference && (
+        <p className="text-[11px] text-muted-foreground mb-1.5">§ {obl.section_reference}</p>
+      )}
+
+      {/* Mapped controls toggle */}
+      {mappedCtrls.length > 0 && (
+        <button
+          type="button"
+          className="flex items-center gap-1.5 text-[11px] font-medium text-[var(--pacific)] hover:text-[var(--pacific)]/80 transition-colors mt-1"
+          onClick={() => setCtrlsExpanded(v => !v)}
+        >
+          <ShieldCheck className="h-3.5 w-3.5" />
+          {mappedCtrls.length} mapped control{mappedCtrls.length !== 1 ? "s" : ""}
+          {ctrlsExpanded
+            ? <ChevronDown className="h-3 w-3" />
+            : <ChevronRight className="h-3 w-3" />}
+        </button>
+      )}
+
+      {/* Mapped controls expanded list */}
+      {ctrlsExpanded && (
+        <div className="mt-2 rounded-lg border border-[var(--pacific)]/20 bg-[var(--pacific)]/[0.03] overflow-hidden divide-y divide-[var(--pacific)]/5">
+          {mappedCtrls.sort((a, b) => b.match_score - a.match_score).map((ctrl, ci) => (
+            <div key={ci} className="flex items-start gap-2.5 px-3 py-2 hover:bg-muted/20 transition-colors">
+              <ShieldCheck className={`h-3.5 w-3.5 mt-0.5 shrink-0 ${CTRL_TYPE_ICON_COLOR[ctrl.control_type] ?? "text-muted-foreground"}`} />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-xs font-medium text-foreground">{ctrl.control_name}</span>
+                  <button
+                    type="button"
+                    className="text-[9px] font-mono text-[var(--pacific)] bg-[var(--pacific)]/10 hover:bg-[var(--pacific)]/20 border border-[var(--pacific)]/30 rounded px-1.5 py-0.5 transition-colors"
+                    onClick={() => onControlClick(ctrl.control_id)}
+                  >
+                    ↗ {ctrl.control_id}
+                  </button>
+                </div>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-[10px] text-muted-foreground capitalize">{ctrl.domain.replace(/_/g, " ")}</span>
+                  <span className="text-[10px] text-muted-foreground">· {ctrl.control_type}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
+                <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full ${ctrl.match_score >= 0.7 ? "bg-emerald-500" : ctrl.match_score >= 0.4 ? "bg-amber-500" : "bg-red-400"}`}
+                    style={{ width: `${Math.round(ctrl.match_score * 100)}%` }}
+                  />
+                </div>
+                <span className="text-[10px] font-mono text-muted-foreground w-7 text-right">{Math.round(ctrl.match_score * 100)}%</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── DashboardOblRow — stable row for dashboard obligations list ───────────────
+function DashboardOblRow({
+  obl, hue, dashboardViewMode, mappedCtrls, controlsLoaded, onControlClick,
+}: {
+  obl: any;
+  hue: number;
+  dashboardViewMode: string;
+  mappedCtrls: MappedControlEntry[];
+  controlsLoaded: boolean;
+  onControlClick: (id: string) => void;
+}) {
+  const [ctrlsExpanded, setCtrlsExpanded] = useState(false);
+
+  return (
+    <div className="px-3 py-2.5 hover:bg-muted/20 transition-colors">
+      <div className="flex items-start gap-2">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+            <code className="text-[10px] font-mono text-muted-foreground bg-muted rounded px-1">{obl.obligation_id}</code>
+            <Badge
+              variant="outline"
+              className="text-[10px] capitalize"
+              style={{ borderColor: `hsl(${hue},60%,60%)`, color: `hsl(${hue},60%,40%)` }}
+            >
+              {obl.domain?.replace(/_/g, " ")}
+            </Badge>
+            <Badge variant="outline" className={`text-[10px] ${ENFORCEMENT_COLOR[obl.enforcement_level] ?? ""}`}>
+              {obl.enforcement_level}
+            </Badge>
+            {obl.merged_from_count > 1 && (
+              <Badge variant="secondary" className="text-[10px]">
+                <Layers className="h-2.5 w-2.5 mr-0.5" />
+                {obl.merged_from_count} sources
+              </Badge>
+            )}
+            {controlsLoaded && mappedCtrls.length > 0 && (
+              <button
+                type="button"
+                className="flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full border border-[var(--pacific)]/40 text-[var(--pacific)] hover:bg-[var(--pacific)]/10 transition-colors"
+                onClick={() => setCtrlsExpanded(v => !v)}
+              >
+                <ShieldCheck className="h-2.5 w-2.5" />
+                {mappedCtrls.length}
+                {ctrlsExpanded
+                  ? <ChevronDown className="h-2.5 w-2.5 ml-0.5" />
+                  : <ChevronRight className="h-2.5 w-2.5 ml-0.5" />}
+              </button>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground line-clamp-2">{obl.obligation_text}</p>
+
+          {dashboardViewMode === "all" && (
+            <div className="flex items-center gap-1.5 mt-1 text-[10px]">
+              <Link2 className="h-3 w-3 text-muted-foreground/60 shrink-0" />
+              <span className="font-medium text-muted-foreground">{obl.framework_name || obl.source_filename}</span>
+              {obl.framework_name && obl.source_filename && obl.framework_name !== obl.source_filename && (
+                <span className="text-muted-foreground/50 truncate max-w-[160px]" title={obl.source_filename}>({obl.source_filename})</span>
+              )}
+              {obl.section_reference && <span className="text-muted-foreground/70">§{obl.section_reference}</span>}
+            </div>
+          )}
+
+          {obl.merged_from_count > 1 && obl.source_documents?.length > 0 && (
+            <div className="mt-1.5 space-y-1">
+              <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide">Merged from</p>
+              <div className="flex flex-col gap-1">
+                {obl.source_documents.map((src: any, si: number) => (
+                  <div key={si} className={`flex items-start gap-1.5 text-[10px] rounded px-1.5 py-1 ${src.is_primary ? "bg-primary/8 border border-primary/20" : "bg-muted/40"}`}>
+                    {src.is_primary && <span className="text-primary shrink-0 leading-none mt-0.5">★</span>}
+                    <div className="min-w-0">
+                      <span className="font-medium text-foreground/80">{src.framework_name || src.source_filename}</span>
+                      {src.framework_name && src.source_filename && src.framework_name !== src.source_filename && (
+                        <span className="text-muted-foreground/50 ml-1 truncate" title={src.source_filename}>({src.source_filename})</span>
+                      )}
+                      {src.section_reference && <span className="text-muted-foreground/70 ml-1">§{src.section_reference}</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Mapped controls inline expand */}
+          {controlsLoaded && mappedCtrls.length > 0 && ctrlsExpanded && (
+            <div className="mt-2 rounded-lg border border-[var(--pacific)]/20 bg-[var(--pacific)]/[0.03] overflow-hidden divide-y divide-[var(--pacific)]/5">
+              {mappedCtrls.sort((a, b) => b.match_score - a.match_score).map((ctrl, ci) => (
+                <div key={ci} className="flex items-start gap-2.5 px-3 py-2 hover:bg-muted/20 transition-colors">
+                  <ShieldCheck className={`h-3.5 w-3.5 mt-0.5 shrink-0 ${CTRL_TYPE_ICON_COLOR[ctrl.control_type] ?? "text-muted-foreground"}`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-xs font-medium text-foreground">{ctrl.control_name}</span>
+                      <button
+                        type="button"
+                        className="text-[9px] font-mono text-[var(--pacific)] bg-[var(--pacific)]/10 hover:bg-[var(--pacific)]/20 border border-[var(--pacific)]/30 rounded px-1.5 py-0.5 transition-colors"
+                        onClick={() => onControlClick(ctrl.control_id)}
+                      >
+                        ↗ {ctrl.control_id}
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-[10px] text-muted-foreground capitalize">{ctrl.domain.replace(/_/g, " ")}</span>
+                      <span className="text-[10px] text-muted-foreground">· {ctrl.control_type}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
+                    <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${ctrl.match_score >= 0.7 ? "bg-emerald-500" : ctrl.match_score >= 0.4 ? "bg-amber-500" : "bg-red-400"}`}
+                        style={{ width: `${Math.round(ctrl.match_score * 100)}%` }}
+                      />
+                    </div>
+                    <span className="text-[10px] font-mono text-muted-foreground w-7 text-right">{Math.round(ctrl.match_score * 100)}%</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── ObligationCard — stable component so expand state survives filter changes ──
+function ObligationCard({
+  obl, heading, hasFullText, mappedCtrls, controlsLoaded, onControlClick,
+}: {
+  obl: any;
+  heading: string;
+  hasFullText: boolean;
+  mappedCtrls: MappedControlEntry[];
+  controlsLoaded: boolean;
+  onControlClick: (id: string) => void;
+}) {
+  const [ctrlsExpanded, setCtrlsExpanded] = useState(false);
+
+  return (
+    <Card className="shadow-none">
+      <CardHeader className="pb-2 pt-3 px-4">
+        <div className="flex flex-wrap items-center gap-1.5">
+          {obl.section_reference && (
+            <Badge variant="secondary" className="text-xs font-mono">{obl.section_reference}</Badge>
+          )}
+          <Badge variant="outline" className={`text-xs ${ENFORCEMENT_COLOR[obl.enforcement_level] ?? ""}`}>
+            {obl.enforcement_level}
+          </Badge>
+          <Badge variant="outline" className="text-xs capitalize">{(obl.domain ?? "").replace(/_/g, " ")}</Badge>
+          <Badge variant="outline" className="text-xs">{(obl.obligation_type ?? "").replace(/_/g, " ")}</Badge>
+          {obl.has_metric && <Badge variant="outline" className="text-xs text-blue-600 border-blue-300">metric</Badge>}
+          {obl.has_frequency && <Badge variant="outline" className="text-xs text-purple-600 border-purple-300">frequency</Badge>}
+          {controlsLoaded && mappedCtrls.length > 0 && (
+            <button
+              type="button"
+              className="flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full border border-[var(--pacific)]/40 text-[var(--pacific)] hover:bg-[var(--pacific)]/10 transition-colors"
+              onClick={() => setCtrlsExpanded(v => !v)}
+            >
+              <ShieldCheck className="h-2.5 w-2.5" />
+              {mappedCtrls.length} control{mappedCtrls.length !== 1 ? "s" : ""}
+              {ctrlsExpanded
+                ? <ChevronDown className="h-2.5 w-2.5 ml-0.5" />
+                : <ChevronRight className="h-2.5 w-2.5 ml-0.5" />}
+            </button>
+          )}
+        </div>
+        <CardTitle className="text-sm font-medium text-muted-foreground leading-snug mt-1.5">{heading}</CardTitle>
+      </CardHeader>
+      <CardContent className="pt-0 px-4 pb-3 space-y-2">
+        {hasFullText && (
+          <p className="text-sm text-foreground leading-relaxed">{obl.obligation_text}</p>
+        )}
+        {obl.keywords && obl.keywords.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {obl.keywords.slice(0, 6).map((kw: string, k: number) => (
+              <span key={k} className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{kw}</span>
+            ))}
+          </div>
+        )}
+        {controlsLoaded && mappedCtrls.length > 0 && ctrlsExpanded && (
+          <div className="rounded-lg border border-[var(--pacific)]/20 bg-[var(--pacific)]/[0.03] overflow-hidden divide-y divide-[var(--pacific)]/5">
+            {mappedCtrls.sort((a, b) => b.match_score - a.match_score).map((ctrl, ci) => (
+              <div key={ci} className="flex items-start gap-2.5 px-3 py-2 hover:bg-muted/20 transition-colors">
+                <ShieldCheck className={`h-3.5 w-3.5 mt-0.5 shrink-0 ${CTRL_TYPE_ICON_COLOR[ctrl.control_type] ?? "text-muted-foreground"}`} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-xs font-medium text-foreground">{ctrl.control_name}</span>
+                    <button
+                      type="button"
+                      className="text-[9px] font-mono text-[var(--pacific)] bg-[var(--pacific)]/10 hover:bg-[var(--pacific)]/20 border border-[var(--pacific)]/30 rounded px-1.5 py-0.5 transition-colors"
+                      onClick={() => onControlClick(ctrl.control_id)}
+                    >
+                      ↗ {ctrl.control_id}
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-[10px] text-muted-foreground capitalize">{ctrl.domain.replace(/_/g, " ")}</span>
+                    <span className="text-[10px] text-muted-foreground">· {ctrl.control_type}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
+                  <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${ctrl.match_score >= 0.7 ? "bg-emerald-500" : ctrl.match_score >= 0.4 ? "bg-amber-500" : "bg-red-400"}`}
+                      style={{ width: `${Math.round(ctrl.match_score * 100)}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] font-mono text-muted-foreground w-7 text-right">{Math.round(ctrl.match_score * 100)}%</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function RegulatoryLibraryPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -258,8 +573,9 @@ export default function RegulatoryLibraryPage() {
   const [allControls, setAllControls] = useState<any[]>([]);
   const [controlsLoaded, setControlsLoaded] = useState(false);
 
-  // Cross-library analysis toggle
+  // Cross-library analysis toggle + metric drill-down popup
   const [showCrossAnalysis, setShowCrossAnalysis] = useState(false);
+  const [crossMetricDialog, setCrossMetricDialog] = useState<{ title: string; obligations: any[] } | null>(null);
 
   // Build obligation_id → controls[] reverse index
   const obligationControlMap = useMemo(() => {
@@ -612,10 +928,24 @@ export default function RegulatoryLibraryPage() {
     (libraryDomainFilter === "all" || o.domain === libraryDomainFilter) &&
     (libraryEnforcementFilter === "all" || o.enforcement_level === libraryEnforcementFilter) &&
     (librarySearch === "" ||
-      o.obligation_id?.toLowerCase().includes(librarySearch.toLowerCase()) ||
-      o.obligation_text.toLowerCase().includes(librarySearch.toLowerCase()) ||
-      o.section_reference.toLowerCase().includes(librarySearch.toLowerCase()))
+      (o.obligation_id ?? "").toLowerCase().includes(librarySearch.toLowerCase()) ||
+      (o.obligation_text ?? "").toLowerCase().includes(librarySearch.toLowerCase()) ||
+      (o.section_reference ?? "").toLowerCase().includes(librarySearch.toLowerCase()))
   ) ?? [];
+
+  // ── Dashboard obligations — filtered list ────────────────────────────────
+  const filteredDashboardObligations = useMemo(() => {
+    const activeObls = dashboardViewMode === "merged"
+      ? (mergedObligations ?? [])
+      : dashboardObligations;
+    return activeObls.filter(o =>
+      (dashboardDomainFilter === "all" || o.domain === dashboardDomainFilter) &&
+      (dashboardSearch === "" ||
+        (o.obligation_id ?? "").toLowerCase().includes(dashboardSearch.toLowerCase()) ||
+        (o.obligation_text ?? "").toLowerCase().includes(dashboardSearch.toLowerCase()) ||
+        (o.section_reference ?? "").toLowerCase().includes(dashboardSearch.toLowerCase()))
+    );
+  }, [dashboardObligations, mergedObligations, dashboardViewMode, dashboardDomainFilter, dashboardSearch]);
 
   // ── Dashboard metrics ─────────────────────────────────────────────────────
 
@@ -1050,63 +1380,82 @@ export default function RegulatoryLibraryPage() {
                     )}
 
                     {/* Expanded breakdown */}
-                    {showCrossAnalysis && hasCrossData && (
-                      <div className="mt-2 rounded-xl bg-white/10 border border-white/20 p-4 space-y-4">
-                        <p className="text-xs font-semibold text-white/80 uppercase tracking-wider">Metric Breakdown</p>
-                        <div className="space-y-4">
-                          {[
-                            {
-                              icon: "📊",
-                              metric: "Obligations Coverage",
-                              value: `${oblCoveragePct.toFixed(1)}%`,
-                              color: oblCoveragePct >= 75 ? "#00FF88" : oblCoveragePct >= 50 ? "#EAAA00" : "#FF6B6B",
-                              explanation: `${coveredObligations} out of ${totalObligations} regulatory obligations are addressed by at least one control in your controls library. A higher percentage indicates better regulatory alignment.`,
-                            },
-                            {
-                              icon: "🔴",
-                              metric: "Gap Obligations",
-                              value: String(gapObligations),
-                              color: gapObligations === 0 ? "#00FF88" : "#EAAA00",
-                              explanation: gapObligations === 0
-                                ? "All regulatory obligations have at least one mapped control — no coverage gaps detected."
-                                : `${gapObligations} obligations across your regulatory frameworks are not covered by any control. These represent compliance risk areas that require new controls or mappings.`,
-                            },
-                            {
-                              icon: "🛡️",
-                              metric: "Controls with Obligation Mapping",
-                              value: `${ctrlCoveragePct.toFixed(1)}%`,
-                              color: ctrlCoveragePct >= 70 ? "#00FF88" : ctrlCoveragePct >= 40 ? "#EAAA00" : "#FF6B6B",
-                              explanation: `${ctrlWithMapping} of ${allControls.length} controls are mapped to at least one regulatory obligation. Controls without mappings may be redundant or cover areas not yet reflected in your regulatory library.`,
-                            },
-                            {
-                              icon: "📋",
-                              metric: "Total Obligations",
-                              value: totalObligations.toLocaleString(),
-                              color: "#00B8F5",
-                              explanation: `Your regulatory library contains ${totalObligations} discrete obligations extracted across ${libraryDocuments.length} document${libraryDocuments.length !== 1 ? "s" : ""} (${frameworkNames.join(", ") || "unknown frameworks"}).`,
-                            },
-                            {
-                              icon: "🏷️",
-                              metric: "Domain Coverage",
-                              value: `${sortedDomains.length} domains`,
-                              color: "#ffffff",
-                              explanation: `Regulatory obligations span ${sortedDomains.length} security domains. Domains with many obligations but few controls are your highest-risk coverage gaps.`,
-                            },
-                          ].map(({ icon, metric, value, color, explanation }) => (
-                            <div key={metric} className="flex items-start gap-3">
+                    {showCrossAnalysis && hasCrossData && (() => {
+                      // Deduplicate by obligation_id (same ID can appear across multiple docs)
+                      const dedup = (obls: any[]) =>
+                        Array.from(new Map(obls.filter(o => o.obligation_id).map(o => [o.obligation_id, o])).values());
+
+                      const coveredObls = dedup(dashboardObligations.filter(o => o.obligation_id && coveredObligationIds.has(o.obligation_id)));
+                      const gapObls    = dedup(dashboardObligations.filter(o => o.obligation_id && !coveredObligationIds.has(o.obligation_id)));
+                      const allObls    = dedup(dashboardObligations);
+
+                      const metrics = [
+                        {
+                          icon: "📊",
+                          metric: "Obligations Coverage",
+                          value: `${oblCoveragePct.toFixed(1)}%`,
+                          color: oblCoveragePct >= 75 ? "#00FF88" : oblCoveragePct >= 50 ? "#EAAA00" : "#FF6B6B",
+                          explanation: `${coveredObls.length} of ${allObls.length} unique obligations are addressed by at least one control.`,
+                          obligations: coveredObls,
+                          dialogTitle: `Covered Obligations (${coveredObls.length})`,
+                        },
+                        {
+                          icon: "🔴",
+                          metric: "Gap Obligations",
+                          value: String(gapObls.length),
+                          color: gapObls.length === 0 ? "#00FF88" : "#EAAA00",
+                          explanation: gapObls.length === 0
+                            ? "All obligations have at least one mapped control — no gaps."
+                            : `${gapObls.length} obligations have no mapped controls. These are compliance risk areas.`,
+                          obligations: gapObls,
+                          dialogTitle: `Gap Obligations — No Control Coverage (${gapObls.length})`,
+                        },
+                        {
+                          icon: "📋",
+                          metric: "Total Obligations",
+                          value: allObls.length.toLocaleString(),
+                          color: "#00B8F5",
+                          explanation: `${allObls.length} unique obligations across ${libraryDocuments.length} document(s): ${frameworkNames.join(", ") || "unknown frameworks"}.`,
+                          obligations: allObls,
+                          dialogTitle: `All Obligations (${allObls.length})`,
+                        },
+                        {
+                          icon: "🏷️",
+                          metric: "Domain Coverage",
+                          value: `${sortedDomains.length} domains`,
+                          color: "#ffffff",
+                          explanation: `Obligations span ${sortedDomains.length} domains. Domains with many obligations but few controls are highest-risk gaps.`,
+                          obligations: [] as any[],
+                          dialogTitle: "",
+                        },
+                      ];
+                      return (
+                        <div className="mt-2 rounded-xl bg-white/10 border border-white/20 p-4 space-y-1">
+                          <p className="text-xs font-semibold text-white/80 uppercase tracking-wider mb-3">Metric Breakdown — click to view obligations</p>
+                          {metrics.map(({ icon, metric, value, color, explanation, obligations, dialogTitle }) => (
+                            <button
+                              key={metric}
+                              type="button"
+                              disabled={obligations.length === 0}
+                              className="w-full flex items-start gap-3 text-left rounded-lg px-3 py-2.5 hover:bg-white/10 transition-colors disabled:opacity-60 disabled:cursor-default group"
+                              onClick={() => obligations.length > 0 && setCrossMetricDialog({ title: dialogTitle, obligations })}
+                            >
                               <span className="text-lg shrink-0 mt-0.5">{icon}</span>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <span className="text-xs font-semibold text-white/90">{metric}</span>
                                   <span className="text-sm font-bold font-mono" style={{ color }}>{value}</span>
+                                  {obligations.length > 0 && (
+                                    <ArrowRight className="h-3 w-3 text-white/40 ml-auto group-hover:text-white/70 transition-colors" />
+                                  )}
                                 </div>
                                 <p className="text-[11px] text-white/55 mt-0.5 leading-relaxed">{explanation}</p>
                               </div>
-                            </div>
+                            </button>
                           ))}
                         </div>
-                      </div>
-                    )}
+                      );
+                    })()}
                   </div>
                 )}
 
@@ -1177,15 +1526,7 @@ export default function RegulatoryLibraryPage() {
                           )}
                         </h3>
                         <Badge variant="secondary" className="text-[10px]">
-                          {(dashboardViewMode === "merged" ? (mergedObligations ?? []) : dashboardObligations)
-                            .filter(o =>
-                              (dashboardDomainFilter === "all" || o.domain === dashboardDomainFilter) &&
-                              (dashboardSearch === "" ||
-                                o.obligation_id?.toLowerCase().includes(dashboardSearch.toLowerCase()) ||
-                                o.obligation_text?.toLowerCase().includes(dashboardSearch.toLowerCase()) ||
-                                o.section_reference?.toLowerCase().includes(dashboardSearch.toLowerCase()))
-                            ).length
-                          } shown
+                          {filteredDashboardObligations.length} shown
                         </Badge>
                       </div>
                       <div className="flex items-center gap-1">
@@ -1231,102 +1572,28 @@ export default function RegulatoryLibraryPage() {
                     <div className="flex justify-center py-8">
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
                     </div>
+                  ) : filteredDashboardObligations.length === 0 ? (
+                    <p className="text-xs text-muted-foreground text-center py-6">
+                      {dashboardObligations.length === 0 ? "No obligations loaded." : "No obligations match the current filter."}
+                    </p>
                   ) : (
-                    (() => {
-                      const activeObls = dashboardViewMode === "merged"
-                        ? (mergedObligations ?? [])
-                        : dashboardObligations;
-                      const filtered = activeObls.filter(o =>
-                        (dashboardDomainFilter === "all" || o.domain === dashboardDomainFilter) &&
-                        (dashboardSearch === "" ||
-                          o.obligation_id?.toLowerCase().includes(dashboardSearch.toLowerCase()) ||
-                          o.obligation_text?.toLowerCase().includes(dashboardSearch.toLowerCase()) ||
-                          o.section_reference?.toLowerCase().includes(dashboardSearch.toLowerCase()))
-                      );
-                      if (filtered.length === 0) return (
-                        <p className="text-xs text-muted-foreground text-center py-6">
-                          {activeObls.length === 0 ? "No obligations loaded." : "No obligations match the current filter."}
-                        </p>
-                      );
-                      return (
-                        <div className="divide-y">
-                          {filtered.map((obl, i) => {
-                            const hue = HUES[sortedDomains.findIndex(([d]) => d === obl.domain) % HUES.length];
-                            const mappedCtrls = obligationControlMap.get(obl.obligation_id) ?? [];
-                            return (
-                              <div key={obl.obligation_id ?? i} className="px-3 py-2.5 hover:bg-muted/20 transition-colors">
-                                <div className="flex items-start gap-2">
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
-                                      <code className="text-[10px] font-mono text-muted-foreground bg-muted rounded px-1">{obl.obligation_id}</code>
-                                      <Badge
-                                        variant="outline"
-                                        className="text-[10px] capitalize"
-                                        style={{ borderColor: `hsl(${hue},60%,60%)`, color: `hsl(${hue},60%,40%)` }}
-                                      >
-                                        {obl.domain?.replace(/_/g, " ")}
-                                      </Badge>
-                                      <Badge
-                                        variant="outline"
-                                        className={`text-[10px] ${ENFORCEMENT_COLOR[obl.enforcement_level] ?? ""}`}
-                                      >
-                                        {obl.enforcement_level}
-                                      </Badge>
-                                      {obl.merged_from_count > 1 && (
-                                        <Badge variant="secondary" className="text-[10px]">
-                                          <Layers className="h-2.5 w-2.5 mr-0.5" />
-                                          {obl.merged_from_count} sources
-                                        </Badge>
-                                      )}
-                                      {mappedCtrls.length > 0 && (
-                                        <Badge variant="outline" className="text-[10px] text-[var(--pacific)] border-[var(--pacific)]/40 gap-0.5">
-                                          <ShieldCheck className="h-2.5 w-2.5" />
-                                          {mappedCtrls.length}
-                                        </Badge>
-                                      )}
-                                    </div>
-                                    <p className="text-xs text-muted-foreground line-clamp-2">{obl.obligation_text}</p>
-                                    {/* Source document reference (all obligations) */}
-                                    {dashboardViewMode === "all" && (
-                                      <div className="flex items-center gap-1.5 mt-1 text-[10px]">
-                                        <Link2 className="h-3 w-3 text-muted-foreground/60 shrink-0" />
-                                        <span className="font-medium text-muted-foreground">{obl.framework_name || obl.source_filename}</span>
-                                        {obl.framework_name && obl.source_filename && obl.framework_name !== obl.source_filename && (
-                                          <span className="text-muted-foreground/50 truncate max-w-[160px]" title={obl.source_filename}>({obl.source_filename})</span>
-                                        )}
-                                        {obl.section_reference && <span className="text-muted-foreground/70">§{obl.section_reference}</span>}
-                                      </div>
-                                    )}
-                                    {/* Sources for merged rows */}
-                                    {obl.merged_from_count > 1 && obl.source_documents?.length > 0 && (
-                                      <div className="mt-1.5 space-y-1">
-                                        <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide">Merged from</p>
-                                        <div className="flex flex-col gap-1">
-                                          {obl.source_documents.map((src: any, si: number) => (
-                                            <div key={si} className={`flex items-start gap-1.5 text-[10px] rounded px-1.5 py-1 ${src.is_primary ? "bg-primary/8 border border-primary/20" : "bg-muted/40"}`}>
-                                              {src.is_primary && <span className="text-primary shrink-0 leading-none mt-0.5">★</span>}
-                                              <div className="min-w-0">
-                                                <span className="font-medium text-foreground/80">{src.framework_name || src.source_filename}</span>
-                                                {src.framework_name && src.source_filename && src.framework_name !== src.source_filename && (
-                                                  <span className="text-muted-foreground/50 ml-1 truncate" title={src.source_filename}>({src.source_filename})</span>
-                                                )}
-                                                {src.section_reference && <span className="text-muted-foreground/70 ml-1">§{src.section_reference}</span>}
-                                              </div>
-                                            </div>
-                                          ))}
-                                        </div>
-                                      </div>
-                                    )}
-                                    {/* Mapped controls */}
-                                    {controlsLoaded && <MappedControlsSection controls={mappedCtrls} onControlClick={handleControlClick} />}
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      );
-                    })()
+                    <div className="divide-y">
+                      {filteredDashboardObligations.map((obl, i) => {
+                        const hue = HUES[sortedDomains.findIndex(([d]) => d === obl.domain) % HUES.length];
+                        const mappedCtrls = obligationControlMap.get(obl.obligation_id) ?? [];
+                        return (
+                          <DashboardOblRow
+                            key={`${obl.obligation_id ?? ""}::${obl.source_filename ?? ""}::${i}`}
+                            obl={obl}
+                            hue={hue}
+                            dashboardViewMode={dashboardViewMode}
+                            mappedCtrls={mappedCtrls}
+                            controlsLoaded={controlsLoaded}
+                            onControlClick={handleControlClick}
+                          />
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
 
@@ -1494,49 +1761,23 @@ export default function RegulatoryLibraryPage() {
                     <p className="text-center text-muted-foreground py-12 text-sm">No obligations match the current filter</p>
                   )}
                   {filteredObligations.map((obl, j) => {
-                    const heading = obl.obligation_text.length > 120
-                      ? obl.obligation_text.slice(0, 120).replace(/\s\S*$/, "") + "…"
-                      : obl.obligation_text;
-                    const hasFullText = obl.obligation_text.length > 120;
+                    const oblText = obl.obligation_text ?? "";
+                    const heading = oblText.length > 120
+                      ? oblText.slice(0, 120).replace(/\s\S*$/, "") + "…"
+                      : oblText;
+                    const hasFullText = oblText.length > 120;
                     const mappedCtrls = obligationControlMap.get(obl.obligation_id) ?? [];
 
                     return (
-                      <Card key={j} className="shadow-none">
-                        <CardHeader className="pb-2 pt-3 px-4">
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            {obl.section_reference && (
-                              <Badge variant="secondary" className="text-xs font-mono">{obl.section_reference}</Badge>
-                            )}
-                            <Badge variant="outline" className={`text-xs ${ENFORCEMENT_COLOR[obl.enforcement_level] ?? ""}`}>
-                              {obl.enforcement_level}
-                            </Badge>
-                            <Badge variant="outline" className="text-xs capitalize">{obl.domain.replace(/_/g, " ")}</Badge>
-                            <Badge variant="outline" className="text-xs">{obl.obligation_type.replace(/_/g, " ")}</Badge>
-                            {obl.has_metric && <Badge variant="outline" className="text-xs text-blue-600 border-blue-300">metric</Badge>}
-                            {obl.has_frequency && <Badge variant="outline" className="text-xs text-purple-600 border-purple-300">frequency</Badge>}
-                            {mappedCtrls.length > 0 && (
-                              <Badge variant="outline" className="text-[10px] text-[var(--pacific)] border-[var(--pacific)]/40 gap-0.5">
-                                <ShieldCheck className="h-2.5 w-2.5" />
-                                {mappedCtrls.length}
-                              </Badge>
-                            )}
-                          </div>
-                          <CardTitle className="text-sm font-medium text-muted-foreground leading-snug mt-1.5">{heading}</CardTitle>
-                        </CardHeader>
-                        <CardContent className="pt-0 px-4 pb-3 space-y-2">
-                          {hasFullText && (
-                            <p className="text-sm text-foreground leading-relaxed">{obl.obligation_text}</p>
-                          )}
-                          {obl.keywords && obl.keywords.length > 0 && (
-                            <div className="flex flex-wrap gap-1">
-                              {obl.keywords.slice(0, 6).map((kw, k) => (
-                                <span key={k} className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{kw}</span>
-                              ))}
-                            </div>
-                          )}
-                          {controlsLoaded && <MappedControlsSection controls={mappedCtrls} onControlClick={handleControlClick} />}
-                        </CardContent>
-                      </Card>
+                      <ObligationCard
+                        key={obl.obligation_id ?? j}
+                        obl={obl}
+                        heading={heading}
+                        hasFullText={hasFullText}
+                        mappedCtrls={mappedCtrls}
+                        controlsLoaded={controlsLoaded}
+                        onControlClick={handleControlClick}
+                      />
                     );
                   })}
                 </div>
@@ -1988,6 +2229,38 @@ export default function RegulatoryLibraryPage() {
         )}
       </div>
       </div>
+
+      {/* ── Cross-Library Metric Obligation Popup ────────────────────────── */}
+      <Dialog open={!!crossMetricDialog} onOpenChange={open => { if (!open) setCrossMetricDialog(null); }}>
+        <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col p-0 gap-0">
+          <DialogHeader className="px-5 py-4 border-b shrink-0">
+            <DialogTitle className="text-base font-semibold">{crossMetricDialog?.title}</DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="flex-1 min-h-0" type="always">
+            <div className="divide-y">
+              {(crossMetricDialog?.obligations ?? []).map((obl: any, i: number) => (
+                <DialogOblRow
+                  key={obl.obligation_id ?? i}
+                  obl={obl}
+                  mappedCtrls={obligationControlMap.get(obl.obligation_id) ?? []}
+                  onControlClick={handleControlClick}
+                  onObligationClick={(oblId) => {
+                    setCrossMetricDialog(null);
+                    setRightPanelView("dashboard");
+                    setSelectedLibraryDoc(null);
+                    setDashboardSearch(oblId);
+                    setDashboardDomainFilter("all");
+                    setDashboardViewMode("all");
+                  }}
+                />
+              ))}
+              {(crossMetricDialog?.obligations ?? []).length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-10">No obligations to display.</p>
+              )}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
