@@ -6,11 +6,13 @@ import {
   CheckCircle2, FileText, GitCompare, Network, ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import HeroSection from "@/components/HeroSection";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
+import ControlTestingKpis from "@/components/ControlTestingKpis";
 
 interface GapSummary {
   total_documents: number;
@@ -28,6 +30,7 @@ interface ControlTestSummary {
   fail_count: number;
   partial_count: number;
   no_evidence_count: number;
+  severity_counts?: { high: number; medium: number; low: number };
 }
 
 interface ReportSummary {
@@ -224,30 +227,23 @@ export default function ReportsPage() {
 
   return (
     <div className="h-full flex flex-col">
-      {/* Pinned header */}
-      <div
-        className="flex-shrink-0 px-6 py-3 flex items-center gap-3"
-        style={{
-          background: "linear-gradient(135deg, hsl(262 80% 20% / 0.4), hsl(217 91% 20% / 0.3))",
-          borderBottom: "1px solid hsl(217 91% 55% / 0.2)",
-        }}
-      >
-        <FileBarChart className="h-6 w-6 text-blue-400 flex-shrink-0" />
-        <div className="flex-1 min-w-0">
-          <h1 className="text-lg font-bold text-foreground leading-tight">Reports</h1>
-          <p className="text-xs text-muted-foreground">Control testing workpapers, RCM compliance assessments, and regulatory gap analyses</p>
-        </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={fetchReports}
-          disabled={loading}
-          className="h-7 w-7 text-muted-foreground hover:text-foreground"
-          title="Refresh"
-        >
-          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-        </Button>
-      </div>
+      <HeroSection
+        title="Reports"
+        subtitle="Control testing workpapers, RCM compliance assessments, and regulatory gap analyses"
+        icon={FileBarChart}
+        actions={
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={fetchReports}
+            disabled={loading}
+            className="h-7 w-7 text-slate-400 hover:text-white hover:bg-white/10"
+            title="Refresh"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+          </Button>
+        }
+      />
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-auto p-6">
@@ -395,20 +391,27 @@ export default function ReportsPage() {
 
                     <CollapsibleContent>
                       <CardContent className="pt-0 space-y-4">
-                        {/* ── Control Testing KPI row ── */}
+                        {/* ── Control Testing KPI cards ── */}
                         {ctTest && ctSum && (
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                            {[
-                              { label: "Pass", value: ctSum.pass_count, color: "text-green-400" },
-                              { label: "Fail", value: ctSum.fail_count, color: "text-red-400" },
-                              { label: "Partial", value: ctSum.partial_count, color: "text-yellow-400" },
-                              { label: "No Evidence", value: ctSum.no_evidence_count, color: "text-muted-foreground" },
-                            ].map((kpi) => (
-                              <div key={kpi.label} className="rounded-lg bg-muted/30 p-3 text-center">
-                                <p className={`text-lg font-bold ${kpi.color}`}>{kpi.value}</p>
-                                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{kpi.label}</p>
-                              </div>
-                            ))}
+                          <div className="space-y-3">
+                            <ControlTestingKpis
+                              controlsTested={ctSum.controls_tested}
+                              issuesIdentified={ctSum.fail_count + ctSum.partial_count}
+                              severityCounts={ctSum.severity_counts}
+                            />
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                              {[
+                                { label: "Pass", value: ctSum.pass_count, color: "text-green-400" },
+                                { label: "Fail", value: ctSum.fail_count, color: "text-red-400" },
+                                { label: "Partial", value: ctSum.partial_count, color: "text-yellow-400" },
+                                { label: "No Evidence", value: ctSum.no_evidence_count, color: "text-muted-foreground" },
+                              ].map((kpi) => (
+                                <div key={kpi.label} className="rounded-lg bg-muted/30 p-3 text-center">
+                                  <p className={`text-lg font-bold ${kpi.color}`}>{kpi.value}</p>
+                                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{kpi.label}</p>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         )}
 

@@ -480,6 +480,14 @@ def generate_overall_summary(analysis_results: List[Dict[str, Any]]) -> Dict[str
     else:
         overall = "COMPLIANT"
 
+    # Count severity only for issues (FAIL + PARTIAL)
+    issues = [r for r in analysis_results if r["result"] in ("FAIL", "PARTIAL")]
+    severity_counts = {
+        "high":   sum(1 for r in issues if r.get("impact") == "HIGH"),
+        "medium": sum(1 for r in issues if r.get("impact") == "MEDIUM"),
+        "low":    sum(1 for r in issues if r.get("impact") == "LOW"),
+    }
+
     return {
         "controls_tested":           total,
         "controls_with_evidence":    total - no_evidence_count,
@@ -489,4 +497,5 @@ def generate_overall_summary(analysis_results: List[Dict[str, Any]]) -> Dict[str
         "fail_count":                fail_count,
         "partial_count":             partial_count,
         "no_evidence_count":         no_evidence_count,
+        "severity_counts":           severity_counts,
     }

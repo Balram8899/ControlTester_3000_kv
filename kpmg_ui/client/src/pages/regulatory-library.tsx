@@ -1,12 +1,15 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLocation } from "wouter";
+import { useCrossNav } from "@/contexts/CrossNavContext";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
   Upload, FileText, X, Play, RotateCcw, BookOpen, Search, Trash2, Library,
   LayoutDashboard, GitCompare, ChevronRight, AlertTriangle, CheckCircle2, Minus, Layers, Link2,
-  PanelLeftClose, PanelLeftOpen, Download, Network,
+  PanelLeftClose, PanelLeftOpen, Download, Network, ShieldCheck, ChevronDown, ArrowRight, TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import HeroSection from "@/components/HeroSection";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -76,8 +79,116 @@ interface GapResults {
   graph_stats?: { nodes: number; edges: number; chunk_nodes: number; domain_nodes: number; standard_nodes: number } | null;
 }
 
+// ── Mapped-control reverse index types ────────────────────────────────────────
+interface MappedControlEntry {
+  control_id: string;
+  control_name: string;
+  domain: string;
+  control_type: string;
+  match_score: number;
+  source_filename?: string;
+}
+
+const CTRL_TYPE_ICON_COLOR: Record<string, string> = {
+  preventive:   "text-blue-500",
+  detective:    "text-yellow-500",
+  corrective:   "text-orange-500",
+  directive:    "text-purple-500",
+  compensating: "text-gray-400",
+};
+
+function scoreColor(score: number): string {
+  if (score >= 0.7) return "bg-emerald-500";
+  if (score >= 0.4) return "bg-amber-500";
+  return "bg-red-400";
+}
+
+function scorePct(score: number): string {
+  return `${Math.round(score * 100)}%`;
+}
+
+/** Inline collapsible showing controls mapped to an obligation */
+function MappedControlsSection({ controls, onControlClick }: { controls: MappedControlEntry[]; onControlClick?: (controlId: string) => void }) {
+  const [expanded, setExpanded] = useState(false);
+
+  if (controls.length === 0) return null;
+
+  return (
+    <div className="mt-2 rounded-lg border border-[var(--pacific)]/20 bg-[var(--pacific)]/[0.03] overflow-hidden">
+      <button
+        type="button"
+        className="w-full flex items-center gap-2 px-3 py-1.5 text-left hover:bg-[var(--pacific)]/[0.06] transition-colors"
+        onClick={() => setExpanded(e => !e)}
+      >
+        <ShieldCheck className="h-3.5 w-3.5 text-[var(--pacific)] shrink-0" />
+        <span className="text-[11px] font-semibold text-[var(--pacific)]">
+          {controls.length} Mapped Control{controls.length !== 1 ? "s" : ""}
+        </span>
+        <div className="flex items-center gap-1 ml-auto">
+          {/* Mini score dots preview when collapsed */}
+          {!expanded && controls.slice(0, 5).map((c, i) => (
+            <span
+              key={i}
+              className={`h-1.5 w-1.5 rounded-full ${scoreColor(c.match_score)}`}
+              title={`${c.control_name} (${scorePct(c.match_score)})`}
+            />
+          ))}
+          {!expanded && controls.length > 5 && (
+            <span className="text-[9px] text-muted-foreground">+{controls.length - 5}</span>
+          )}
+          {expanded
+            ? <ChevronDown className="h-3 w-3 text-muted-foreground" />
+            : <ChevronRight className="h-3 w-3 text-muted-foreground" />
+          }
+        </div>
+      </button>
+
+      {expanded && (
+        <div className="border-t border-[var(--pacific)]/10 divide-y divide-[var(--pacific)]/5">
+          {controls
+            .sort((a, b) => b.match_score - a.match_score)
+            .map((ctrl, ci) => (
+            <div key={ci} className="flex items-start gap-2.5 px-3 py-2 hover:bg-muted/20 transition-colors">
+              <ShieldCheck className={`h-3.5 w-3.5 mt-0.5 shrink-0 ${CTRL_TYPE_ICON_COLOR[ctrl.control_type] ?? "text-muted-foreground"}`} />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-xs font-medium text-foreground">{ctrl.control_name}</span>
+                  <button
+                    type="button"
+                    title="Navigate to this control in Controls Library"
+                    className="text-[9px] font-mono text-[var(--pacific)] bg-[var(--pacific)]/10 hover:bg-[var(--pacific)]/20 border border-[var(--pacific)]/30 rounded px-1.5 py-0.5 transition-colors cursor-pointer"
+                    onClick={() => onControlClick?.(ctrl.control_id)}
+                  >
+                    ↗ {ctrl.control_id}
+                  </button>
+                </div>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-[10px] text-muted-foreground capitalize">{ctrl.domain.replace(/_/g, " ")}</span>
+                  <span className="text-[10px] text-muted-foreground capitalize">· {ctrl.control_type}</span>
+                </div>
+              </div>
+              {/* Match score bar */}
+              <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
+                <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${scoreColor(ctrl.match_score)}`}
+                    style={{ width: scorePct(ctrl.match_score) }}
+                  />
+                </div>
+                <span className="text-[10px] font-mono text-muted-foreground w-7 text-right">{scorePct(ctrl.match_score)}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function RegulatoryLibraryPage() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
+  const { pendingObligationId, setPendingObligationId, setPendingControlId } = useCrossNav();
   const {
     libraryDocuments,
     setLibraryDocuments,
@@ -143,9 +254,58 @@ export default function RegulatoryLibraryPage() {
   const [clearingLibrary, setClearingLibrary] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
+  // Controls reverse-mapping state
+  const [allControls, setAllControls] = useState<any[]>([]);
+  const [controlsLoaded, setControlsLoaded] = useState(false);
+
+  // Cross-library analysis toggle
+  const [showCrossAnalysis, setShowCrossAnalysis] = useState(false);
+
+  // Build obligation_id → controls[] reverse index
+  const obligationControlMap = useMemo(() => {
+    const map = new Map<string, MappedControlEntry[]>();
+    for (const ctrl of allControls) {
+      const mappedObls: any[] = ctrl.mapped_obligations ?? [];
+      for (const obl of mappedObls) {
+        const oblId = obl.obligation_id;
+        if (!oblId) continue;
+        const entry: MappedControlEntry = {
+          control_id: ctrl.control_id,
+          control_name: ctrl.control_name,
+          domain: ctrl.domain,
+          control_type: ctrl.control_type,
+          match_score: obl.match_score ?? 0,
+          source_filename: ctrl._source_filename,
+        };
+        const existing = map.get(oblId);
+        if (existing) existing.push(entry);
+        else map.set(oblId, [entry]);
+      }
+    }
+    return map;
+  }, [allControls]);
+
   useEffect(() => {
     fetchLibraryDocuments();
+    fetchAllControls();
   }, []);
+
+  // React to cross-page navigation: jump to a specific obligation
+  useEffect(() => {
+    if (!pendingObligationId) return;
+    setRightPanelView("dashboard");
+    setSelectedLibraryDoc(null);
+    setDashboardSearch(pendingObligationId);
+    setDashboardDomainFilter("all");
+    setDashboardViewMode("all");
+    setPendingObligationId(null);
+  }, [pendingObligationId]);
+
+  // Navigate to controls library focused on a specific control
+  const handleControlClick = (controlId: string) => {
+    setPendingControlId(controlId);
+    setLocation("/controls-library");
+  };
 
   // ── API helpers ───────────────────────────────────────────────────────────
 
@@ -181,6 +341,21 @@ export default function RegulatoryLibraryPage() {
       console.warn("fetchAllObligations failed:", err);
     } finally {
       setDashboardLoading(false);
+    }
+  };
+
+  const fetchAllControls = async () => {
+    try {
+      const res = await fetch("/api/controls-library/all-controls");
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.success && Array.isArray(data.controls)) {
+        setAllControls(data.controls);
+      }
+    } catch {
+      // silently ignore — mapped controls are supplementary
+    } finally {
+      setControlsLoaded(true);
     }
   };
 
@@ -437,6 +612,7 @@ export default function RegulatoryLibraryPage() {
     (libraryDomainFilter === "all" || o.domain === libraryDomainFilter) &&
     (libraryEnforcementFilter === "all" || o.enforcement_level === libraryEnforcementFilter) &&
     (librarySearch === "" ||
+      o.obligation_id?.toLowerCase().includes(librarySearch.toLowerCase()) ||
       o.obligation_text.toLowerCase().includes(librarySearch.toLowerCase()) ||
       o.section_reference.toLowerCase().includes(librarySearch.toLowerCase()))
   ) ?? [];
@@ -455,17 +631,23 @@ export default function RegulatoryLibraryPage() {
 
   const sortedDomains = Object.entries(allDomainCounts).sort((a, b) => b[1] - a[1]);
 
+  // ── Cross-library metrics ─────────────────────────────────────────────────
+  const coveredObligationIds = new Set<string>(
+    allControls.flatMap(c => (c.mapped_obligations ?? []).map((o: any) => o.obligation_id).filter(Boolean))
+  );
+  const coveredObligations = coveredObligationIds.size;
+  const gapObligations = Math.max(0, totalObligations - coveredObligations);
+  const oblCoveragePct = totalObligations > 0 ? (coveredObligations / totalObligations) * 100 : 0;
+  const ctrlWithMapping = allControls.filter(c => (c.mapped_obligations?.length ?? 0) > 0).length;
+  const ctrlCoveragePct = allControls.length > 0 ? (ctrlWithMapping / allControls.length) * 100 : 0;
+  const frameworkNames = Array.from(new Set(libraryDocuments.map(d => d.framework_name).filter(Boolean)));
+  const hasCrossData = controlsLoaded && allControls.length > 0 && totalObligations > 0;
+
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
     <div className="h-full flex flex-col overflow-hidden select-none">
-      <div className="flex-shrink-0 px-6 py-3 flex items-center gap-3" style={{ background: "linear-gradient(135deg, hsl(262 80% 20% / 0.4), hsl(217 91% 20% / 0.3))", borderBottom: "1px solid hsl(217 91% 55% / 0.2)" }}>
-        <Library className="h-5 w-5 text-blue-400 flex-shrink-0" />
-        <div>
-          <h1 className="text-base font-bold text-foreground">Regulatory Library</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">Browse and analyse regulatory frameworks and obligations</p>
-        </div>
-      </div>
+      <HeroSection title="Regulatory Library" subtitle="Browse and analyse regulatory frameworks and obligations" icon={Library} />
       <div className="flex-1 flex overflow-hidden">
 
       {/* ── LEFT PANEL ─────────────────────────────────────────────────────── */}
@@ -810,6 +992,124 @@ export default function RegulatoryLibraryPage() {
                   </div>
                 </div>
 
+                {/* Cross-Library Analysis card */}
+                {(hasCrossData || (controlsLoaded && allControls.length === 0)) && (
+                  <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-[#00338D] to-[#1E49E2] p-5 text-white space-y-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-white/60 mb-0.5">
+                          Cross-Library Analysis
+                        </p>
+                        <h3 className="text-base font-bold">Regulation–Controls Coverage</h3>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowCrossAnalysis(v => !v)}
+                        className="shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full border border-white/30 text-white hover:bg-white/10 transition-colors flex items-center gap-1.5"
+                      >
+                        {showCrossAnalysis ? "Hide Breakdown" : "View Full Analysis"} <ArrowRight className="h-3 w-3" />
+                      </button>
+                    </div>
+
+                    {/* Stats row */}
+                    {hasCrossData ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        {[
+                          {
+                            value: `${oblCoveragePct.toFixed(0)}%`,
+                            label: "obligations covered",
+                            color: oblCoveragePct >= 75 ? "#00FF88" : oblCoveragePct >= 50 ? "#EAAA00" : "#FF6B6B",
+                          },
+                          { value: totalObligations.toLocaleString(), label: "total obligations", color: "#00B8F5" },
+                          {
+                            value: String(gapObligations),
+                            label: "gap obligations",
+                            color: gapObligations === 0 ? "#00FF88" : "#EAAA00",
+                          },
+                          { value: String(allControls.length), label: "controls assessed", color: "#ffffff" },
+                        ].map(({ value, label, color }) => (
+                          <div key={label}>
+                            <p className="text-2xl font-bold leading-none" style={{ color }}>{value}</p>
+                            <p className="text-[11px] text-white/60 mt-1">{label}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-white/50">Load the Controls Library to see cross-library metrics.</p>
+                    )}
+
+                    {/* Framework pills */}
+                    {frameworkNames.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {frameworkNames.map((name, i) => (
+                          <span key={i} className="text-[11px] font-medium px-3 py-1 rounded-full border border-white/20 bg-white/10 text-white/80">
+                            {name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Expanded breakdown */}
+                    {showCrossAnalysis && hasCrossData && (
+                      <div className="mt-2 rounded-xl bg-white/10 border border-white/20 p-4 space-y-4">
+                        <p className="text-xs font-semibold text-white/80 uppercase tracking-wider">Metric Breakdown</p>
+                        <div className="space-y-4">
+                          {[
+                            {
+                              icon: "📊",
+                              metric: "Obligations Coverage",
+                              value: `${oblCoveragePct.toFixed(1)}%`,
+                              color: oblCoveragePct >= 75 ? "#00FF88" : oblCoveragePct >= 50 ? "#EAAA00" : "#FF6B6B",
+                              explanation: `${coveredObligations} out of ${totalObligations} regulatory obligations are addressed by at least one control in your controls library. A higher percentage indicates better regulatory alignment.`,
+                            },
+                            {
+                              icon: "🔴",
+                              metric: "Gap Obligations",
+                              value: String(gapObligations),
+                              color: gapObligations === 0 ? "#00FF88" : "#EAAA00",
+                              explanation: gapObligations === 0
+                                ? "All regulatory obligations have at least one mapped control — no coverage gaps detected."
+                                : `${gapObligations} obligations across your regulatory frameworks are not covered by any control. These represent compliance risk areas that require new controls or mappings.`,
+                            },
+                            {
+                              icon: "🛡️",
+                              metric: "Controls with Obligation Mapping",
+                              value: `${ctrlCoveragePct.toFixed(1)}%`,
+                              color: ctrlCoveragePct >= 70 ? "#00FF88" : ctrlCoveragePct >= 40 ? "#EAAA00" : "#FF6B6B",
+                              explanation: `${ctrlWithMapping} of ${allControls.length} controls are mapped to at least one regulatory obligation. Controls without mappings may be redundant or cover areas not yet reflected in your regulatory library.`,
+                            },
+                            {
+                              icon: "📋",
+                              metric: "Total Obligations",
+                              value: totalObligations.toLocaleString(),
+                              color: "#00B8F5",
+                              explanation: `Your regulatory library contains ${totalObligations} discrete obligations extracted across ${libraryDocuments.length} document${libraryDocuments.length !== 1 ? "s" : ""} (${frameworkNames.join(", ") || "unknown frameworks"}).`,
+                            },
+                            {
+                              icon: "🏷️",
+                              metric: "Domain Coverage",
+                              value: `${sortedDomains.length} domains`,
+                              color: "#ffffff",
+                              explanation: `Regulatory obligations span ${sortedDomains.length} security domains. Domains with many obligations but few controls are your highest-risk coverage gaps.`,
+                            },
+                          ].map(({ icon, metric, value, color, explanation }) => (
+                            <div key={metric} className="flex items-start gap-3">
+                              <span className="text-lg shrink-0 mt-0.5">{icon}</span>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-xs font-semibold text-white/90">{metric}</span>
+                                  <span className="text-sm font-bold font-mono" style={{ color }}>{value}</span>
+                                </div>
+                                <p className="text-[11px] text-white/55 mt-0.5 leading-relaxed">{explanation}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Domain Distribution — clickable filter bars */}
                 {sortedDomains.length > 0 && (
                   <div className="rounded-xl border bg-card p-4 space-y-3">
@@ -881,6 +1181,7 @@ export default function RegulatoryLibraryPage() {
                             .filter(o =>
                               (dashboardDomainFilter === "all" || o.domain === dashboardDomainFilter) &&
                               (dashboardSearch === "" ||
+                                o.obligation_id?.toLowerCase().includes(dashboardSearch.toLowerCase()) ||
                                 o.obligation_text?.toLowerCase().includes(dashboardSearch.toLowerCase()) ||
                                 o.section_reference?.toLowerCase().includes(dashboardSearch.toLowerCase()))
                             ).length
@@ -938,6 +1239,7 @@ export default function RegulatoryLibraryPage() {
                       const filtered = activeObls.filter(o =>
                         (dashboardDomainFilter === "all" || o.domain === dashboardDomainFilter) &&
                         (dashboardSearch === "" ||
+                          o.obligation_id?.toLowerCase().includes(dashboardSearch.toLowerCase()) ||
                           o.obligation_text?.toLowerCase().includes(dashboardSearch.toLowerCase()) ||
                           o.section_reference?.toLowerCase().includes(dashboardSearch.toLowerCase()))
                       );
@@ -950,6 +1252,7 @@ export default function RegulatoryLibraryPage() {
                         <div className="divide-y">
                           {filtered.map((obl, i) => {
                             const hue = HUES[sortedDomains.findIndex(([d]) => d === obl.domain) % HUES.length];
+                            const mappedCtrls = obligationControlMap.get(obl.obligation_id) ?? [];
                             return (
                               <div key={obl.obligation_id ?? i} className="px-3 py-2.5 hover:bg-muted/20 transition-colors">
                                 <div className="flex items-start gap-2">
@@ -973,6 +1276,12 @@ export default function RegulatoryLibraryPage() {
                                         <Badge variant="secondary" className="text-[10px]">
                                           <Layers className="h-2.5 w-2.5 mr-0.5" />
                                           {obl.merged_from_count} sources
+                                        </Badge>
+                                      )}
+                                      {mappedCtrls.length > 0 && (
+                                        <Badge variant="outline" className="text-[10px] text-[var(--pacific)] border-[var(--pacific)]/40 gap-0.5">
+                                          <ShieldCheck className="h-2.5 w-2.5" />
+                                          {mappedCtrls.length}
                                         </Badge>
                                       )}
                                     </div>
@@ -1008,6 +1317,8 @@ export default function RegulatoryLibraryPage() {
                                         </div>
                                       </div>
                                     )}
+                                    {/* Mapped controls */}
+                                    {controlsLoaded && <MappedControlsSection controls={mappedCtrls} onControlClick={handleControlClick} />}
                                   </div>
                                 </div>
                               </div>
@@ -1187,6 +1498,7 @@ export default function RegulatoryLibraryPage() {
                       ? obl.obligation_text.slice(0, 120).replace(/\s\S*$/, "") + "…"
                       : obl.obligation_text;
                     const hasFullText = obl.obligation_text.length > 120;
+                    const mappedCtrls = obligationControlMap.get(obl.obligation_id) ?? [];
 
                     return (
                       <Card key={j} className="shadow-none">
@@ -1202,30 +1514,28 @@ export default function RegulatoryLibraryPage() {
                             <Badge variant="outline" className="text-xs">{obl.obligation_type.replace(/_/g, " ")}</Badge>
                             {obl.has_metric && <Badge variant="outline" className="text-xs text-blue-600 border-blue-300">metric</Badge>}
                             {obl.has_frequency && <Badge variant="outline" className="text-xs text-purple-600 border-purple-300">frequency</Badge>}
+                            {mappedCtrls.length > 0 && (
+                              <Badge variant="outline" className="text-[10px] text-[var(--pacific)] border-[var(--pacific)]/40 gap-0.5">
+                                <ShieldCheck className="h-2.5 w-2.5" />
+                                {mappedCtrls.length}
+                              </Badge>
+                            )}
                           </div>
                           <CardTitle className="text-sm font-medium text-muted-foreground leading-snug mt-1.5">{heading}</CardTitle>
                         </CardHeader>
-                        {hasFullText && (
-                          <CardContent className="pt-0 px-4 pb-3 space-y-2">
+                        <CardContent className="pt-0 px-4 pb-3 space-y-2">
+                          {hasFullText && (
                             <p className="text-sm text-foreground leading-relaxed">{obl.obligation_text}</p>
-                            {obl.keywords && obl.keywords.length > 0 && (
-                              <div className="flex flex-wrap gap-1 pt-1">
-                                {obl.keywords.slice(0, 6).map((kw, k) => (
-                                  <span key={k} className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{kw}</span>
-                                ))}
-                              </div>
-                            )}
-                          </CardContent>
-                        )}
-                        {!hasFullText && obl.keywords && obl.keywords.length > 0 && (
-                          <CardContent className="pt-0 px-4 pb-3">
+                          )}
+                          {obl.keywords && obl.keywords.length > 0 && (
                             <div className="flex flex-wrap gap-1">
                               {obl.keywords.slice(0, 6).map((kw, k) => (
                                 <span key={k} className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{kw}</span>
                               ))}
                             </div>
-                          </CardContent>
-                        )}
+                          )}
+                          {controlsLoaded && <MappedControlsSection controls={mappedCtrls} onControlClick={handleControlClick} />}
+                        </CardContent>
                       </Card>
                     );
                   })}

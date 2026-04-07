@@ -4,6 +4,7 @@ import { Upload, FileText, X, Play, Download, RotateCcw, Scale, FileCheck, Chevr
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Button } from "@/components/ui/button";
+import HeroSection from "@/components/HeroSection";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -269,13 +270,7 @@ export default function RegulatoryTestingPage() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex-shrink-0 px-6 py-3 flex items-center gap-3" style={{ background: "linear-gradient(135deg, hsl(262 80% 20% / 0.4), hsl(217 91% 20% / 0.3))", borderBottom: "1px solid hsl(217 91% 55% / 0.2)" }}>
-        <Scale className="h-6 w-6 text-blue-400 flex-shrink-0" />
-        <div>
-          <h1 className="text-lg font-bold text-foreground">Regulatory Testing</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">Compare regulations or assess RCM documents against regulatory requirements</p>
-        </div>
-      </div>
+      <HeroSection title="Regulatory Testing" subtitle="Compare regulations or assess RCM documents against regulatory requirements" icon={Scale} />
       <div className="flex-1 overflow-auto p-6">
       <div className="max-w-4xl mx-auto space-y-6">
 

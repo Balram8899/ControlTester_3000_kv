@@ -5,6 +5,7 @@ import { useChatContext } from "@/hooks/useChatContext";
 import ChatMessages from "@/components/ChatMessages";
 import ChatInput from "@/components/ChatInput";
 import { Button } from "@/components/ui/button";
+import HeroSection from "@/components/HeroSection";
 import { Trash2, MessageSquare } from "lucide-react";
 import type { Message } from "@/types";
 
@@ -313,27 +314,25 @@ export default function ChatPage() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex-shrink-0 px-6 py-3 flex items-center justify-between" style={{ background: "linear-gradient(135deg, hsl(262 80% 20% / 0.4), hsl(217 91% 20% / 0.3))", borderBottom: "1px solid hsl(217 91% 55% / 0.2)" }}>
-        <div className="flex items-center gap-3">
-          <MessageSquare className="h-5 w-5 text-blue-400" />
-          <div>
-            <h1 className="text-base font-bold text-foreground">AI Chat</h1>
-            <p className="text-xs text-muted-foreground">Converse with your AI cybersecurity audit assistant</p>
-          </div>
-        </div>
-        {messages.length > 0 && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleClearChat}
-            data-testid="button-clear-chat"
-            className="text-muted-foreground hover:text-foreground"
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Clear Chat
-          </Button>
-        )}
-      </div>
+      <HeroSection
+        title="AI Chat"
+        subtitle="Converse with your AI cybersecurity audit assistant"
+        icon={MessageSquare}
+        actions={
+          messages.length > 0 ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClearChat}
+              data-testid="button-clear-chat"
+              className="text-slate-400 hover:text-white hover:bg-white/10"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Clear Chat
+            </Button>
+          ) : undefined
+        }
+      />
 
       {messages.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center px-6">

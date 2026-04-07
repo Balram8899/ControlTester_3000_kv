@@ -9,6 +9,7 @@ import { ChatProvider } from "@/contexts/ChatContext";
 import { EvidenceProvider } from "@/contexts/EvidenceContext";
 import { ControlTestingProvider } from "@/contexts/ControlTestingContext";
 import { RegulatoryTestingProvider } from "@/contexts/RegulatoryTestingContext";
+import { CrossNavProvider } from "@/contexts/CrossNavContext";
 import AppLayout from "@/components/AppLayout";
 import LoginPage from "@/pages/login";
 import ChatPage from "@/pages/chat";
@@ -21,6 +22,9 @@ import ControlsLibraryPage from "@/pages/controls-library";
 import FrameworksLibraryPage from "@/pages/frameworks-library";
 import DashboardPage from "@/pages/dashboard";
 import ReportsPage from "@/pages/reports";
+import IssueManagementPage from "@/pages/issue-management";
+import ExceptionManagementPage from "@/pages/exception-management";
+import LandingPage from "@/pages/landing";
 
 // All pages are kept permanently mounted and CSS-hidden when inactive.
 // This prevents remount on every tab switch, so useEffect runs only once per
@@ -36,6 +40,8 @@ const PAGES = [
   { path: "/controls-library",     Page: ControlsLibraryPage     },
   { path: "/frameworks-library",   Page: FrameworksLibraryPage   },
   { path: "/settings",             Page: SettingsPage            },
+  { path: "/issue-management",     Page: IssueManagementPage     },
+  { path: "/exception-management", Page: ExceptionManagementPage },
 ] as const;
 
 function Router() {
@@ -48,12 +54,16 @@ function Router() {
     return null;
   }
   if (user && location === "/login") {
-    setLocation("/");
+    setLocation("/landing");
     return null;
   }
 
   if (location === "/login") {
     return <LoginPage />;
+  }
+
+  if (location === "/landing") {
+    return <LandingPage />;
   }
 
   return (
@@ -77,8 +87,10 @@ function App() {
               <EvidenceProvider>
                 <ControlTestingProvider>
                   <RegulatoryTestingProvider>
-                    <Toaster />
-                    <Router />
+                    <CrossNavProvider>
+                      <Toaster />
+                      <Router />
+                    </CrossNavProvider>
                   </RegulatoryTestingProvider>
                 </ControlTestingProvider>
               </EvidenceProvider>

@@ -2031,8 +2031,8 @@ async def controls_library_ingest(
 
     try:
         for uf in policy_files:
-            if not uf.filename.lower().endswith((".pdf", ".docx", ".doc", ".txt", ".md")):
-                errors.append({"filename": uf.filename, "error": "Unsupported file type. Use PDF, DOCX, TXT, or MD."})
+            if not uf.filename.lower().endswith((".pdf", ".docx", ".doc", ".txt", ".md", ".xlsx", ".xls", ".csv")):
+                errors.append({"filename": uf.filename, "error": "Unsupported file type. Use PDF, DOCX, TXT, MD, XLSX, or CSV."})
                 continue
 
             content = await uf.read()

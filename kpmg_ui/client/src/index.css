@@ -69,9 +69,31 @@
   --chart-4: 147 78% 42%;
   --chart-5: 341 75% 51%;
   --font-sans: 'Inter', sans-serif;
+  --font-display: 'Plus Jakarta Sans', 'Inter', sans-serif;
   --font-serif: 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
   --radius: 0.5rem;
+
+  /* KPMG Brand Colors */
+  --kpmg-blue: #00338D;
+  --cobalt: #1E49E2;
+  --dark-blue: #0C233C;
+  --pacific: #00B8F5;
+  --purple-accent: #7213EA;
+  --teal: #098E7E;
+  --green: #009A44;
+  --amber: #EAAA00;
+  --red: #E5001B;
+  --grey-100: #F0F2F7;
+  --grey-200: #E2E6EF;
+  --grey-500: #8492A6;
+
+  /* OSINT theme */
+  --osint-glow: rgba(0, 184, 245, 0.08);
+  --scan-line-color: rgba(0, 184, 245, 0.03);
+  --grid-color: rgba(0, 51, 141, 0.04);
+  --terminal-green: #00C97A;
+
   --shadow-2xs: 0px 1px 2px 0px rgba(0,0,0,0.06);
   --shadow-xs: 0px 1px 3px 0px rgba(0,0,0,0.08);
   --shadow-sm: 0px 2px 4px 0px rgba(0,0,0,0.08), 0px 1px 2px -1px rgba(0,0,0,0.06);
@@ -120,15 +142,15 @@
   --opaque-button-border-intensity: 9;
   --elevate-1: rgba(255,255,255, .04);
   --elevate-2: rgba(255,255,255, .09);
-  --background: 220 40% 5%;
+  --background: 222 45% 4%;
   --foreground: 210 40% 94%;
-  --border: 222 30% 18%;
-  --card: 222 40% 9%;
+  --border: 222 35% 15%;
+  --card: 222 45% 7%;
   --card-foreground: 210 40% 94%;
-  --card-border: 222 30% 18%;
-  --sidebar: 222 42% 7%;
+  --card-border: 222 35% 15%;
+  --sidebar: 222 48% 5%;
   --sidebar-foreground: 210 40% 94%;
-  --sidebar-border: 222 30% 18%;
+  --sidebar-border: 222 35% 15%;
   --sidebar-primary: 217 91% 55%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 222 35% 13%;
@@ -195,8 +217,29 @@
   --spacing: 0.25rem;
   --font-mono: 'JetBrains Mono', monospace;
   --font-sans: 'Inter', sans-serif;
+  --font-display: 'Plus Jakarta Sans', 'Inter', sans-serif;
   --font-serif: 'Inter', sans-serif;
   --tracking-normal: 0em;
+
+  /* KPMG Brand Colors (same in dark) */
+  --kpmg-blue: #00338D;
+  --cobalt: #1E49E2;
+  --dark-blue: #0C233C;
+  --pacific: #00B8F5;
+  --purple-accent: #7213EA;
+  --teal: #098E7E;
+  --green: #009A44;
+  --amber: #EAAA00;
+  --red: #E5001B;
+  --grey-100: #F0F2F7;
+  --grey-200: #E2E6EF;
+  --grey-500: #8492A6;
+
+  /* OSINT theme (dark) */
+  --osint-glow: rgba(0, 184, 245, 0.15);
+  --scan-line-color: rgba(0, 184, 245, 0.06);
+  --grid-color: rgba(0, 184, 245, 0.04);
+  --terminal-green: #00FF88;
 }
 
 @layer base {
@@ -351,5 +394,110 @@
   .border.active-elevate-2:not(.no-active-interaction-elevate)::after,
   .border.hover-elevate:not(.no-hover-interaction-elevate)::after {
     inset: -1px;
+  }
+}
+
+/* ── KPMG APEX Animations ── */
+@keyframes panelIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes scanLine {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+@keyframes dataPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.08); opacity: 0.7; }
+}
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--osint-glow); }
+  50%      { box-shadow: 0 0 15px 2px var(--osint-glow); }
+}
+@keyframes orbFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(30px, -20px) scale(1.05); }
+  66%      { transform: translate(-20px, 15px) scale(0.95); }
+}
+
+@layer utilities {
+  .animate-panel-in { animation: panelIn 0.4s ease-out both; }
+  .animate-fade-up  { animation: fadeUp 0.5s ease-out both; }
+  .animate-orb-float { animation: orbFloat 8s ease-in-out infinite; }
+
+  .gradient-text {
+    background: linear-gradient(135deg, var(--pacific), var(--cobalt));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-section {
+    background: var(--dark-blue);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .status-pass    { background: rgba(0,154,68,0.12);  color: #009A44; border: 1px solid rgba(0,154,68,0.25); }
+  .status-fail    { background: rgba(229,0,27,0.12);  color: #E5001B; border: 1px solid rgba(229,0,27,0.25); }
+  .status-partial { background: rgba(234,170,0,0.12); color: #EAAA00; border: 1px solid rgba(234,170,0,0.25); }
+  .status-info    { background: rgba(0,184,245,0.12); color: #00B8F5; border: 1px solid rgba(0,184,245,0.25); }
+
+  /* ── OSINT utilities ── */
+  .osint-grid {
+    background-image: radial-gradient(circle, var(--grid-color) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  .osint-scanline {
+    position: relative;
+    overflow: hidden;
+  }
+  .osint-scanline::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      var(--scan-line-color) 50%,
+      transparent 100%
+    );
+    background-size: 100% 8px;
+    animation: scanLine 4s linear infinite;
+    opacity: 0;
+  }
+  .dark .osint-scanline::before {
+    opacity: 1;
+  }
+
+  .glow-border {
+    animation: glowPulse 3s ease-in-out infinite;
+  }
+
+  .data-pulse {
+    animation: dataPulse 2s ease-in-out infinite;
+  }
+
+  .terminal-text {
+    font-family: var(--font-mono);
+    color: var(--terminal-green);
+  }
+
+  .card-interactive {
+    transition: all 0.2s ease;
+  }
+  .card-interactive:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px -5px var(--osint-glow), 0 4px 10px -6px rgba(0,0,0,0.1);
+  }
+  .dark .card-interactive:hover {
+    box-shadow: 0 8px 25px -5px var(--osint-glow), 0 0 20px -5px var(--osint-glow);
   }
 }

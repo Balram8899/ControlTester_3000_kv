@@ -507,6 +507,164 @@ def build_and_save_library_graph(store: "MongoControlsStore", graph_dir: str) ->
 
 
 # ------------------------------------------------------------------
+# DIRECT RCM EXCEL INGEST (bypasses LLM extraction)
+# ------------------------------------------------------------------
+_KNOWN_DOMAINS = {
+    "governance", "third_party", "change_management", "technology_refresh",
+    "access_control", "va_pt", "cryptography", "data_security", "network_security",
+    "business_continuity", "incident_response", "system_security", "cyber_operations",
+    "audit", "online_services", "emerging_tech",
+}
+
+def _normalize_excel_domain(raw: str) -> str:
+    """Map free-text Excel domain to our internal domain key, or classify by keywords."""
+    if not raw:
+        return "governance"
+    normalized = raw.lower().strip().replace(" ", "_").replace("-", "_")
+    if normalized in _KNOWN_DOMAINS:
+        return normalized
+    # Try classify_domain on raw text as fallback
+    try:
+        guessed = classify_domain(raw)
+        if guessed and guessed in _KNOWN_DOMAINS:
+            return guessed
+    except Exception:
+        pass
+    return "governance"
+
+
+def _ingest_rcm_excel_direct(
+    file_path: str,
+    filename: str,
+    selected_model: str,
+    regulatory_store: Optional[Any] = None,
+) -> Dict:
+    """
+    Directly ingest an RCM Excel file without LLM extraction.
+    Uses the Excel 'Control Reference' column as the control_id.
+    Handles duplicates by appending ' (n)' suffixes.
+    """
+    logger.info(f"[CONTROLS] Direct Excel ingest: {filename}")
+    try:
+        from utils.rcm_compliance_analyzer import parse_rcm_excel
+        rcm_data = parse_rcm_excel(file_path)
+    except Exception as exc:
+        logger.error(f"[CONTROLS] Failed to parse Excel {filename}: {exc}")
+        return {"success": False, "source_filename": filename, "error": str(exc)}
+
+    # Collect existing control IDs from MongoDB (non-fatal if unavailable)
+    existing_ids: set = set()
+    try:
+        _store = MongoControlsStore()
+        if _store.is_connected:
+            for ctrl in _store.all_controls():
+                cid = ctrl.get("control_id", "")
+                if cid:
+                    existing_ids.add(cid)
+    except Exception:
+        pass
+
+    controls: List[Dict] = []
+    seen_in_file: set = set()  # track IDs assigned within this upload
+
+    for sheet_name, rows in rcm_data.items():
+        for row_data in rows:
+            ref = (row_data.get("reference") or "").strip()
+            title = (row_data.get("title") or "").strip()
+            desc = (row_data.get("description") or "").strip()
+            domain_raw = (row_data.get("domain") or "").strip()
+            subdomain = (row_data.get("subdomain") or "").strip()
+            row_num = row_data.get("row", "")
+
+            # Skip rows that have no meaningful content
+            if not (ref or title or desc):
+                continue
+
+            # Determine unique control_id
+            base_id = ref if ref else "CTL-" + uuid.uuid4().hex[:12].upper()
+            final_id = base_id
+            if base_id in existing_ids or base_id in seen_in_file:
+                counter = 1
+                while f"{base_id} ({counter})" in existing_ids or f"{base_id} ({counter})" in seen_in_file:
+                    counter += 1
+                final_id = f"{base_id} ({counter})"
+            seen_in_file.add(final_id)
+
+            # Build citation reference
+            ref_parts = []
+            if sheet_name:
+                ref_parts.append(f"Sheet: {sheet_name}")
+            if row_num:
+                ref_parts.append(f"Row: {row_num}")
+            doc_reference = ", ".join(ref_parts) if ref_parts else ""
+
+            # Domain classification
+            combined_text = f"{title} {desc} {domain_raw} {subdomain}"
+            domain = _normalize_excel_domain(domain_raw) if domain_raw else classify_domain(combined_text)
+
+            ctrl: Dict = {
+                "control_id": final_id,
+                "control_name": title or f"Control {final_id}",
+                "description": desc or title,
+                "document_reference": doc_reference,
+                "domain": domain,
+                "control_type": "preventive",
+                "keywords": [w for w in (title or desc).lower().split() if len(w) > 4][:6],
+                "specificity_level": "specific",
+                "mapped_obligations": [],
+            }
+            controls.append(ctrl)
+
+    logger.info(f"[CONTROLS] Direct Excel: {len(controls)} controls from {filename}")
+
+    # Obligation mapping
+    if regulatory_store is not None and controls:
+        try:
+            controls = map_controls_to_obligations(controls, regulatory_store)
+        except Exception as exc:
+            logger.warning(f"[CONTROLS] Obligation mapping failed (non-fatal): {exc}")
+            for ctrl in controls:
+                ctrl.setdefault("mapped_obligations", [])
+    else:
+        for ctrl in controls:
+            ctrl.setdefault("mapped_obligations", [])
+
+    # Per-domain summary
+    controls_by_domain: Dict[str, int] = {}
+    for ctrl in controls:
+        d = ctrl.get("domain", "governance")
+        controls_by_domain[d] = controls_by_domain.get(d, 0) + 1
+
+    document_id = hashlib.md5(f"{filename}:{selected_model}".encode()).hexdigest()[:16]
+    store_doc = {
+        "document_id": document_id,
+        "source_filename": filename,
+        "upload_timestamp": datetime.utcnow().isoformat(),
+        "model_used": selected_model,
+        "total_controls": len(controls),
+        "controls_by_domain": controls_by_domain,
+        "controls": controls,
+    }
+
+    mongo_ok = False
+    try:
+        store = MongoControlsStore()
+        store.save_document(store_doc)
+        mongo_ok = True
+    except Exception as exc:
+        logger.error(f"[CONTROLS] MongoDB save failed for {filename}: {exc}")
+
+    return {
+        "success": True,
+        "document_id": document_id,
+        "source_filename": filename,
+        "total_controls": len(controls),
+        "controls_by_domain": controls_by_domain,
+        "mongo_saved": mongo_ok,
+    }
+
+
+# ------------------------------------------------------------------
 # TOP-LEVEL INGEST FUNCTION
 # ------------------------------------------------------------------
 def ingest_controls_document(
@@ -536,18 +694,28 @@ def ingest_controls_document(
 
     # 1. Load document
     try:
-        if file_path.lower().endswith(".pdf"):
+        fp_lower = file_path.lower()
+        if fp_lower.endswith(".pdf"):
             loader = PyPDFLoader(file_path)
-        elif file_path.lower().endswith((".docx", ".doc")):
+            docs = loader.load()
+        elif fp_lower.endswith((".docx", ".doc")):
             try:
                 from langchain_community.document_loaders import Docx2txtLoader
                 loader = Docx2txtLoader(file_path)
             except ImportError:
                 from langchain_community.document_loaders import UnstructuredWordDocumentLoader
                 loader = UnstructuredWordDocumentLoader(file_path)
+            docs = loader.load()
+        elif fp_lower.endswith((".xlsx", ".xls")):
+            # Structured Excel — bypass LLM, use Excel reference IDs directly
+            return _ingest_rcm_excel_direct(file_path, filename, selected_model, regulatory_store)
+        elif fp_lower.endswith(".csv"):
+            from langchain_community.document_loaders import CSVLoader
+            loader = CSVLoader(file_path)
+            docs = loader.load()
         else:
             loader = TextLoader(file_path)
-        docs = loader.load()
+            docs = loader.load()
         for d in docs:
             d.metadata["source"] = filename
         logger.info(f"[CONTROLS] Loaded {len(docs)} pages from {filename}")

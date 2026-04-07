@@ -5,10 +5,12 @@ import {
   AlertCircle, Clock, ChevronRight, ChevronLeft, FileWarning, Shield, Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import HeroSection from "@/components/HeroSection";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useControlTesting } from "@/contexts/ControlTestingContext";
+import ControlTestingKpis from "@/components/ControlTestingKpis";
 
 const CHECKLIST_PAGE_SIZE = 5;
 
@@ -267,23 +269,18 @@ export default function ControlTestingPage() {
     toast({ title: "Reset", description: "Ready for new audit" });
   };
 
-  const stepNumber = currentStep === "upload_script" ? 1
+  const stepNumber = currentStep === "landing" ? 0
+    : currentStep === "upload_script" ? 1
     : currentStep === "review_checklist" || currentStep === "upload_evidence" ? 2
-    : currentStep === "generating" ? 3
     : 3;
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex-shrink-0 px-6 py-3 flex items-center gap-3" style={{ background: "linear-gradient(135deg, hsl(262 80% 20% / 0.4), hsl(217 91% 20% / 0.3))", borderBottom: "1px solid hsl(217 91% 55% / 0.2)" }}>
-        <Shield className="h-6 w-6 text-blue-400 flex-shrink-0" />
-        <div>
-          <h1 className="text-lg font-bold text-foreground">AI Control Testing</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">Upload a control test script, provide evidence, and generate audit workpapers</p>
-        </div>
-      </div>
+      <HeroSection title="AI Control Testing" subtitle="Upload a control test script, provide evidence, and generate audit workpapers" icon={Shield} />
       <div className="flex-1 overflow-auto p-6">
       <div className="max-w-4xl mx-auto space-y-6">
 
+        {/* Step indicators */}
         <div className="flex items-center justify-center gap-2 mb-6">
           {[
             { num: 1, label: "Upload Script" },
@@ -721,9 +718,9 @@ export default function ControlTestingPage() {
                 </CardTitle>
                 <CardDescription>{resultMessage}</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-5">
                 {workpaperSummary && (
-                  <div className="space-y-3">
+                  <>
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
                       <span>{workpaperSummary.controls_tested} controls tested</span>
                       <Badge variant="outline" className={
@@ -734,6 +731,15 @@ export default function ControlTestingPage() {
                         {(workpaperSummary.overall_result ?? "").replace(/_/g, " ")}
                       </Badge>
                     </div>
+
+                    {/* KPI cards */}
+                    <ControlTestingKpis
+                      controlsTested={workpaperSummary.controls_tested}
+                      issuesIdentified={workpaperSummary.fail_count + workpaperSummary.partial_count}
+                      severityCounts={workpaperSummary.severity_counts}
+                    />
+
+                    {/* Detailed pass/fail/partial/no-evidence breakdown */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <div className="p-4 bg-green-500/10 rounded-lg text-center">
                         <p className="text-2xl font-bold text-green-600 dark:text-green-400">{workpaperSummary.pass_count}</p>
@@ -747,12 +753,12 @@ export default function ControlTestingPage() {
                         <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{workpaperSummary.partial_count}</p>
                         <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">Partial</p>
                       </div>
-                      <div className="p-4 bg-muted/50 rounded-lg text-center">
-                        <p className="text-2xl font-bold text-muted-foreground">{workpaperSummary.no_evidence_count}</p>
-                        <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">No Evidence</p>
+                      <div className="p-4 bg-blue-500/10 rounded-lg text-center">
+                        <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{workpaperSummary.controls_with_evidence}</p>
+                        <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">Evidence Files</p>
                       </div>
                     </div>
-                  </div>
+                  </>
                 )}
 
                 {downloadUrl && (

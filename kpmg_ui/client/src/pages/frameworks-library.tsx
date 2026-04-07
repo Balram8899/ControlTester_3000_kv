@@ -5,6 +5,7 @@ import {
   Network, AlertTriangle, Target, Tag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import HeroSection from "@/components/HeroSection";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
@@ -478,20 +479,16 @@ export default function FrameworksLibraryPage() {
     <div className="h-full flex flex-col bg-background overflow-hidden">
 
       {/* ── Page header ── */}
-      <div className="flex-shrink-0 flex items-center gap-3 px-5 py-3 border-b bg-card/40 backdrop-blur-sm">
-        <div className="p-2 rounded-lg bg-gradient-to-br from-teal-500/20 to-cyan-500/20 border border-teal-500/20">
-          <BookOpen className="h-5 w-5 text-teal-400" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <h1 className="text-base font-semibold leading-tight">Frameworks Library</h1>
-          <p className="text-[11px] text-muted-foreground">
-            Upload quality &amp; risk frameworks — 5W1H, ECOTM, PDCA, FMEA, and more
-          </p>
-        </div>
-        <Button variant="ghost" size="icon" onClick={fetchDocs} title="Refresh" className="h-8 w-8">
-          <RotateCcw className="h-4 w-4" />
-        </Button>
-      </div>
+      <HeroSection
+        title="Frameworks Library"
+        subtitle="Upload quality & risk frameworks — 5W1H, ECOTM, PDCA, FMEA, and more"
+        icon={BookOpen}
+        actions={
+          <Button variant="ghost" size="icon" onClick={fetchDocs} title="Refresh" className="h-8 w-8 text-slate-400 hover:text-white hover:bg-white/10">
+            <RotateCcw className="h-4 w-4" />
+          </Button>
+        }
+      />
 
       {/* ── KPI strip ── */}
       <div className="flex-shrink-0 grid grid-cols-3 gap-3 px-5 py-3 border-b">

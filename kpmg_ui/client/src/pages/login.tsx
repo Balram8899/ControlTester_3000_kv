@@ -16,12 +16,12 @@ const FEATURES = [
   {
     icon: Brain,
     title: "Multi-Agent AI Assessment",
-    desc: "Automated risk identification and control testing powered by Gemini",
+    desc: "Automated risk identification and control testing powered by AI Agents",
   },
   {
     icon: Shield,
     title: "Regulatory Compliance",
-    desc: "NIST CSF, ISO 27001, SOC2, PCI-DSS, GDPR, Basel III",
+    desc: "NIST CSF, ISO 27001, SOC2, PCI-DSS, GDPR",
   },
   {
     icon: FileSearch,
@@ -31,7 +31,7 @@ const FEATURES = [
   {
     icon: ClipboardList,
     title: "AI-Powered Workpaper Generation",
-    desc: "Generate audit-ready workpapers and executive summaries instantly",
+    desc: "Generate workpapers and executive summaries instantly",
   },
 ];
 
@@ -55,7 +55,7 @@ export default function LoginPage() {
   const [registering, setRegistering] = useState(false);
 
   useEffect(() => {
-    if (user) setLocation("/");
+    if (user) setLocation("/landing");
   }, [user, setLocation]);
 
   function handleLogin(e: React.FormEvent) {
@@ -64,7 +64,7 @@ export default function LoginPage() {
     setLoginError("");
     const result = login(email.trim(), password);
     if (result.ok) {
-      setLocation("/");
+      setLocation("/landing");
     } else {
       setLoginError(result.error ?? "Login failed.");
     }
@@ -82,7 +82,7 @@ export default function LoginPage() {
     const result = register(regName.trim(), regEmail.trim().toLowerCase(), regPassword);
     if (result.ok) {
       setShowRegister(false);
-      setLocation("/");
+      setLocation("/landing");
     } else {
       setRegError(result.error ?? "Registration failed.");
     }
@@ -90,8 +90,25 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#080E1F]">
-      {/* Subtle grid pattern overlay */}
+    <div className="flex h-screen w-screen overflow-hidden osint-scanline" style={{ background: "var(--dark-blue)" }}>
+      {/* Animated gradient orbs */}
+      <div
+        className="absolute top-[-100px] right-[20%] h-72 w-72 rounded-full opacity-25 blur-[80px] animate-orb-float"
+        style={{ background: "radial-gradient(circle, var(--pacific), transparent)" }}
+      />
+      <div
+        className="absolute bottom-[-80px] left-[10%] h-56 w-56 rounded-full opacity-20 blur-[70px] animate-orb-float"
+        style={{ background: "radial-gradient(circle, var(--cobalt), transparent)", animationDelay: "-3s" }}
+      />
+      <div
+        className="absolute top-[40%] left-[40%] h-40 w-40 rounded-full opacity-15 blur-[60px] animate-orb-float"
+        style={{ background: "radial-gradient(circle, var(--purple-accent), transparent)", animationDelay: "-5s" }}
+      />
+
+      {/* OSINT dot grid overlay */}
+      <div className="absolute inset-0 pointer-events-none osint-grid opacity-60" />
+
+      {/* Subtle line grid overlay */}
       <div
         className="absolute inset-0 pointer-events-none opacity-[0.04]"
         style={{
@@ -103,23 +120,23 @@ export default function LoginPage() {
 
       {/* ── Left panel — glassmorphism form ── */}
       <div className="relative flex w-full md:w-[44%] items-center justify-center p-8">
-        <div className="w-full max-w-sm">
+        <div className="w-full max-w-sm animate-panel-in">
           {/* Glass card */}
-          <div className="glass-light rounded-2xl p-8 flex flex-col items-center gap-6">
-            {/* Logo avatar */}
-            <div
-              className="flex h-16 w-16 items-center justify-center rounded-full text-white text-2xl font-bold select-none shadow-lg"
-              style={{ background: "linear-gradient(135deg, #1B6CE8, #6B2EE0)" }}
-            >
-              TR
-            </div>
-
-            {/* Heading */}
-            <div className="text-center">
-              <h1 className="text-2xl font-bold text-white">Trace</h1>
-              <p className="mt-1 text-sm text-slate-400">
-                Trusted Risk Assurance &amp; Controls Engine
-              </p>
+          <div className="glass-light rounded-3xl p-8 flex flex-col items-center gap-6">
+            {/* Logo */}
+            <div className="flex flex-col items-center gap-3">
+              <div
+                className="flex h-14 w-14 items-center justify-center rounded-xl text-white text-lg font-bold font-mono select-none shadow-lg glow-border"
+                style={{ background: "linear-gradient(135deg, var(--kpmg-blue), var(--cobalt))" }}
+              >
+                <span className="tracking-[0.15em]">TR</span>
+              </div>
+              <div className="text-center">
+                <h1 className="text-xl font-bold font-mono text-white tracking-[0.2em] uppercase">Trace</h1>
+                <p className="mt-1 text-[10px] text-slate-500 font-mono tracking-[0.15em] uppercase">
+                  Control Testing Platform
+                </p>
+              </div>
             </div>
 
             {/* Login form */}
@@ -136,7 +153,7 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
                   required
-                  className="bg-white/5 border-white/15 text-white placeholder:text-slate-500 focus:border-blue-500 focus:ring-blue-500/20"
+                  className="bg-white/5 border-white/15 text-white placeholder:text-slate-500 focus:border-[var(--pacific)] focus:ring-[var(--pacific)]/20"
                 />
               </div>
 
@@ -152,7 +169,7 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="bg-white/5 border-white/15 text-white placeholder:text-slate-500 focus:border-blue-500 focus:ring-blue-500/20"
+                  className="bg-white/5 border-white/15 text-white placeholder:text-slate-500 focus:border-[var(--pacific)] focus:ring-[var(--pacific)]/20"
                 />
               </div>
 
@@ -163,7 +180,7 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 disabled={loggingIn}
-                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold border-0 shadow-lg"
+                className="w-full bg-[var(--kpmg-blue)] hover:bg-[var(--cobalt)] text-white font-semibold border-0 shadow-lg transition-all duration-200"
               >
                 {loggingIn ? "Signing in…" : "Sign In"}
               </Button>
@@ -174,7 +191,7 @@ export default function LoginPage() {
               New user?{" "}
               <button
                 type="button"
-                className="text-blue-400 hover:text-blue-300 hover:underline font-medium transition-colors"
+                className="text-[var(--pacific)] hover:text-[var(--pacific)]/80 hover:underline font-medium transition-colors"
                 onClick={() => { setShowRegister(true); setRegError(""); }}
               >
                 Create an account
@@ -182,8 +199,8 @@ export default function LoginPage() {
             </p>
 
             {/* Demo credentials */}
-            <div className="rounded-lg border border-blue-700/30 bg-blue-900/20 px-4 py-3 text-center w-full">
-              <p className="text-xs font-medium text-blue-300 mb-1">Demo Credentials</p>
+            <div className="rounded-lg border border-[var(--cobalt)]/30 bg-[var(--cobalt)]/10 px-4 py-3 text-center w-full">
+              <p className="text-xs font-medium text-[var(--pacific)] mb-1">Demo Credentials</p>
               <p className="text-xs text-slate-400">admin@bank.com / admin123</p>
             </div>
           </div>
@@ -192,32 +209,38 @@ export default function LoginPage() {
 
       {/* ── Right panel — KPMG gradient ── */}
       <div className="hidden md:flex md:w-[56%] flex-col justify-center px-16 relative overflow-hidden"
-           style={{ background: "linear-gradient(135deg, #4C1D95 0%, #5B21B6 30%, #1D4ED8 70%, #1E40AF 100%)" }}>
+           style={{ background: "linear-gradient(135deg, var(--dark-blue) 0%, var(--kpmg-blue) 100%)" }}>
 
-        {/* Decorative blobs */}
-        <div className="absolute top-[-80px] right-[-80px] h-64 w-64 rounded-full opacity-20"
-             style={{ background: "radial-gradient(circle, #00E5FF, transparent)" }} />
-        <div className="absolute bottom-[-60px] left-[-60px] h-48 w-48 rounded-full opacity-15"
-             style={{ background: "radial-gradient(circle, #7C3AED, transparent)" }} />
+        {/* Decorative orbs */}
+        <div className="absolute top-[-80px] right-[-80px] h-64 w-64 rounded-full opacity-20 blur-[60px] animate-orb-float"
+             style={{ background: "radial-gradient(circle, var(--pacific), transparent)" }} />
+        <div className="absolute bottom-[-60px] left-[-60px] h-48 w-48 rounded-full opacity-15 blur-[50px] animate-orb-float"
+             style={{ background: "radial-gradient(circle, var(--purple-accent), transparent)", animationDelay: "-4s" }} />
 
         <div className="relative z-10">
-          <h2 className="text-4xl font-extrabold text-white leading-tight mb-3">
+          <h2 className="text-4xl font-extrabold font-display text-white leading-tight mb-3">
             Enterprise-Grade<br />Cybersecurity Auditing
           </h2>
-          <p className="text-blue-200 text-sm mb-10 font-medium">
-            AI-powered. Compliance-ready. Audit-grade.
+          <p className="text-[var(--pacific)]/80 text-sm mb-10 text-white font-medium">
+            AI-powered. Compliance-ready.
           </p>
 
           <ul className="flex flex-col gap-4">
-            {FEATURES.map(({ icon: Icon, title, desc }) => (
-              <li key={title} className="flex items-start gap-4 rounded-xl p-4"
-                  style={{ background: "rgba(255,255,255,0.08)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.12)" }}>
+            {FEATURES.map(({ icon: Icon, title, desc }, i) => (
+              <li key={title}
+                  className="flex items-start gap-4 rounded-xl p-4 animate-fade-up"
+                  style={{
+                    background: "rgba(255,255,255,0.08)",
+                    backdropFilter: "blur(8px)",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    animationDelay: `${i * 0.1}s`,
+                  }}>
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
-                      style={{ background: "rgba(0,229,255,0.15)" }}>
-                  <CheckCircle className="h-4 w-4 text-cyan-400" />
+                      style={{ background: "rgba(0,184,245,0.15)" }}>
+                  <CheckCircle className="h-4 w-4 text-[var(--pacific)]" />
                 </span>
                 <div>
-                  <p className="font-semibold text-white text-sm">{title}</p>
+                  <p className="font-semibold font-display text-white text-sm">{title}</p>
                   <p className="text-xs text-blue-200 mt-0.5 leading-relaxed">{desc}</p>
                 </div>
               </li>
@@ -228,9 +251,9 @@ export default function LoginPage() {
 
       {/* ── Register dialog ── */}
       <Dialog open={showRegister} onOpenChange={setShowRegister}>
-        <DialogContent className="sm:max-w-md bg-[#0F1629] border-[#1E2D4D] text-white">
+        <DialogContent className="sm:max-w-md border-[var(--cobalt)]/30 text-white" style={{ background: "var(--dark-blue)" }}>
           <DialogHeader>
-            <DialogTitle className="text-white">Create an account</DialogTitle>
+            <DialogTitle className="text-white font-display">Create an account</DialogTitle>
           </DialogHeader>
 
           <form onSubmit={handleRegister} className="flex flex-col gap-4 mt-2">
@@ -291,7 +314,7 @@ export default function LoginPage() {
 
             <Button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-500 text-white border-0 mt-1"
+              className="w-full bg-[var(--kpmg-blue)] hover:bg-[var(--cobalt)] text-white border-0 mt-1 transition-all duration-200"
               disabled={registering}
             >
               {registering ? "Creating account…" : "Create account"}

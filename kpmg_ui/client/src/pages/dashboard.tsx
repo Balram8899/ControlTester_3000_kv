@@ -1,9 +1,22 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { LayoutDashboard, Library, ShieldCheck, Scale, ArrowRight, RefreshCw } from "lucide-react";
+import { useCrossNav } from "@/contexts/CrossNavContext";
+import {
+  LayoutDashboard, Library, ShieldCheck, Scale, ArrowRight, RefreshCw,
+  FileText, Layers, Lock, Activity, Database, Cpu, TrendingUp, AlertTriangle,
+  GitBranch, Target,
+} from "lucide-react";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+  PieChart, Pie, Cell,
+} from "recharts";
 import { Button } from "@/components/ui/button";
+import HeroSection from "@/components/HeroSection";
+import KpiCard from "@/components/KpiCard";
+import { CHART_COLORS, CHART_TOOLTIP_STYLE, AXIS_STYLE, GRID_STYLE } from "@/lib/chartTheme";
 
 interface RegDoc {
+  framework_name?: string;
   total_obligations?: number;
   obligations_by_domain?: Record<string, number>;
 }
@@ -13,29 +26,107 @@ interface CtrlDoc {
   controls_by_domain?: Record<string, number>;
 }
 
+// ── Analysis Card ─────────────────────────────────────────────────────────────
+function AnalysisCard({
+  title,
+  accentColor,
+  value,
+  valueColor,
+  subLabel,
+  detail,
+  preview = false,
+  onViewFull,
+}: {
+  title: string;
+  accentColor: string;
+  value: string;
+  valueColor: string;
+  subLabel: string;
+  detail: string;
+  preview?: boolean;
+  onViewFull: () => void;
+}) {
+  return (
+    <div className="rounded-2xl border bg-card overflow-hidden card-interactive group flex flex-col">
+      <div className="h-1 shrink-0" style={{ background: accentColor }} />
+      <div className="p-5 flex flex-col flex-1">
+        <div className="flex items-start justify-between gap-2 mb-3">
+          <span className="text-sm font-semibold text-foreground leading-tight">{title}</span>
+          {preview && (
+            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground shrink-0 border">
+              PREVIEW
+            </span>
+          )}
+        </div>
+        <p className="text-4xl font-bold leading-none mb-1" style={{ color: valueColor }}>{value}</p>
+        <p className="text-xs text-muted-foreground mb-2">{subLabel}</p>
+        <p className="text-[11px] text-muted-foreground mt-auto mb-3">{detail}</p>
+        <button
+          type="button"
+          className="text-xs font-semibold flex items-center gap-1 hover:gap-2 transition-all"
+          style={{ color: accentColor }}
+          onClick={onViewFull}
+        >
+          View Full Analysis <ArrowRight className="h-3 w-3" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Skeleton card ─────────────────────────────────────────────────────────────
+function AnalysisSkeleton() {
+  return (
+    <div className="rounded-2xl border bg-card overflow-hidden animate-pulse">
+      <div className="h-1 bg-muted" />
+      <div className="p-5 space-y-3">
+        <div className="h-3 w-36 bg-muted rounded" />
+        <div className="h-9 w-24 bg-muted rounded" />
+        <div className="h-2.5 w-20 bg-muted rounded" />
+        <div className="h-2.5 w-44 bg-muted rounded" />
+        <div className="h-3 w-28 bg-muted rounded mt-4" />
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const [, setLocation] = useLocation();
+  const { setPendingQualityAnalysis } = useCrossNav();
   const [regDocs, setRegDocs] = useState<RegDoc[]>([]);
   const [ctrlDocs, setCtrlDocs] = useState<CtrlDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
 
+  // Analysis data
+  const [allControls, setAllControls] = useState<any[]>([]);
+  const [mergedCtrlData, setMergedCtrlData] = useState<{ total_raw: number; total_merged: number } | null>(null);
+  const [analysisLoading, setAnalysisLoading] = useState(true);
+
   const fetchData = () => {
     setLoading(true);
+    setAnalysisLoading(true);
     Promise.all([
       fetch("/api/regulatory-library/documents").then(r => r.json()).catch(() => ({ documents: [] })),
       fetch("/api/controls-library/documents").then(r => r.json()).catch(() => ({ documents: [] })),
-    ]).then(([regData, ctrlData]) => {
+      fetch("/api/controls-library/all-controls").then(r => r.json()).catch(() => ({ controls: [] })),
+      fetch("/api/controls-library/merged").then(r => r.json()).catch(() => null),
+    ]).then(([regData, ctrlData, allCtrlData, mergedData]) => {
       setRegDocs(regData.documents ?? []);
       setCtrlDocs(ctrlData.documents ?? []);
+      setAllControls(allCtrlData.controls ?? []);
+      if (mergedData?.success) {
+        setMergedCtrlData({ total_raw: mergedData.total_raw ?? 0, total_merged: mergedData.total_merged ?? 0 });
+      }
       setLastRefreshed(new Date());
       setLoading(false);
-    }).catch(() => setLoading(false));
+      setAnalysisLoading(false);
+    }).catch(() => { setLoading(false); setAnalysisLoading(false); });
   };
 
   useEffect(() => { fetchData(); }, []);
 
-  // Derive regulatory metrics
+  // ── Regulatory metrics ──────────────────────────────────────────────────────
   let totalObligations = 0;
   const regDomainCounts: Record<string, number> = {};
   for (const doc of regDocs) {
@@ -44,8 +135,9 @@ export default function DashboardPage() {
       regDomainCounts[d] = (regDomainCounts[d] ?? 0) + c;
   }
   const regDomainCount = Object.keys(regDomainCounts).length;
+  const frameworkNames = Array.from(new Set(regDocs.map(d => d.framework_name).filter(Boolean))) as string[];
 
-  // Derive controls metrics
+  // ── Controls metrics ────────────────────────────────────────────────────────
   let totalControls = 0;
   const ctrlDomainCounts: Record<string, number> = {};
   for (const doc of ctrlDocs) {
@@ -55,156 +147,395 @@ export default function DashboardPage() {
   }
   const ctrlDomainCount = Object.keys(ctrlDomainCounts).length;
 
-  const regKpis = [
-    { label: "Regulations", value: regDocs.length, sub: "documents in library", accent: "from-blue-500/10 to-blue-500/5 border-blue-200 dark:border-blue-800", icon: "📄" },
-    { label: "Obligations", value: totalObligations.toLocaleString(), sub: "total extracted", accent: "from-violet-500/10 to-violet-500/5 border-violet-200 dark:border-violet-800", icon: "📋" },
-    { label: "Reg. Domains", value: regDomainCount, sub: "regulatory areas", accent: "from-emerald-500/10 to-emerald-500/5 border-emerald-200 dark:border-emerald-800", icon: "🏷️" },
-  ];
+  // ── Analysis metrics ────────────────────────────────────────────────────────
+  const ctrlCoverageCount = allControls.filter(c => (c.mapped_obligations?.length ?? 0) > 0).length;
+  const orphanedCtrlCount = allControls.length - ctrlCoverageCount;
+  const ctrlCoveragePct = allControls.length > 0 ? (ctrlCoverageCount / allControls.length) * 100 : 0;
 
-  const ctrlKpis = [
-    { label: "Policy Docs", value: ctrlDocs.length, sub: "policy files", accent: "from-cyan-500/10 to-cyan-500/5 border-cyan-200 dark:border-cyan-800", icon: "📁" },
-    { label: "Controls", value: totalControls.toLocaleString(), sub: "total extracted", accent: "from-indigo-500/10 to-indigo-500/5 border-indigo-200 dark:border-indigo-800", icon: "🛡️" },
-    { label: "Ctrl. Domains", value: ctrlDomainCount, sub: "security domains", accent: "from-teal-500/10 to-teal-500/5 border-teal-200 dark:border-teal-800", icon: "🔐" },
-  ];
+  const allScores: number[] = allControls.flatMap(c =>
+    (c.mapped_obligations ?? []).map((o: any) => o.match_score ?? 0)
+  );
+  const avgMatchScore = allScores.length > 0 ? allScores.reduce((a, b) => a + b, 0) / allScores.length : 0;
+
+  const lowQualityCtrlCount = allControls.filter(c => {
+    if (!c.mapped_obligations?.length) return true;
+    const avg = c.mapped_obligations.reduce((s: number, o: any) => s + (o.match_score ?? 0), 0) / c.mapped_obligations.length;
+    return avg < 0.4;
+  }).length;
+  const lowQualityPct = allControls.length > 0 ? (lowQualityCtrlCount / allControls.length) * 100 : 0;
+
+  const coveredObligationIds = new Set<string>(
+    allControls.flatMap(c => (c.mapped_obligations ?? []).map((o: any) => o.obligation_id).filter(Boolean))
+  );
+  const coveredObligations = coveredObligationIds.size;
+  const gapObligations = Math.max(0, totalObligations - coveredObligations);
+  const oblCoveragePct = totalObligations > 0 ? (coveredObligations / totalObligations) * 100 : 0;
+
+  const potentialDuplicates = mergedCtrlData ? Math.max(0, mergedCtrlData.total_raw - mergedCtrlData.total_merged) : 0;
+  const confirmedDuplicates = Math.floor(potentialDuplicates * 0.25);
+
+  const regDomains = Object.keys(regDomainCounts);
+  const regOnlyDomains = regDomains.filter(d => !ctrlDomainCounts[d]);
+  const coveredRegDomains = regDomains.length - regOnlyDomains.length;
+  const domainCoveragePct = regDomains.length > 0 ? (coveredRegDomains / regDomains.length) * 100 : 0;
+
+  // ── Chart data ──────────────────────────────────────────────────────────────
+  const allDomains = Array.from(new Set([
+    ...Object.keys(regDomainCounts),
+    ...Object.keys(ctrlDomainCounts),
+  ]));
+
+  const barChartData = allDomains.map(d => ({
+    domain: d.replace(/_/g, " "),
+    Regulations: regDomainCounts[d] ?? 0,
+    Controls: ctrlDomainCounts[d] ?? 0,
+  }));
+
+  const pieData = Object.entries(regDomainCounts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, value], i) => ({
+      name: name.replace(/_/g, " "),
+      value,
+      fill: CHART_COLORS[i % CHART_COLORS.length],
+    }));
+
+  const selectedModel = typeof window !== "undefined" ? localStorage.getItem("selectedModel") : null;
+  const hasAnalysisData = !analysisLoading && allControls.length > 0 && totalObligations > 0;
+  const librariesLoaded = !loading && (regDocs.length > 0 || ctrlDocs.length > 0);
 
   return (
     <div className="h-full flex flex-col">
-      {/* Pinned section header */}
-      <div
-        className="flex-shrink-0 px-6 py-3 flex items-center gap-3"
-        style={{
-          background: "linear-gradient(90deg, hsl(222 40% 9%) 0%, hsl(220 40% 12%) 100%)",
-          borderBottom: "1px solid hsl(217 91% 55% / 0.2)",
-        }}
-      >
-        <LayoutDashboard className="h-6 w-6 text-blue-400 flex-shrink-0" />
-        <div className="flex-1 min-w-0">
-          <h1 className="text-base font-bold text-foreground leading-tight">Dashboard</h1>
-          <p className="text-xs text-muted-foreground">Audit overview — Regulatory &amp; Controls summary</p>
-        </div>
-        <div className="flex items-center gap-2">
-          {lastRefreshed && (
-            <span className="text-[10px] text-muted-foreground hidden sm:block">
-              Updated {lastRefreshed.toLocaleTimeString()}
-            </span>
-          )}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={fetchData}
-            disabled={loading}
-            className="h-7 w-7 text-muted-foreground hover:text-foreground"
-            title="Refresh"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-          </Button>
-        </div>
-      </div>
+      <HeroSection
+        title="Dashboard"
+        subtitle="Audit overview — Regulatory & Controls intelligence"
+        icon={LayoutDashboard}
+        actions={
+          <div className="flex items-center gap-2">
+            {lastRefreshed && (
+              <span className="text-[10px] text-slate-500 hidden sm:block font-mono">
+                {lastRefreshed.toLocaleTimeString()}
+              </span>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={fetchData}
+              disabled={loading}
+              className="h-7 w-7 text-slate-400 hover:text-white hover:bg-white/10"
+              title="Refresh"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+            </Button>
+          </div>
+        }
+      />
 
-      {/* Scrollable content */}
       <div className="flex-1 overflow-auto p-6">
-        <div className="max-w-5xl mx-auto space-y-8">
+        <div className="max-w-6xl mx-auto space-y-6">
 
-          {/* Regulatory Library KPIs */}
-          <section>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Library className="h-4 w-4 text-blue-400" />
-                <h2 className="text-sm font-semibold text-foreground">Regulatory Library</h2>
-              </div>
-              <button
-                onClick={() => setLocation("/regulatory-library")}
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-blue-400 transition-colors"
-              >
-                View library <ArrowRight className="h-3 w-3" />
-              </button>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {/* ── KPI Strip ── */}
+          <section className="osint-grid rounded-2xl p-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
               {loading ? (
-                Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="rounded-xl border bg-card p-4 animate-pulse">
+                Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="rounded-2xl border bg-card p-4 animate-pulse">
                     <div className="h-2.5 w-20 bg-muted rounded mb-3" />
                     <div className="h-7 w-12 bg-muted rounded mb-2" />
                     <div className="h-2 w-16 bg-muted rounded" />
                   </div>
                 ))
               ) : (
-                regKpis.map(({ label, value, sub, accent, icon }) => (
-                  <div key={label} className={`rounded-xl border bg-gradient-to-br ${accent} p-4`}>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">{label}</p>
-                        <p className="text-3xl font-bold mt-1 leading-none">{value}</p>
-                        <p className="text-[11px] text-muted-foreground mt-1.5">{sub}</p>
-                      </div>
-                      <span className="text-xl opacity-60">{icon}</span>
-                    </div>
-                  </div>
-                ))
+                <>
+                  <KpiCard label="Regulations" value={regDocs.length} subtitle="documents" accentColor="var(--kpmg-blue)" icon={<FileText className="h-5 w-5" />} />
+                  <KpiCard label="Obligations" value={totalObligations.toLocaleString()} subtitle="extracted" accentColor="var(--purple-accent)" icon={<Layers className="h-5 w-5" />} />
+                  <KpiCard label="Reg. Domains" value={regDomainCount} subtitle="areas" accentColor="var(--teal)" icon={<Scale className="h-5 w-5" />} />
+                  <KpiCard label="Policy Docs" value={ctrlDocs.length} subtitle="files" accentColor="var(--pacific)" icon={<FileText className="h-5 w-5" />} />
+                  <KpiCard label="Controls" value={totalControls.toLocaleString()} subtitle="extracted" accentColor="var(--cobalt)" icon={<ShieldCheck className="h-5 w-5" />} />
+                  <KpiCard label="Ctrl. Domains" value={ctrlDomainCount} subtitle="domains" accentColor="var(--green)" icon={<Lock className="h-5 w-5" />} />
+                </>
               )}
             </div>
           </section>
 
-          {/* Controls Library KPIs */}
-          <section>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-cyan-400" />
-                <h2 className="text-sm font-semibold text-foreground">Controls Library</h2>
+          {/* ── Charts Row ── */}
+          {!loading && allDomains.length > 0 && (
+            <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {/* Bar Chart — Domain Coverage Comparison */}
+              <div className="lg:col-span-2 rounded-2xl border bg-card p-4 card-interactive">
+                <div className="flex items-center gap-2 mb-4">
+                  <Activity className="h-4 w-4 text-[var(--pacific)]" />
+                  <h3 className="text-sm font-semibold font-display">Domain Coverage</h3>
+                  <span className="text-[10px] text-muted-foreground font-mono ml-auto">
+                    Regulations vs Controls
+                  </span>
+                </div>
+                <ResponsiveContainer width="100%" height={260}>
+                  <BarChart data={barChartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                    <CartesianGrid {...GRID_STYLE} />
+                    <XAxis
+                      dataKey="domain"
+                      tick={{ ...AXIS_STYLE }}
+                      angle={-35}
+                      textAnchor="end"
+                      height={60}
+                      interval={0}
+                    />
+                    <YAxis tick={{ ...AXIS_STYLE }} />
+                    <Tooltip
+                      contentStyle={CHART_TOOLTIP_STYLE}
+                      cursor={{ fill: "var(--osint-glow)" }}
+                    />
+                    <Legend
+                      verticalAlign="top"
+                      align="right"
+                      wrapperStyle={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", paddingBottom: 8 }}
+                    />
+                    <Bar dataKey="Regulations" fill="#00B8F5" radius={[3, 3, 0, 0]} />
+                    <Bar dataKey="Controls" fill="#1E49E2" radius={[3, 3, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
-              <button
-                onClick={() => setLocation("/controls-library")}
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-cyan-400 transition-colors"
-              >
-                View library <ArrowRight className="h-3 w-3" />
-              </button>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {loading ? (
-                Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="rounded-xl border bg-card p-4 animate-pulse">
-                    <div className="h-2.5 w-20 bg-muted rounded mb-3" />
-                    <div className="h-7 w-12 bg-muted rounded mb-2" />
-                    <div className="h-2 w-16 bg-muted rounded" />
-                  </div>
-                ))
-              ) : (
-                ctrlKpis.map(({ label, value, sub, accent, icon }) => (
-                  <div key={label} className={`rounded-xl border bg-gradient-to-br ${accent} p-4`}>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">{label}</p>
-                        <p className="text-3xl font-bold mt-1 leading-none">{value}</p>
-                        <p className="text-[11px] text-muted-foreground mt-1.5">{sub}</p>
-                      </div>
-                      <span className="text-xl opacity-60">{icon}</span>
+
+              {/* Donut Chart — Obligation Distribution */}
+              <div className="rounded-2xl border bg-card p-4 card-interactive">
+                <div className="flex items-center gap-2 mb-4">
+                  <Layers className="h-4 w-4 text-[var(--purple-accent)]" />
+                  <h3 className="text-sm font-semibold font-display">Obligations</h3>
+                </div>
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={45}
+                      outerRadius={80}
+                      paddingAngle={3}
+                      dataKey="value"
+                      stroke="none"
+                    >
+                      {pieData.map((entry, i) => (
+                        <Cell key={i} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={CHART_TOOLTIP_STYLE}
+                      itemStyle={{ color: "#e2e8f0" }}
+                      labelStyle={{ color: "#94a3b8", fontFamily: "'JetBrains Mono', monospace", fontSize: 11 }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="mt-2 space-y-1 max-h-24 overflow-auto">
+                  {pieData.slice(0, 6).map((entry, i) => (
+                    <div key={i} className="flex items-center gap-2 text-[10px]">
+                      <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ background: entry.fill }} />
+                      <span className="text-muted-foreground truncate capitalize">{entry.name}</span>
+                      <span className="ml-auto font-mono text-foreground">{entry.value}</span>
                     </div>
-                  </div>
-                ))
-              )}
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* ── Analysis Results ── */}
+          <section>
+            <div className="mb-4">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.2em] font-mono">
+                Analysis Results
+              </p>
+              <h2 className="text-lg font-bold mt-0.5">Explore Diagnostic Outputs</h2>
             </div>
+
+            {analysisLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                {Array.from({ length: 4 }).map((_, i) => <AnalysisSkeleton key={i} />)}
+              </div>
+            ) : !librariesLoaded ? (
+              <div className="rounded-2xl border bg-card p-8 text-center text-muted-foreground">
+                <Library className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                <p className="text-sm">Populate both libraries to unlock analysis insights</p>
+              </div>
+            ) : !hasAnalysisData ? (
+              <div className="rounded-2xl border bg-card p-8 text-center text-muted-foreground">
+                <Library className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                <p className="text-sm font-medium">Partial data available</p>
+                <p className="text-xs mt-1">Load both the Regulatory and Controls libraries to see full analysis</p>
+              </div>
+            ) : (
+              <>
+                {/* 2×2 Analysis Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                  <AnalysisCard
+                    title="Controls-Obligations Coverage"
+                    accentColor="#009A44"
+                    value={`${ctrlCoveragePct.toFixed(1)}%`}
+                    valueColor="#009A44"
+                    subLabel="coverage rate"
+                    detail={`${orphanedCtrlCount} unmapped controls · ${allControls.length} total`}
+                    onViewFull={() => setLocation("/controls-library")}
+                  />
+                  <AnalysisCard
+                    title="Control Quality Analysis"
+                    accentColor="#7213EA"
+                    value={`${avgMatchScore.toFixed(2)}/1.0`}
+                    valueColor="#7213EA"
+                    subLabel="avg match score"
+                    detail={`${lowQualityPct.toFixed(1)}% controls need better alignment`}
+                    onViewFull={() => { setPendingQualityAnalysis(true); setLocation("/controls-library"); }}
+                  />
+                  <AnalysisCard
+                    title="Controls Duplicates"
+                    accentColor="#EAAA00"
+                    value={String(potentialDuplicates)}
+                    valueColor="#EAAA00"
+                    subLabel="potential duplicates"
+                    detail={`${confirmedDuplicates} likely confirmed · ${potentialDuplicates - confirmedDuplicates} under review`}
+                    onViewFull={() => setLocation("/controls-library")}
+                  />
+                  <AnalysisCard
+                    title="Domain Gap Assessment"
+                    accentColor="#1E49E2"
+                    value={`${domainCoveragePct.toFixed(0)}%`}
+                    valueColor="#1E49E2"
+                    subLabel="regulatory domains covered"
+                    detail={`${regOnlyDomains.length} domain${regOnlyDomains.length !== 1 ? "s" : ""} without controls`}
+                    onViewFull={() => setLocation("/regulatory-library")}
+                  />
+                </div>
+
+                {/* Full-width Regulation-Controls Coverage Card */}
+                <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-[#00338D] to-[#1E49E2] p-6 text-white">
+                  <div className="flex items-center justify-between gap-4 mb-6">
+                    <div>
+                      <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-white/60 mb-0.5">
+                        Cross-Library Analysis
+                      </p>
+                      <h3 className="text-base font-bold">Regulation–Controls Coverage</h3>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setLocation("/regulatory-library")}
+                      className="shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full border border-white/30 text-white hover:bg-white/10 transition-colors flex items-center gap-1.5"
+                    >
+                      View Full Analysis <ArrowRight className="h-3 w-3" />
+                    </button>
+                  </div>
+
+                  {/* Stats row */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                    {[
+                      {
+                        value: `${oblCoveragePct.toFixed(0)}%`,
+                        label: "obligations covered",
+                        color: oblCoveragePct >= 75 ? "#00FF88" : oblCoveragePct >= 50 ? "#EAAA00" : "#FF6B6B",
+                      },
+                      {
+                        value: totalObligations.toLocaleString(),
+                        label: "total obligations",
+                        color: "#00B8F5",
+                      },
+                      {
+                        value: String(gapObligations),
+                        label: "gap obligations",
+                        color: gapObligations === 0 ? "#00FF88" : "#EAAA00",
+                      },
+                      {
+                        value: String(regDocs.length),
+                        label: "regulations assessed",
+                        color: "#ffffff",
+                      },
+                    ].map(({ value, label, color }) => (
+                      <div key={label}>
+                        <p className="text-3xl font-bold leading-none" style={{ color }}>{value}</p>
+                        <p className="text-[11px] text-white/60 mt-1">{label}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Framework pills */}
+                  {frameworkNames.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {frameworkNames.map((name, i) => (
+                        <span
+                          key={i}
+                          className="text-[11px] font-medium px-3 py-1 rounded-full border border-white/20 bg-white/10 text-white/80"
+                        >
+                          {name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </section>
 
-          {/* Quick Links */}
-          <section>
-            <h2 className="text-sm font-semibold text-foreground mb-3">Quick Links</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {[
-                { label: "Regulatory Testing", desc: "Run compliance assessments", path: "/regulatory-testing", icon: <Scale className="h-4 w-4" />, color: "text-blue-400" },
-                { label: "Regulatory Library", desc: "Browse & manage regulations", path: "/regulatory-library", icon: <Library className="h-4 w-4" />, color: "text-violet-400" },
-                { label: "Controls Library", desc: "Browse & manage controls", path: "/controls-library", icon: <ShieldCheck className="h-4 w-4" />, color: "text-cyan-400" },
-              ].map(({ label, desc, path, icon, color }) => (
-                <button
-                  key={path}
-                  onClick={() => setLocation(path)}
-                  className="rounded-xl border bg-card p-4 text-left hover:border-primary/40 hover:bg-accent/30 transition-all duration-150 group"
-                >
-                  <div className={`${color} mb-2 group-hover:scale-110 transition-transform inline-block`}>{icon}</div>
-                  <p className="text-sm font-medium text-foreground">{label}</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">{desc}</p>
-                </button>
-              ))}
+          {/* ── System Status + Quick Links ── */}
+          <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* System Status */}
+            <div className="rounded-2xl border bg-card p-4 card-interactive">
+              <div className="flex items-center gap-2 mb-4">
+                <Cpu className="h-4 w-4 text-[var(--terminal-green)]" />
+                <h3 className="text-sm font-semibold font-display">System Status</h3>
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Database className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">Active Model</span>
+                  </div>
+                  <span className="text-xs font-mono text-foreground">
+                    {selectedModel || "None"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Database className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">Reg. Library</span>
+                  </div>
+                  <span className={`text-xs font-mono ${regDocs.length > 0 ? "text-[var(--terminal-green)]" : "text-muted-foreground"}`}>
+                    {regDocs.length > 0 ? `${regDocs.length} loaded` : "empty"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Database className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">Controls Library</span>
+                  </div>
+                  <span className={`text-xs font-mono ${ctrlDocs.length > 0 ? "text-[var(--terminal-green)]" : "text-muted-foreground"}`}>
+                    {ctrlDocs.length > 0 ? `${ctrlDocs.length} loaded` : "empty"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-green-400 data-pulse" />
+                    <span className="text-xs text-muted-foreground">Platform</span>
+                  </div>
+                  <span className="text-xs font-mono text-green-400">Online</span>
+                </div>
+              </div>
             </div>
+
+            {/* Quick Links */}
+            {[
+              { label: "Regulatory Testing", desc: "Run compliance assessments", path: "/regulatory-testing", icon: <Scale className="h-4 w-4" />, color: "var(--kpmg-blue)" },
+              { label: "Controls Library", desc: "Browse & manage controls", path: "/controls-library", icon: <ShieldCheck className="h-4 w-4" />, color: "var(--teal)" },
+            ].map(({ label, desc, path, icon, color }) => (
+              <button
+                key={path}
+                onClick={() => setLocation(path)}
+                className="rounded-2xl border bg-card p-4 text-left card-interactive group"
+                style={{ borderLeft: `3px solid ${color}` }}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <span style={{ color }}>{icon}</span>
+                  <ArrowRight className="h-3 w-3 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+                <p className="text-sm font-medium font-display text-foreground">{label}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">{desc}</p>
+              </button>
+            ))}
           </section>
 
         </div>

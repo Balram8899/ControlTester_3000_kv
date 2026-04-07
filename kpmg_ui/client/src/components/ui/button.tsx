@@ -11,7 +11,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground border border-primary-border",
+          "bg-[var(--kpmg-blue)] hover:bg-[var(--cobalt)] text-white border border-[var(--kpmg-blue)] transition-colors duration-200",
         destructive:
           "bg-destructive text-destructive-foreground border border-destructive-border",
         outline:
@@ -30,6 +30,7 @@ const buttonVariants = cva(
         sm: "min-h-8 rounded-md px-3 text-xs",
         lg: "min-h-10 rounded-md px-8",
         icon: "h-9 w-9",
+        pill: "min-h-9 rounded-full px-6 py-2",
       },
     },
     defaultVariants: {

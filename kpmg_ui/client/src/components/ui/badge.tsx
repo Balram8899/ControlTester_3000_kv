@@ -17,6 +17,10 @@ const badgeVariants = cva(
           "border-transparent bg-destructive text-destructive-foreground shadow-xs",
 
         outline: " border [border-color:var(--badge-outline)] shadow-xs",
+        "status-pass": "border-[rgba(0,154,68,0.25)] bg-[rgba(0,154,68,0.12)] text-[#009A44]",
+        "status-fail": "border-[rgba(229,0,27,0.25)] bg-[rgba(229,0,27,0.12)] text-[#E5001B]",
+        "status-partial": "border-[rgba(234,170,0,0.25)] bg-[rgba(234,170,0,0.12)] text-[#EAAA00]",
+        "status-info": "border-[rgba(0,184,245,0.25)] bg-[rgba(0,184,245,0.12)] text-[#00B8F5]",
       },
     },
     defaultVariants: {

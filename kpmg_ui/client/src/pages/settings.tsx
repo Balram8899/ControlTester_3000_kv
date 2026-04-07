@@ -1,7 +1,15 @@
 import { useState, useEffect, useRef } from "react";
-import { CheckCircle2, Network } from "lucide-react";
+import { CheckCircle2, Network, Eye, EyeOff } from "lucide-react";
+import { HIDEABLE_TABS } from "@/components/AppLayout";
+
+const NAV_HIDDEN_KEY = "nav_hidden_pages";
+
+function readHiddenPages(): string[] {
+  try { return JSON.parse(localStorage.getItem(NAV_HIDDEN_KEY) || "[]"); } catch { return []; }
+}
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import HeroSection from "@/components/HeroSection";
 import ContextFileUpload from "@/components/ContextFileUpload";
 import {
   Select,
@@ -39,6 +47,16 @@ interface VectorstoreInfo {
 export default function SettingsPage() {
   const [generalContextFiles, setGeneralContextFiles] = useState<ContextFile[]>([]);
   const [companyPolicyFiles, setCompanyPolicyFiles] = useState<ContextFile[]>([]);
+  const [hiddenPages, setHiddenPages] = useState<string[]>(readHiddenPages);
+
+  const togglePageVisibility = (path: string) => {
+    setHiddenPages(prev => {
+      const next = prev.includes(path) ? prev.filter(p => p !== path) : [...prev, path];
+      localStorage.setItem(NAV_HIDDEN_KEY, JSON.stringify(next));
+      window.dispatchEvent(new Event(NAV_HIDDEN_KEY));
+      return next;
+    });
+  };
   const [selectedModel, setSelectedModel] = useState(() => {
     return localStorage.getItem("selectedModel") || "";
   });
@@ -307,13 +325,7 @@ export default function SettingsPage() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex-shrink-0 px-6 py-3 flex items-center gap-3" style={{ background: "linear-gradient(135deg, hsl(262 80% 20% / 0.4), hsl(217 91% 20% / 0.3))", borderBottom: "1px solid hsl(217 91% 55% / 0.2)" }}>
-        <Network className="h-6 w-6 text-blue-400 flex-shrink-0" />
-        <div>
-          <h1 className="text-lg font-bold text-foreground">Settings</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">Configure AI models and application preferences</p>
-        </div>
-      </div>
+      <HeroSection title="Settings" subtitle="Configure AI models and application preferences" icon={Network} />
       <div className="flex-1 overflow-auto">
       <div className="max-w-4xl mx-auto p-8">
         <div className="space-y-8">
@@ -451,6 +463,51 @@ export default function SettingsPage() {
                 acceptedFileTypes=".pdf,.txt,.jpg,.jpeg,.csv,.xls,.xlsx"
                 acceptedExtensions={['pdf', 'txt', 'jpg', 'jpeg', 'csv', 'xls', 'xlsx']}
               />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Eye className="h-4 w-4" />
+                Navigation Visibility
+              </CardTitle>
+              <CardDescription>
+                Choose which pages appear in the left panel. Settings is always visible.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-1">
+                {HIDEABLE_TABS.map(tab => {
+                  const hidden = hiddenPages.includes(tab.path);
+                  return (
+                    <div
+                      key={tab.path}
+                      className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-muted/40 transition-colors"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <tab.icon className={`h-4 w-4 ${hidden ? "text-muted-foreground/40" : "text-muted-foreground"}`} />
+                        <span className={`text-sm ${hidden ? "text-muted-foreground/40 line-through" : "text-foreground"}`}>
+                          {tab.fullTitle}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => togglePageVisibility(tab.path)}
+                        className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                          hidden
+                            ? "border-muted-foreground/30 text-muted-foreground/50 hover:text-foreground hover:border-primary/50"
+                            : "border-primary/30 text-primary hover:bg-primary/10"
+                        }`}
+                      >
+                        {hidden ? (
+                          <><EyeOff className="h-3 w-3" /> Hidden</>
+                        ) : (
+                          <><Eye className="h-3 w-3" /> Visible</>
+                        )}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
             </CardContent>
           </Card>
         </div>

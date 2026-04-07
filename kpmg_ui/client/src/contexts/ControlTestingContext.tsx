@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 
-export type AuditStep = "upload_script" | "review_checklist" | "upload_evidence" | "generating" | "results";
+export type AuditStep = "landing" | "upload_script" | "review_checklist" | "upload_evidence" | "generating" | "results";
 
 export interface EvidenceChecklistItem {
   control_id: string;
@@ -40,6 +40,7 @@ export interface WorkpaperSummary {
   fail_count: number;
   partial_count: number;
   no_evidence_count: number;
+  severity_counts?: { high: number; medium: number; low: number };
 }
 
 export interface AuditSessionState {
