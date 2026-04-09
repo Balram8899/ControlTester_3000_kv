@@ -1,5 +1,5 @@
 """
-Complete FastAPI wrapper for ControlTester_3000 with Session & Memory Management
+Complete FastAPI wrapper for Trace with Session & Memory Management
 File: api/main.py
 Includes session management, conversation memory, and enhanced chat capabilities
 Phase 1 + Phase 2 implementation - FIXED VERSION
@@ -102,7 +102,7 @@ class WorkpaperResponse(BaseModel):
 # FastAPI instance & CORS
 # ----------------------------------------------------------------------------
 app = FastAPI(
-    title="ControlTester 3000 API",
+    title="Trace API",
     version="2.2.0",
     description="Cybersecurity audit service with memory management, session handling, and multi-source context integration.",
     openapi_tags=[

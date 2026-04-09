@@ -29,7 +29,7 @@ from utils.regulatory_comparision import (
 logger = logging.getLogger(__name__)
 
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
-DB_NAME = "controltester_db"
+DB_NAME = "Trace_db"
 COLLECTION_NAME = "controls_library"
 
 LIBRARY_GRAPH_DIR = "data/library_graphs/controls"

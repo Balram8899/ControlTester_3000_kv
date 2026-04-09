@@ -33,7 +33,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# ControlTester 3000 - Cyber Risk Audit Bot
+# Trace - Cyber Risk Audit Bot
 # This is a Streamlit app for a Cyber Risk Audit Bot that allows users to upload policies and evidence files,
 # train a knowledge base, assess evidence against the knowledge base, and generate an audit workbook.
 

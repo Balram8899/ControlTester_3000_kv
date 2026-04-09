@@ -1,5 +1,5 @@
 """
-Graph-RAG module for ControlTester 3000.
+Graph-RAG module for Trace.
 
 Provides a Knowledge Graph layer (NetworkX DiGraph) that sits alongside the
 existing FAISS vectorstore. All paths that touch the graph fall back

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**ControlTester 3000** is a cybersecurity audit and compliance assessment platform. It uses a local LLM (Ollama with Llama3) and RAG (Retrieval-Augmented Generation) to help auditors analyze evidence, test controls, check regulatory compliance, and generate workpapers.
+**Trace** is a cybersecurity audit and compliance assessment platform. It uses a local LLM (Ollama with Llama3) and RAG (Retrieval-Augmented Generation) to help auditors analyze evidence, test controls, check regulatory compliance, and generate workpapers.
 
 ## Services & Ports
 

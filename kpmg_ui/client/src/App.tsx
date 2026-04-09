@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -49,19 +50,22 @@ function Router() {
   const [location, setLocation] = useLocation();
   const { user } = useAuth();
 
-  // Auth guards
-  if (!user && location !== "/login") {
-    setLocation("/login");
-    return null;
-  }
-  if (user && location === "/login") {
-    setLocation("/landing");
-    return null;
-  }
+  // Sync URL with auth state
+  useEffect(() => {
+    if (!user && location !== "/login") {
+      setLocation("/login");
+    } else if (user && location === "/login") {
+      setLocation("/landing");
+    }
+  }, [user, location]);
 
-  if (location === "/login") {
+  // Not authenticated — always show login immediately (URL will sync via effect above)
+  if (!user) {
     return <LoginPage />;
   }
+
+  // Authenticated but still on /login — redirect pending, show nothing briefly
+  if (location === "/login") return null;
 
   if (location === "/landing") {
     return <LandingPage />;

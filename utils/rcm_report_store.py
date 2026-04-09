@@ -14,7 +14,7 @@ from typing import List, Dict, Optional, Tuple, Any
 logger = logging.getLogger(__name__)
 
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
-DB_NAME = "controltester_db"
+DB_NAME = "Trace_db"
 COLLECTION_NAME = "rcm_reports"
 
 
