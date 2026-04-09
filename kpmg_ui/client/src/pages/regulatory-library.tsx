@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { useCrossNav } from "@/contexts/CrossNavContext";
+import { useLibraryMetrics } from "@/contexts/LibraryMetricsContext";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
@@ -504,6 +505,7 @@ export default function RegulatoryLibraryPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const { pendingObligationId, setPendingObligationId, setPendingControlId } = useCrossNav();
+  const { refreshMetrics } = useLibraryMetrics();
   const {
     libraryDocuments,
     setLibraryDocuments,
@@ -726,6 +728,7 @@ export default function RegulatoryLibraryPage() {
 
       await fetchLibraryDocuments();
       await fetchAllObligations();
+      refreshMetrics();
 
       const mongoFailed = ingested.some((r: any) => !r.mongo_saved);
       toast({
@@ -754,6 +757,7 @@ export default function RegulatoryLibraryPage() {
       }
       gapSelectedIds.delete(documentId);
       setGapSelectedIds(new Set(gapSelectedIds));
+      refreshMetrics();
       toast({ title: "Deleted", description: "Document removed from library" });
     } catch (err) {
       toast({ title: "Error", description: err instanceof Error ? err.message : "Delete failed", variant: "destructive" });
@@ -774,6 +778,7 @@ export default function RegulatoryLibraryPage() {
       setRightPanelView("dashboard");
       setGapSelectedIds(new Set());
       setGapResults(null);
+      refreshMetrics();
       toast({ title: "Library cleared", description: `${data.deleted_count} document(s) removed` });
     } catch (err) {
       toast({ title: "Error", description: err instanceof Error ? err.message : "Clear failed", variant: "destructive" });
@@ -2232,11 +2237,11 @@ export default function RegulatoryLibraryPage() {
 
       {/* ── Cross-Library Metric Obligation Popup ────────────────────────── */}
       <Dialog open={!!crossMetricDialog} onOpenChange={open => { if (!open) setCrossMetricDialog(null); }}>
-        <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col p-0 gap-0">
+        <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col p-0 gap-0 overflow-hidden">
           <DialogHeader className="px-5 py-4 border-b shrink-0">
             <DialogTitle className="text-base font-semibold">{crossMetricDialog?.title}</DialogTitle>
           </DialogHeader>
-          <ScrollArea className="flex-1 min-h-0" type="always">
+          <div className="flex-1 overflow-y-auto min-h-0">
             <div className="divide-y">
               {(crossMetricDialog?.obligations ?? []).map((obl: any, i: number) => (
                 <DialogOblRow
@@ -2258,7 +2263,7 @@ export default function RegulatoryLibraryPage() {
                 <p className="text-sm text-muted-foreground text-center py-10">No obligations to display.</p>
               )}
             </div>
-          </ScrollArea>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

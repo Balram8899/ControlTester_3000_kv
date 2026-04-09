@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { useCrossNav } from "@/contexts/CrossNavContext";
+import { useLibraryMetrics } from "@/contexts/LibraryMetricsContext";
 import {
   Upload, X, Play, RotateCcw, Search, Trash2, ShieldCheck,
   LayoutDashboard, List, ChevronDown, ChevronRight, BookOpen,
@@ -466,6 +467,7 @@ export default function ControlsLibraryPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const { pendingControlId, setPendingControlId, setPendingObligationId, pendingQualityAnalysis, setPendingQualityAnalysis } = useCrossNav();
+  const { refreshMetrics } = useLibraryMetrics();
 
   // Resizable panel
   const [panelWidth, setPanelWidth] = useState(320);
@@ -621,6 +623,7 @@ export default function ControlsLibraryPage() {
       setUploadFiles([]);
       await fetchDocs();
       await fetchAllControls();
+      refreshMetrics();
 
       const mongoFailed = ingested.some((r: any) => !r.mongo_saved);
       toast({
@@ -647,6 +650,7 @@ export default function ControlsLibraryPage() {
         setSelectedDoc(null);
         setRightPanelView("dashboard");
       }
+      refreshMetrics();
       toast({ title: "Deleted", description: "Document removed from controls library" });
     } catch (err) {
       toast({ title: "Error", description: err instanceof Error ? err.message : "Delete failed", variant: "destructive" });
@@ -666,6 +670,7 @@ export default function ControlsLibraryPage() {
       setSelectedDoc(null);
       setDocCache({});
       setRightPanelView("dashboard");
+      refreshMetrics();
       toast({ title: "Library cleared", description: `${data.deleted_count} document(s) removed` });
     } catch (err) {
       toast({ title: "Error", description: err instanceof Error ? err.message : "Clear failed", variant: "destructive" });
@@ -685,6 +690,7 @@ export default function ControlsLibraryPage() {
       setMergedControls(null);
       setDocCache({});
       setSelectedDoc(null);
+      refreshMetrics();
     } catch (err) {
       toast({ title: "Remap failed", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" });
     } finally {

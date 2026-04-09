@@ -3,7 +3,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
   FileBarChart, RefreshCw, Download, Trash2, ChevronRight, AlertCircle,
-  CheckCircle2, FileText, GitCompare, Network, ShieldCheck,
+  CheckCircle2, FileText, GitCompare, Network, ShieldCheck, ScanSearch,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import HeroSection from "@/components/HeroSection";
@@ -61,6 +61,11 @@ interface ReportSummary {
   controls_tested?: number;
   summary?: ControlTestSummary;
   session_id?: string;
+  // Evidence assessment specific
+  evidence_files?: string[];
+  evidence_file_count?: number;
+  assessment_count?: number;
+  controls_graph_nodes?: number;
 }
 
 interface FullReport extends ReportSummary {
@@ -224,12 +229,13 @@ export default function ReportsPage() {
 
   const isGapReport = (r: ReportSummary) => r.report_type === "regulatory_gap_analysis";
   const isControlTest = (r: ReportSummary) => r.report_type === "control_testing";
+  const isEvidenceAssessment = (r: ReportSummary) => r.report_type === "evidence_assessment";
 
   return (
     <div className="h-full flex flex-col">
       <HeroSection
         title="Reports"
-        subtitle="Control testing workpapers, RCM compliance assessments, and regulatory gap analyses"
+        subtitle="Evidence assessments, control testing workpapers, RCM compliance assessments, and regulatory gap analyses"
         icon={FileBarChart}
         actions={
           <Button
@@ -263,13 +269,14 @@ export default function ReportsPage() {
               <FileBarChart className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
               <p className="text-sm font-medium text-muted-foreground">No reports yet</p>
               <p className="text-xs text-muted-foreground mt-1">
-                Run a Control Testing workpaper, RCM compliance analysis, or Regulatory Library gap analysis to see records here
+                Run an Evidence Assessment, Control Testing workpaper, RCM compliance analysis, or Regulatory Library gap analysis to see records here
               </p>
             </div>
           ) : (
             reports.map((report) => {
               const gap = isGapReport(report);
               const ctTest = isControlTest(report);
+              const evAssess = isEvidenceAssessment(report);
               const isExpanded = expandedReport === report.report_id;
               const full = fullReports[report.report_id];
               const stats = report.compliance_stats;
@@ -302,6 +309,11 @@ export default function ReportsPage() {
                                   <ShieldCheck className="h-3 w-3" />
                                   AI Control Testing
                                 </Badge>
+                              ) : evAssess ? (
+                                <Badge variant="outline" className="text-[10px] gap-1 border-teal-400 text-teal-500 dark:text-teal-400">
+                                  <ScanSearch className="h-3 w-3" />
+                                  Evidence Assessment
+                                </Badge>
                               ) : (
                                 <Badge variant="outline" className="text-[10px] gap-1 border-blue-400 text-blue-500 dark:text-blue-400">
                                   <FileBarChart className="h-3 w-3" />
@@ -314,6 +326,8 @@ export default function ReportsPage() {
                                   ? `${names.length} framework${names.length !== 1 ? "s" : ""} compared`
                                   : ctTest
                                   ? report.workpaper_filename ?? report.rcm_filename
+                                  : evAssess
+                                  ? `${report.evidence_file_count ?? 0} evidence file${(report.evidence_file_count ?? 0) !== 1 ? "s" : ""} assessed`
                                   : report.rcm_filename}
                               </CardTitle>
 
@@ -352,8 +366,8 @@ export default function ReportsPage() {
                               )}
                             </div>
 
-                            {/* Framework / regulation name pills (not shown for control testing) */}
-                            {!ctTest && (
+                            {/* Framework / regulation name pills (not shown for control testing or evidence assessment) */}
+                            {!ctTest && !evAssess && (
                               <div className="flex flex-wrap gap-1.5">
                                 {names.map((name, i) => (
                                   <Badge key={i} variant="secondary" className="text-[10px]">
@@ -362,17 +376,32 @@ export default function ReportsPage() {
                                 ))}
                               </div>
                             )}
+                            {evAssess && report.evidence_files && report.evidence_files.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5">
+                                {report.evidence_files.map((f, i) => (
+                                  <Badge key={i} variant="secondary" className="text-[10px]">
+                                    {f}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
 
                             <div className="flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap">
                               <span>{formatDate(report.created_at)}</span>
-                              {!gap && !ctTest && stats?.overall_compliance_score != null && (
+                              {!gap && !ctTest && !evAssess && stats?.overall_compliance_score != null && (
                                 <span>Score: {stats.overall_compliance_score}%</span>
                               )}
-                              {!gap && !ctTest && stats?.controls_analyzed != null && (
+                              {!gap && !ctTest && !evAssess && stats?.controls_analyzed != null && (
                                 <span>{stats.controls_analyzed} controls analyzed</span>
                               )}
                               {ctTest && ctSum && (
                                 <span>{ctSum.controls_tested} controls tested</span>
+                              )}
+                              {evAssess && (
+                                <>
+                                  <span>{report.assessment_count ?? 0} controls assessed</span>
+                                  {report.controls_graph_nodes ? <span>{report.controls_graph_nodes} graph nodes</span> : null}
+                                </>
                               )}
                               {gap && gapSum && (
                                 <>
@@ -415,8 +444,23 @@ export default function ReportsPage() {
                           </div>
                         )}
 
+                        {/* ── Evidence assessment KPI row ── */}
+                        {evAssess && (
+                          <div className="grid grid-cols-2 gap-2">
+                            {[
+                              { label: "Files Assessed", value: report.evidence_file_count ?? 0, color: "text-teal-400" },
+                              { label: "Controls Tested", value: report.assessment_count ?? 0, color: "text-blue-400" },
+                            ].map((kpi) => (
+                              <div key={kpi.label} className="rounded-lg bg-muted/30 p-3 text-center">
+                                <p className={`text-lg font-bold ${kpi.color}`}>{kpi.value}</p>
+                                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{kpi.label}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
                         {/* ── RCM compliance KPI row ── */}
-                        {!gap && !ctTest && stats && (
+                        {!gap && !ctTest && !evAssess && stats && (
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                             {[
                               { label: "Compliant", value: stats.compliant ?? 0, color: "text-green-400" },
@@ -461,7 +505,7 @@ export default function ReportsPage() {
                               </ReactMarkdown>
                             </div>
                           </ScrollArea>
-                        ) : !gap && !ctTest && full?.executive_summary ? (
+                        ) : (evAssess || (!gap && !ctTest)) && full?.executive_summary ? (
                           <ScrollArea className="max-h-80 rounded-lg border bg-muted/20 p-4">
                             <pre className="text-xs text-foreground whitespace-pre-wrap font-mono leading-relaxed">
                               {full.executive_summary}
@@ -477,6 +521,18 @@ export default function ReportsPage() {
 
                         {/* ── Action buttons ── */}
                         <div className="flex flex-wrap gap-2">
+                          {/* Evidence Assessment: download PDF workbook */}
+                          {evAssess && report.rcm_filename && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => { e.stopPropagation(); handleDownloadRcm(report.report_id, report.rcm_filename); }}
+                              className="gap-1.5 text-xs"
+                            >
+                              <Download className="h-3 w-3" /> Download Report
+                            </Button>
+                          )}
+
                           {/* Control Testing: download workpaper */}
                           {ctTest && report.rcm_filename && (
                             <Button

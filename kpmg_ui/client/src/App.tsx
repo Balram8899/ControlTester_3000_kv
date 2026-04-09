@@ -10,6 +10,7 @@ import { EvidenceProvider } from "@/contexts/EvidenceContext";
 import { ControlTestingProvider } from "@/contexts/ControlTestingContext";
 import { RegulatoryTestingProvider } from "@/contexts/RegulatoryTestingContext";
 import { CrossNavProvider } from "@/contexts/CrossNavContext";
+import { LibraryMetricsProvider } from "@/contexts/LibraryMetricsContext";
 import AppLayout from "@/components/AppLayout";
 import LoginPage from "@/pages/login";
 import ChatPage from "@/pages/chat";
@@ -88,8 +89,10 @@ function App() {
                 <ControlTestingProvider>
                   <RegulatoryTestingProvider>
                     <CrossNavProvider>
-                      <Toaster />
-                      <Router />
+                      <LibraryMetricsProvider>
+                        <Toaster />
+                        <Router />
+                      </LibraryMetricsProvider>
                     </CrossNavProvider>
                   </RegulatoryTestingProvider>
                 </ControlTestingProvider>

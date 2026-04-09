@@ -22,7 +22,29 @@ from typing import Optional, Tuple
 warnings.filterwarnings("ignore", category=UserWarning, module="openpyxl")
 
 GOOGLE_LLM_MODEL = os.getenv('GOOGLE_LLM_MODEL', 'gemini-3-flash-preview')
-GOOGLE_EMBEDDING_MODEL = os.getenv('GOOGLE_EMBEDDING_MODEL', 'models/text-embedding-004')
+GOOGLE_EMBEDDING_MODEL = os.getenv('GOOGLE_EMBEDDING_MODEL', 'gemini-embedding-001')
+
+# Maps Gemini LLM model names to their corresponding embedding model.
+# Gemini chat models don't support embedContent, so we map them to a
+# dedicated embedding model from the same generation.
+_LLM_TO_EMBEDDING: dict[str, str] = {
+    "gemini-2.0-flash":        "gemini-embedding-001",
+    "gemini-2.0-flash-lite":   "gemini-embedding-001",
+    "gemini-3-flash-preview":  "gemini-embedding-001",
+    "gemini-1.5-pro":          "gemini-embedding-001",
+    "gemini-1.5-flash":        "gemini-embedding-001",
+}
+
+
+def _resolve_embedding_model(selected_model: str | None) -> str:
+    """Return the embedding model to use for a given LLM selection."""
+    if selected_model:
+        # If the caller passed an actual embedding model name, use it directly.
+        if "embed" in selected_model.lower():
+            return selected_model
+        # Otherwise map the LLM model to its embedding counterpart.
+        return _LLM_TO_EMBEDDING.get(selected_model, GOOGLE_EMBEDDING_MODEL)
+    return GOOGLE_EMBEDDING_MODEL
 
 
 def _make_llm(model: str | None = None, temperature: float = 0.1):
@@ -56,8 +78,7 @@ def initialize(selected_model: str, embedding_model: str | None = None):
     global llm
     global embeddings
     llm = _make_llm(selected_model)
-    embed_name = embedding_model or GOOGLE_EMBEDDING_MODEL
-    embeddings = _make_embeddings(embed_name)
+    embeddings = _make_embeddings(embedding_model or _resolve_embedding_model(selected_model))
 
 
 text_splitter = RecursiveCharacterTextSplitter(
@@ -99,8 +120,8 @@ def build_knowledge_base(
     max_retries=3,
     embedding_model: str | None = None,
     build_graph: bool = True,
-) -> Tuple[FAISS, Optional[object]]:
-    embed_name = embedding_model or GOOGLE_EMBEDDING_MODEL
+) -> Tuple[Optional[FAISS], Optional[object]]:
+    embed_name = embedding_model or _resolve_embedding_model(selected_model)
     embedding_obj = _make_embeddings(embed_name)
     start = time.time()
     all_documents = []
@@ -163,8 +184,11 @@ def build_knowledge_base(
         logger.info(f"Vector store built successfully with {kb_vectorstore.index.ntotal} vectors.")
 
     except Exception as e:
-        logger.critical(f"Vector store creation failed: {e}")
-        raise
+        logger.warning(
+            f"Vector store creation failed (embedding unavailable, "
+            f"falling back to LLM-only analysis): {e}"
+        )
+        return None, None
 
     total_time = time.time() - start
     logger.info(f"Knowledge base built in {total_time:.2f} seconds.")
@@ -200,6 +224,54 @@ def extract_and_validate_json(text):
         raise ValueError(f"Could not parse JSON after cleaning: {e}")
 
 
+def _retrieve_controls_from_graph(
+    evid_text: str,
+    controls_lib_graph,
+    max_results: int = 8,
+) -> str:
+    """
+    Query the Controls Library knowledge graph directly (no FAISS) to find
+    relevant controls based on domain and standard matching with evidence text.
+    Returns a newline-joined string of control text previews, or "" if none found.
+    """
+    try:
+        from utils.graph_rag import RegexEntityExtractor
+        extractor = RegexEntityExtractor()
+        domains = extractor.extract_domains(evid_text)
+        standards = extractor.extract_standards(evid_text)
+
+        chunk_ids: set = set()
+        for domain in domains:
+            chunk_ids.update(controls_lib_graph._domain_index.get(domain, []))
+        for standard in standards:
+            chunk_ids.update(controls_lib_graph._standard_index.get(standard, []))
+
+        # If no domain/standard match, sample all chunk nodes (limited)
+        if not chunk_ids:
+            chunk_ids = {
+                nid for nid, data in controls_lib_graph.graph.nodes(data=True)
+                if data.get("type") == "chunk"
+            }
+
+        # BFS expansion — collect neighbors (depth=1)
+        expanded: set = set(chunk_ids)
+        for cid in list(chunk_ids):
+            expanded.update(
+                controls_lib_graph.get_neighbor_chunk_ids(cid, depth=1)
+            )
+
+        texts = []
+        for cid in list(expanded)[:max_results]:
+            preview = controls_lib_graph.get_chunk_text_preview(cid)
+            if preview:
+                texts.append(preview)
+
+        return "\n\n".join(texts)
+    except Exception as exc:
+        logger.warning(f"Controls library graph retrieval failed (non-fatal): {exc}")
+        return ""
+
+
 def _assess_single_evidence(
     evid_text: str,
     kb_vectorstore,
@@ -211,6 +283,7 @@ def _assess_single_evidence(
     evidence_context: str | None = None,
     kb_graph=None,
     company_kb_graph=None,
+    controls_lib_graph=None,
 ):
     """
     Assess a single evidence chunk against the knowledge bases.
@@ -264,6 +337,20 @@ def _assess_single_evidence(
                            "Proceeding without company policy context.")
             company_knowledge_base_context = "Company-specific knowledge base not available."
 
+        # ── Controls Library graph retrieval (pure graph, no FAISS) ────────
+        controls_library_section = ""
+        if controls_lib_graph is not None:
+            cl_context = _retrieve_controls_from_graph(evid_text, controls_lib_graph)
+            if cl_context:
+                controls_library_section = (
+                    "### CONTROLS LIBRARY (Internal Controls Reference)\n"
+                    "The following controls are from the organization's Controls Library. "
+                    "Use them to anchor your assessment to known internal control objectives "
+                    "and identify whether the evidence satisfies them:\n\n"
+                    f"{cl_context}\n\n"
+                    "---\n"
+                )
+
         # ── BUG 1 FIX: build control-context section when available ────────
         control_context_section = ""
         if evidence_context:
@@ -289,6 +376,8 @@ def _assess_single_evidence(
 
             ### COMPANY-SPECIFIC RISK AND CONTROL STANDARDS (CRI PROFILE)
             {company_knowledge_base_context}
+
+            {controls_library_section}
 
             {control_context_section}
 
@@ -388,6 +477,7 @@ def _assess_single_evidence(
             input_variables=[
                 "knowledge_base_context",
                 "company_knowledge_base_context",
+                "controls_library_section",
                 "evid_text",
                 "control_context_section",   # ← new variable (BUG 1 fix)
             ],
@@ -397,6 +487,7 @@ def _assess_single_evidence(
         formatted_prompt = prompt.format(
             knowledge_base_context=knowledge_base_context,
             company_knowledge_base_context=company_knowledge_base_context,
+            controls_library_section=controls_library_section,
             evid_text=evid_text,
             control_context_section=control_context_section,   # ← BUG 1 fix
         )
@@ -447,6 +538,7 @@ def assess_evidence_with_kb(
     evidence_context: str | None = None,
     kb_graph=None,
     company_kb_graph=None,
+    controls_lib_graph=None,
 ):
     """
     Split evidence files into chunks and assess each chunk against the KBs.
@@ -503,6 +595,7 @@ def assess_evidence_with_kb(
                 evidence_context,       # ← BUG 1 FIX: was previously omitted
                 kb_graph,               # Graph-RAG: global KB graph
                 company_kb_graph,       # Graph-RAG: company KB graph
+                controls_lib_graph,     # Controls Library graph (pure graph retrieval)
             )
             for i in range(len(evid_texts))
         ]

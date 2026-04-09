@@ -1,10 +1,9 @@
-import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useCrossNav } from "@/contexts/CrossNavContext";
+import { useLibraryMetrics } from "@/contexts/LibraryMetricsContext";
 import {
   LayoutDashboard, Library, ShieldCheck, Scale, ArrowRight, RefreshCw,
-  FileText, Layers, Lock, Activity, Database, Cpu, TrendingUp, AlertTriangle,
-  GitBranch, Target,
+  FileText, Layers, Lock, Activity, Database, Cpu,
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
@@ -13,18 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import HeroSection from "@/components/HeroSection";
 import KpiCard from "@/components/KpiCard";
-import { CHART_COLORS, CHART_TOOLTIP_STYLE, AXIS_STYLE, GRID_STYLE } from "@/lib/chartTheme";
-
-interface RegDoc {
-  framework_name?: string;
-  total_obligations?: number;
-  obligations_by_domain?: Record<string, number>;
-}
-
-interface CtrlDoc {
-  total_controls?: number;
-  controls_by_domain?: Record<string, number>;
-}
+import { CHART_TOOLTIP_STYLE, AXIS_STYLE, GRID_STYLE } from "@/lib/chartTheme";
 
 // ── Analysis Card ─────────────────────────────────────────────────────────────
 function AnalysisCard({
@@ -93,111 +81,21 @@ function AnalysisSkeleton() {
 export default function DashboardPage() {
   const [, setLocation] = useLocation();
   const { setPendingQualityAnalysis } = useCrossNav();
-  const [regDocs, setRegDocs] = useState<RegDoc[]>([]);
-  const [ctrlDocs, setCtrlDocs] = useState<CtrlDoc[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
 
-  // Analysis data
-  const [allControls, setAllControls] = useState<any[]>([]);
-  const [mergedCtrlData, setMergedCtrlData] = useState<{ total_raw: number; total_merged: number } | null>(null);
-  const [analysisLoading, setAnalysisLoading] = useState(true);
-
-  const fetchData = () => {
-    setLoading(true);
-    setAnalysisLoading(true);
-    Promise.all([
-      fetch("/api/regulatory-library/documents").then(r => r.json()).catch(() => ({ documents: [] })),
-      fetch("/api/controls-library/documents").then(r => r.json()).catch(() => ({ documents: [] })),
-      fetch("/api/controls-library/all-controls").then(r => r.json()).catch(() => ({ controls: [] })),
-      fetch("/api/controls-library/merged").then(r => r.json()).catch(() => null),
-    ]).then(([regData, ctrlData, allCtrlData, mergedData]) => {
-      setRegDocs(regData.documents ?? []);
-      setCtrlDocs(ctrlData.documents ?? []);
-      setAllControls(allCtrlData.controls ?? []);
-      if (mergedData?.success) {
-        setMergedCtrlData({ total_raw: mergedData.total_raw ?? 0, total_merged: mergedData.total_merged ?? 0 });
-      }
-      setLastRefreshed(new Date());
-      setLoading(false);
-      setAnalysisLoading(false);
-    }).catch(() => { setLoading(false); setAnalysisLoading(false); });
-  };
-
-  useEffect(() => { fetchData(); }, []);
-
-  // ── Regulatory metrics ──────────────────────────────────────────────────────
-  let totalObligations = 0;
-  const regDomainCounts: Record<string, number> = {};
-  for (const doc of regDocs) {
-    totalObligations += doc.total_obligations ?? 0;
-    for (const [d, c] of Object.entries(doc.obligations_by_domain ?? {}))
-      regDomainCounts[d] = (regDomainCounts[d] ?? 0) + c;
-  }
-  const regDomainCount = Object.keys(regDomainCounts).length;
-  const frameworkNames = Array.from(new Set(regDocs.map(d => d.framework_name).filter(Boolean))) as string[];
-
-  // ── Controls metrics ────────────────────────────────────────────────────────
-  let totalControls = 0;
-  const ctrlDomainCounts: Record<string, number> = {};
-  for (const doc of ctrlDocs) {
-    totalControls += doc.total_controls ?? 0;
-    for (const [d, c] of Object.entries(doc.controls_by_domain ?? {}))
-      ctrlDomainCounts[d] = (ctrlDomainCounts[d] ?? 0) + c;
-  }
-  const ctrlDomainCount = Object.keys(ctrlDomainCounts).length;
-
-  // ── Analysis metrics ────────────────────────────────────────────────────────
-  const ctrlCoverageCount = allControls.filter(c => (c.mapped_obligations?.length ?? 0) > 0).length;
-  const orphanedCtrlCount = allControls.length - ctrlCoverageCount;
-  const ctrlCoveragePct = allControls.length > 0 ? (ctrlCoverageCount / allControls.length) * 100 : 0;
-
-  const allScores: number[] = allControls.flatMap(c =>
-    (c.mapped_obligations ?? []).map((o: any) => o.match_score ?? 0)
-  );
-  const avgMatchScore = allScores.length > 0 ? allScores.reduce((a, b) => a + b, 0) / allScores.length : 0;
-
-  const lowQualityCtrlCount = allControls.filter(c => {
-    if (!c.mapped_obligations?.length) return true;
-    const avg = c.mapped_obligations.reduce((s: number, o: any) => s + (o.match_score ?? 0), 0) / c.mapped_obligations.length;
-    return avg < 0.4;
-  }).length;
-  const lowQualityPct = allControls.length > 0 ? (lowQualityCtrlCount / allControls.length) * 100 : 0;
-
-  const coveredObligationIds = new Set<string>(
-    allControls.flatMap(c => (c.mapped_obligations ?? []).map((o: any) => o.obligation_id).filter(Boolean))
-  );
-  const coveredObligations = coveredObligationIds.size;
-  const gapObligations = Math.max(0, totalObligations - coveredObligations);
-  const oblCoveragePct = totalObligations > 0 ? (coveredObligations / totalObligations) * 100 : 0;
-
-  const potentialDuplicates = mergedCtrlData ? Math.max(0, mergedCtrlData.total_raw - mergedCtrlData.total_merged) : 0;
-  const confirmedDuplicates = Math.floor(potentialDuplicates * 0.25);
-
-  const regDomains = Object.keys(regDomainCounts);
-  const regOnlyDomains = regDomains.filter(d => !ctrlDomainCounts[d]);
-  const coveredRegDomains = regDomains.length - regOnlyDomains.length;
-  const domainCoveragePct = regDomains.length > 0 ? (coveredRegDomains / regDomains.length) * 100 : 0;
-
-  // ── Chart data ──────────────────────────────────────────────────────────────
-  const allDomains = Array.from(new Set([
-    ...Object.keys(regDomainCounts),
-    ...Object.keys(ctrlDomainCounts),
-  ]));
-
-  const barChartData = allDomains.map(d => ({
-    domain: d.replace(/_/g, " "),
-    Regulations: regDomainCounts[d] ?? 0,
-    Controls: ctrlDomainCounts[d] ?? 0,
-  }));
-
-  const pieData = Object.entries(regDomainCounts)
-    .sort((a, b) => b[1] - a[1])
-    .map(([name, value], i) => ({
-      name: name.replace(/_/g, " "),
-      value,
-      fill: CHART_COLORS[i % CHART_COLORS.length],
-    }));
+  const {
+    regDocs, ctrlDocs,
+    totalObligations, regDomainCount, regDomainCounts, frameworkNames,
+    totalControls, ctrlDomainCount,
+    allControls,
+    ctrlCoverageCount, orphanedCtrlCount, ctrlCoveragePct,
+    avgMatchScore, lowQualityPct,
+    coveredObligations, gapObligations, oblCoveragePct,
+    potentialDuplicates, confirmedDuplicates,
+    regOnlyDomains, domainCoveragePct,
+    allDomains, barChartData, pieData,
+    loading, analysisLoading, lastRefreshed,
+    refreshMetrics,
+  } = useLibraryMetrics();
 
   const selectedModel = typeof window !== "undefined" ? localStorage.getItem("selectedModel") : null;
   const hasAnalysisData = !analysisLoading && allControls.length > 0 && totalObligations > 0;
@@ -219,7 +117,7 @@ export default function DashboardPage() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={fetchData}
+              onClick={refreshMetrics}
               disabled={loading}
               className="h-7 w-7 text-slate-400 hover:text-white hover:bg-white/10"
               title="Refresh"

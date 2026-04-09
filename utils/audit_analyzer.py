@@ -292,6 +292,7 @@ def analyze_control_evidence(
     kb2_vectorstore,
     model: str,
     kb1_graph=None,
+    controls_lib_graph=None,
 ) -> Dict[str, Any]:
     control_id = control.get("control_id", "UNKNOWN")
     logger.info(f"Analyzing control: {control_id}")
@@ -328,6 +329,7 @@ def analyze_control_evidence(
             selected_model=model,
             evidence_context=evidence_context,
             kb_graph=kb1_graph,
+            controls_lib_graph=controls_lib_graph,
         )
 
         if not assessment_items:
@@ -444,6 +446,7 @@ def analyze_all_controls(
     kb2_vectorstore,
     model: str,
     kb1_graph=None,
+    controls_lib_graph=None,
 ) -> List[Dict[str, Any]]:
     controls      = session_data.get("controls", [])
     uploaded_files = session_data.get("uploaded_files", {})
@@ -458,7 +461,7 @@ def analyze_all_controls(
             for fname, fdata in uploaded_files.items()
             if cid in fdata.get("satisfies_controls", [])
         ]
-        results.append(analyze_control_evidence(control, evidence, kb1_vectorstore, kb2_vectorstore, model, kb1_graph=kb1_graph))
+        results.append(analyze_control_evidence(control, evidence, kb1_vectorstore, kb2_vectorstore, model, kb1_graph=kb1_graph, controls_lib_graph=controls_lib_graph))
 
     logger.info(f"Analysis complete: {len(results)} results")
     return results

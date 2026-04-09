@@ -135,6 +135,58 @@ class RCMReportStore:
         logger.info(f"Saved control testing report {report_id} ({report_data.get('controls_tested', 0)} controls)")
         return report_id
 
+    def save_evidence_assessment_report(
+        self,
+        report_data: Dict[str, Any],
+        workbook_bytes: bytes,
+        workbook_filename: str,
+    ) -> str:
+        """Save an evidence assessment PDF workbook and its summary. Returns report_id."""
+        self._require_connection()
+        report_id = uuid.uuid4().hex
+        gridfs_file_id = self._fs.put(
+            workbook_bytes,
+            filename=workbook_filename,
+            report_id=report_id,
+        )
+        doc = {
+            "report_id": report_id,
+            "report_type": "evidence_assessment",
+            "created_at": datetime.utcnow().isoformat(),
+            "model_used": report_data.get("model_used", ""),
+            "status": "success",
+            "error_message": None,
+            # Evidence-assessment-specific
+            "evidence_files": report_data.get("evidence_files", []),
+            "evidence_file_count": report_data.get("evidence_file_count", 0),
+            "assessment_count": report_data.get("assessment_count", 0),
+            "controls_graph_nodes": report_data.get("controls_graph_nodes", 0),
+            "workpaper_filename": workbook_filename,
+            "rcm_filename": workbook_filename,
+            "gridfs_file_id": gridfs_file_id,
+            "executive_summary": report_data.get("executive_summary", ""),
+            "analysis": report_data.get("analysis", {}),
+            # Unused fields for other report types
+            "regulation_document_ids": [],
+            "regulation_names": [],
+            "document_names": [],
+            "document_count": 0,
+            "compliance_stats": {},
+            "domain_reports": {},
+            "suggestions_summary_counts": {},
+            "gap_summary": None,
+            "graph_context_used": False,
+            "graph_stats": None,
+            "final_report": "",
+        }
+        self._col.insert_one(doc)
+        logger.info(
+            f"Saved evidence assessment report {report_id} "
+            f"({report_data.get('evidence_file_count', 0)} files, "
+            f"{report_data.get('assessment_count', 0)} controls)"
+        )
+        return report_id
+
     def save_gap_analysis_report(self, report_data: Dict[str, Any]) -> str:
         """Save a regulatory gap analysis report (no attached file). Returns report_id."""
         self._require_connection()
@@ -195,6 +247,10 @@ class RCMReportStore:
                 "controls_tested": 1,
                 "summary": 1,
                 "session_id": 1,
+                "evidence_files": 1,
+                "evidence_file_count": 1,
+                "assessment_count": 1,
+                "controls_graph_nodes": 1,
             },
         ).sort("created_at", -1)
         return list(cursor)

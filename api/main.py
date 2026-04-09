@@ -9,7 +9,7 @@ from fastapi import FastAPI, File, UploadFile, Form, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.responses import FileResponse
-from utils.llm_chain import _make_embeddings
+from utils.llm_chain import _make_embeddings, _resolve_embedding_model
 from langchain_community.vectorstores import FAISS
 from pydantic import BaseModel, Field, validator
 from typing import List, Optional, Dict, Any
@@ -578,7 +578,7 @@ async def chat_with_memory(request: ChatRequest):
     request.company_kb_path = request.company_kb_path or "saved_company_vectorstore"
     request.chat_kb_path = request.chat_kb_path or "chat_attachment_vectorstore"
 
-    embeddings_for_load = _make_embeddings(request.embedding_model or None)
+    embeddings_for_load = _make_embeddings(request.embedding_model or _resolve_embedding_model(request.selected_model))
 
     # Load vectorstores
     loaded_stores: Dict[str, Any] = {"global": None, "company": None, "evidence": None, "chat": None}
@@ -728,6 +728,14 @@ async def build_kb(
             max_retries=max_retries
         )
 
+        if vectorstore is None:
+            return KBResp(
+                success=False,
+                message="Knowledge base build failed: embedding API unavailable. Analysis will proceed without RAG.",
+                processing_summary={"embedding_available": False},
+                error_details="Embedding model unavailable — check Google API key and SDK version."
+            )
+
         VECTORSTORE_CACHE[kb_type] = vectorstore
         GRAPH_CACHE[kb_type] = knowledge_graph  # may be None if graph build failed
 
@@ -791,9 +799,9 @@ async def assess_evidence(
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Evidence files are required")  
 
     evidence_objs: List[Any] = []
-    tmp_paths: List[str] = []       
+    tmp_paths: List[str] = []
     file_results: List[FileResult] = []
-    embeddings_for_load = _make_embeddings()
+    embeddings_for_load = _make_embeddings(_resolve_embedding_model(selected_model))
 
     try:
         for uf in evidence_files:           
@@ -815,15 +823,21 @@ async def assess_evidence(
                 processing_time=time.time() - start
             ))
 
-        saved_global_vectorstore = load_faiss_vectorstore("saved_global_vectorstore", embeddings_for_load)
-        if not saved_global_vectorstore:
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, "global vectorstores are required")
-        VECTORSTORE_CACHE["global"] = saved_global_vectorstore        
-
-        saved_company_vectorstore = load_faiss_vectorstore("saved_company_vectorstore", embeddings_for_load)
-        if not saved_company_vectorstore:
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, "company vectorstores are required")
-        VECTORSTORE_CACHE["company"] = saved_company_vectorstore
+        # Load Controls Library knowledge graph (replaces saved_global/company vectorstores)
+        controls_lib_graph = None
+        try:
+            from utils.graph_rag import KnowledgeGraph
+            from utils.controls_library import LIBRARY_GRAPH_DIR as CONTROLS_GRAPH_DIR
+            if KnowledgeGraph.exists(CONTROLS_GRAPH_DIR):
+                controls_lib_graph = KnowledgeGraph.load(CONTROLS_GRAPH_DIR)
+                logger.info(f"Loaded controls library graph from {CONTROLS_GRAPH_DIR} for assessment")
+            else:
+                logger.warning(
+                    f"Controls library graph not found at {CONTROLS_GRAPH_DIR}. "
+                    "Ingest documents via Controls Library first."
+                )
+        except Exception as graph_exc:
+            logger.warning(f"Could not load controls library graph (non-fatal): {graph_exc}")
 
         evidence_vectorstore, _ = build_knowledge_base(
             files=evidence_objs,
@@ -834,33 +848,58 @@ async def assess_evidence(
             max_retries=_Cfg.DEFAULT_RETRIES
         )
         VECTORSTORE_CACHE["evidence"] = evidence_vectorstore
+        if evidence_vectorstore is None:
+            logger.warning("Evidence vectorstore unavailable — proceeding with LLM-only analysis.")
 
-        # Graph-RAG: load graphs from cache (populated by load-vectorstore calls above)
-        global_graph = GRAPH_CACHE.get("global")
-        company_graph = GRAPH_CACHE.get("company")
-
-        # Get assessment results
+        # Get assessment results — vectorstores replaced by Controls Library graph
         assessment_results = assess_evidence_with_kb(
             evidence_files=evidence_objs,
-            kb_vectorstore=saved_global_vectorstore,
-            company_kb_vectorstore=saved_company_vectorstore,
+            kb_vectorstore=None,
+            company_kb_vectorstore=None,
             selected_model=selected_model,
             max_workers=max_workers,
-            kb_graph=global_graph,
-            company_kb_graph=company_graph,
+            controls_lib_graph=controls_lib_graph,
         )
 
         assessment_summary = generate_executive_summary(assessment_results,selected_model)
         assessment_results.append(assessment_summary)
         workbook_path = generate_workbook(assessment_results, None)
 
+        controls_graph_stats = controls_lib_graph.get_graph_stats() if controls_lib_graph else {}
+
+        # Persist to Reports page
+        try:
+            rpt_store = RCMReportStore()
+            if rpt_store.is_connected and workbook_path and os.path.exists(workbook_path):
+                with open(workbook_path, "rb") as f:
+                    workbook_bytes = f.read()
+                exec_summary_text = ""
+                if assessment_summary:
+                    exec_summary_text = (
+                        assessment_summary.get("executive_summary", "")
+                        or assessment_summary.get("summary", "")
+                        or ""
+                    )
+                rpt_store.save_evidence_assessment_report(
+                    report_data={
+                        "model_used": selected_model,
+                        "evidence_files": [uf.filename for uf in evidence_files],
+                        "evidence_file_count": len(evidence_files),
+                        "assessment_count": len(assessment_results) - 1,
+                        "controls_graph_nodes": controls_graph_stats.get("chunk_nodes", 0),
+                        "executive_summary": exec_summary_text,
+                    },
+                    workbook_bytes=workbook_bytes,
+                    workbook_filename=os.path.basename(workbook_path),
+                )
+        except Exception as rpt_exc:
+            logger.warning(f"Failed to save evidence assessment report: {rpt_exc}")
         processing_summary = {
             "evidence_files": len(evidence_files),
             "evidence_documents": len(evidence_files),
             "assessment_results": len(assessment_results),
             "workbook_path": workbook_path,
-            "global_vectors": getattr(saved_global_vectorstore.index, "ntotal", 0),
-            "company_vectors": getattr(saved_company_vectorstore.index, "ntotal", 0),
+            "controls_graph_nodes": controls_graph_stats.get("chunk_nodes", 0),
             "processing_seconds": time.time() - t0,
             "model_used": selected_model,
             "max_workers": max_workers
@@ -970,7 +1009,7 @@ async def load_vectorstore_api(
     model_name: str = Form(...)
 ):
     try:
-        embeddings = _make_embeddings()
+        embeddings = _make_embeddings(_resolve_embedding_model(model_name))
         vs = load_faiss_vectorstore(dir_path, embeddings)
         VECTORSTORE_CACHE[kb_type] = vs
 
@@ -2687,7 +2726,7 @@ async def audit_generate_workpaper(
     try:
         # Load knowledge bases
         # Initialize embeddings for loading vectorstores
-        embeddings_for_load = _make_embeddings()
+        embeddings_for_load = _make_embeddings(_resolve_embedding_model(session.get("selected_model") if session else None))
 
         kb1_path = os.getenv("KB1_PATH", "saved_global_vectorstore")
         kb2_path = os.getenv("KB2_PATH", "saved_company_vectorstore")
@@ -2734,6 +2773,7 @@ async def audit_generate_workpaper(
             kb2_vectorstore=kb2_vectorstore,
             model=model,
             kb1_graph=kb1_graph,
+            controls_lib_graph=kb1_graph,  # Controls Library graph for direct graph retrieval
         )
         
         logger.info(f"[{rid}] Analysis complete. Generating workpaper.")
