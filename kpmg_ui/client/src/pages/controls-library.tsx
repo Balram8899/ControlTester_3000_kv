@@ -650,6 +650,7 @@ export default function ControlsLibraryPage() {
         setSelectedDoc(null);
         setRightPanelView("dashboard");
       }
+      fetchAllControls();
       refreshMetrics();
       toast({ title: "Deleted", description: "Document removed from controls library" });
     } catch (err) {
@@ -686,10 +687,10 @@ export default function ControlsLibraryPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail ?? "Remap failed");
       toast({ title: "Obligations mapped", description: `${data.controls_updated} controls updated across ${data.documents_processed} document(s).` });
-      setDashboardControls([]);
       setMergedControls(null);
       setDocCache({});
       setSelectedDoc(null);
+      await fetchAllControls();
       refreshMetrics();
     } catch (err) {
       toast({ title: "Remap failed", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" });

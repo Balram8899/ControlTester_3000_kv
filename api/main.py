@@ -1577,12 +1577,23 @@ async def library_ingest(
                     else:
                         errors.append({"filename": fname, "error": result.get("error", "Unknown error")})
 
+        # Auto-remap: when new regulations are ingested, refresh all existing controls' mapped_obligations
+        _remap_result = {"controls_updated": 0}
+        if ingested:
+            try:
+                _controls_store = MongoControlsStore()
+                _remap_result = remap_obligations_for_all(_controls_store, MongoLibraryStore())
+                logger.info(f"[{rid}] Auto-remap after reg ingest: {_remap_result}")
+            except Exception as _remap_exc:
+                logger.warning(f"[{rid}] Auto-remap after regulation ingest failed (non-fatal): {_remap_exc}")
+
         return JSONResponse({
             "success": True,
             "request_id": rid,
             "ingested": ingested,
             "errors": errors,
             "total_ingested": len(ingested),
+            "controls_remapped": _remap_result.get("controls_updated", 0),
         })
 
     except HTTPException:

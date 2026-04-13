@@ -505,7 +505,7 @@ export default function RegulatoryLibraryPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const { pendingObligationId, setPendingObligationId, setPendingControlId } = useCrossNav();
-  const { refreshMetrics } = useLibraryMetrics();
+  const { refreshMetrics, allControls, loading: metricsLoading } = useLibraryMetrics();
   const {
     libraryDocuments,
     setLibraryDocuments,
@@ -571,9 +571,9 @@ export default function RegulatoryLibraryPage() {
   const [clearingLibrary, setClearingLibrary] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
-  // Controls reverse-mapping state
-  const [allControls, setAllControls] = useState<any[]>([]);
-  const [controlsLoaded, setControlsLoaded] = useState(false);
+  // Controls reverse-mapping: sourced from shared LibraryMetricsContext so it
+  // stays in sync whenever any page calls refreshMetrics() (e.g. after remap).
+  const controlsLoaded = !metricsLoading;
 
   // Cross-library analysis toggle + metric drill-down popup
   const [showCrossAnalysis, setShowCrossAnalysis] = useState(false);
@@ -605,7 +605,6 @@ export default function RegulatoryLibraryPage() {
 
   useEffect(() => {
     fetchLibraryDocuments();
-    fetchAllControls();
   }, []);
 
   // React to cross-page navigation: jump to a specific obligation
@@ -659,21 +658,6 @@ export default function RegulatoryLibraryPage() {
       console.warn("fetchAllObligations failed:", err);
     } finally {
       setDashboardLoading(false);
-    }
-  };
-
-  const fetchAllControls = async () => {
-    try {
-      const res = await fetch("/api/controls-library/all-controls");
-      if (!res.ok) return;
-      const data = await res.json();
-      if (data.success && Array.isArray(data.controls)) {
-        setAllControls(data.controls);
-      }
-    } catch {
-      // silently ignore — mapped controls are supplementary
-    } finally {
-      setControlsLoaded(true);
     }
   };
 
@@ -731,11 +715,13 @@ export default function RegulatoryLibraryPage() {
       refreshMetrics();
 
       const mongoFailed = ingested.some((r: any) => !r.mongo_saved);
+      const controlsRemapped: number = data.controls_remapped ?? 0;
+      const remapSuffix = controlsRemapped > 0 ? ` ${controlsRemapped} control(s) re-mapped.` : "";
       toast({
         title: "Ingested",
         description: mongoFailed
           ? `${data.total_ingested} document(s) extracted. ⚠ MongoDB save failed — obligations visible this session only.`
-          : `${data.total_ingested} document(s) added to library`,
+          : `${data.total_ingested} document(s) added to library.${remapSuffix}`,
         variant: mongoFailed ? "destructive" : "default",
       });
     } catch (err) {
