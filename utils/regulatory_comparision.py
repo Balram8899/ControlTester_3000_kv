@@ -170,23 +170,19 @@ class ControlExtractorAgent:
     def __init__(self, model: str, kb_vectorstore=None, kb_graph=None):
         self.llm = _make_llm(model, temperature=0.1)
         self.batch_size = 3  # Process multiple chunks together for context
-        self.kb_vectorstore = kb_vectorstore
         self.kb_graph = kb_graph
 
     def _get_kb_context(self, batch_text: str) -> str:
-        """Retrieve relevant KB context for a batch of text. Returns empty string on failure."""
-        if self.kb_vectorstore is None:
+        """Retrieve relevant KB context using knowledge graph search."""
+        if self.kb_graph is None:
             return ""
         try:
             from utils.graph_rag import GraphRAGRetriever
-            retriever = GraphRAGRetriever(
-                self.kb_vectorstore, self.kb_graph, seed_k=3, final_k=4
-            )
-            docs = retriever.retrieve(batch_text[:500])  # use first 500 chars as query
+            retriever = GraphRAGRetriever(self.kb_graph, seed_k=3, final_k=4)
+            docs = retriever.retrieve(batch_text[:500])
             if not docs:
                 return ""
-            snippets = [d.page_content[:300] for d in docs]
-            return "\n---\n".join(snippets)
+            return "\n---\n".join(d.page_content[:300] for d in docs)
         except Exception as exc:
             print(f"[WARNING] KB context retrieval failed (non-fatal): {exc}")
             return ""
@@ -801,16 +797,12 @@ def compare_regulatory_documents(
 
     Parameters
     ----------
-    kb_vectorstore : optional pre-loaded global FAISS vectorstore
-        When provided, used by ControlExtractorAgent to enrich extraction with
-        relevant risk/control knowledge base context.
-    kb_graph : optional pre-loaded KnowledgeGraph
-        Passed alongside kb_vectorstore for graph-augmented retrieval.
+    kb_graph : optional pre-loaded KnowledgeGraph for graph-augmented retrieval.
     """
     print(f"[INFO] Starting analysis with model: {selected_model}")
     print(f"[INFO] Documents: {filenames}")
-    if kb_vectorstore is not None:
-        print("[INFO] Global KB vectorstore available — will enrich control extraction")
+    if kb_graph is not None:
+        print("[INFO] Global KB graph available — will enrich control extraction")
     else:
         print("[INFO] No global KB loaded — running without KB enrichment")
 
@@ -845,7 +837,7 @@ def compare_regulatory_documents(
 
     # 3. Initialize agents
     doc_analyzer = DocumentAnalyzerAgent(selected_model)
-    control_extractor = ControlExtractorAgent(selected_model, kb_vectorstore=kb_vectorstore, kb_graph=kb_graph)
+    control_extractor = ControlExtractorAgent(selected_model, kb_graph=kb_graph)
     stringency_analyzer = StringencyAnalyzerAgent()
     report_generator = ReportGeneratorAgent(selected_model)
     gap_analyzer = GapAnalyzerAgent()
@@ -942,7 +934,7 @@ def compare_regulatory_documents(
             "pages_analyzed": len(docs),
             "similarity_threshold": SIM_THRESHOLD,
             "graph_enhanced": reg_graph is not None,
-            "kb_enriched": kb_vectorstore is not None,
+            "kb_enriched": kb_graph is not None,
         }
     }
 

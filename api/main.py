@@ -9,8 +9,6 @@ from fastapi import FastAPI, File, UploadFile, Form, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.responses import FileResponse
-from utils.llm_chain import _make_embeddings, _resolve_embedding_model
-from langchain_community.vectorstores import FAISS
 from pydantic import BaseModel, Field, validator
 from typing import List, Optional, Dict, Any
 import tempfile
@@ -21,7 +19,6 @@ import logging
 import traceback
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from utils.file_handlers import save_faiss_vectorstore, load_faiss_vectorstore
 from utils.audit_session_store import audit_session_store
 from utils.test_script_parser import parse_test_script, validate_controls
 from utils.evidence_validator import validate_evidence_file
@@ -30,6 +27,7 @@ from utils.workpaper_filler import fill_workpaper_template
 
 # utils imports
 from utils.llm_chain import build_knowledge_base, assess_evidence_with_kb, generate_executive_summary
+from utils.graph_rag import KnowledgeGraph
 from utils.find_llm import get_google_model_names
 from langchain.schema import Document
 from utils.pdf_generator import generate_workbook
@@ -173,7 +171,6 @@ class SessionMemory:
                 'created_at': datetime.now().isoformat(),
                 'message_count': 0,
                 'chat_history': [],
-                'conversation_vectorstore': None,
                 'last_activity': datetime.now().isoformat()
             }
             logger.info(f"Created new session: {session_id}")
@@ -210,10 +207,6 @@ class SessionMemory:
             del self.sessions[session_id]
             logger.info(f"Cleared session: {session_id}")
 
-    def update_vectorstore(self, session_id: str, vectorstore):
-        """Update conversation vectorstore for session"""
-        if session_id in self.sessions:
-            self.sessions[session_id]['conversation_vectorstore'] = vectorstore
 
 # Global session manager
 session_manager = SessionMemory()
@@ -237,11 +230,8 @@ def _req_id() -> str:
     return f"req_{int(time.time())}_{request_counter}"
 
 # ----------------------------------------------------------------------------
-# In-memory Vectorstore Cache
+# In-memory Knowledge Graph Cache
 # ----------------------------------------------------------------------------
-VECTORSTORE_CACHE: Dict[str, Any] = {"global": None, "company": None, "evidence": None, "chat": None}
-
-# Graph-RAG: Knowledge Graph cache (mirrors VECTORSTORE_CACHE)
 GRAPH_CACHE: Dict[str, Any] = {"global": None, "company": None, "evidence": None, "chat": None}
 
 # ----------------------------------------------------------------------------
@@ -269,7 +259,6 @@ class KBResp(BaseModel):
     success: bool
     message: str
     processing_summary: Dict[str, Any]
-    vector_count: Optional[int] = None
     error_details: Optional[str] = None
     files_processed: Optional[List[FileResult]] = None
     graph_node_count: Optional[int] = None
@@ -291,10 +280,10 @@ class ChatRequest(BaseModel):
     user_input: str = Field(..., description="User question or prompt")
     session_id: Optional[str] = Field(None, description="Session ID for conversation continuity")
     include_history: bool = Field(True, description="Whether to include conversation history")
-    global_kb_path: Optional[str] = Field(None, description="Path to saved global FAISS KB")
-    company_kb_path: Optional[str] = Field(None, description="Path to saved company FAISS KB")
-    chat_kb_path: Optional[str] = Field(None, description="Path to saved chat attachments FAISS KB")
-    evid_kb_path: Optional[str] = Field(None, description="Path to saved evidence FAISS KB")
+    global_kb_path: Optional[str] = Field(None, description="Path to saved global KB graph")
+    company_kb_path: Optional[str] = Field(None, description="Path to saved company KB graph")
+    chat_kb_path: Optional[str] = Field(None, description="Path to saved chat attachments KB graph")
+    evid_kb_path: Optional[str] = Field(None, description="Path to saved evidence KB graph")
     embedding_model: Optional[str] = Field(None, description="Optional embedding model name")
 
 class ChatResponse(BaseModel):
@@ -400,7 +389,7 @@ async def get_session_info(session_id: str):
         "created_at": session['created_at'],
         "message_count": session['message_count'],
         "last_activity": session['last_activity'],
-        "has_vectorstore": session['conversation_vectorstore'] is not None
+        "has_vectorstore": False
     }
 
 @app.delete("/session/{session_id}", tags=["session"])
@@ -555,7 +544,7 @@ async def chat_with_memory(request: ChatRequest):
     # ========================================================================
     # IMPORT CHAT LOGIC FROM utils/chat.py
     # ========================================================================
-    from utils.chat import chat_with_ai_with_memory, update_conversation_vectorstore_api
+    from utils.chat import chat_with_ai_with_memory
 
     # Validate input
     try:
@@ -578,65 +567,82 @@ async def chat_with_memory(request: ChatRequest):
     request.company_kb_path = request.company_kb_path or "saved_company_vectorstore"
     request.chat_kb_path = request.chat_kb_path or "chat_attachment_vectorstore"
 
-    embeddings_for_load = _make_embeddings(request.embedding_model or _resolve_embedding_model(request.selected_model))
-
-    # Load vectorstores
-    loaded_stores: Dict[str, Any] = {"global": None, "company": None, "evidence": None, "chat": None}
+    # Load knowledge graphs from disk or memory cache
+    loaded_graphs: Dict[str, Any] = {"global": None, "company": None, "evidence": None, "chat": None}
     loaded_paths: Dict[str, Optional[str]] = {"global": None, "company": None, "evidence": None, "chat": None}
 
     try:
-        if request.global_kb_path and Path(request.global_kb_path).exists():
-            loaded_stores['global'] = load_faiss_vectorstore(request.global_kb_path, embeddings_for_load)
+        if request.global_kb_path and KnowledgeGraph.exists(request.global_kb_path):
+            loaded_graphs['global'] = KnowledgeGraph.load(request.global_kb_path)
             loaded_paths['global'] = request.global_kb_path
-        if request.company_kb_path and Path(request.company_kb_path).exists():
-            loaded_stores['company'] = load_faiss_vectorstore(request.company_kb_path, embeddings_for_load)
-            loaded_paths['company'] = request.company_kb_path
-        if request.evid_kb_path and Path(request.evid_kb_path).exists():
-            loaded_stores['evidence'] = load_faiss_vectorstore(request.evid_kb_path, embeddings_for_load)
-            loaded_paths['evidence'] = request.evid_kb_path
-        if request.chat_kb_path and Path(request.chat_kb_path).exists():
-            loaded_stores['chat'] = load_faiss_vectorstore(request.chat_kb_path, embeddings_for_load)
-            loaded_paths['chat'] = request.chat_kb_path
+        elif GRAPH_CACHE.get("global"):
+            loaded_graphs['global'] = GRAPH_CACHE["global"]
+            loaded_paths['global'] = "in-memory"
 
-        # Use cached evidence if available
-        if VECTORSTORE_CACHE["evidence"]:
-            loaded_stores['evidence'] = VECTORSTORE_CACHE["evidence"]
+        if request.company_kb_path and KnowledgeGraph.exists(request.company_kb_path):
+            loaded_graphs['company'] = KnowledgeGraph.load(request.company_kb_path)
+            loaded_paths['company'] = request.company_kb_path
+        elif GRAPH_CACHE.get("company"):
+            loaded_graphs['company'] = GRAPH_CACHE["company"]
+            loaded_paths['company'] = "in-memory"
+
+        if request.evid_kb_path and KnowledgeGraph.exists(request.evid_kb_path):
+            loaded_graphs['evidence'] = KnowledgeGraph.load(request.evid_kb_path)
+            loaded_paths['evidence'] = request.evid_kb_path
+        elif GRAPH_CACHE.get("evidence"):
+            loaded_graphs['evidence'] = GRAPH_CACHE["evidence"]
             loaded_paths['evidence'] = "in-memory"
+
+        if request.chat_kb_path and KnowledgeGraph.exists(request.chat_kb_path):
+            loaded_graphs['chat'] = KnowledgeGraph.load(request.chat_kb_path)
+            loaded_paths['chat'] = request.chat_kb_path
+        elif GRAPH_CACHE.get("chat"):
+            loaded_graphs['chat'] = GRAPH_CACHE["chat"]
+            loaded_paths['chat'] = "in-memory"
     except Exception as e:
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, f"Vectorstore loading error: {e}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, f"Graph loading error: {e}")
+
+    # Load persisted library graphs (controls, regulatory, frameworks) — non-fatal if absent
+    from utils.controls_library import LIBRARY_GRAPH_DIR as CONTROLS_GRAPH_DIR
+    from utils.regulatory_library import LIBRARY_GRAPH_DIR as REGULATORY_GRAPH_DIR
+    from utils.frameworks_library import LIBRARY_GRAPH_DIR as FRAMEWORKS_GRAPH_DIR
+
+    def _load_lib_graph(path: str):
+        try:
+            return KnowledgeGraph.load(path) if KnowledgeGraph.exists(path) else None
+        except Exception as exc:
+            logger.warning(f"Could not load library graph from {path}: {exc}")
+            return None
+
+    controls_lib_graph   = _load_lib_graph(CONTROLS_GRAPH_DIR)
+    regulatory_lib_graph = _load_lib_graph(REGULATORY_GRAPH_DIR)
+    frameworks_lib_graph = _load_lib_graph(FRAMEWORKS_GRAPH_DIR)
+
+    logger.info(
+        f"Library graphs — controls: {'loaded' if controls_lib_graph else 'absent'}, "
+        f"regulatory: {'loaded' if regulatory_lib_graph else 'absent'}, "
+        f"frameworks: {'loaded' if frameworks_lib_graph else 'absent'}"
+    )
 
     try:
-        # ========================================================================
-        # CALL THE MAIN CHAT LOGIC FROM utils/chat.py
-        # All prompt construction, LLM invocation, and context handling happens here
-        # ========================================================================
         response_text = chat_with_ai_with_memory(
-            kb_vectorstore=loaded_stores['global'],
-            company_kb_vectorstore=loaded_stores['company'],
-            evid_vectorstore=loaded_stores['evidence'],
-            chat_attachment_vectorstore=loaded_stores['chat'],
+            kb_graph=loaded_graphs['global'],
+            company_kb_graph=loaded_graphs['company'],
+            evid_graph=loaded_graphs['evidence'],
+            chat_graph=loaded_graphs['chat'],
+            controls_lib_graph=controls_lib_graph,
+            regulatory_lib_graph=regulatory_lib_graph,
+            frameworks_lib_graph=frameworks_lib_graph,
             selected_model=request.selected_model,
             user_input=request.user_input,
             session_manager=session_manager,
             session_id=session_id,
-            embedding_model=embeddings_for_load,
             include_history=request.include_history
         )
 
         # Save to session memory
         session_manager.add_message(session_id, "user", request.user_input)
         session_manager.add_message(session_id, "assistant", response_text)
-
-        # ========================================================================
-        # UPDATE CONVERSATION VECTORSTORE USING UTILITY FUNCTION
-        # ========================================================================
-        update_conversation_vectorstore_api(
-            user_input=request.user_input,
-            bot_response=response_text,
-            session_manager=session_manager,
-            session_id=session_id,
-            embedding_model=embeddings_for_load
-        )
 
         return ChatResponse(
             success=True,
@@ -719,31 +725,25 @@ async def build_kb(
                 processing_time=time.time() - start
             ))
 
-        vectorstore, knowledge_graph = build_knowledge_base(
+        knowledge_graph = build_knowledge_base(
             files=file_objs,
             source=files_source,
             selected_model=selected_model,
-            batch_size=batch_size,
-            delay_between_batches=delay_between_batches,
-            max_retries=max_retries
         )
 
-        if vectorstore is None:
+        if knowledge_graph is None:
             return KBResp(
                 success=False,
-                message="Knowledge base build failed: embedding API unavailable. Analysis will proceed without RAG.",
-                processing_summary={"embedding_available": False},
-                error_details="Embedding model unavailable — check Google API key and SDK version."
+                message="Knowledge base build failed: no valid content found.",
+                processing_summary={},
+                error_details="No documents could be processed."
             )
 
-        VECTORSTORE_CACHE[kb_type] = vectorstore
-        GRAPH_CACHE[kb_type] = knowledge_graph  # may be None if graph build failed
+        GRAPH_CACHE[kb_type] = knowledge_graph
 
-        vec_count = getattr(vectorstore.index, "ntotal", None)
-        graph_stats = knowledge_graph.get_graph_stats() if knowledge_graph else {}
+        graph_stats = knowledge_graph.get_graph_stats()
         summary = {
             "files": len(file_objs),
-            "vectors": vec_count,
             "processing_seconds": time.time() - t0,
             "model": selected_model,
             "graph_nodes": graph_stats.get("nodes", 0),
@@ -754,7 +754,6 @@ async def build_kb(
             success=True,
             message="Knowledge base built",
             processing_summary=summary,
-            vector_count=vec_count,
             files_processed=file_results,
             graph_node_count=graph_stats.get("nodes"),
             graph_edge_count=graph_stats.get("edges"),
@@ -801,7 +800,6 @@ async def assess_evidence(
     evidence_objs: List[Any] = []
     tmp_paths: List[str] = []
     file_results: List[FileResult] = []
-    embeddings_for_load = _make_embeddings(_resolve_embedding_model(selected_model))
 
     try:
         for uf in evidence_files:           
@@ -839,23 +837,16 @@ async def assess_evidence(
         except Exception as graph_exc:
             logger.warning(f"Could not load controls library graph (non-fatal): {graph_exc}")
 
-        evidence_vectorstore, _ = build_knowledge_base(
+        # Build evidence knowledge graph
+        evidence_graph = build_knowledge_base(
             files=evidence_objs,
             source="Evidence Upload",
             selected_model=selected_model,
-            batch_size=_Cfg.DEFAULT_BATCH,
-            delay_between_batches=_Cfg.DEFAULT_DELAY,
-            max_retries=_Cfg.DEFAULT_RETRIES
         )
-        VECTORSTORE_CACHE["evidence"] = evidence_vectorstore
-        if evidence_vectorstore is None:
-            logger.warning("Evidence vectorstore unavailable — proceeding with LLM-only analysis.")
+        GRAPH_CACHE["evidence"] = evidence_graph
 
-        # Get assessment results — vectorstores replaced by Controls Library graph
         assessment_results = assess_evidence_with_kb(
             evidence_files=evidence_objs,
-            kb_vectorstore=None,
-            company_kb_vectorstore=None,
             selected_model=selected_model,
             max_workers=max_workers,
             controls_lib_graph=controls_lib_graph,
@@ -960,85 +951,51 @@ async def download_report(filename: str):
     return FileResponse(path=str(found_path), filename=filename, media_type='application/pdf')
 
 # ----------------------------------------------------------------------------
-# FAISS Vectorstore Save/Load Endpoints
+# Knowledge Graph Save/Load Endpoints
 # ----------------------------------------------------------------------------
-@app.post("/save-vectorstore", tags=["knowledge-base"])
-async def save_vectorstore_api(
+@app.post("/save-graph", tags=["knowledge-base"])
+async def save_graph_api(
     dir_path: str = Form(...),
     kb_type: str = Form("global")
 ):
     try:
-        if kb_type == "evidence":
-            raise HTTPException(
-                status.HTTP_400_BAD_REQUEST,
-                "Evidence KB is only available in memory and cannot be saved to disk"
-            )
-        vs = VECTORSTORE_CACHE.get(kb_type)
-        if vs is None:
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, f"No vectorstore cached for {kb_type}")
-        saved_path = save_faiss_vectorstore(vs, dir_path)
-
-        # Graph-RAG: also save knowledge graph alongside FAISS files
-        graph_saved = False
-        graph_path = None
         graph = GRAPH_CACHE.get(kb_type)
-        if graph is not None:
-            try:
-                from utils.graph_rag import KnowledgeGraph
-                graph_path = graph.save(dir_path)
-                graph_saved = True
-            except Exception as graph_exc:
-                logger.warning(f"Graph save failed for {kb_type} (non-fatal): {graph_exc}")
-
+        if graph is None:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, f"No knowledge graph cached for {kb_type}")
+        saved_path = graph.save(dir_path)
+        graph_stats = graph.get_graph_stats()
         return {
             "success": True,
             "path": saved_path,
             "kb_type": kb_type,
-            "graph_saved": graph_saved,
-            "graph_path": graph_path,
+            "graph_nodes": graph_stats.get("nodes", 0),
+            "graph_edges": graph_stats.get("edges", 0),
         }
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, str(e))
 
-@app.post("/load-vectorstore", tags=["knowledge-base"])
-async def load_vectorstore_api(
+@app.post("/load-graph", tags=["knowledge-base"])
+async def load_graph_api(
     dir_path: str = Form(...),
-    kb_type: str = Form("global"),
-    model_name: str = Form(...)
+    kb_type: str = Form("global")
 ):
     try:
-        embeddings = _make_embeddings(_resolve_embedding_model(model_name))
-        vs = load_faiss_vectorstore(dir_path, embeddings)
-        VECTORSTORE_CACHE[kb_type] = vs
-
-        # Graph-RAG: attempt to load knowledge graph (graceful fallback)
-        graph_loaded = False
-        graph_stats: Dict[str, Any] = {}
-        try:
-            from utils.graph_rag import KnowledgeGraph
-            if KnowledgeGraph.exists(dir_path):
-                GRAPH_CACHE[kb_type] = KnowledgeGraph.load(dir_path)
-                graph_loaded = True
-                graph_stats = GRAPH_CACHE[kb_type].get_graph_stats()
-            else:
-                GRAPH_CACHE[kb_type] = None
-        except Exception as graph_exc:
-            logger.warning(
-                f"Graph load failed for {kb_type} (falling back to FAISS-only): {graph_exc}"
-            )
-            GRAPH_CACHE[kb_type] = None
-
+        if not KnowledgeGraph.exists(dir_path):
+            raise HTTPException(status.HTTP_404_NOT_FOUND, f"No graph file found at {dir_path}")
+        GRAPH_CACHE[kb_type] = KnowledgeGraph.load(dir_path)
+        graph_stats = GRAPH_CACHE[kb_type].get_graph_stats()
         return {
             "success": True,
             "path": dir_path,
             "kb_type": kb_type,
-            "ntotal": getattr(vs.index, "ntotal", None),
-            "graph_loaded": graph_loaded,
             "graph_nodes": graph_stats.get("nodes", 0),
             "graph_edges": graph_stats.get("edges", 0),
+            "graph_chunks": graph_stats.get("chunk_nodes", 0),
         }
+    except HTTPException:
+        raise
     except FileNotFoundError as fe:
         raise HTTPException(status.HTTP_404_NOT_FOUND, str(fe))
     except Exception as e:
@@ -1122,19 +1079,13 @@ async def compare_regulations(
             
             logger.info(f"[{rid}] Uploaded: {uf.filename} ({len(content)} bytes)")
 
-        # Run enhanced comparison (pass global KB if loaded)
-        kb_vs = VECTORSTORE_CACHE.get("global")
         kb_g = GRAPH_CACHE.get("global")
-        if kb_vs is not None:
-            logger.info(f"[{rid}] Using global KB vectorstore for enriched control extraction")
-        else:
-            logger.info(f"[{rid}] No global KB loaded — running without KB enrichment")
         logger.info(f"[{rid}] Starting analysis...")
         result = compare_regulatory_documents(
             file_paths=tmp_paths,
             filenames=filenames,
             selected_model=selected_model,
-            kb_vectorstore=kb_vs,
+            kb_vectorstore=None,
             kb_graph=kb_g,
         )
         
@@ -1589,7 +1540,6 @@ async def library_ingest(
             logger.info(f"[{rid}] Queued for ingest: {uf.filename} ({len(content)} bytes)")
 
         # --- Phase 2: ingest all files in parallel (each is CPU/LLM-bound) ---
-        kb_vs = VECTORSTORE_CACHE.get("global")
         kb_g  = GRAPH_CACHE.get("global")
 
         def _ingest(tmp_path: str, filename: str) -> dict:
@@ -1597,7 +1547,7 @@ async def library_ingest(
                 file_path=tmp_path,
                 filename=filename,
                 selected_model=selected_model,
-                kb_vectorstore=kb_vs,
+                kb_vectorstore=None,
                 kb_graph=kb_g,
             )
 
@@ -2089,8 +2039,6 @@ async def controls_library_ingest(
 
         # Provide the regulatory store so controls get mapped to obligations
         reg_store = MongoLibraryStore()
-        # Pass global KB vectorstore + graph for GraphRAG-enriched extraction
-        kb_vs = VECTORSTORE_CACHE.get("global")
         kb_g  = GRAPH_CACHE.get("global")
 
         def _ingest(tmp_path: str, filename: str) -> dict:
@@ -2099,7 +2047,7 @@ async def controls_library_ingest(
                 filename=filename,
                 selected_model=selected_model,
                 regulatory_store=reg_store,
-                kb_vectorstore=kb_vs,
+                kb_vectorstore=None,
                 kb_graph=kb_g,
             )
 
@@ -2325,15 +2273,13 @@ async def frameworks_ingest(
             tmp.write(await upload.read())
             tmp.close()
 
-            # Pass global kb context if available
-            kb_vs = VECTORSTORE_CACHE.get("global")
             kb_g = GRAPH_CACHE.get("global")
 
             result = ingest_framework_document(
                 file_path=tmp.name,
                 filename=upload.filename,
                 selected_model=selected_model,
-                kb_vectorstore=kb_vs,
+                kb_vectorstore=None,
                 kb_graph=kb_g,
             )
             results.append(result)
@@ -2724,35 +2670,9 @@ async def audit_generate_workpaper(
         })
     
     try:
-        # Load knowledge bases
-        # Initialize embeddings for loading vectorstores
-        embeddings_for_load = _make_embeddings(_resolve_embedding_model(session.get("selected_model") if session else None))
-
-        kb1_path = os.getenv("KB1_PATH", "saved_global_vectorstore")
-        kb2_path = os.getenv("KB2_PATH", "saved_company_vectorstore")
-        
-        logger.info(f"[{rid}] Loading KBs: {kb1_path}, {kb2_path}")
-        
-        # Try to load KBs from disk
-        kb1_vectorstore = None
-        kb2_vectorstore = None
-        
-        try:
-            kb1_vectorstore = load_faiss_vectorstore(kb1_path, embeddings_for_load)  # ✅ Now correct            
-            logger.info(f"[{rid}] Loaded KB1 from {kb1_path}")
-        except Exception as e:
-            logger.warning(f"[{rid}] Could not load KB1: {e}")
-        
-        try:
-            kb2_vectorstore = load_faiss_vectorstore(kb2_path, embeddings_for_load)  # ✅ Now correct
-            logger.info(f"[{rid}] Loaded KB2 from {kb2_path}")
-        except Exception as e:
-            logger.warning(f"[{rid}] Could not load KB2: {e}")
-
         # Load Control Library knowledge graph (non-fatal if absent)
         kb1_graph = None
         try:
-            from utils.graph_rag import KnowledgeGraph
             from utils.controls_library import LIBRARY_GRAPH_DIR as CONTROLS_GRAPH_DIR
             if KnowledgeGraph.exists(CONTROLS_GRAPH_DIR):
                 kb1_graph = KnowledgeGraph.load(CONTROLS_GRAPH_DIR)
@@ -2769,11 +2689,11 @@ async def audit_generate_workpaper(
 
         analysis_results = analyze_all_controls(
             session_data=session,
-            kb1_vectorstore=kb1_vectorstore,
-            kb2_vectorstore=kb2_vectorstore,
+            kb1_vectorstore=None,
+            kb2_vectorstore=None,
             model=model,
             kb1_graph=kb1_graph,
-            controls_lib_graph=kb1_graph,  # Controls Library graph for direct graph retrieval
+            controls_lib_graph=kb1_graph,
         )
         
         logger.info(f"[{rid}] Analysis complete. Generating workpaper.")

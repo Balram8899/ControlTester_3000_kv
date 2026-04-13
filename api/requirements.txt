@@ -17,9 +17,6 @@ langchain-experimental==0.3.4
 langchain-unstructured==0.1.6
 langsmith==0.3.42
 
-# Vector store (CPU-only — no CUDA needed in the API container)
-faiss-cpu
-
 # Embeddings / ML utilities (CPU)
 numpy==1.26.4
 scikit-learn==1.7.0

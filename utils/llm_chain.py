@@ -3,7 +3,6 @@ from utils.file_handlers import save_and_load_files
 from utils.assessment_schema import Assessment
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import FAISS
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_core.output_parsers import StrOutputParser
 import logging
@@ -17,7 +16,7 @@ import warnings
 import json
 import io
 from PIL import Image, ImageDraw, ImageFont
-from typing import Optional, Tuple
+from typing import Optional
 
 warnings.filterwarnings("ignore", category=UserWarning, module="openpyxl")
 
@@ -115,14 +114,12 @@ def build_knowledge_base(
     files,
     source,
     selected_model=None,
-    batch_size=15,
-    delay_between_batches=0.2,
-    max_retries=3,
-    embedding_model: str | None = None,
-    build_graph: bool = True,
-) -> Tuple[Optional[FAISS], Optional[object]]:
-    embed_name = embedding_model or _resolve_embedding_model(selected_model)
-    embedding_obj = _make_embeddings(embed_name)
+    **kwargs,
+):
+    """Build a KnowledgeGraph from uploaded files.
+
+    Returns the KnowledgeGraph, or None if no valid content was found.
+    """
     start = time.time()
     all_documents = []
 
@@ -146,65 +143,18 @@ def build_knowledge_base(
     if not all_documents:
         raise ValueError("No valid content found in input documents.")
 
-    logger.info(f"Processing {len(all_documents)} documents in batches of {batch_size}")
+    logger.info(f"Building knowledge graph from {len(all_documents)} document chunks.")
 
     try:
-        kb_vectorstore = None
-        total_batches = (len(all_documents) + batch_size - 1) // batch_size
-
-        for batch_idx in range(0, len(all_documents), batch_size):
-            batch_docs = all_documents[batch_idx:batch_idx + batch_size]
-            current_batch_num = (batch_idx // batch_size) + 1
-
-            logger.info(f"Processing batch {current_batch_num}/{total_batches} ({len(batch_docs)} documents)")
-
-            batch_success = False
-            for attempt in range(max_retries):
-                try:
-                    if kb_vectorstore is None:
-                        kb_vectorstore = FAISS.from_documents(batch_docs, embedding_obj)
-                    else:
-                        temp_vectorstore = FAISS.from_documents(batch_docs, embedding_obj)
-                        kb_vectorstore.merge_from(temp_vectorstore)
-                    batch_success = True
-                    break
-                except Exception as e:
-                    logger.warning(f"Batch {current_batch_num} attempt {attempt + 1} failed: {e}")
-                    if attempt < max_retries - 1:
-                        wait_time = delay_between_batches * (2 ** attempt)
-                        logger.info(f"Retrying in {wait_time:.1f} seconds...")
-                        time.sleep(wait_time)
-                    else:
-                        logger.error(f"Batch {current_batch_num} failed after {max_retries} attempts")
-                        raise
-
-            if not batch_success:
-                raise Exception(f"Failed to process batch {current_batch_num}")
-
-        logger.info(f"Vector store built successfully with {kb_vectorstore.index.ntotal} vectors.")
-
-    except Exception as e:
-        logger.warning(
-            f"Vector store creation failed (embedding unavailable, "
-            f"falling back to LLM-only analysis): {e}"
-        )
-        return None, None
+        from utils.graph_rag import build_knowledge_graph_from_documents
+        knowledge_graph = build_knowledge_graph_from_documents(all_documents)
+    except Exception as graph_exc:
+        logger.warning(f"Knowledge graph build failed: {graph_exc}")
+        return None
 
     total_time = time.time() - start
     logger.info(f"Knowledge base built in {total_time:.2f} seconds.")
-
-    # ── Graph-RAG: build knowledge graph (no LLM, pure regex) ────────────────
-    knowledge_graph = None
-    if build_graph and all_documents:
-        try:
-            from utils.graph_rag import build_knowledge_graph_from_documents
-            knowledge_graph = build_knowledge_graph_from_documents(all_documents)
-        except Exception as graph_exc:
-            logger.warning(
-                f"Knowledge graph build failed (non-fatal, falling back to FAISS-only): {graph_exc}"
-            )
-
-    return kb_vectorstore, knowledge_graph
+    return knowledge_graph
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -274,8 +224,6 @@ def _retrieve_controls_from_graph(
 
 def _assess_single_evidence(
     evid_text: str,
-    kb_vectorstore,
-    company_kb_vectorstore,
     selected_model: str,
     chunk_index: int = 0,
     doc_index: int = 0,
@@ -286,55 +234,32 @@ def _assess_single_evidence(
     controls_lib_graph=None,
 ):
     """
-    Assess a single evidence chunk against the knowledge bases.
-
-    BUG FIX (BUG 1):
-    evidence_context was accepted as a parameter but NEVER used in the prompt
-    template.  The LLM therefore had no idea which specific control was being
-    tested and could only perform a generic assessment.
-
-    Now the prompt includes a dedicated "CONTROL BEING TESTED" section when
-    evidence_context is provided (i.e. called from the audit workflow).
-    The existing generic assessment path (evidence_context=None) is unchanged
-    for backward compatibility.
-
-    BUG FIX (BUG 2):
-    Both kb_vectorstore and company_kb_vectorstore were dereferenced without
-    null checks.  Added guards so a missing KB returns an empty context string
-    instead of raising AttributeError.
+    Assess a single evidence chunk against the knowledge bases using
+    pure knowledge-graph retrieval (no vector store).
     """
     initialize(selected_model)
 
     try:
         parser = PydanticOutputParser(pydantic_object=Assessment)
 
-        # ── BUG 2 FIX: guard against None vectorstores ─────────────────────
-        # Graph-RAG: use GraphRAGRetriever when a graph is available; fall
-        # back transparently to similarity_search when graph is None.
         from utils.graph_rag import GraphRAGRetriever
 
-        if kb_vectorstore is not None:
-            retriever = GraphRAGRetriever(kb_vectorstore, kb_graph, seed_k=5, final_k=8)
+        if kb_graph is not None:
+            retriever = GraphRAGRetriever(kb_graph, seed_k=5, final_k=8)
             base_contexts = retriever.retrieve(evid_text)
             knowledge_base_context = "\n\n".join(
                 getattr(c, "page_content", str(c)) for c in base_contexts
             )
         else:
-            logger.warning(f"Global KB vectorstore is None (chunk {chunk_index}). "
-                           "Proceeding without global policy context.")
             knowledge_base_context = "Global policy knowledge base not available."
 
-        if company_kb_vectorstore is not None:
-            company_retriever = GraphRAGRetriever(
-                company_kb_vectorstore, company_kb_graph, seed_k=5, final_k=8
-            )
+        if company_kb_graph is not None:
+            company_retriever = GraphRAGRetriever(company_kb_graph, seed_k=5, final_k=8)
             company_contexts = company_retriever.retrieve(evid_text)
             company_knowledge_base_context = "\n\n".join(
                 getattr(c, "page_content", str(c)) for c in company_contexts
             )
         else:
-            logger.warning(f"Company KB vectorstore is None (chunk {chunk_index}). "
-                           "Proceeding without company policy context.")
             company_knowledge_base_context = "Company-specific knowledge base not available."
 
         # ── Controls Library graph retrieval (pure graph, no FAISS) ────────
@@ -531,8 +456,6 @@ def render_text_to_image(evidence_docs, font_size=14, width=1200, bg_color="whit
 
 def assess_evidence_with_kb(
     evidence_files,
-    kb_vectorstore,
-    company_kb_vectorstore,
     selected_model: str,
     max_workers: int = 4,
     evidence_context: str | None = None,
@@ -540,24 +463,7 @@ def assess_evidence_with_kb(
     company_kb_graph=None,
     controls_lib_graph=None,
 ):
-    """
-    Split evidence files into chunks and assess each chunk against the KBs.
-
-    BUG FIX (BUG 1):
-    evidence_context was received here but never forwarded to the thread
-    workers.  executor.submit() was called WITHOUT passing evidence_context,
-    so _assess_single_evidence always received None and the control-specific
-    context section was never included in the prompt.
-
-    Fixed by adding evidence_context as the last positional argument in every
-    executor.submit() call.
-
-    BUG FIX (BUG 2):
-    Both vectorstores can legitimately be None (e.g. when called from the
-    audit workflow where only one KB is loaded).  Null checks now live inside
-    _assess_single_evidence, so this function no longer crashes when a
-    vectorstore is missing.
-    """
+    """Split evidence files into chunks and assess each against the knowledge graphs."""
     start = time.time()
     evid_texts, chunk_origin = [], []
 
@@ -585,17 +491,15 @@ def assess_evidence_with_kb(
         futures = [
             executor.submit(
                 _assess_single_evidence,
-                evid_texts[i],          # evid_text
-                kb_vectorstore,         # kb_vectorstore       (may be None — BUG 2 fix)
-                company_kb_vectorstore, # company_kb_vectorstore (may be None — BUG 2 fix)
-                selected_model,         # selected_model
-                i,                      # chunk_index
-                chunk_origin[i],        # doc_index
-                "N/A",                  # filename
-                evidence_context,       # ← BUG 1 FIX: was previously omitted
-                kb_graph,               # Graph-RAG: global KB graph
-                company_kb_graph,       # Graph-RAG: company KB graph
-                controls_lib_graph,     # Controls Library graph (pure graph retrieval)
+                evid_texts[i],      # evid_text
+                selected_model,     # selected_model
+                i,                  # chunk_index
+                chunk_origin[i],    # doc_index
+                "N/A",              # filename
+                evidence_context,   # evidence_context
+                kb_graph,           # kb_graph
+                company_kb_graph,   # company_kb_graph
+                controls_lib_graph, # controls_lib_graph
             )
             for i in range(len(evid_texts))
         ]

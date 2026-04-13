@@ -1642,20 +1642,14 @@ def analyze_rcm_against_obligations(
             if kg is not None:
                 try:
                     from utils.graph_rag import GraphRAGRetriever
-                    from langchain_community.embeddings import OllamaEmbeddings
-                    from langchain_community.vectorstores import FAISS
-
-                    embeddings = OllamaEmbeddings(model="nomic-embed-text")
-                    if obligation_docs:
-                        vs = FAISS.from_documents(obligation_docs[:200], embeddings)
-                        retriever = GraphRAGRetriever(vs, kg, seed_k=3, final_k=5)
-                        sample_query = f"{domain} compliance requirements"
-                        related = retriever.retrieve(sample_query)
-                        if related:
-                            graph_context = (
-                                "\nCross-domain context from knowledge graph:\n"
-                                + "\n".join(d.page_content[:200] for d in related[:3])
-                            )
+                    retriever = GraphRAGRetriever(kg, seed_k=3, final_k=5)
+                    sample_query = f"{domain} compliance requirements"
+                    related = retriever.retrieve(sample_query)
+                    if related:
+                        graph_context = (
+                            "\nCross-domain context from knowledge graph:\n"
+                            + "\n".join(d.page_content[:200] for d in related[:3])
+                        )
                 except Exception as exc:
                     logger.warning(f"Graph context retrieval failed for {domain}: {exc}")
 

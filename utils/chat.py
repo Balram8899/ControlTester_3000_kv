@@ -10,7 +10,6 @@ try:
 except ImportError:
     st = None  # Not available in FastAPI container — only needed for Streamlit UI functions
 from utils.llm_chain import _make_llm, _make_embeddings, GOOGLE_LLM_MODEL, GOOGLE_EMBEDDING_MODEL
-from langchain_community.vectorstores import FAISS
 from langchain.schema import Document
 from datetime import datetime
 
@@ -25,8 +24,8 @@ KPMG_PURPLE = "#470a68"
 # PHASE 2: AGENT DECISION LOGIC
 # ============================================================================
 
-def analyze_query_needs(user_input: str, kb_vectorstore, company_kb_vectorstore, 
-                       evid_vectorstore) -> dict:
+def analyze_query_needs(user_input: str, kb_graph, company_kb_graph,
+                       evid_graph) -> dict:
     """
     Analyze user query to determine if agent can proceed or needs additional context.
 
@@ -56,19 +55,19 @@ def analyze_query_needs(user_input: str, kb_vectorstore, company_kb_vectorstore,
 
     # Check for missing knowledge bases
     if any(keyword in query_lower for keyword in policy_keywords):
-        if not kb_vectorstore:
+        if not kb_graph:
             needs['can_proceed'] = False
             needs['missing_context'].append('policy_documents')
             needs['reasoning'] = 'Query requires security policies/standards but none are loaded'
 
     if any(keyword in query_lower for keyword in evidence_keywords):
-        if not evid_vectorstore:
+        if not evid_graph:
             needs['can_proceed'] = False
             needs['missing_context'].append('evidence_files')
             needs['reasoning'] = 'Query requires evidence/log files for assessment but none are loaded'
 
     if any(keyword in query_lower for keyword in company_keywords):
-        if not company_kb_vectorstore:
+        if not company_kb_graph:
             needs['can_proceed'] = False
             needs['missing_context'].append('company_documents')
             needs['reasoning'] = 'Query requires company-specific documents but none are loaded'
@@ -245,8 +244,8 @@ To provide company-specific guidance, I need your organization's documentation.
 # ENHANCED CHAT FUNCTION WITH PHASE 2 DECISION LOGIC
 # ============================================================================
 
-def chat_with_bot(kb_vectorstore, company_kb_vectorstore, assessment, 
-                  evid_vectorstore, chat_attachment_vectorstore, selected_model):
+def chat_with_bot(kb_graph, company_kb_graph, assessment,
+                  evid_graph, chat_graph, selected_model):
     """
     Enhanced chat function with active feedback loop.
     Analyzes user queries and requests missing context before proceeding.
@@ -272,8 +271,8 @@ def chat_with_bot(kb_vectorstore, company_kb_vectorstore, assessment,
     # PHASE 2: Check if agent is waiting for user input
     if st.session_state.get('agent_pending_request'):
         render_pending_request_ui(
-            kb_vectorstore, company_kb_vectorstore, evid_vectorstore,
-            chat_attachment_vectorstore, selected_model
+            kb_graph, company_kb_graph, evid_graph,
+            chat_graph, selected_model
         )
         return
 
@@ -311,14 +310,27 @@ def chat_with_bot(kb_vectorstore, company_kb_vectorstore, assessment,
         export_conversation_history()
 
     if send_clicked and user_input.strip() != "":
-        embedding_model = _make_embeddings()
+        # Load persisted library graphs (non-fatal if absent)
+        from utils.graph_rag import KnowledgeGraph as _KG
+        def _load_lib(path):
+            try:
+                return _KG.load(path) if _KG.exists(path) else None
+            except Exception:
+                return None
+
+        from utils.controls_library import LIBRARY_GRAPH_DIR as _CTRL_DIR
+        from utils.regulatory_library import LIBRARY_GRAPH_DIR as _REG_DIR
+        from utils.frameworks_library import LIBRARY_GRAPH_DIR as _FW_DIR
+        controls_lib_graph   = _load_lib(_CTRL_DIR)
+        regulatory_lib_graph = _load_lib(_REG_DIR)
+        frameworks_lib_graph = _load_lib(_FW_DIR)
 
         # PHASE 2: Analyze query before proceeding
         needs = analyze_query_needs(
             user_input,
-            kb_vectorstore,
-            company_kb_vectorstore,
-            evid_vectorstore
+            kb_graph,
+            company_kb_graph,
+            evid_graph
         )
 
         # Create agent request if needed
@@ -345,19 +357,21 @@ def chat_with_bot(kb_vectorstore, company_kb_vectorstore, assessment,
             # Can proceed normally
             import app
             app.add_message_to_enhanced_history('user', user_input, {
-                'kb_ready': kb_vectorstore is not None,
-                'company_ready': company_kb_vectorstore is not None,
-                'evidence_ready': evid_vectorstore is not None
+                'kb_ready': kb_graph is not None,
+                'company_ready': company_kb_graph is not None,
+                'evidence_ready': evid_graph is not None
             })
 
             response = chat_with_ai_with_memory(
-                kb_vectorstore,
-                company_kb_vectorstore,
-                evid_vectorstore,
-                chat_attachment_vectorstore,
-                selected_model,
-                user_input,
-                embedding_model
+                kb_graph=kb_graph,
+                company_kb_graph=company_kb_graph,
+                evid_graph=evid_graph,
+                chat_graph=chat_graph,
+                controls_lib_graph=controls_lib_graph,
+                regulatory_lib_graph=regulatory_lib_graph,
+                frameworks_lib_graph=frameworks_lib_graph,
+                selected_model=selected_model,
+                user_input=user_input,
             )
 
             app.add_message_to_enhanced_history('assistant', response, {
@@ -372,7 +386,6 @@ def chat_with_bot(kb_vectorstore, company_kb_vectorstore, assessment,
                     {"output": response}
                 )
 
-            update_conversation_vectorstore(user_input, response, embedding_model)
             if hasattr(st, "rerun"):
                 st.rerun()
             else:
@@ -384,8 +397,8 @@ def chat_with_bot(kb_vectorstore, company_kb_vectorstore, assessment,
         bot_chat_box(chat["bot"])
 
 
-def render_pending_request_ui(kb_vectorstore, company_kb_vectorstore, evid_vectorstore,
-                               chat_attachment_vectorstore, selected_model):
+def render_pending_request_ui(kb_graph, company_kb_graph, evid_graph,
+                               chat_graph, selected_model):
     """Render UI for pending agent request (file upload or clarification)"""
 
     request = st.session_state['agent_pending_request']
@@ -425,22 +438,19 @@ def render_pending_request_ui(kb_vectorstore, company_kb_vectorstore, evid_vecto
 
                 if missing_type == 'policy_documents':
                     from utils.llm_chain import build_knowledge_base
-                    kb_vectorstore, _ = build_knowledge_base(uploaded_files, selected_model)
-                    st.session_state['kb_vectorstore'] = kb_vectorstore
+                    st.session_state['kb_graph'] = build_knowledge_base(uploaded_files, selected_model)
                     st.session_state['kb_ready'] = True
                     st.success("✅ Policy documents processed!")
 
                 elif missing_type == 'evidence_files':
                     from utils.llm_chain import build_knowledge_base
-                    evid_vectorstore, _ = build_knowledge_base(uploaded_files, selected_model)
-                    st.session_state['evid_vectorstore'] = evid_vectorstore
+                    st.session_state['evid_graph'] = build_knowledge_base(uploaded_files, selected_model)
                     st.session_state['evidence_kb_ready'] = True
                     st.success("✅ Evidence files processed!")
 
                 elif missing_type == 'company_documents':
                     from utils.llm_chain import build_knowledge_base
-                    company_kb_vectorstore, _ = build_knowledge_base(uploaded_files, selected_model)
-                    st.session_state['company_kb_vectorstore'] = company_kb_vectorstore
+                    st.session_state['company_kb_graph'] = build_knowledge_base(uploaded_files, selected_model)
                     st.session_state['company_files_ready'] = True
                     st.success("✅ Company documents processed!")
 
@@ -450,21 +460,13 @@ def render_pending_request_ui(kb_vectorstore, company_kb_vectorstore, evid_vecto
             # Now process the original query
             st.info("Files processed! Now answering your original question...")
 
-            embedding_model = _make_embeddings()
-
-            # Get updated vectorstores
-            kb_vectorstore = st.session_state.get('kb_vectorstore')
-            company_kb_vectorstore = st.session_state.get('company_kb_vectorstore')
-            evid_vectorstore = st.session_state.get('evid_vectorstore')
-
             response = chat_with_ai_with_memory(
-                kb_vectorstore,
-                company_kb_vectorstore,
-                evid_vectorstore,
-                chat_attachment_vectorstore,
-                selected_model,
-                original_query,
-                embedding_model
+                kb_graph=st.session_state.get('kb_graph'),
+                company_kb_graph=st.session_state.get('company_kb_graph'),
+                evid_graph=st.session_state.get('evid_graph'),
+                chat_graph=chat_graph,
+                selected_model=selected_model,
+                user_input=original_query,
             )
 
             st.session_state["chat_history"].append({
@@ -509,16 +511,13 @@ def render_pending_request_ui(kb_vectorstore, company_kb_vectorstore, evid_vecto
             st.session_state['agent_pending_request'] = None
             st.session_state['original_query'] = None
 
-            embedding_model = _make_embeddings()
-
             response = chat_with_ai_with_memory(
-                kb_vectorstore,
-                company_kb_vectorstore,
-                evid_vectorstore,
-                chat_attachment_vectorstore,
-                selected_model,
-                enhanced_query,
-                embedding_model
+                kb_graph=kb_graph,
+                company_kb_graph=company_kb_graph,
+                evid_graph=evid_graph,
+                chat_graph=chat_graph,
+                selected_model=selected_model,
+                user_input=enhanced_query,
             )
 
             st.session_state["chat_history"].append({
@@ -537,97 +536,82 @@ def render_pending_request_ui(kb_vectorstore, company_kb_vectorstore, evid_vecto
 # ============================================================================
 
 def chat_with_ai_with_memory(
-    kb_vectorstore,
-    company_kb_vectorstore, 
-    evid_vectorstore,
-    chat_attachment_vectorstore,
-    selected_model: str,
-    user_input: str,
-    session_manager,
-    session_id: str,
-    embedding_model=None,
-    include_history: bool = True
+    kb_graph=None,
+    company_kb_graph=None,
+    evid_graph=None,
+    chat_graph=None,
+    controls_lib_graph=None,
+    regulatory_lib_graph=None,
+    frameworks_lib_graph=None,
+    selected_model: str = None,
+    user_input: str = "",
+    session_manager=None,
+    session_id: str = None,
+    include_history: bool = True,
+    # Legacy compat — ignored
+    **_kwargs,
 ) -> str:
     """
-    Enhanced chat function with full memory and context integration.
-    This is the CORE logic extracted from api/main.py /chat endpoint.
+    Enhanced chat function with graph-based KB retrieval and session memory.
 
-    Args:
-        kb_vectorstore: Global knowledge base vectorstore
-        company_kb_vectorstore: Company-specific vectorstore
-        evid_vectorstore: Evidence vectorstore
-        chat_attachment_vectorstore: Chat attachments vectorstore
-        selected_model: LLM model name
-        user_input: User query
-        session_manager: Session manager instance (API) or mock for Streamlit
-        session_id: Session identifier
-        embedding_model: Optional embedding model (created if None)
-        include_history: Whether to include conversation history
-
-    Returns:
-        str: LLM response
+    Context sources (all KnowledgeGraph instances):
+      - kb_graph              : user-uploaded global policy docs
+      - company_kb_graph      : user-uploaded company docs
+      - evid_graph            : uploaded evidence / log files
+      - chat_graph            : files attached during chat
+      - controls_lib_graph    : persisted Controls Library (data/library_graphs/controls)
+      - regulatory_lib_graph  : persisted Regulatory Library (data/library_graphs/regulatory)
+      - frameworks_lib_graph  : persisted Frameworks Library (data/library_graphs/frameworks)
     """
     llm = _make_llm(selected_model)
 
-    # Default embedding model
-    if embedding_model is None:
-        embedding_model = _make_embeddings()
-
     # ========== GET SESSION CONTEXT ==========
-    session = session_manager.get_session(session_id)
-
-    # Get conversation history
     conversation_history = ""
-    past_relevant_context = ""
-
-    if include_history and session:
-        # Get recent history from session manager
+    if include_history and session_manager and session_id:
         recent_messages = session_manager.get_recent_history(session_id, k=10)
         if recent_messages:
-            conversation_history = "\n".join([
+            conversation_history = "\n".join(
                 f"{msg['role']}: {msg['content']}" for msg in recent_messages
-            ])
+            )
             logger.info(f"Loaded {len(recent_messages)} recent messages from session")
-
-        # Get semantically relevant past exchanges from conversation vectorstore
-        conv_vectorstore = session.get('conversation_vectorstore')
-        if conv_vectorstore:
-            try:
-                past_relevant = conv_vectorstore.similarity_search(user_input, k=3)
-                if past_relevant:
-                    past_relevant_context = "\n\n".join([
-                        f"Past exchange: {doc.page_content}" 
-                        for doc in past_relevant
-                    ])
-                    logger.info(f"Retrieved {len(past_relevant)} relevant past exchanges")
-            except Exception as e:
-                logger.error(f"Error retrieving from conversation vectorstore: {e}")
 
     # ========== GET KNOWLEDGE BASE CONTEXTS ==========
 
-    def safe_similarity_search(store, query, k=3):
-        """Safely perform similarity search with error handling"""
-        if store is None:
+    def safe_graph_search(graph, query, k=3):
+        if graph is None:
             return []
         try:
-            return store.similarity_search(query, k=k)
+            return graph.search(query, k=k)
         except Exception as e:
-            logger.error(f"Error during similarity search: {e}")
+            logger.error(f"Error during graph search: {e}")
             return []
 
-    kb_contexts = safe_similarity_search(kb_vectorstore, user_input)
-    company_contexts = safe_similarity_search(company_kb_vectorstore, user_input)
-    evid_contexts = safe_similarity_search(evid_vectorstore, user_input)
-    chat_file_contexts = safe_similarity_search(chat_attachment_vectorstore, user_input)
+    kb_contexts          = safe_graph_search(kb_graph, user_input)
+    company_contexts     = safe_graph_search(company_kb_graph, user_input)
+    evid_contexts        = safe_graph_search(evid_graph, user_input)
+    chat_file_contexts   = safe_graph_search(chat_graph, user_input)
+    controls_contexts    = safe_graph_search(controls_lib_graph, user_input, k=4)
+    regulatory_contexts  = safe_graph_search(regulatory_lib_graph, user_input, k=4)
+    frameworks_contexts  = safe_graph_search(frameworks_lib_graph, user_input, k=3)
 
-    # Format contexts for prompt
-    kb_context = "\n\n".join([c.page_content for c in kb_contexts]) if kb_contexts else "No policy context available"
-    company_kb_context = "\n\n".join([c.page_content for c in company_contexts]) if company_contexts else "No company context available"
-    evid_context = "\n\n".join([c.page_content for c in evid_contexts]) if evid_contexts else "No evidence context available"
-    chat_files_context = "\n\n".join([c.page_content for c in chat_file_contexts]) if chat_file_contexts else "No chat attachments"
+    def _fmt(docs, fallback):
+        return "\n\n".join(d.page_content for d in docs) if docs else fallback
 
-    logger.info(f"Using model: {selected_model}")
-    logger.info(f"Context sources - KB: {len(kb_contexts)}, Company: {len(company_contexts)}, Evidence: {len(evid_contexts)}")
+    kb_context           = _fmt(kb_contexts,         "No policy context available")
+    company_kb_context   = _fmt(company_contexts,    "No company context available")
+    evid_context         = _fmt(evid_contexts,       "No evidence context available")
+    chat_files_context   = _fmt(chat_file_contexts,  "No chat attachments")
+    controls_context     = _fmt(controls_contexts,   "No controls library context available")
+    regulatory_context   = _fmt(regulatory_contexts, "No regulatory library context available")
+    frameworks_context   = _fmt(frameworks_contexts, "No frameworks library context available")
+
+    logger.info(
+        f"Using model: {selected_model} | Context sources — "
+        f"KB: {len(kb_contexts)}, Company: {len(company_contexts)}, "
+        f"Evidence: {len(evid_contexts)}, Chat: {len(chat_file_contexts)}, "
+        f"Controls lib: {len(controls_contexts)}, Regulatory lib: {len(regulatory_contexts)}, "
+        f"Frameworks lib: {len(frameworks_contexts)}"
+    )
 
     # ========== BUILD ENHANCED PROMPT ==========
 
@@ -635,20 +619,27 @@ def chat_with_ai_with_memory(
 
 You have been designed to provide accurate, actionable guidance based on available information. If you lack necessary context, you should clearly state what is missing rather than guessing.
 
-=== KNOWLEDGE SOURCES LEARN FROM===
+=== KNOWLEDGE SOURCES ===
 
-**Information Security Standards & Policies:**
+**Information Security Standards & Policies (uploaded documents):**
 {kb_context}
 
 **Company-Specific Policies & Procedures:**
 {company_kb_context}
 
-=== Evidence & Log Files ===
+**Controls Library (internal controls reference):**
+{controls_context}
+
+**Regulatory Library (regulatory obligations reference):**
+{regulatory_context}
+
+**Frameworks Library (risk & control frameworks reference):**
+{frameworks_context}
+
+=== EVIDENCE & ATTACHMENTS ===
 
 **Security Logs & Evidence:**
 {evid_context}
-
-=== CHAT CONTEXT ===
 
 **Chat File Attachments:**
 {chat_files_context}
@@ -658,9 +649,6 @@ You have been designed to provide accurate, actionable guidance based on availab
 **Recent Conversation History:**
 {conversation_history if conversation_history else "No previous conversation"}
 
-**Relevant Past Discussions:**
-{past_relevant_context if past_relevant_context else "No relevant past discussions"}
-
 === CURRENT USER QUESTION ===
 {user_input}
 
@@ -669,13 +657,13 @@ You have been designed to provide accurate, actionable guidance based on availab
 **Context-Aware Responding:**
 - Use only available context to provide the most comprehensive answer possible
 - Reference previous conversations when relevant (e.g., "As we discussed earlier...")
-- Cite your sources by mentioning which context you're using (policies, company docs, evidence, past discussion)
+- Cite your sources by mentioning which context you're using (policies, controls library, regulatory library, company docs, evidence, etc.)
 - Maintain conversation continuity - build upon previous answers for follow-up questions
 - If the document name, type, or purpose is not explicit, infer it from content.
 - Always answer based on the chat context and uploaded chat files
 
 **Quality Guidelines:**
-- Develop your understanding from KNOWLEDGE SOURCES LEARN FROM
+- Develop your understanding from all KNOWLEDGE SOURCES
 - Be specific and actionable with concrete recommendations
 - Use bullet points, numbered lists, and tables where appropriate
 - Provide examples when explaining concepts
@@ -703,91 +691,6 @@ Your comprehensive response:"""
         logger.error(f"Error generating response: {e}")
         raise
 
-
-def update_conversation_vectorstore_api(
-    user_input: str,
-    bot_response: str,
-    session_manager,
-    session_id: str,
-    embedding_model
-):
-    """
-    Update conversation vectorstore for API context.
-    Adds new conversation exchange to vectorstore for semantic retrieval.
-
-    Args:
-        user_input: User's question
-        bot_response: Assistant's response
-        session_manager: Session manager instance
-        session_id: Session identifier
-        embedding_model: Embedding model for vectorization
-    """
-    try:
-        session = session_manager.get_session(session_id)
-        if not session:
-            logger.error(f"Session {session_id} not found")
-            return
-
-        conversation_text = f"""User Question: {user_input}
-
-Assistant Response: {bot_response}
-
-Context: Exchange on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"""
-
-        if session['conversation_vectorstore'] is None:
-            logger.info("Creating new conversation vectorstore")
-            session['conversation_vectorstore'] = FAISS.from_texts(
-                [conversation_text],
-                embedding_model
-            )
-            logger.info("Conversation vectorstore created")
-        else:
-            new_doc = [Document(
-                page_content=conversation_text,
-                metadata={
-                    'timestamp': datetime.now().isoformat(),
-                    'user_query': user_input[:100]
-                }
-            )]
-            session['conversation_vectorstore'].add_documents(new_doc)
-            logger.info(f"Vectorstore now has {session['conversation_vectorstore'].index.ntotal} vectors")
-
-        # Update session in session_manager
-        session_manager.update_vectorstore(session_id, session['conversation_vectorstore'])
-
-    except Exception as e:
-        logger.error(f"Error updating conversation vectorstore: {e}")
-
-
-def update_conversation_vectorstore(user_input, bot_response, embedding_model):
-    """Add new conversation exchange to vectorstore for semantic retrieval"""
-    try:
-        conversation_text = f"""User Question: {user_input}
-
-Assistant Response: {bot_response}
-
-Context: This exchange occurred on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"""
-
-        if st.session_state['conversation_vectorstore'] is None:
-            logger.info("Creating new conversation vectorstore")
-            st.session_state['conversation_vectorstore'] = FAISS.from_texts(
-                [conversation_text],
-                embedding_model
-            )
-            logger.info("Conversation vectorstore created")
-        else:
-            new_doc = [Document(
-                page_content=conversation_text,
-                metadata={
-                    'timestamp': datetime.now().isoformat(),
-                    'user_query': user_input[:100]
-                }
-            )]
-            st.session_state['conversation_vectorstore'].add_documents(new_doc)
-            logger.info(f"Vectorstore now has {st.session_state['conversation_vectorstore'].index.ntotal} vectors")
-
-    except Exception as e:
-        logger.error(f"Error updating conversation vectorstore: {e}")
 
 
 def export_conversation_history():

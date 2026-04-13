@@ -64,14 +64,12 @@ class ControlExtractorAgent:
         return _google_make_llm(self.model, temperature=0.1)
 
     def _get_kb_context(self, batch_text: str) -> str:
-        """Retrieve relevant KB context using GraphRAG. Falls back to pure FAISS, then empty."""
-        if self.kb_vectorstore is None:
+        """Retrieve relevant KB context using knowledge graph search."""
+        if self.kb_graph is None:
             return ""
         try:
             from utils.graph_rag import GraphRAGRetriever
-            retriever = GraphRAGRetriever(
-                self.kb_vectorstore, self.kb_graph, seed_k=3, final_k=4
-            )
+            retriever = GraphRAGRetriever(self.kb_graph, seed_k=3, final_k=4)
             docs = retriever.retrieve(batch_text[:500])
             if not docs:
                 return ""

@@ -7,8 +7,6 @@ from utils.llm_chain import assess_evidence_with_kb, build_knowledge_base
 from utils.pdf_generator import generate_workbook
 from utils.chat import chat_with_bot
 import base64
-from langchain_community.vectorstores import FAISS
-from langchain_ollama import OllamaEmbeddings
 from langchain.memory import ConversationBufferWindowMemory, ConversationSummaryBufferMemory
 from langchain_community.chat_message_histories import StreamlitChatMessageHistory
 from datetime import datetime
@@ -67,12 +65,7 @@ def initialize_conversation_memory():
             output_key="output"
         )
 
-    # 2. Conversation vectorstore for semantic retrieval
-    if 'conversation_vectorstore' not in st.session_state:
-        st.session_state['conversation_vectorstore'] = None
-        logger.info("Conversation vectorstore initialized as None")
-
-    # 3. Enhanced chat history with metadata
+    # 2. Enhanced chat history with metadata
     if 'enhanced_chat_history' not in st.session_state:
         st.session_state['enhanced_chat_history'] = []
         st.session_state['chat_metadata'] = {
@@ -89,9 +82,6 @@ def clear_all_memory():
     # Clear LangChain memory
     if 'conversation_memory' in st.session_state:
         st.session_state['conversation_memory'].clear()
-
-    # Clear conversation vectorstore
-    st.session_state['conversation_vectorstore'] = None
 
     # Clear enhanced history
     st.session_state['enhanced_chat_history'] = []
@@ -198,15 +188,15 @@ if ok_btn and not st.session_state['model_selected']:
 selected_model = st.session_state['selected_model']
 
 
-# --- Load saved bot at app start ---
-if os.path.exists(VECTORSTORE_PATH) and not st.session_state.get('kb_ready', False):    
-    st.session_state['kb_vectorstore'] = FAISS.load_local(
-        VECTORSTORE_PATH,
-        OllamaEmbeddings(model=OLLAMA_EMBEDDING_MODEL, base_url=OLLAMA_BASE_URL),
-        allow_dangerous_deserialization=True
-    )
-    st.session_state['kb_ready'] = True
-    st.session_state['kb_loaded_from_saved'] = True
+# --- Load saved bot at app start (graph-based) ---
+from utils.graph_rag import KnowledgeGraph as _KG
+if _KG.exists(VECTORSTORE_PATH) and not st.session_state.get('kb_ready', False):
+    try:
+        st.session_state['kb_graph'] = _KG.load(VECTORSTORE_PATH)
+        st.session_state['kb_ready'] = True
+        st.session_state['kb_loaded_from_saved'] = True
+    except Exception:
+        pass
     
 
 # --- Step 1: Upload Knowledge Base Documents ---
@@ -228,10 +218,10 @@ with st.expander("1️⃣ Upload training documents", expanded=True):
         st.session_state['bot_trained_success'] = False
     if 'assessment' not in st.session_state:
         st.session_state['assessment'] = None
-    if 'kb_vectorstore' not in st.session_state:
-        st.session_state['kb_vectorstore'] = None
-    if 'evid_vectorstore' not in st.session_state:
-        st.session_state['evid_vectorstore'] = None   
+    if 'kb_graph' not in st.session_state:
+        st.session_state['kb_graph'] = None
+    if 'evid_graph' not in st.session_state:
+        st.session_state['evid_graph'] = None
     if 'merged_vectorstore' not in st.session_state:
         st.session_state['merged_vectorstore'] = None
     if 'evidence_kb_ready' not in st.session_state:
@@ -268,17 +258,15 @@ with st.expander("1️⃣ Upload training documents", expanded=True):
    # Train bot on KB
     if upld_btn:
         with st.spinner("Processing and indexing knowledge base..."):
-            # kb_docs = save_and_load_files(policy_files)
-            # kb_vectorstore = build_knowledge_base(kb_docs,selected_model)
-            kb_vectorstore, _ = build_knowledge_base(policy_files,selected_model)
-            st.session_state['kb_vectorstore'] = kb_vectorstore
+            kb_graph = build_knowledge_base(policy_files, selected_model)
+            st.session_state['kb_graph'] = kb_graph
             st.session_state['kb_ready'] = True
-            st.session_state['bot_trained_success'] = True  # <-- enable Save on next rerun!
-            st.session_state['bot_saved'] = False  # Not yet saved after new training
+            st.session_state['bot_trained_success'] = True
+            st.session_state['bot_saved'] = False
             st.session_state['kb_loaded_from_saved'] = False
-            if( st.session_state['kb_vectorstore'] and st.session_state['kb_ready']):
-                st.session_state['kb_vectorstore'].save_local(VECTORSTORE_PATH)           
-                st.success("✅ Information Security Policies uploaded successfully")   
+            if kb_graph:
+                kb_graph.save(VECTORSTORE_PATH)
+                st.success("✅ Information Security Policies uploaded successfully")
         # Optionally force a rerun so Save enables immediately
         if hasattr(st, "rerun"):
             st.rerun()
@@ -307,7 +295,7 @@ with st.expander("1️⃣ Upload training documents", expanded=True):
             shutil.rmtree(VECTORSTORE_PATH)
             st.success("🗑️ Previous trained model deleted successfully.")
             st.session_state['kb_ready'] = False
-            st.session_state['kb_vectorstore'] = None
+            st.session_state['kb_graph'] = None
             st.session_state['bot_trained_success'] = False
             st.session_state['bot_saved'] = False
             st.session_state['kb_loaded_from_saved'] = False
@@ -329,15 +317,14 @@ with st.expander("1️⃣ Upload training documents", expanded=True):
     else:
         st.warning("🚫 No trained model loaded. Please train or load a saved model.")
 
-# Check if a saved company vectorstore exists
-if os.path.exists(COMPANY_VECTORSTORE_PATH) and not st.session_state.get('company_files_ready', False):
-    st.session_state['company_kb_vectorstore'] = FAISS.load_local(
-        COMPANY_VECTORSTORE_PATH,
-        OllamaEmbeddings(model=OLLAMA_EMBEDDING_MODEL, base_url=OLLAMA_BASE_URL),
-        allow_dangerous_deserialization=True
-    )
-    st.session_state['company_files_ready'] = True  
-    st.session_state['company_kb_loaded_from_saved'] = True
+# Check if a saved company graph exists
+if _KG.exists(COMPANY_VECTORSTORE_PATH) and not st.session_state.get('company_files_ready', False):
+    try:
+        st.session_state['company_kb_graph'] = _KG.load(COMPANY_VECTORSTORE_PATH)
+        st.session_state['company_files_ready'] = True
+        st.session_state['company_kb_loaded_from_saved'] = True
+    except Exception:
+        pass
 
 # --- Step 2: Upload Company Resources ---
 with st.expander("2️⃣ Upload company documents", expanded=True):
@@ -348,8 +335,8 @@ with st.expander("2️⃣ Upload company documents", expanded=True):
 
     if 'company_files_ready' not in st.session_state:
         st.session_state['company_files_ready'] = False
-    if 'company_kb_vectorstore' not in st.session_state:
-        st.session_state['company_kb_vectorstore'] = None
+    if 'company_kb_graph' not in st.session_state:
+        st.session_state['company_kb_graph'] = None
     if 'company_kb_loaded_from_saved' not in st.session_state:
         st.session_state['company_kb_loaded_from_saved'] = False   
     
@@ -373,15 +360,13 @@ with st.expander("2️⃣ Upload company documents", expanded=True):
         )
     if upload_btn:
         with st.spinner("Processing company resources..."):
-            # Here you can process the company files if needed            
-            # company_docs =  save_and_load_files(company_files)
-            company_kb_vectorstore, _ = build_knowledge_base(company_files,selected_model)
-            st.session_state['company_kb_vectorstore'] = company_kb_vectorstore           
+            company_kb_graph = build_knowledge_base(company_files, selected_model)
+            st.session_state['company_kb_graph'] = company_kb_graph
             st.session_state['company_files_ready'] = True
             st.session_state['company_kb_loaded_from_saved'] = False
-            if( st.session_state['company_kb_vectorstore'] and st.session_state['company_files_ready']):
-                st.session_state['company_kb_vectorstore'].save_local(COMPANY_VECTORSTORE_PATH)           
-                st.success("✅ Company documents uploaded successfully") 
+            if company_kb_graph:
+                company_kb_graph.save(COMPANY_VECTORSTORE_PATH)
+                st.success("✅ Company documents uploaded successfully")
            
     if clear_btn:
         if os.path.exists(COMPANY_VECTORSTORE_PATH):
@@ -433,8 +418,7 @@ with st.expander("3️⃣ Upload files for assessment", expanded=True):
         with st.spinner("Processing files..."):
             # evidence_docs = save_and_load_files(evidence_files)
             evidence_docs_screenshot = llm_chain.render_text_to_image(evidence_files)
-            evid_vectorstore, _ = build_knowledge_base(evidence_files,selected_model)
-            st.session_state['evid_vectorstore'] = evid_vectorstore
+            st.session_state['evid_graph'] = build_knowledge_base(evidence_files, selected_model)
             st.session_state['evidence_kb_ready'] = True
             st.toast("✅ Files Uploaded Successfully!")
             st.success("✅ Files Uploaded Successfully")
@@ -451,9 +435,9 @@ with st.expander("3️⃣ Upload files for assessment", expanded=True):
                 #evidence_docs = save_and_load_files(evidence_files)
                 assessment = assess_evidence_with_kb(
                     evidence_files,
-                    st.session_state['kb_vectorstore'],
-                    st.session_state['company_kb_vectorstore'],
-                    selected_model
+                    selected_model,
+                    kb_graph=st.session_state.get('kb_graph'),
+                    company_kb_graph=st.session_state.get('company_kb_graph'),
                 )
                 # Render to image and save to a variable (PIL Image object)
                 
@@ -518,10 +502,10 @@ with st.expander("4️⃣ Chat with the agent", expanded=True):
 
     # Call enhanced chat function
     chat_with_bot(
-        st.session_state['kb_vectorstore'],
-        st.session_state['company_kb_vectorstore'],
+        st.session_state.get('kb_graph'),
+        st.session_state.get('company_kb_graph'),
         st.session_state['assessment'],
-        st.session_state['evid_vectorstore'],
+        st.session_state.get('evid_graph'),
         None,
         st.session_state['selected_model']
     )
@@ -548,8 +532,3 @@ with st.expander("4️⃣ Chat with the agent", expanded=True):
                 except Exception as e:
                     st.write(f"Memory status: {str(e)}")
 
-            # Show vectorstore status
-            if st.session_state['conversation_vectorstore']:
-                st.write(f"**Conversation Vectorstore:** {st.session_state['conversation_vectorstore'].index.ntotal} vectors")
-            else:
-                st.write("**Conversation Vectorstore:** Not yet created")

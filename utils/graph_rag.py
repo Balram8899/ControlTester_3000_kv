@@ -2,14 +2,14 @@
 Graph-RAG module for Trace.
 
 Provides a Knowledge Graph layer (NetworkX DiGraph) that sits alongside the
-existing FAISS vectorstore. All paths that touch the graph fall back
-gracefully to pure-FAISS retrieval if the graph is unavailable.
+pure Knowledge Graph retrieval. All retrieval paths use entity-based
+graph search with substring fallback.
 
 Classes
 -------
 RegexEntityExtractor   – Deterministic regex/keyword extraction, no LLM needed.
 KnowledgeGraph         – Wraps nx.DiGraph; builds, persists, and queries the graph.
-GraphRAGRetriever      – Combines FAISS seed retrieval with graph-neighbor expansion.
+GraphRAGRetriever      – Pure knowledge-graph retrieval with neighbor expansion.
 RegulatoryControlGraph – Per-comparison graph used in regulatory_comparision.py.
 """
 
@@ -263,6 +263,55 @@ class KnowledgeGraph:
             "standard_nodes": _count("standard"),
         }
 
+    def search(self, query: str, k: int = 5) -> List[Document]:
+        """
+        Entity-based retrieval without a vector store.
+
+        Algorithm:
+          1. Extract domains and standards from the query using RegexEntityExtractor.
+          2. Score chunk nodes by how many entity categories they match
+             (standards weighted higher than domains).
+          3. If no entity matches, fall back to substring matching on text_preview.
+          4. Return top-k chunks as LangChain Documents.
+        """
+        extractor = RegexEntityExtractor()
+        entities = extractor.extract_all(query)
+
+        scores: Dict[str, int] = {}
+
+        for domain in entities.get("domains", []):
+            for chunk_id in self._domain_index.get(domain, []):
+                scores[chunk_id] = scores.get(chunk_id, 0) + 2
+
+        for standard in entities.get("standards", []):
+            for chunk_id in self._standard_index.get(standard, []):
+                scores[chunk_id] = scores.get(chunk_id, 0) + 3
+
+        # Fallback: substring match on stored text_preview
+        if not scores:
+            query_lower = query.lower()
+            keywords = [w for w in query_lower.split() if len(w) > 3]
+            for node_id, data in self.graph.nodes(data=True):
+                if data.get("type") == "chunk":
+                    preview = data.get("text_preview", "").lower()
+                    hits = sum(1 for kw in keywords if kw in preview)
+                    if hits:
+                        scores[node_id] = hits
+
+        top_chunks = sorted(scores, key=lambda c: scores[c], reverse=True)[:k]
+        results = []
+        for chunk_id in top_chunks:
+            node_data = self.graph.nodes[chunk_id]
+            results.append(Document(
+                page_content=node_data.get("text_preview", ""),
+                metadata={
+                    "source": node_data.get("source", ""),
+                    "file_name": node_data.get("file_name", ""),
+                    "graph_chunk_id": chunk_id,
+                },
+            ))
+        return results
+
     # ------------------------------------------------------------------
     # Persistence
     # ------------------------------------------------------------------
@@ -312,29 +361,24 @@ class KnowledgeGraph:
 
 class GraphRAGRetriever:
     """
-    Combines FAISS dense retrieval with Knowledge Graph neighbor expansion.
+    Pure Knowledge Graph retrieval — no vector store required.
 
     Algorithm (3 stages):
-      1. Seed retrieval  – FAISS similarity_search(query, k=seed_k)
-      2. Graph expansion – for each seed chunk_id found in the graph, walk
-                           up to ``expansion_depth`` hops to collect neighbor
-                           chunk_ids and re-query FAISS using their stored
-                           text_preview.
+      1. Seed retrieval  – KnowledgeGraph.search(query, k=seed_k)
+                           (entity-based scoring with substring fallback)
+      2. Graph expansion – for each seed chunk_id, walk up to
+                           ``expansion_depth`` hops to collect neighbor
+                           chunk_ids and build Documents from stored text.
       3. Deduplication   – merge seed + expanded docs, return top ``final_k``.
-
-    Falls back transparently to pure FAISS if the graph is None or if any
-    graph operation raises an exception.
     """
 
     def __init__(
         self,
-        vectorstore: Any,
-        graph: Optional[KnowledgeGraph],
+        graph: KnowledgeGraph,
         seed_k: int = 5,
         expansion_depth: int = 1,
         final_k: int = 8,
     ) -> None:
-        self.vectorstore = vectorstore
         self.graph = graph
         self.seed_k = seed_k
         self.expansion_depth = expansion_depth
@@ -342,21 +386,16 @@ class GraphRAGRetriever:
 
     def retrieve(self, query: str) -> List[Document]:
         if self.graph is None:
-            return self.vectorstore.similarity_search(query, k=self.final_k)
+            return []
         try:
-            return self._graph_augmented_retrieve(query)
+            return self._graph_retrieve(query)
         except Exception as exc:
-            logger.warning(
-                f"GraphRAGRetriever graph expansion failed ({exc}); "
-                "falling back to pure FAISS."
-            )
-            return self.vectorstore.similarity_search(query, k=self.final_k)
+            logger.warning(f"GraphRAGRetriever failed ({exc}); returning empty context.")
+            return []
 
-    def _graph_augmented_retrieve(self, query: str) -> List[Document]:
-        # Stage 1: seed retrieval
-        seed_docs: List[Document] = self.vectorstore.similarity_search(
-            query, k=self.seed_k
-        )
+    def _graph_retrieve(self, query: str) -> List[Document]:
+        # Stage 1: seed retrieval via graph search
+        seed_docs: List[Document] = self.graph.search(query, k=self.seed_k)
 
         # Stage 2: graph expansion
         seen_previews: set = set()
@@ -374,12 +413,17 @@ class GraphRAGRetriever:
                 if not preview or preview in seen_previews:
                     continue
                 seen_previews.add(preview)
-                # Re-query FAISS to get the full Document with its metadata
-                expanded = self.vectorstore.similarity_search(preview[:200], k=1)
-                if expanded:
-                    all_docs.extend(expanded)
+                node_data = self.graph.graph.nodes[nid]
+                all_docs.append(Document(
+                    page_content=preview,
+                    metadata={
+                        "source": node_data.get("source", ""),
+                        "file_name": node_data.get("file_name", ""),
+                        "graph_chunk_id": nid,
+                    },
+                ))
 
-        # Stage 3: deduplicate by page_content hash, preserve seed order
+        # Stage 3: deduplicate by page_content prefix, preserve seed order
         final: List[Document] = []
         seen_content: set = set()
         for doc in all_docs:
@@ -596,7 +640,7 @@ def build_knowledge_graph_from_documents(
     """
     Build a KnowledgeGraph from a list of LangChain Documents.
     Injects ``graph_chunk_id`` back into each document's metadata so that
-    GraphRAGRetriever can bridge FAISS docs to graph nodes.
+    GraphRAGRetriever can identify nodes by their chunk_id.
     """
     extractor = RegexEntityExtractor()
     kg = KnowledgeGraph()
