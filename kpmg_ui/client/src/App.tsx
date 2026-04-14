@@ -27,6 +27,8 @@ import ReportsPage from "@/pages/reports";
 import IssueManagementPage from "@/pages/issue-management";
 import ExceptionManagementPage from "@/pages/exception-management";
 import LandingPage from "@/pages/landing";
+import AssetRegistryPage from "@/pages/asset-registry";
+import { AssetRegistryProvider } from "@/contexts/AssetRegistryContext";
 
 // All pages are kept permanently mounted and CSS-hidden when inactive.
 // This prevents remount on every tab switch, so useEffect runs only once per
@@ -44,6 +46,7 @@ const PAGES = [
   { path: "/settings",             Page: SettingsPage            },
   { path: "/issue-management",     Page: IssueManagementPage     },
   { path: "/exception-management", Page: ExceptionManagementPage },
+  { path: "/asset-registry",       Page: AssetRegistryPage       },
 ] as const;
 
 function Router() {
@@ -94,8 +97,10 @@ function App() {
                   <RegulatoryTestingProvider>
                     <CrossNavProvider>
                       <LibraryMetricsProvider>
-                        <Toaster />
-                        <Router />
+                        <AssetRegistryProvider>
+                          <Toaster />
+                          <Router />
+                        </AssetRegistryProvider>
                       </LibraryMetricsProvider>
                     </CrossNavProvider>
                   </RegulatoryTestingProvider>

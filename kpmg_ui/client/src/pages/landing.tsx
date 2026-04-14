@@ -1,7 +1,7 @@
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCrossNav } from "@/contexts/CrossNavContext";
-import { Search, CheckSquare, BookOpen, AlertTriangle, ChevronRight } from "lucide-react";
+import { Search, CheckSquare, BookOpen, AlertTriangle, ChevronRight, Database } from "lucide-react";
 
 const CARD1_LINKS = [
   "Risk – Controls Coverage",
@@ -28,6 +28,9 @@ const CARD4_LINKS = [
   "Control-Risk Linkage",
   "Risk Appetite Dashboard",
 ];
+
+const CARD5_LINKS = ["Asset Inventory", "CIA Rating & Criticality", "Control Mapping", "Assessment Scheduling"];
+const CARD6_LINKS = ["Issue Tracking", "Remediation Plans", "Evidence Management", "Sign-off Workflow"];
 
 export default function LandingPage() {
   const [, setLocation] = useLocation();
@@ -130,12 +133,12 @@ export default function LandingPage() {
               </h2>
             </div>
             <span className="text-xs font-medium px-3 py-1 rounded-full" style={{ background: "rgba(0,30,98,0.08)", color: "#001E62" }}>
-              3 of 4 live
+              5 of 6 live
             </span>
           </div>
 
-          {/* Cards grid — 4 columns */}
-          <div className="grid grid-cols-4 gap-5">
+          {/* Cards grid — 3 columns */}
+          <div className="grid grid-cols-3 gap-5">
 
             {/* Card 1 — Controls Design Diagnostics */}
             <div
@@ -254,38 +257,102 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Card 4 — Risk Assessment (In Development) */}
+            {/* Card 4 — Risk Assessment */}
             <div
-              className="rounded-lg flex flex-col transition-all duration-200 relative overflow-hidden"
-              style={inactiveCardStyle}
+              className="rounded-lg flex flex-col transition-all duration-200 cursor-pointer"
+              style={activeCardStyle}
+              onClick={() => setLocation("/risk-assessment")}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLDivElement).style.boxShadow = "0 8px 24px rgba(0,30,98,0.18)";
+                (e.currentTarget as HTMLDivElement).style.borderColor = "var(--pacific, #00b2e3)";
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLDivElement).style.boxShadow = "0 1px 3px rgba(0,0,0,0.06)";
+                (e.currentTarget as HTMLDivElement).style.borderColor = "#001E62";
+              }}
             >
-              {/* In Development badge */}
-              <span
-                className="absolute top-3 right-3 text-[9px] font-semibold px-2 py-0.5 rounded-full tracking-wider"
-                style={{ background: "rgba(100,116,139,0.15)", color: "#94a3b8", border: "1px solid #cbd5e1" }}
-              >
-                IN DEVELOPMENT
-              </span>
               <div className="p-5 flex-1">
                 <div className="flex items-start justify-between mb-4">
-                  <div className="h-9 w-9 rounded-md flex items-center justify-center" style={{ background: "#94a3b8" }}>
+                  <div className="h-9 w-9 rounded-md flex items-center justify-center" style={{ background: "#001E62" }}>
                     <AlertTriangle className="h-4 w-4 text-white" />
                   </div>
                 </div>
-                <h3 className="font-bold text-sm mb-2" style={{ color: "#64748b" }}>Risk Assessment</h3>
-                <p className="text-xs leading-relaxed" style={{ color: "#94a3b8" }}>
+                <h3 className="font-bold text-sm mb-2" style={{ color: "#001E62" }}>Risk Assessment</h3>
+                <p className="text-xs leading-relaxed" style={{ color: "#64748b" }}>
                   AI-driven risk identification and heatmap generation — linking risks to controls and surfacing coverage gaps across the enterprise risk landscape.
                 </p>
               </div>
               <div className="px-5 pb-5">
                 <div className="border-t pt-4" style={{ borderColor: "#e2e8f0" }}>
-                  <p className="text-xs font-semibold mb-2 flex items-center gap-1" style={{ color: "#94a3b8" }}>
+                  <p className="text-xs font-semibold mb-2 flex items-center gap-1" style={{ color: "#001E62" }}>
                     <ChevronRight className="h-3 w-3" /> View Risks
                   </p>
                   <div className="space-y-1.5">
                     {CARD4_LINKS.map(link => (
-                      <p key={link} className="text-xs pl-4" style={{ color: "#cbd5e1" }}>{link}</p>
+                      <p key={link} className="text-xs pl-4" style={{ color: "#3b82f6" }}>{link}</p>
                     ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 5 — Asset Registry */}
+            <div
+              className="rounded-lg flex flex-col transition-all duration-200 cursor-pointer"
+              style={activeCardStyle}
+              onClick={() => setLocation("/asset-registry")}
+              onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = "0 8px 24px rgba(0,30,98,0.18)"; (e.currentTarget as HTMLDivElement).style.borderColor = "var(--pacific, #00b2e3)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = "0 1px 3px rgba(0,0,0,0.06)"; (e.currentTarget as HTMLDivElement).style.borderColor = "#001E62"; }}
+            >
+              <div className="p-5 flex-1">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="h-9 w-9 rounded-md flex items-center justify-center" style={{ background: "#001E62" }}>
+                    <Database className="h-4 w-4 text-white" />
+                  </div>
+                </div>
+                <h3 className="font-bold text-sm mb-2" style={{ color: "#001E62" }}>Asset Registry</h3>
+                <p className="text-xs leading-relaxed" style={{ color: "#64748b" }}>
+                  Centralised register of IT, data, process, and vendor assets with CIA ratings, criticality scoring, and LLM-assisted control mapping.
+                </p>
+              </div>
+              <div className="px-5 pb-5">
+                <div className="border-t pt-4" style={{ borderColor: "#e2e8f0" }}>
+                  <p className="text-xs font-semibold mb-2 flex items-center gap-1" style={{ color: "#001E62" }}>
+                    <ChevronRight className="h-3 w-3" /> Manage Assets
+                  </p>
+                  <div className="space-y-1.5">
+                    {CARD5_LINKS.map(link => <p key={link} className="text-xs pl-4" style={{ color: "#3b82f6" }}>{link}</p>)}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 6 — Issue Management */}
+            <div
+              className="rounded-lg flex flex-col transition-all duration-200 cursor-pointer"
+              style={activeCardStyle}
+              onClick={() => setLocation("/issue-management")}
+              onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = "0 8px 24px rgba(0,30,98,0.18)"; (e.currentTarget as HTMLDivElement).style.borderColor = "var(--pacific, #00b2e3)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = "0 1px 3px rgba(0,0,0,0.06)"; (e.currentTarget as HTMLDivElement).style.borderColor = "#001E62"; }}
+            >
+              <div className="p-5 flex-1">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="h-9 w-9 rounded-md flex items-center justify-center" style={{ background: "#001E62" }}>
+                    <AlertTriangle className="h-4 w-4 text-white" />
+                  </div>
+                </div>
+                <h3 className="font-bold text-sm mb-2" style={{ color: "#001E62" }}>Issue Management</h3>
+                <p className="text-xs leading-relaxed" style={{ color: "#64748b" }}>
+                  Track issues against controls and assets with remediation plans, evidence upload, maker-checker sign-off, and live residual risk impact.
+                </p>
+              </div>
+              <div className="px-5 pb-5">
+                <div className="border-t pt-4" style={{ borderColor: "#e2e8f0" }}>
+                  <p className="text-xs font-semibold mb-2 flex items-center gap-1" style={{ color: "#001E62" }}>
+                    <ChevronRight className="h-3 w-3" /> Manage Issues
+                  </p>
+                  <div className="space-y-1.5">
+                    {CARD6_LINKS.map(link => <p key={link} className="text-xs pl-4" style={{ color: "#3b82f6" }}>{link}</p>)}
                   </div>
                 </div>
               </div>
