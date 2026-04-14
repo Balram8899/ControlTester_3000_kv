@@ -56,6 +56,7 @@ from utils.rcm_compliance_analyzer import (
     analyze_rcm_against_obligations,
 )
 from utils.rcm_report_store import RCMReportStore
+from api.routers.assets import router as assets_router
 
 # ----------------------------------------------------------------------------
 # Logging
@@ -148,6 +149,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(assets_router)
 
 # ============================================================================
 # SESSION & MEMORY MANAGEMENT
