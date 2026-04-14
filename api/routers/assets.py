@@ -141,7 +141,7 @@ def _suggest_controls_llm(asset: Asset) -> list[dict]:
     all_controls: list[dict] = []
 
     try:
-        for c in MongoControlsStore().collection.find(
+        for c in MongoControlsStore()._col.find(
             {}, {"_id": 1, "name": 1, "description": 1}
         ).limit(80):
             all_controls.append({
@@ -154,7 +154,7 @@ def _suggest_controls_llm(asset: Asset) -> list[dict]:
         logger.warning(f"controls_library fetch failed: {e}")
 
     try:
-        for r in MongoLibraryStore().collection.find(
+        for r in MongoLibraryStore()._col.find(
             {}, {"_id": 1, "obligation": 1, "domain": 1, "framework_name": 1}
         ).limit(80):
             all_controls.append({
