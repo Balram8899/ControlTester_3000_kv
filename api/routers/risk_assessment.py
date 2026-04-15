@@ -287,3 +287,126 @@ def get_residual(ra_id: str):
         })
 
     return {"assessment_id": ra_id, "residual_risks": results}
+
+
+@router.get("/questions/{assessment_type}")
+def get_assessment_questions(assessment_type: str):
+    from utils.assessment_questions import get_questions
+    questions = get_questions(assessment_type)
+    if not questions:
+        raise HTTPException(400, f"Unknown assessment type: {assessment_type}. Use BIA, LEGAL, or PIA.")
+    return {"assessment_type": assessment_type.upper(), "questions": questions}
+
+
+@router.post("/{ra_id}/analyze")
+def analyze_assessment(ra_id: str):
+    """Run LLM analysis on all Q&A responses to identify risks and compute inherent risk scores."""
+    from utils.llm_chain import _make_llm
+    from langchain.schema import HumanMessage
+    import json as _json
+
+    ra = get_store().get(ra_id)
+    if not ra:
+        raise HTTPException(404, "Assessment not found")
+    if not ra.responses:
+        raise HTTPException(400, "No responses yet. Submit Q&A responses first via POST /{ra_id}/respond")
+
+    # Fetch asset details from MongoDB
+    from api.routers.assets import get_store as get_asset_store
+    asset_store = get_asset_store()
+
+    # Group responses by asset_id
+    by_asset: dict[str, dict[str, list[dict]]] = {}
+    for resp in ra.responses:
+        aid = resp["asset_id"]
+        atype = resp["assessment_type"]
+        by_asset.setdefault(aid, {}).setdefault(atype, []).append(resp)
+
+    all_risks: list[dict] = []
+
+    for asset_id, type_responses in by_asset.items():
+        asset = asset_store.get(asset_id)
+        asset_name = asset.name if asset else asset_id
+        cia_score = asset.cia_score if asset else 3.0
+        initial_band = ra.initial_inherent_ratings.get(asset_id, "Medium")
+
+        # Build Q&A summary text
+        qa_lines = []
+        for atype, resps in type_responses.items():
+            qa_lines.append(f"\n=== {atype} Assessment ===")
+            for r in resps:
+                qa_lines.append(f"Q[{r['question_id']}]: {r['response_text']}")
+        qa_text = "\n".join(qa_lines)
+
+        prompt = f"""You are a cybersecurity risk analyst. Analyse the following assessment responses for an asset and identify the top risks.
+
+Asset: {asset_name}
+CIA Score: {cia_score:.2f}/5.00
+Initial Inherent Risk Rating (human estimate): {initial_band}
+
+Assessment Responses:
+{qa_text}
+
+Based on these responses, identify 2-4 specific risks for this asset.
+For each risk return a JSON object with:
+- title: short risk title
+- description: 1-2 sentence description
+- risk_category: one of [Operational, Regulatory, Privacy, Financial, Reputational]
+- likelihood_score: integer 1-5 (1=rare, 5=almost certain)
+- impact_score: integer 1-5 (1=negligible, 5=catastrophic)
+- rationale: one sentence explaining the score
+
+Return ONLY a valid JSON array. Example:
+[{{"title":"...", "description":"...", "risk_category":"...", "likelihood_score":3, "impact_score":4, "rationale":"..."}}]"""
+
+        try:
+            llm = _make_llm(os.environ.get("OLLAMA_LLM_MODEL", "llama3:8b"), temperature=0.2)
+            response = llm.invoke([HumanMessage(content=prompt)])
+            content = response.content.strip()
+            # Strip markdown code fences if present
+            if content.startswith("```"):
+                content = content.split("```")[1]
+                if content.startswith("json"):
+                    content = content[4:]
+            llm_risks = _json.loads(content)
+        except Exception as e:
+            logger.error(f"LLM analysis failed for asset {asset_id}: {e}")
+            # Fallback: create a generic risk from initial rating
+            band_to_scores = {"Critical": (4, 5), "High": (3, 4), "Medium": (2, 3), "Low": (1, 2)}
+            l, i = band_to_scores.get(initial_band, (2, 3))
+            llm_risks = [{
+                "title": f"Risk: {asset_name} exposure",
+                "description": f"Risk identified from initial assessment rating of {initial_band}.",
+                "risk_category": "Operational",
+                "likelihood_score": l,
+                "impact_score": i,
+                "rationale": "Derived from initial inherent risk rating (LLM analysis unavailable).",
+            }]
+
+        for r in llm_risks:
+            l = int(r.get("likelihood_score", 3))
+            i = int(r.get("impact_score", 3))
+            score = l * i
+            all_risks.append({
+                "id": str(uuid.uuid4()),
+                "asset_id": asset_id,
+                "title": r.get("title", "Unnamed Risk"),
+                "description": r.get("description", ""),
+                "risk_category": r.get("risk_category", "Operational"),
+                "likelihood_score": l,
+                "impact_score": i,
+                "inherent_risk_score": score,
+                "inherent_risk_band": _inherent_risk_band(score),
+                "residual_risk_score": score,
+                "residual_risk_band": _inherent_risk_band(score),
+                "source": "llm_generated",
+                "human_rationale": r.get("rationale", ""),
+                "status": "identified",
+            })
+
+    get_store().set_risks(ra_id, all_risks)
+    return {
+        "assessment_id": ra_id,
+        "risks_identified": len(all_risks),
+        "risks": all_risks,
+    }
