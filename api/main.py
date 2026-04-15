@@ -28,7 +28,7 @@ from utils.workpaper_filler import fill_workpaper_template
 # utils imports
 from utils.llm_chain import build_knowledge_base, assess_evidence_with_kb, generate_executive_summary
 from utils.graph_rag import KnowledgeGraph
-from utils.find_llm import get_google_model_names
+from utils.find_llm import get_ollama_model_names
 from langchain.schema import Document
 from utils.pdf_generator import generate_workbook
 
@@ -57,6 +57,7 @@ from utils.rcm_compliance_analyzer import (
 )
 from utils.rcm_report_store import RCMReportStore
 from api.routers.assets import router as assets_router
+from api.routers.risk_assessment import router as risk_assessment_router
 
 # ----------------------------------------------------------------------------
 # Logging
@@ -151,6 +152,7 @@ app.add_middleware(
 )
 
 app.include_router(assets_router)
+app.include_router(risk_assessment_router)
 
 # ============================================================================
 # SESSION & MEMORY MANAGEMENT
@@ -362,10 +364,10 @@ async def health():
         "active_sessions": len(session_manager.sessions)
     }
 
-@app.get("/models", tags=["models"], summary="Available Gemini models")
+@app.get("/models", tags=["models"], summary="Available Ollama models")
 async def models():
     try:
-        names = get_google_model_names()
+        names = get_ollama_model_names()
         return {"models": names, "count": len(names)}
     except Exception as e:
         raise HTTPException(500, f"Failed fetching models: {e}")
@@ -814,6 +816,7 @@ async def assess_evidence(
             content = await uf.read()
             tmp.write(content)
             tmp.close()
+            tmp_paths.append(tmp.name)
 
             evidence_objs.append(FileWrapper(tmp.name, uf.filename))
 
@@ -854,10 +857,11 @@ async def assess_evidence(
             max_workers=max_workers,
             controls_lib_graph=controls_lib_graph,
         )
+        raw_assessment_results = list(assessment_results)
 
-        assessment_summary = generate_executive_summary(assessment_results,selected_model)
-        assessment_results.append(assessment_summary)
-        workbook_path = generate_workbook(assessment_results, None)
+        assessment_summary = generate_executive_summary(raw_assessment_results,selected_model)
+        report_payload = raw_assessment_results + [assessment_summary]
+        workbook_path = generate_workbook(report_payload, None)
 
         controls_graph_stats = controls_lib_graph.get_graph_stats() if controls_lib_graph else {}
 
@@ -879,7 +883,7 @@ async def assess_evidence(
                         "model_used": selected_model,
                         "evidence_files": [uf.filename for uf in evidence_files],
                         "evidence_file_count": len(evidence_files),
-                        "assessment_count": len(assessment_results) - 1,
+                        "assessment_count": len(raw_assessment_results),
                         "controls_graph_nodes": controls_graph_stats.get("chunk_nodes", 0),
                         "executive_summary": exec_summary_text,
                     },
@@ -891,7 +895,9 @@ async def assess_evidence(
         processing_summary = {
             "evidence_files": len(evidence_files),
             "evidence_documents": len(evidence_files),
-            "assessment_results": len(assessment_results),
+            "assessment_count": len(raw_assessment_results),
+            "assessment_results": raw_assessment_results,
+            "executive_summary": assessment_summary.get("executive_summary", ""),
             "workbook_path": workbook_path,
             "controls_graph_nodes": controls_graph_stats.get("chunk_nodes", 0),
             "processing_seconds": time.time() - t0,
@@ -1741,7 +1747,7 @@ async def library_merged_obligations():
 
 class LibraryGapAnalysisRequest(BaseModel):
     document_ids: List[str]
-    selected_model: str = ""   # empty → use default GOOGLE_LLM_MODEL
+    selected_model: str = ""   # empty -> use default Ollama model
     generate_report: bool = True
 
 
