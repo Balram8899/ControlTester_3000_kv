@@ -1,6 +1,6 @@
 # FastAPI + server
 fastapi==0.115.12
-uvicorn[standard]
+uvicorn[standard]==0.34.2
 starlette==0.46.2
 python-multipart==0.0.20
 pydantic==2.11.5
@@ -10,8 +10,7 @@ pydantic-settings==2.9.1
 langchain==0.3.25
 langchain-community==0.3.24
 langchain-core==0.3.61
-langchain-google-genai>=2.0.0
-google-genai>=0.8.0
+langchain-ollama==0.3.3
 langchain-text-splitters==0.3.8
 langchain-experimental==0.3.4
 langchain-unstructured==0.1.6
@@ -20,7 +19,6 @@ langsmith==0.3.42
 # Embeddings / ML utilities (CPU)
 numpy==1.26.4
 scikit-learn==1.7.0
-sentence-transformers==4.1.0
 
 # Document loaders
 pypdf==5.5.0
@@ -45,7 +43,7 @@ olefile==0.47
 chardet==5.2.0
 
 # MongoDB
-pymongo
+pymongo==4.13.0
 
 # Graph / network (used in graph_rag.py)
 networkx==3.4.2

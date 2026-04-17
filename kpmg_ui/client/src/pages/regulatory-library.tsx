@@ -688,8 +688,24 @@ export default function RegulatoryLibraryPage() {
       formData.append("selected_model", selectedModel);
       libraryFiles.forEach(f => formData.append("regulation_files", f));
       const res = await fetch(`/api/regulatory-library/ingest`, { method: "POST", body: formData });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail?.error || "Ingest failed");
+      const queued = await res.json();
+      if (!res.ok) {
+        const firstDetailedError = Array.isArray(queued.detail?.errors) && queued.detail.errors.length > 0
+          ? `${queued.detail.errors[0].filename}: ${queued.detail.errors[0].error}`
+          : null;
+        throw new Error(firstDetailedError || queued.detail?.error || "Ingest failed");
+      }
+
+      // Poll background task until complete
+      const taskId = queued.task_id;
+      let data: any;
+      while (true) {
+        await new Promise(r => setTimeout(r, 3000));
+        const poll = await fetch(`/api/ingest-task/${taskId}`);
+        const task = await poll.json();
+        if (task.status === "done") { data = task.result; break; }
+        if (task.status === "failed") throw new Error(task.error || "Ingest failed");
+      }
 
       const ingested: any[] = data.ingested || [];
       setLibraryIngestResults(ingested);
@@ -993,7 +1009,7 @@ export default function RegulatoryLibraryPage() {
               id="lib-file-input"
               type="file"
               multiple
-              accept=".pdf,.txt,.md"
+              accept=".pdf,.docx,.doc,.txt,.md,.csv,.xlsx,.xls,.png,.jpg,.jpeg"
               className="hidden"
               onChange={e => {
                 const files = Array.from(e.target.files || []);
@@ -1003,7 +1019,7 @@ export default function RegulatoryLibraryPage() {
             />
             <Upload className="h-6 w-6 mx-auto text-muted-foreground mb-1" />
             <p className="text-xs text-foreground font-medium">Click to browse</p>
-            <p className="text-xs text-muted-foreground">PDF, TXT or MD</p>
+            <p className="text-xs text-muted-foreground">PDF, Word, TXT, MD, CSV, Excel or image</p>
           </div>
 
           {libraryFiles.length > 0 && (

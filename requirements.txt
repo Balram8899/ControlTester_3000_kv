@@ -51,8 +51,7 @@ langchain==0.3.25
 langchain-community==0.3.24
 langchain-core==0.3.61
 langchain-experimental==0.3.4
-langchain-google-genai
-google-generativeai
+langchain-ollama==0.3.3
 langchain-text-splitters==0.3.8
 langchain-unstructured==0.1.6
 langdetect==1.0.9

@@ -15,16 +15,16 @@ from datetime import datetime
 from typing import List, Dict, Optional, Any, Tuple
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain.schema import Document
 
+from utils.document_ingestion import DocumentLoadError, load_documents
 from utils.regulatory_comparision import (
     safe_json_loads,
     CHUNK_SIZE,
     CHUNK_OVERLAP,
     DocumentAnalyzerAgent,
-    _make_llm as _google_make_llm,
 )
+from utils.llm_factory import make_llm
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +66,7 @@ class FrameworkElementExtractorAgent:
         self.kb_graph = kb_graph
 
     def _make_llm(self):
-        return _google_make_llm(self.model, temperature=0.1)
+        return make_llm(self.model, temperature=0.1)
 
     def _get_kb_context(self, batch_text: str) -> str:
         """Retrieve relevant KB context using knowledge graph search."""
@@ -462,21 +462,11 @@ def ingest_framework_document(
 
     # 1. Load document
     try:
-        if file_path.lower().endswith(".pdf"):
-            loader = PyPDFLoader(file_path)
-        elif file_path.lower().endswith((".docx", ".doc")):
-            try:
-                from langchain_community.document_loaders import Docx2txtLoader
-                loader = Docx2txtLoader(file_path)
-            except ImportError:
-                from langchain_community.document_loaders import UnstructuredWordDocumentLoader
-                loader = UnstructuredWordDocumentLoader(file_path)
-        else:
-            loader = TextLoader(file_path)
-        docs = loader.load()
-        for d in docs:
-            d.metadata["source"] = filename
+        docs = load_documents(file_path, filename)
         logger.info(f"[FRAMEWORKS] Loaded {len(docs)} pages from {filename}")
+    except DocumentLoadError as exc:
+        logger.error(f"[FRAMEWORKS] Failed to load {filename}: {exc}")
+        return {"success": False, "source_filename": filename, "error": str(exc)}
     except Exception as exc:
         logger.error(f"[FRAMEWORKS] Failed to load {filename}: {exc}")
         return {"success": False, "source_filename": filename, "error": str(exc)}

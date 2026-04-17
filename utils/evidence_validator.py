@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 _llm_cache = None
 
 def get_llm(model: str):
-    """Lazy load Google Gemini LLM."""
+    """Lazy load the configured Ollama LLM."""
     global _llm_cache
     if _llm_cache is None or _llm_cache[0] != model:
         from utils.llm_chain import _make_llm

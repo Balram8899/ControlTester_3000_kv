@@ -15,9 +15,9 @@ from datetime import datetime
 from typing import List, Dict, Optional, Any, Tuple
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.document_loaders import PyPDFLoader, TextLoader
 
 # Reuse shared utilities from regulatory_comparision
+from utils.document_ingestion import DocumentLoadError, load_documents
 from utils.regulatory_comparision import (
     safe_json_loads,
     classify_domain,
@@ -26,8 +26,8 @@ from utils.regulatory_comparision import (
     CHUNK_OVERLAP,
     GOOGLE_LLM_MODEL,
     DocumentAnalyzerAgent,
-    _make_llm as _google_make_llm,
 )
+from utils.llm_factory import make_llm
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +44,22 @@ OBLIGATION_TYPES = [
     "risk_assessment",
     "audit",
 ]
+
+
+def _clean_llm_json_candidate(text: str) -> str:
+    """Normalize common model wrappers before JSON checks."""
+    if not text:
+        return ""
+    cleaned = text.strip()
+    cleaned = re.sub(r"<think>.*?</think>", "", cleaned, flags=re.DOTALL | re.IGNORECASE).strip()
+    cleaned = re.sub(r"```json|```", "", cleaned, flags=re.IGNORECASE).strip()
+    return cleaned
+
+
+def _is_explicit_empty_array_response(text: str) -> bool:
+    """Return True only when the model explicitly answered with an empty JSON array."""
+    cleaned = _clean_llm_json_candidate(text)
+    return cleaned in {"[]", "[ ]"}
 
 
 # ------------------------------------------------------------------
@@ -70,7 +86,7 @@ class ObligationExtractorAgent:
 
     def _make_llm(self):
         """Each worker thread gets its own LLM instance."""
-        return _google_make_llm(self.model, temperature=0.1)
+        return make_llm(self.model, temperature=0.1)
 
     def _get_kb_context(self, batch_text: str) -> str:
         """Retrieve relevant KB context for a batch. Returns empty string on failure."""
@@ -193,7 +209,9 @@ TEXT:
 Return ONLY the JSON array.
 """
 
-    def _process_batch(self, batch_idx: int, batch_text: str, total_batches: int) -> Tuple[int, List[Dict]]:
+    def _process_batch(
+        self, batch_idx: int, batch_text: str, total_batches: int
+    ) -> Tuple[int, List[Dict], Optional[str]]:
         """Process a single batch. Called from worker threads."""
         logger.info(f"[LIBRARY] Batch {batch_idx + 1}/{total_batches} — LLM call started")
         llm = self._make_llm()
@@ -203,8 +221,10 @@ Return ONLY the JSON array.
         try:
             raw = llm.invoke(prompt)
             parsed = safe_json_loads(raw, default=[])
+            if parsed == [] and raw and not _is_explicit_empty_array_response(raw):
+                raise ValueError("LLM returned output that could not be parsed into an obligations JSON array")
             if not isinstance(parsed, list):
-                parsed = []
+                raise ValueError(f"LLM returned {type(parsed).__name__} instead of a JSON array")
             # Basic cleanup — full renumbering happens in run() after all futures complete
             valid = []
             for obl in parsed:
@@ -221,15 +241,20 @@ Return ONLY the JSON array.
                 obl.setdefault("specificity_level", "general")
                 valid.append(obl)
             logger.info(f"[LIBRARY] Batch {batch_idx + 1}/{total_batches} — {len(valid)} obligations extracted")
-            return batch_idx, valid
+            return batch_idx, valid, None
         except Exception as exc:
             logger.warning(f"[LIBRARY] Batch {batch_idx + 1}/{total_batches} failed: {exc}")
-            return batch_idx, []
+            return batch_idx, [], str(exc)
 
     def run(self, chunks: List) -> List[Dict]:
         # Filter out trivially short chunks
         useful_chunks = [c for c in chunks if len(c.page_content.strip()) >= self.MIN_CHUNK_CHARS]
         logger.info(f"[LIBRARY] {len(useful_chunks)}/{len(chunks)} chunks pass minimum-length filter")
+        if not useful_chunks:
+            raise ValueError(
+                "No usable text chunks were extracted from the document. "
+                "The PDF may be image-based, empty, or not machine-readable."
+            )
 
         # Build batch list
         batches: List[Tuple[int, str]] = []
@@ -243,19 +268,27 @@ Return ONLY the JSON array.
 
         # Run batches in parallel — order preserved via batch_idx
         results: Dict[int, List[Dict]] = {}
+        batch_errors: List[str] = []
         with ThreadPoolExecutor(max_workers=self.MAX_WORKERS) as pool:
             futures = {
                 pool.submit(self._process_batch, idx, text, total_batches): idx
                 for idx, text in batches
             }
             for fut in as_completed(futures):
-                batch_idx, obls = fut.result()
+                batch_idx, obls, error = fut.result()
                 results[batch_idx] = obls
+                if error:
+                    batch_errors.append(f"batch {batch_idx + 1}: {error}")
 
         # Reassemble in original order and assign sequential IDs
         obligations: List[Dict] = []
         for idx in sorted(results):
             obligations.extend(results[idx])
+
+        if batch_errors and not obligations:
+            raise ValueError(
+                "Obligation extraction failed for all batches: " + "; ".join(batch_errors[:3])
+            )
 
         for i, obl in enumerate(obligations, start=1):
             obl["obligation_id"] = f"OBL-{i:03d}"
@@ -431,14 +464,11 @@ def ingest_regulatory_document(
 
     # 1. Load document
     try:
-        if file_path.lower().endswith(".pdf"):
-            loader = PyPDFLoader(file_path)
-        else:
-            loader = TextLoader(file_path)
-        docs = loader.load()
-        for d in docs:
-            d.metadata["source"] = filename
+        docs = load_documents(file_path, filename)
         logger.info(f"[LIBRARY] Loaded {len(docs)} pages from {filename}")
+    except DocumentLoadError as exc:
+        logger.error(f"[LIBRARY] Failed to load {filename}: {exc}")
+        return {"success": False, "source_filename": filename, "error": str(exc)}
     except Exception as exc:
         logger.error(f"[LIBRARY] Failed to load {filename}: {exc}")
         return {"success": False, "source_filename": filename, "error": str(exc)}
@@ -451,6 +481,12 @@ def ingest_regulatory_document(
     )
     chunks = splitter.split_documents(docs)
     logger.info(f"[LIBRARY] {len(chunks)} chunks from {filename}")
+    if not chunks:
+        return {
+            "success": False,
+            "source_filename": filename,
+            "error": "Document text was loaded, but no chunks could be created for obligation extraction.",
+        }
 
     # 3 + 4. Run DocumentAnalyzer and ObligationExtractor concurrently.
     #   DocumentAnalyzer makes 1 LLM call; ObligationExtractor makes N/5 parallel calls.
@@ -475,9 +511,22 @@ def ingest_regulatory_document(
             obligations = obl_future.result()
         except Exception as exc:
             logger.warning(f"[LIBRARY] ObligationExtractor failed for {filename}: {exc}")
-            obligations = []
+            return {
+                "success": False,
+                "source_filename": filename,
+                "error": str(exc),
+            }
 
     logger.info(f"[LIBRARY] Extracted {len(obligations)} obligations from {filename}")
+    if not obligations:
+        return {
+            "success": False,
+            "source_filename": filename,
+            "error": (
+                "No obligations were extracted from the document. "
+                "Review the source text quality and model output for this file."
+            ),
+        }
     framework_name = meta.get("framework_name") or filename
     issuing_authority = meta.get("issuing_authority") or "Unknown"
 
@@ -817,7 +866,7 @@ Unique coverage per document:
 Write a professional, detailed report in markdown format. Be specific — reference actual framework names, domain names, and obligation counts from the data. Avoid generic filler text."""
 
         model = selected_model or GOOGLE_LLM_MODEL
-        llm = _google_make_llm(model, temperature=0.1)
+        llm = make_llm(model, temperature=0.1)
         report = llm.invoke(prompt)
         logger.info(f"[LIBRARY] Gap analysis report generated ({len(report)} chars)")
         return report

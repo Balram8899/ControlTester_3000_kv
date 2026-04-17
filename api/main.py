@@ -5,7 +5,7 @@ Includes session management, conversation memory, and enhanced chat capabilities
 Phase 1 + Phase 2 implementation - FIXED VERSION
 """
 
-from fastapi import FastAPI, File, UploadFile, Form, HTTPException, status
+from fastapi import FastAPI, File, UploadFile, Form, HTTPException, status, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.responses import FileResponse
@@ -19,6 +19,11 @@ import logging
 import traceback
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
+
+# Load .env before any utils imports so OLLAMA_LLM_MODEL etc. are set at module level
+from dotenv import load_dotenv
+load_dotenv()
+
 from utils.audit_session_store import audit_session_store
 from utils.test_script_parser import parse_test_script, validate_controls
 from utils.evidence_validator import validate_evidence_file
@@ -39,6 +44,7 @@ import uuid
 from utils.regulatory_comparision import compare_regulatory_documents, save_analysis_artifacts
 from utils.regulatory_library import ingest_regulatory_document, MongoLibraryStore, merge_similar_obligations
 from utils.controls_library import ingest_controls_document, MongoControlsStore, merge_similar_controls, remap_obligations_for_all
+from utils.document_ingestion import supported_extension_tuple
 from utils.frameworks_library import (
     ingest_framework_document, MongoFrameworksStore, merge_similar_framework_elements,
     build_and_save_library_graph as build_frameworks_graph,
@@ -71,6 +77,34 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
+
+# ----------------------------------------------------------------------------
+# Background Task Store
+# Long-running ingest operations run in the background so HTTP connections
+# don't time out. Frontend polls GET /ingest-task/{task_id} for status.
+# ----------------------------------------------------------------------------
+import threading as _threading
+
+_TASK_STORE: Dict[str, Dict] = {}
+_TASK_LOCK = _threading.Lock()
+
+
+def _create_task(task_id: str, meta: dict = None) -> None:
+    with _TASK_LOCK:
+        _TASK_STORE[task_id] = {"status": "running", "result": None, "error": None, **(meta or {})}
+
+
+def _finish_task(task_id: str, result: dict) -> None:
+    with _TASK_LOCK:
+        if task_id in _TASK_STORE:
+            _TASK_STORE[task_id].update({"status": "done", "result": result, "error": None})
+
+
+def _fail_task(task_id: str, error: str) -> None:
+    with _TASK_LOCK:
+        if task_id in _TASK_STORE:
+            _TASK_STORE[task_id].update({"status": "failed", "error": error, "result": None})
+
 
 class AuditStartResponse(BaseModel):
     session_id: str
@@ -233,6 +267,16 @@ def _req_id() -> str:
     global request_counter
     request_counter += 1
     return f"req_{int(time.time())}_{request_counter}"
+
+
+@app.get("/ingest-task/{task_id}", tags=["tasks"], summary="Poll the status of a background ingest task")
+async def get_ingest_task(task_id: str):
+    with _TASK_LOCK:
+        task = _TASK_STORE.get(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return JSONResponse(task)
+
 
 # ----------------------------------------------------------------------------
 # In-memory Knowledge Graph Cache
@@ -1065,10 +1109,10 @@ async def compare_regulations(
         # Save uploaded files
         for uf in regulation_files:
             # Validate file type
-            if not uf.filename.lower().endswith(('.pdf', '.txt', '.md')):
+            if not uf.filename.lower().endswith(supported_extension_tuple()):
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Unsupported file type: {uf.filename}. Use PDF, TXT, or MD."
+                    detail=f"Unsupported file type: {uf.filename}. Use PDF, DOCX, TXT, MD, CSV, XLSX, XLS, PNG, JPG, or JPEG."
                 )
             
             ext = Path(uf.filename).suffix or ".tmp"
@@ -1512,6 +1556,7 @@ async def delete_rcm_report(report_id: str):
     summary="Upload regulatory documents and extract all obligations into the library",
 )
 async def library_ingest(
+    background_tasks: BackgroundTasks,
     selected_model: str = Form(..., description="LLM model to use"),
     regulation_files: List[UploadFile] = File(..., description="Regulatory documents (PDF, TXT, MD) — up to 10"),
 ):
@@ -1524,32 +1569,36 @@ async def library_ingest(
         raise HTTPException(status_code=400, detail="Maximum 10 files per request")
 
     tmp_paths: List[str] = []
-    # Collect (tmp_path, filename) for valid files; build errors list for invalid ones
     file_jobs: List[tuple] = []
-    errors = []
+    pre_errors = []
 
-    try:
-        # --- Phase 1: read uploads and validate (must be async, so sequential here) ---
-        for uf in regulation_files:
-            if not uf.filename.lower().endswith((".pdf", ".txt", ".md")):
-                errors.append({"filename": uf.filename, "error": "Unsupported file type. Use PDF, TXT, or MD."})
-                continue
+    # --- Phase 1: read & write temp files (async, fast — must happen before returning) ---
+    for uf in regulation_files:
+        if not uf.filename.lower().endswith(supported_extension_tuple()):
+            pre_errors.append({"filename": uf.filename, "error": "Unsupported file type."})
+            continue
+        content = await uf.read()
+        if len(content) == 0:
+            pre_errors.append({"filename": uf.filename, "error": "Empty file"})
+            continue
+        ext = Path(uf.filename).suffix or ".tmp"
+        tmp = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
+        tmp.write(content)
+        tmp.close()
+        tmp_paths.append(tmp.name)
+        file_jobs.append((tmp.name, uf.filename))
+        logger.info(f"[{rid}] Queued for ingest: {uf.filename} ({len(content)} bytes)")
 
-            content = await uf.read()
-            if len(content) == 0:
-                errors.append({"filename": uf.filename, "error": "Empty file"})
-                continue
+    if not file_jobs:
+        raise HTTPException(status_code=422, detail={"error": "No valid files to ingest.", "errors": pre_errors, "request_id": rid})
 
-            ext = Path(uf.filename).suffix or ".tmp"
-            tmp = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
-            tmp.write(content)
-            tmp.close()
-            tmp_paths.append(tmp.name)
-            file_jobs.append((tmp.name, uf.filename))
-            logger.info(f"[{rid}] Queued for ingest: {uf.filename} ({len(content)} bytes)")
+    # --- Phase 2: LLM-bound ingest runs in the background ---
+    _create_task(rid, {"type": "regulatory-ingest", "files": [n for _, n in file_jobs]})
 
-        # --- Phase 2: ingest all files in parallel (each is CPU/LLM-bound) ---
-        kb_g  = GRAPH_CACHE.get("global")
+    def _bg_ingest():
+        errors = list(pre_errors)
+        ingested = []
+        kb_g = GRAPH_CACHE.get("global")
 
         def _ingest(tmp_path: str, filename: str) -> dict:
             return ingest_regulatory_document(
@@ -1560,8 +1609,7 @@ async def library_ingest(
                 kb_graph=kb_g,
             )
 
-        ingested = []
-        if file_jobs:
+        try:
             with ThreadPoolExecutor(max_workers=min(len(file_jobs), 4)) as pool:
                 future_map = {pool.submit(_ingest, p, n): n for p, n in file_jobs}
                 for fut in as_completed(future_map):
@@ -1572,7 +1620,6 @@ async def library_ingest(
                         logger.error(f"[{rid}] Ingest failed for {fname}: {exc}")
                         errors.append({"filename": fname, "error": str(exc)})
                         continue
-
                     if result.get("success"):
                         ingested.append({
                             "document_id": result["document_id"],
@@ -1586,36 +1633,34 @@ async def library_ingest(
                     else:
                         errors.append({"filename": fname, "error": result.get("error", "Unknown error")})
 
-        # Auto-remap: when new regulations are ingested, refresh all existing controls' mapped_obligations
-        _remap_result = {"controls_updated": 0}
-        if ingested:
-            try:
-                _controls_store = MongoControlsStore()
-                _remap_result = remap_obligations_for_all(_controls_store, MongoLibraryStore())
-                logger.info(f"[{rid}] Auto-remap after reg ingest: {_remap_result}")
-            except Exception as _remap_exc:
-                logger.warning(f"[{rid}] Auto-remap after regulation ingest failed (non-fatal): {_remap_exc}")
+            _remap_result = {"controls_updated": 0}
+            if ingested:
+                try:
+                    _remap_result = remap_obligations_for_all(MongoControlsStore(), MongoLibraryStore())
+                    logger.info(f"[{rid}] Auto-remap: {_remap_result}")
+                except Exception as exc:
+                    logger.warning(f"[{rid}] Auto-remap failed (non-fatal): {exc}")
 
-        return JSONResponse({
-            "success": True,
-            "request_id": rid,
-            "ingested": ingested,
-            "errors": errors,
-            "total_ingested": len(ingested),
-            "controls_remapped": _remap_result.get("controls_updated", 0),
-        })
+            _finish_task(rid, {
+                "success": True,
+                "request_id": rid,
+                "ingested": ingested,
+                "errors": errors,
+                "total_ingested": len(ingested),
+                "controls_remapped": _remap_result.get("controls_updated", 0),
+            })
+        except Exception as exc:
+            logger.error(f"[{rid}] Background ingest failed: {exc}\n{traceback.format_exc()}")
+            _fail_task(rid, str(exc))
+        finally:
+            for p in tmp_paths:
+                try:
+                    os.unlink(p)
+                except Exception:
+                    pass
 
-    except HTTPException:
-        raise
-    except Exception as exc:
-        logger.error(f"[{rid}] Library ingest failed: {exc}\n{traceback.format_exc()}")
-        raise HTTPException(status_code=500, detail={"error": str(exc), "request_id": rid})
-    finally:
-        for p in tmp_paths:
-            try:
-                os.unlink(p)
-            except Exception:
-                pass
+    background_tasks.add_task(_bg_ingest)
+    return JSONResponse({"task_id": rid, "status": "running"}, status_code=202)
 
 
 @app.get(
@@ -2025,6 +2070,7 @@ async def library_gap_analysis_pdf(body: GapReportPdfRequest):
     summary="Upload company policy documents and extract controls into the controls library",
 )
 async def controls_library_ingest(
+    background_tasks: BackgroundTasks,
     selected_model: str = Form(..., description="LLM model to use"),
     policy_files: List[UploadFile] = File(..., description="Policy documents (PDF, DOCX, TXT, MD) — up to 10"),
 ):
@@ -2036,30 +2082,34 @@ async def controls_library_ingest(
 
     tmp_paths: List[str] = []
     file_jobs: List[tuple] = []
-    errors = []
+    pre_errors = []
 
-    try:
-        for uf in policy_files:
-            if not uf.filename.lower().endswith((".pdf", ".docx", ".doc", ".txt", ".md", ".xlsx", ".xls", ".csv")):
-                errors.append({"filename": uf.filename, "error": "Unsupported file type. Use PDF, DOCX, TXT, MD, XLSX, or CSV."})
-                continue
+    for uf in policy_files:
+        if not uf.filename.lower().endswith(supported_extension_tuple()):
+            pre_errors.append({"filename": uf.filename, "error": "Unsupported file type."})
+            continue
+        content = await uf.read()
+        if len(content) == 0:
+            pre_errors.append({"filename": uf.filename, "error": "Empty file"})
+            continue
+        ext = Path(uf.filename).suffix or ".tmp"
+        tmp = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
+        tmp.write(content)
+        tmp.close()
+        tmp_paths.append(tmp.name)
+        file_jobs.append((tmp.name, uf.filename))
+        logger.info(f"[{rid}] Queued for controls ingest: {uf.filename} ({len(content)} bytes)")
 
-            content = await uf.read()
-            if len(content) == 0:
-                errors.append({"filename": uf.filename, "error": "Empty file"})
-                continue
+    if not file_jobs:
+        raise HTTPException(status_code=422, detail={"error": "No valid files to ingest.", "errors": pre_errors, "request_id": rid})
 
-            ext = Path(uf.filename).suffix or ".tmp"
-            tmp = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
-            tmp.write(content)
-            tmp.close()
-            tmp_paths.append(tmp.name)
-            file_jobs.append((tmp.name, uf.filename))
-            logger.info(f"[{rid}] Queued for controls ingest: {uf.filename} ({len(content)} bytes)")
+    _create_task(rid, {"type": "controls-ingest", "files": [n for _, n in file_jobs]})
 
-        # Provide the regulatory store so controls get mapped to obligations
+    def _bg_ingest():
+        errors = list(pre_errors)
+        ingested = []
         reg_store = MongoLibraryStore()
-        kb_g  = GRAPH_CACHE.get("global")
+        kb_g = GRAPH_CACHE.get("global")
 
         def _ingest(tmp_path: str, filename: str) -> dict:
             return ingest_controls_document(
@@ -2071,8 +2121,7 @@ async def controls_library_ingest(
                 kb_graph=kb_g,
             )
 
-        ingested = []
-        if file_jobs:
+        try:
             with ThreadPoolExecutor(max_workers=min(len(file_jobs), 8)) as pool:
                 future_map = {pool.submit(_ingest, p, n): n for p, n in file_jobs}
                 for fut in as_completed(future_map):
@@ -2083,7 +2132,6 @@ async def controls_library_ingest(
                         logger.error(f"[{rid}] Controls ingest failed for {fname}: {exc}")
                         errors.append({"filename": fname, "error": str(exc)})
                         continue
-
                     if result.get("success"):
                         ingested.append({
                             "document_id": result["document_id"],
@@ -2095,36 +2143,33 @@ async def controls_library_ingest(
                     else:
                         errors.append({"filename": fname, "error": result.get("error", "Unknown error")})
 
-        # Compute cross-doc merged count for response metadata
-        merged_count = 0
-        try:
-            ctrl_store = MongoControlsStore()
-            all_ctrls = ctrl_store.all_controls()
-            merged = merge_similar_controls(all_ctrls)
-            merged_count = len(merged)
-        except Exception as exc:
-            logger.warning(f"[{rid}] Merge count computation failed (non-fatal): {exc}")
-
-        return JSONResponse({
-            "success": True,
-            "request_id": rid,
-            "ingested": ingested,
-            "errors": errors,
-            "total_ingested": len(ingested),
-            "merged_count": merged_count,
-        })
-
-    except HTTPException:
-        raise
-    except Exception as exc:
-        logger.error(f"[{rid}] Controls library ingest failed: {exc}\n{traceback.format_exc()}")
-        raise HTTPException(status_code=500, detail={"error": str(exc), "request_id": rid})
-    finally:
-        for p in tmp_paths:
+            merged_count = 0
             try:
-                os.unlink(p)
-            except Exception:
-                pass
+                all_ctrls = MongoControlsStore().all_controls()
+                merged_count = len(merge_similar_controls(all_ctrls))
+            except Exception as exc:
+                logger.warning(f"[{rid}] Merge count failed (non-fatal): {exc}")
+
+            _finish_task(rid, {
+                "success": True,
+                "request_id": rid,
+                "ingested": ingested,
+                "errors": errors,
+                "total_ingested": len(ingested),
+                "merged_count": merged_count,
+            })
+        except Exception as exc:
+            logger.error(f"[{rid}] Background controls ingest failed: {exc}\n{traceback.format_exc()}")
+            _fail_task(rid, str(exc))
+        finally:
+            for p in tmp_paths:
+                try:
+                    os.unlink(p)
+                except Exception:
+                    pass
+
+    background_tasks.add_task(_bg_ingest)
+    return JSONResponse({"task_id": rid, "status": "running"}, status_code=202)
 
 
 @app.get(
@@ -2266,6 +2311,7 @@ async def controls_get_merged():
     summary="Upload and extract framework elements from one or more framework documents",
 )
 async def frameworks_ingest(
+    background_tasks: BackgroundTasks,
     selected_model: str = Form(...),
     framework_files: List[UploadFile] = File(...),
 ):
@@ -2274,50 +2320,64 @@ async def frameworks_ingest(
     if len(framework_files) > 10:
         raise HTTPException(status_code=400, detail="Maximum 10 files per request")
 
-    ALLOWED_EXT = {".pdf", ".docx", ".doc", ".txt", ".md"}
-    results = []
+    rid = _req_id()
+    ALLOWED_EXT = set(supported_extension_tuple())
+    file_jobs: List[tuple] = []
+    pre_results = []
 
     for upload in framework_files:
         ext = Path(upload.filename).suffix.lower()
         if ext not in ALLOWED_EXT:
-            results.append({
-                "success": False,
-                "source_filename": upload.filename,
-                "error": f"Unsupported file type: {ext}",
-            })
+            pre_results.append({"success": False, "source_filename": upload.filename, "error": f"Unsupported file type: {ext}"})
             continue
+        content = await upload.read()
+        tmp = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
+        tmp.write(content)
+        tmp.close()
+        file_jobs.append((tmp.name, upload.filename))
 
-        tmp = None
+    if not file_jobs:
+        raise HTTPException(status_code=422, detail={"error": "No valid files to ingest.", "results": pre_results})
+
+    _create_task(rid, {"type": "frameworks-ingest", "files": [n for _, n in file_jobs]})
+
+    def _bg_ingest():
+        results = list(pre_results)
+        kb_g = GRAPH_CACHE.get("global")
         try:
-            tmp = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
-            tmp.write(await upload.read())
-            tmp.close()
+            for tmp_path, filename in file_jobs:
+                try:
+                    result = ingest_framework_document(
+                        file_path=tmp_path,
+                        filename=filename,
+                        selected_model=selected_model,
+                        kb_vectorstore=None,
+                        kb_graph=kb_g,
+                    )
+                    results.append(result)
+                except Exception as exc:
+                    logger.error(f"Frameworks ingest failed for {filename}: {exc}")
+                    results.append({"success": False, "source_filename": filename, "error": str(exc)})
+                finally:
+                    try:
+                        os.unlink(tmp_path)
+                    except Exception:
+                        pass
 
-            kb_g = GRAPH_CACHE.get("global")
-
-            result = ingest_framework_document(
-                file_path=tmp.name,
-                filename=upload.filename,
-                selected_model=selected_model,
-                kb_vectorstore=None,
-                kb_graph=kb_g,
-            )
-            results.append(result)
+            succeeded = sum(1 for r in results if r.get("success"))
+            _finish_task(rid, {
+                "success": succeeded > 0,
+                "processed": len(results),
+                "succeeded": succeeded,
+                "failed": len(results) - succeeded,
+                "results": results,
+            })
         except Exception as exc:
-            logger.error(f"Frameworks ingest failed for {upload.filename}: {exc}")
-            results.append({"success": False, "source_filename": upload.filename, "error": str(exc)})
-        finally:
-            if tmp and os.path.exists(tmp.name):
-                os.unlink(tmp.name)
+            logger.error(f"[{rid}] Background frameworks ingest failed: {exc}\n{traceback.format_exc()}")
+            _fail_task(rid, str(exc))
 
-    succeeded = sum(1 for r in results if r.get("success"))
-    return JSONResponse({
-        "success": succeeded > 0,
-        "processed": len(results),
-        "succeeded": succeeded,
-        "failed": len(results) - succeeded,
-        "results": results,
-    })
+    background_tasks.add_task(_bg_ingest)
+    return JSONResponse({"task_id": rid, "status": "running"}, status_code=202)
 
 
 @app.get(

@@ -11,8 +11,7 @@ export default function FileUploadBarExample() {
     <FileUploadBar
       files={mockFiles}
       onRemoveFile={(index) => console.log("Remove file at index:", index)}
-      onTodAction={() => console.log("TOD action triggered")}
-      onToeAction={() => console.log("TOE action triggered")}
+      onClearAll={() => console.log("Clear all files")}
     />
   );
 }

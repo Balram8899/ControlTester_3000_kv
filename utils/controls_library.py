@@ -15,16 +15,16 @@ from datetime import datetime
 from typing import List, Dict, Optional, Any, Tuple
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.document_loaders import PyPDFLoader, TextLoader
 
+from utils.document_ingestion import DocumentLoadError, load_documents
 from utils.regulatory_comparision import (
     safe_json_loads,
     classify_domain,
     CONTROL_DOMAINS,
     CHUNK_SIZE,
     CHUNK_OVERLAP,
-    _make_llm as _google_make_llm,
 )
+from utils.llm_factory import make_llm
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ class ControlExtractorAgent:
         self.kb_graph = kb_graph
 
     def _make_llm(self):
-        return _google_make_llm(self.model, temperature=0.1)
+        return make_llm(self.model, temperature=0.1)
 
     def _get_kb_context(self, batch_text: str) -> str:
         """Retrieve relevant KB context using knowledge graph search."""
@@ -693,30 +693,15 @@ def ingest_controls_document(
     # 1. Load document
     try:
         fp_lower = file_path.lower()
-        if fp_lower.endswith(".pdf"):
-            loader = PyPDFLoader(file_path)
-            docs = loader.load()
-        elif fp_lower.endswith((".docx", ".doc")):
-            try:
-                from langchain_community.document_loaders import Docx2txtLoader
-                loader = Docx2txtLoader(file_path)
-            except ImportError:
-                from langchain_community.document_loaders import UnstructuredWordDocumentLoader
-                loader = UnstructuredWordDocumentLoader(file_path)
-            docs = loader.load()
-        elif fp_lower.endswith((".xlsx", ".xls")):
+        if fp_lower.endswith((".xlsx", ".xls")):
             # Structured Excel — bypass LLM, use Excel reference IDs directly
             return _ingest_rcm_excel_direct(file_path, filename, selected_model, regulatory_store)
-        elif fp_lower.endswith(".csv"):
-            from langchain_community.document_loaders import CSVLoader
-            loader = CSVLoader(file_path)
-            docs = loader.load()
         else:
-            loader = TextLoader(file_path)
-            docs = loader.load()
-        for d in docs:
-            d.metadata["source"] = filename
+            docs = load_documents(file_path, filename)
         logger.info(f"[CONTROLS] Loaded {len(docs)} pages from {filename}")
+    except DocumentLoadError as exc:
+        logger.error(f"[CONTROLS] Failed to load {filename}: {exc}")
+        return {"success": False, "source_filename": filename, "error": str(exc)}
     except Exception as exc:
         logger.error(f"[CONTROLS] Failed to load {filename}: {exc}")
         return {"success": False, "source_filename": filename, "error": str(exc)}

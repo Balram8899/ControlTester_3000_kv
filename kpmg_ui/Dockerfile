@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.7
 # Multi-stage build for Agent-Assess application
 FROM node:20-alpine AS base
 
@@ -9,7 +10,8 @@ WORKDIR /kpmg_ui
 COPY package.json package-lock.json* ./
 
 # Install dependencies
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci
 
 # Builder stage
 FROM base AS builder
@@ -34,9 +36,6 @@ WORKDIR /kpmg_ui
 # Set production environment
 ENV NODE_ENV=production
 
-# Install curl for healthcheck
-RUN apk add --no-cache curl
-
 # Copy package.json for npm start command
 COPY --from=builder /kpmg_ui/package.json ./
 
@@ -46,7 +45,8 @@ COPY --from=builder /kpmg_ui/dist ./dist
 # Copy shared types/schemas (may be referenced by server bundle)
 COPY --from=builder /kpmg_ui/shared ./shared
 
-# Copy production dependencies only
+# Copy runtime dependencies. We intentionally keep the full install here
+# because the server bundle still touches Vite-side modules at runtime.
 COPY --from=deps /kpmg_ui/node_modules ./node_modules
 
 # Create directories for vectorstore data

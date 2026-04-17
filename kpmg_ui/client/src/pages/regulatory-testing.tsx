@@ -84,6 +84,16 @@ export default function RegulatoryTestingPage() {
   } = useDropzone({
     onDrop: onDropRegulations,
     multiple: true,
+    accept: {
+      "application/pdf": [".pdf"],
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+      "application/msword": [".doc"],
+      "text/plain": [".txt", ".md", ".csv"],
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+      "application/vnd.ms-excel": [".xls"],
+      "image/png": [".png"],
+      "image/jpeg": [".jpg", ".jpeg"],
+    },
   });
 
   const {
@@ -330,7 +340,7 @@ export default function RegulatoryTestingPage() {
                           Drag & drop regulation files here
                         </p>
                         <p className="text-muted-foreground text-sm mt-1">
-                          or click to browse (PDF, DOCX, TXT)
+                          or click to browse (PDF, DOCX, TXT, MD, CSV, Excel, image)
                         </p>
                       </>
                     )}

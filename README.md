@@ -1,5 +1,11 @@
+## Local Ollama setup
 
-uv pip freeze > requirements.txt
+1. Make sure Ollama is running on Windows and pull the models you want to use:
+   `ollama pull llama3:8b`
+   `ollama pull nomic-embed-text:latest`
+2. Copy `.env.example` to `.env` and adjust values if needed.
+3. Start the app stack with Docker Desktop:
+   `docker compose up --build`
 
-https://collabnix.com/getting-started-with-ollama-and-docker/
-docker exec -it ollama ollama pull OLLAMA_LLM
+The API container is configured to reach your host Ollama instance at
+`http://host.docker.internal:11434` by default.

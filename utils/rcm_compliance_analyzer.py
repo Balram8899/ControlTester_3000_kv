@@ -20,13 +20,15 @@ from pathlib import Path
 import logging
 from datetime import datetime
 
+from utils.document_ingestion import DocumentLoadError, load_documents as load_generic_documents
+
 logger = logging.getLogger(__name__)
 
 # Lazy load LLM
 _llm_cache = None
 
 def get_llm(model: str):
-    """Lazy load Google Gemini LLM."""
+    """Lazy load the configured Ollama LLM."""
     global _llm_cache
     if _llm_cache is None or _llm_cache[0] != model:
         from utils.llm_chain import _make_llm
@@ -50,27 +52,12 @@ def load_document(file_path: str, filename: str = None) -> List[Any]:
     Returns:
         List of loaded documents with page_content attribute
     """
-    from langchain_community.document_loaders import (
-        PyPDFLoader, TextLoader, UnstructuredMarkdownLoader, CSVLoader
-    )
     from langchain.schema import Document
     
     ext = Path(file_path).suffix.lower()
     
     try:
-        if ext == '.pdf':
-            loader = PyPDFLoader(file_path)
-            return loader.load()
-        elif ext == '.txt':
-            loader = TextLoader(file_path)
-            return loader.load()
-        elif ext == '.md':
-            loader = UnstructuredMarkdownLoader(file_path)
-            return loader.load()
-        elif ext == '.csv':
-            loader = CSVLoader(file_path)
-            return loader.load()
-        elif ext in ['.xlsx', '.xls']:
+        if ext in ['.xlsx', '.xls']:
             # For Excel files, parse as RCM and create Document objects
             logger.info(f"Loading Excel file as RCM: {file_path}")
             
@@ -114,8 +101,11 @@ Sheet: {sheet_name}"""
                     metadata={'source': filename or file_path, 'type': 'excel', 'error': str(e)}
                 )]
         else:
-            raise ValueError(f"Unsupported file type: {ext}")
+            return load_generic_documents(file_path, filename or file_path)
         
+    except DocumentLoadError as e:
+        logger.error(f"Failed to load document {file_path}: {e}")
+        raise
     except Exception as e:
         logger.error(f"Failed to load document {file_path}: {e}")
         raise
@@ -1125,22 +1115,12 @@ def analyze_rcm_compliance(
 
         regulatory_obligations = []
 
-        from langchain_community.document_loaders import (
-            PyPDFLoader, TextLoader, UnstructuredMarkdownLoader
-        )
-
         for reg_doc_path in regulatory_docs:
-
-            ext = Path(reg_doc_path).suffix.lower()
-
-            if ext == ".pdf":
-                loader = PyPDFLoader(reg_doc_path)
-            elif ext in [".txt", ".md"]:
-                loader = TextLoader(reg_doc_path)
-            else:
+            try:
+                docs = load_generic_documents(reg_doc_path, Path(reg_doc_path).name)
+            except DocumentLoadError as exc:
+                logger.warning(f"Skipping unreadable regulatory document {reg_doc_path}: {exc}")
                 continue
-
-            docs = loader.load()
 
             full_text = "\n".join([d.page_content for d in docs])[:12000]
 

@@ -344,8 +344,20 @@ export default function FrameworksLibraryPage() {
       formData.append("selected_model", selectedModel);
       uploadFiles.forEach(f => formData.append("framework_files", f));
       const res = await fetch("/api/frameworks-library/ingest", { method: "POST", body: formData });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail?.error || "Ingest failed");
+      const queued = await res.json();
+      if (!res.ok) throw new Error(queued.detail?.error || "Ingest failed");
+
+      // Poll background task until complete
+      const taskId = queued.task_id;
+      let data: any;
+      while (true) {
+        await new Promise(r => setTimeout(r, 3000));
+        const poll = await fetch(`/api/ingest-task/${taskId}`);
+        const task = await poll.json();
+        if (task.status === "done") { data = task.result; break; }
+        if (task.status === "failed") throw new Error(task.error || "Ingest failed");
+      }
+
       setUploadFiles([]);
       await fetchDocs();
       const failed = data.results?.filter((r: any) => !r.success) ?? [];
@@ -460,7 +472,7 @@ export default function FrameworksLibraryPage() {
 
   // ── Drag-and-drop ─────────────────────────────────────────────────────────────
 
-  const ACCEPTED = [".pdf", ".docx", ".doc", ".txt", ".md"];
+  const ACCEPTED = [".pdf", ".docx", ".doc", ".txt", ".md", ".csv", ".xlsx", ".xls", ".png", ".jpg", ".jpeg"];
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -525,12 +537,12 @@ export default function FrameworksLibraryPage() {
                 <p className="text-xs text-muted-foreground">
                   Drop framework files or <span className="text-primary underline">browse</span>
                 </p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">PDF, DOCX, TXT, MD</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">PDF, DOCX, TXT, MD, CSV, Excel, image</p>
                 <input
                   id="fw-file-input"
                   type="file"
                   multiple
-                  accept=".pdf,.docx,.doc,.txt,.md"
+                  accept=".pdf,.docx,.doc,.txt,.md,.csv,.xlsx,.xls,.png,.jpg,.jpeg"
                   className="hidden"
                   onChange={e => {
                     const files = Array.from(e.target.files ?? []);

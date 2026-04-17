@@ -7,11 +7,16 @@ from typing import List, Dict, Tuple, Optional
 from collections import defaultdict
 from datetime import datetime
 
-from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
-from langchain_core.output_parsers import StrOutputParser
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from sklearn.metrics.pairwise import cosine_similarity
+
+from utils.document_ingestion import DocumentLoadError, load_documents
+from utils.llm_chain import (
+    OLLAMA_LLM_MODEL,
+    OLLAMA_EMBEDDING_MODEL,
+    _make_llm,
+    _make_embeddings,
+)
 
 
 # ------------------------------------------------------------------
@@ -20,25 +25,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 SIM_THRESHOLD = 0.68  # Lowered slightly for better grouping
 CHUNK_SIZE = 3000     # Increased for better context
 CHUNK_OVERLAP = 600   # Increased overlap
-GOOGLE_LLM_MODEL = os.getenv('GOOGLE_LLM_MODEL', 'gemini-3-flash-preview')
-GOOGLE_EMBEDDING_MODEL = os.getenv('GOOGLE_EMBEDDING_MODEL', 'models/text-embedding-004')
-
-
-def _make_llm(model: str | None = None, temperature: float = 0.1):
-    """Return a string-producing LLM (drop-in for OllamaLLM / Ollama)."""
-    return ChatGoogleGenerativeAI(
-        model=model or GOOGLE_LLM_MODEL,
-        google_api_key=os.getenv("GOOGLE_API_KEY"),
-        temperature=temperature,
-    ) | StrOutputParser()
-
-
-def _make_embeddings(model: str | None = None):
-    """Return a GoogleGenerativeAIEmbeddings instance (drop-in for OllamaEmbeddings)."""
-    return GoogleGenerativeAIEmbeddings(
-        model=model or GOOGLE_EMBEDDING_MODEL,
-        google_api_key=os.getenv("GOOGLE_API_KEY"),
-    )
+GOOGLE_LLM_MODEL = OLLAMA_LLM_MODEL
+GOOGLE_EMBEDDING_MODEL = OLLAMA_EMBEDDING_MODEL
 
 # Control domain taxonomy - expanded to match analysis
 CONTROL_DOMAINS = {
@@ -810,12 +798,12 @@ def compare_regulatory_documents(
     docs = []
     for path, name in zip(file_paths, filenames):
         try:
-            loader = PyPDFLoader(path) if path.endswith(".pdf") else TextLoader(path)
-            loaded = loader.load()
-            for d in loaded:
-                d.metadata["source"] = name
+            loaded = load_documents(path, name)
             docs.extend(loaded)
             print(f"[INFO] Loaded {len(loaded)} pages from {name}")
+        except DocumentLoadError as e:
+            print(f"[ERROR] Failed to load {name}: {e}")
+            continue
         except Exception as e:
             print(f"[ERROR] Failed to load {name}: {e}")
             continue

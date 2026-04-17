@@ -615,8 +615,19 @@ export default function ControlsLibraryPage() {
       formData.append("selected_model", selectedModel);
       uploadFiles.forEach(f => formData.append("policy_files", f));
       const res = await fetch("/api/controls-library/ingest", { method: "POST", body: formData });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail?.error || "Ingest failed");
+      const queued = await res.json();
+      if (!res.ok) throw new Error(queued.detail?.error || "Ingest failed");
+
+      // Poll background task until complete
+      const taskId = queued.task_id;
+      let data: any;
+      while (true) {
+        await new Promise(r => setTimeout(r, 3000));
+        const poll = await fetch(`/api/ingest-task/${taskId}`);
+        const task = await poll.json();
+        if (task.status === "done") { data = task.result; break; }
+        if (task.status === "failed") throw new Error(task.error || "Ingest failed");
+      }
 
       const ingested: any[] = data.ingested || [];
       setIngestResults(ingested);
@@ -887,7 +898,7 @@ export default function ControlsLibraryPage() {
               id="ctrl-file-input"
               type="file"
               multiple
-              accept=".pdf,.docx,.doc,.txt,.md,.xlsx,.xls,.csv"
+              accept=".pdf,.docx,.doc,.txt,.md,.xlsx,.xls,.csv,.png,.jpg,.jpeg"
               className="hidden"
               onChange={e => {
                 const files = Array.from(e.target.files || []);
@@ -897,7 +908,7 @@ export default function ControlsLibraryPage() {
             />
             <Upload className="h-6 w-6 mx-auto text-muted-foreground mb-1" />
             <p className="text-xs text-foreground font-medium">Click to browse</p>
-            <p className="text-xs text-muted-foreground">PDF, DOCX, TXT, MD, XLSX or CSV</p>
+            <p className="text-xs text-muted-foreground">PDF, Word, TXT, MD, Excel, CSV or image</p>
           </div>
 
           {uploadFiles.length > 0 && (

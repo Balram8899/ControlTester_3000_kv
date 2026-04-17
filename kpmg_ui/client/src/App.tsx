@@ -17,6 +17,7 @@ import LoginPage from "@/pages/login";
 import ChatPage from "@/pages/chat";
 import SettingsPage from "@/pages/settings";
 import EvidenceAssessmentPage from "@/pages/evidence-assessment";
+import RiskAssessmentPage from "@/pages/risk-assessment";
 import ControlTestingPage from "@/pages/control-testing";
 import RegulatoryTestingPage from "@/pages/regulatory-testing";
 import RegulatoryLibraryPage from "@/pages/regulatory-library";
@@ -29,6 +30,7 @@ import ExceptionManagementPage from "@/pages/exception-management";
 import LandingPage from "@/pages/landing";
 import AssetRegistryPage from "@/pages/asset-registry";
 import { AssetRegistryProvider } from "@/contexts/AssetRegistryContext";
+import { RiskAssessmentProvider } from "@/contexts/RiskAssessmentContext";
 
 // All pages are kept permanently mounted and CSS-hidden when inactive.
 // This prevents remount on every tab switch, so useEffect runs only once per
@@ -37,6 +39,7 @@ const PAGES = [
   { path: "/",                     Page: DashboardPage           },
   { path: "/regulatory-testing",   Page: RegulatoryTestingPage   },
   { path: "/reports",              Page: ReportsPage             },
+  { path: "/risk-assessment",      Page: RiskAssessmentPage      },
   { path: "/evidence-assessment",  Page: EvidenceAssessmentPage  },
   { path: "/control-testing",      Page: ControlTestingPage      },
   { path: "/chat",                 Page: ChatPage                },
@@ -98,8 +101,10 @@ function App() {
                     <CrossNavProvider>
                       <LibraryMetricsProvider>
                         <AssetRegistryProvider>
-                          <Toaster />
-                          <Router />
+                          <RiskAssessmentProvider>
+                            <Toaster />
+                            <Router />
+                          </RiskAssessmentProvider>
                         </AssetRegistryProvider>
                       </LibraryMetricsProvider>
                     </CrossNavProvider>

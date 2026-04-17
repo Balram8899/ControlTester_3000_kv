@@ -1,9 +1,10 @@
 import time
-from utils.file_handlers import save_and_load_files
+from utils.document_ingestion import DocumentLoadError, load_documents
+from utils.file_handlers import infer_control_domain, infer_doc_category
 from utils.assessment_schema import Assessment
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langchain_core.output_parsers import StrOutputParser
 import logging
 from langchain.schema import Document
@@ -20,46 +21,37 @@ from typing import Optional
 
 warnings.filterwarnings("ignore", category=UserWarning, module="openpyxl")
 
-GOOGLE_LLM_MODEL = os.getenv('GOOGLE_LLM_MODEL', 'gemini-3-flash-preview')
-GOOGLE_EMBEDDING_MODEL = os.getenv('GOOGLE_EMBEDDING_MODEL', 'gemini-embedding-001')
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+OLLAMA_LLM_MODEL = os.getenv("OLLAMA_LLM_MODEL", "llama3:8b")
+OLLAMA_EMBEDDING_MODEL = os.getenv("OLLAMA_EMBEDDING_MODEL", "nomic-embed-text:latest")
 
-# Maps Gemini LLM model names to their corresponding embedding model.
-# Gemini chat models don't support embedContent, so we map them to a
-# dedicated embedding model from the same generation.
-_LLM_TO_EMBEDDING: dict[str, str] = {
-    "gemini-2.0-flash":        "gemini-embedding-001",
-    "gemini-2.0-flash-lite":   "gemini-embedding-001",
-    "gemini-3-flash-preview":  "gemini-embedding-001",
-    "gemini-1.5-pro":          "gemini-embedding-001",
-    "gemini-1.5-flash":        "gemini-embedding-001",
-}
+# Backward-compatible aliases for older imports across the codebase.
+GOOGLE_LLM_MODEL = OLLAMA_LLM_MODEL
+GOOGLE_EMBEDDING_MODEL = OLLAMA_EMBEDDING_MODEL
 
 
 def _resolve_embedding_model(selected_model: str | None) -> str:
     """Return the embedding model to use for a given LLM selection."""
-    if selected_model:
-        # If the caller passed an actual embedding model name, use it directly.
-        if "embed" in selected_model.lower():
-            return selected_model
-        # Otherwise map the LLM model to its embedding counterpart.
-        return _LLM_TO_EMBEDDING.get(selected_model, GOOGLE_EMBEDDING_MODEL)
-    return GOOGLE_EMBEDDING_MODEL
+    if selected_model and "embed" in selected_model.lower():
+        return selected_model
+    return OLLAMA_EMBEDDING_MODEL
 
 
 def _make_llm(model: str | None = None, temperature: float = 0.1):
-    """Return a string-producing LLM (drop-in for OllamaLLM)."""
-    return ChatGoogleGenerativeAI(
-        model=model or GOOGLE_LLM_MODEL,
-        google_api_key=os.getenv("GOOGLE_API_KEY"),
+    """Return a string-producing Ollama chat model."""
+    return ChatOllama(
+        model=model or OLLAMA_LLM_MODEL,
+        base_url=OLLAMA_BASE_URL,
         temperature=temperature,
+        keep_alive="30m",
     ) | StrOutputParser()
 
 
 def _make_embeddings(model: str | None = None):
-    """Return GoogleGenerativeAIEmbeddings (drop-in for OllamaEmbeddings)."""
-    return GoogleGenerativeAIEmbeddings(
-        model=model or GOOGLE_EMBEDDING_MODEL,
-        google_api_key=os.getenv("GOOGLE_API_KEY"),
+    """Return Ollama embeddings."""
+    return OllamaEmbeddings(
+        model=model or OLLAMA_EMBEDDING_MODEL,
+        base_url=OLLAMA_BASE_URL,
     )
 
 logging.basicConfig(
@@ -123,7 +115,35 @@ def build_knowledge_base(
     start = time.time()
     all_documents = []
 
-    docs = save_and_load_files(files, source)
+    docs = []
+    for file in files:
+        temp_path = None
+        try:
+            suffix = "." + file.name.split(".")[-1]
+            import tempfile
+
+            temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+            temp_file.write(file.read())
+            temp_file.close()
+            temp_path = temp_file.name
+            docs.extend(
+                load_documents(
+                    temp_path,
+                    getattr(file, "name", temp_path),
+                    extra_metadata={
+                        "file_name": getattr(file, "name", temp_path),
+                        "file_type": suffix.replace(".", "").upper(),
+                        "source": source,
+                        "doc_category": infer_doc_category(getattr(file, "name", temp_path)),
+                        "control_domain": infer_control_domain(getattr(file, "name", temp_path)),
+                    },
+                )
+            )
+        except DocumentLoadError as exc:
+            logger.warning(f"Skipping unreadable file in knowledge base build: {exc}")
+        finally:
+            if temp_path and os.path.exists(temp_path):
+                os.unlink(temp_path)
 
     for i, doc in enumerate(docs):
         try:

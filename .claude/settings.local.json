@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__plugin_context-mode_context-mode__ctx_execute_file",
+      "mcp__plugin_context-mode_context-mode__ctx_search",
+      "mcp__plugin_context-mode_context-mode__ctx_index",
+      "Bash(python -m pytest tests/test_risk_scorer.py -v)",
+      "Bash(git config:*)",
+      "mcp__plugin_context-mode_context-mode__ctx_batch_execute",
+      "mcp__plugin_context-mode_context-mode__ctx_execute",
+      "Bash(python -m pytest tests/test_assets_api.py -v)",
+      "Bash(python -m pytest tests/test_assets_api.py::test_create_asset_returns_201 -v)",
+      "Bash(pip install:*)",
+      "Bash(python -m pytest tests/ -v)",
+      "Bash(python -m pytest tests/test_assets_api.py::test_suggest_controls_returns_suggestions -v)",
+      "Bash(npm run:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm install:*)",
+      "Bash(pip show:*)",
+      "Bash(python -c \"from utils.assessment_questions import get_questions; from api.routers.risk_assessment import RiskAssessment; print\\('OK'\\)\")",
+      "Bash(python -c \"import sys; print\\(sys.version\\); from typing import List; x: List[dict] = []; print\\('ok'\\)\")",
+      "Bash(python -c \"from api.main import app; risk_routes = [r.path for r in app.routes if 'risk' in r.path.lower\\(\\)]; print\\('Risk assessment routes registered:', risk_routes if risk_routes else 'Routes found \\(checking...\\)'\\); print\\('Total routes:', len\\(app.routes\\)\\)\")",
+      "Bash(python -c \"from api.routers.risk_assessment import router; print\\('OK'\\)\")",
+      "Bash(docker exec *)",
+      "Bash(nvidia-smi --query-gpu=name,memory.total,driver_version,compute_cap --format=csv,noheader)",
+      "mcp__plugin_socraticode_socraticode__codebase_health",
+      "mcp__plugin_socraticode_socraticode__codebase_index",
+      "mcp__plugin_socraticode_socraticode__codebase_status",
+      "mcp__plugin_socraticode_socraticode__codebase_search"
+    ]
+  }
+}

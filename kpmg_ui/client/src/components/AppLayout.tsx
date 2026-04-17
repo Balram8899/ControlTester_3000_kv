@@ -24,6 +24,7 @@ export const HIDEABLE_TABS = [
   { title: "Frameworks Lib.", fullTitle: "Frameworks Library",   path: "/frameworks-library",   icon: BookOpen    },
   { title: "Reg. Testing",    fullTitle: "Regulatory Testing",   path: "/regulatory-testing",   icon: Scale       },
   { title: "Reports",         fullTitle: "RCM Reports",          path: "/reports",              icon: FileBarChart },
+  { title: "Risk Assess.",    fullTitle: "Risk Assessment",      path: "/risk-assessment",      icon: FileSearch  },
   { title: "Final Report",    fullTitle: "Final Report",         path: "/evidence-assessment",  icon: FileSearch  },
   { title: "Control Testing", fullTitle: "AI Control Testing",   path: "/control-testing",      icon: TestTube    },
   { title: "Chat",            fullTitle: "AI Chat",              path: "/chat",                 icon: MessageSquare },
