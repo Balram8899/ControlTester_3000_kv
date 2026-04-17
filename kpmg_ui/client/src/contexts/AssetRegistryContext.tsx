@@ -1,7 +1,6 @@
 // kpmg_ui/client/src/contexts/AssetRegistryContext.tsx
 import { createContext, useContext, useState, useCallback, ReactNode } from "react";
 
-export type CIALevel = "low" | "medium" | "high";
 export type AssetType = "IT" | "Data" | "Process" | "Vendor";
 
 export interface Asset {
@@ -9,9 +8,9 @@ export interface Asset {
   name: string;
   type: AssetType;
   description: string;
-  confidentiality: CIALevel;
-  integrity: CIALevel;
-  availability: CIALevel;
+  confidentiality_score: number;
+  integrity_score: number;
+  availability_score: number;
   cia_score: number;
   criticality: "Critical" | "High" | "Medium" | "Low";
   assessment_periodicity: "Quarterly" | "Semi-Annual" | "Annual";
@@ -31,9 +30,9 @@ export interface AssetCreate {
   name: string;
   type: AssetType;
   description: string;
-  confidentiality: CIALevel;
-  integrity: CIALevel;
-  availability: CIALevel;
+  confidentiality_score: number;
+  integrity_score: number;
+  availability_score: number;
   owner: string;
   custodian: string;
   location: "On-premise" | "Cloud" | "Hybrid";

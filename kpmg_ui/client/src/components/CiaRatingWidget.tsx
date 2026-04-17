@@ -2,36 +2,52 @@
 import { Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-type CIALevel = "low" | "medium" | "high";
+type CIADimension = "confidentiality_score" | "integrity_score" | "availability_score";
 
-const LEVELS: CIALevel[] = ["low", "medium", "high"];
-
-const ACTIVE: Record<CIALevel, string> = {
-  low:    "bg-emerald-100 border-emerald-400 text-emerald-700 font-semibold",
-  medium: "bg-amber-100 border-amber-400 text-amber-700 font-semibold",
-  high:   "bg-red-100 border-red-400 text-red-700 font-semibold",
+const SCORE_STYLE: Record<number, string> = {
+  1: "bg-emerald-100 border-emerald-400 text-emerald-700 font-semibold",
+  2: "bg-lime-100    border-lime-400    text-lime-700    font-semibold",
+  3: "bg-amber-100   border-amber-400   text-amber-700   font-semibold",
+  4: "bg-orange-100  border-orange-400  text-orange-700  font-semibold",
+  5: "bg-red-100     border-red-400     text-red-700     font-semibold",
 };
 
-const GUIDANCE: Record<string, Record<CIALevel, string>> = {
+const GUIDANCE: Record<string, Record<number, string>> = {
   Confidentiality: {
-    low:    "Disclosure causes no or minimal impact (publicly available data).",
-    medium: "Disclosure causes moderate impact — limited exposure, recoverable.",
-    high:   "Disclosure causes severe impact — regulatory breach, major reputational damage.",
+    1: "Public — disclosure causes no harm.",
+    2: "Internal — limited disclosure impact.",
+    3: "Sensitive — moderate disclosure impact.",
+    4: "Confidential — significant harm if disclosed.",
+    5: "Highly restricted — disclosure causes severe regulatory or reputational harm.",
   },
   Integrity: {
-    low:    "Corruption causes minimal disruption.",
-    medium: "Corruption causes noticeable errors or delays, correctable.",
-    high:   "Corruption causes severe failures, safety risk, or fraud.",
+    1: "Corruption causes negligible disruption.",
+    2: "Minor errors, easily corrected.",
+    3: "Noticeable data errors with moderate impact.",
+    4: "Significant corruption, difficult to recover.",
+    5: "Corruption causes severe failures, fraud, or safety risk.",
   },
   Availability: {
-    low:    "Outage causes minimal disruption — non-critical service.",
-    medium: "Outage causes moderate disruption — SLA breach.",
-    high:   "Outage causes severe disruption — business-critical service.",
+    1: "Non-critical — outage tolerable.",
+    2: "Low-priority — short outages acceptable.",
+    3: "Moderate impact — SLA breach possible.",
+    4: "High-priority — outage causes business disruption.",
+    5: "Mission-critical — outage causes severe operational failure.",
   },
 };
 
-function CiaAxis({ label, value, onChange, readOnly = false }: {
-  label: string; value: CIALevel; onChange: (v: CIALevel) => void; readOnly?: boolean;
+function CiaAxis({
+  label,
+  field,
+  value,
+  onChange,
+  readOnly,
+}: {
+  label: string;
+  field: CIADimension;
+  value: number;
+  onChange: (field: CIADimension, value: number) => void;
+  readOnly: boolean;
 }) {
   return (
     <div className="flex items-center gap-3">
@@ -44,45 +60,73 @@ function CiaAxis({ label, value, onChange, readOnly = false }: {
             </button>
           </TooltipTrigger>
           <TooltipContent className="max-w-xs text-xs" side="right">
-            <p className="font-semibold mb-1">{label} Rating Guide</p>
-            {LEVELS.map(l => (
-              <p key={l}><span className={l === "low" ? "text-emerald-600 font-medium" : l === "medium" ? "text-amber-600 font-medium" : "text-red-600 font-medium"} style={{textTransform:"capitalize"}}>{l}:</span> {GUIDANCE[label][l]}</p>
+            <p className="font-semibold mb-1">{label} — Score Guide</p>
+            {([1, 2, 3, 4, 5] as const).map(n => (
+              <p key={n}>
+                <span className="font-medium">{n}:</span> {GUIDANCE[label][n]}
+              </p>
             ))}
           </TooltipContent>
         </Tooltip>
       </div>
-      <div className="flex gap-1.5">
-        {LEVELS.map(level => (
+      <div className="flex gap-1">
+        {([1, 2, 3, 4, 5] as const).map(n => (
           <button
-            key={level}
+            key={n}
             type="button"
             disabled={readOnly}
-            onClick={() => !readOnly && onChange(level)}
-            className={`px-3 py-1 rounded border text-xs capitalize transition-all ${
-              value === level ? ACTIVE[level] : "border-slate-300 text-slate-500 hover:border-slate-400"
+            onClick={() => !readOnly && onChange(field, n)}
+            className={`w-8 h-8 rounded border text-xs font-medium transition-all ${
+              value === n
+                ? SCORE_STYLE[n]
+                : "border-slate-300 text-slate-500 hover:border-slate-400"
             } ${readOnly ? "cursor-default" : "cursor-pointer"}`}
           >
-            {level}
+            {n}
           </button>
         ))}
       </div>
+      <span className="text-xs text-slate-400 w-4">{value}</span>
     </div>
   );
 }
 
 export default function CiaRatingWidget({
-  confidentiality, integrity, availability, onChange, readOnly = false,
+  confidentiality_score,
+  integrity_score,
+  availability_score,
+  onChange,
+  readOnly = false,
 }: {
-  confidentiality: CIALevel; integrity: CIALevel; availability: CIALevel;
-  onChange: (field: "confidentiality" | "integrity" | "availability", value: CIALevel) => void;
+  confidentiality_score: number;
+  integrity_score: number;
+  availability_score: number;
+  onChange: (field: CIADimension, value: number) => void;
   readOnly?: boolean;
 }) {
+  const total = confidentiality_score + integrity_score + availability_score;
+  const band =
+    total <= 5  ? "Low" :
+    total <= 8  ? "Medium" :
+    total <= 11 ? "High" : "Critical";
+
+  const bandColor =
+    band === "Low"      ? "text-emerald-700 bg-emerald-100 border-emerald-300" :
+    band === "Medium"   ? "text-amber-700   bg-amber-100   border-amber-300"   :
+    band === "High"     ? "text-orange-700  bg-orange-100  border-orange-300"  :
+                          "text-red-700     bg-red-100     border-red-300";
+
   return (
     <div className="space-y-3 p-4 rounded-lg border border-slate-200 bg-slate-50">
-      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">CIA Rating</p>
-      <CiaAxis label="Confidentiality" value={confidentiality} onChange={v => onChange("confidentiality", v)} readOnly={readOnly} />
-      <CiaAxis label="Integrity"       value={integrity}       onChange={v => onChange("integrity", v)}       readOnly={readOnly} />
-      <CiaAxis label="Availability"    value={availability}    onChange={v => onChange("availability", v)}    readOnly={readOnly} />
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">CIA Rating</p>
+        <div className={`text-xs px-2 py-0.5 rounded border font-semibold ${bandColor}`}>
+          {total}/15 · {band}
+        </div>
+      </div>
+      <CiaAxis label="Confidentiality" field="confidentiality_score" value={confidentiality_score} onChange={onChange} readOnly={readOnly} />
+      <CiaAxis label="Integrity"       field="integrity_score"       value={integrity_score}       onChange={onChange} readOnly={readOnly} />
+      <CiaAxis label="Availability"    field="availability_score"    value={availability_score}    onChange={onChange} readOnly={readOnly} />
     </div>
   );
 }

@@ -22,7 +22,7 @@ const CRIT_COLOR: Record<string, string> = {
 
 const EMPTY: AssetCreate = {
   name: "", type: "IT", description: "",
-  confidentiality: "medium", integrity: "medium", availability: "medium",
+  confidentiality_score: 3, integrity_score: 3, availability_score: 3,
   owner: "", custodian: "", location: "Cloud", jurisdiction: "", classification: "Internal",
 };
 
@@ -57,7 +57,7 @@ export default function AssetRegistryPage() {
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <HeroSection title="Asset Registry" subtitle="Manage assets, CIA ratings, and control mappings" badge="Asset Management" />
+      <HeroSection title="Asset Registry" subtitle="Manage assets, CIA ratings, and control mappings" />
 
       <div className="flex flex-1 overflow-hidden">
         {/* Left Panel */}
@@ -181,9 +181,9 @@ export default function AssetRegistryPage() {
                   ))}
                 </div>
                 <CiaRatingWidget
-                  confidentiality={selectedAsset.confidentiality}
-                  integrity={selectedAsset.integrity}
-                  availability={selectedAsset.availability}
+                  confidentiality_score={selectedAsset.confidentiality_score}
+                  integrity_score={selectedAsset.integrity_score}
+                  availability_score={selectedAsset.availability_score}
                   onChange={() => {}}
                   readOnly
                 />
@@ -265,7 +265,7 @@ export default function AssetRegistryPage() {
                   </select>
                 </div>
                 <CiaRatingWidget
-                  confidentiality={form.confidentiality} integrity={form.integrity} availability={form.availability}
+                  confidentiality_score={form.confidentiality_score} integrity_score={form.integrity_score} availability_score={form.availability_score}
                   onChange={(field, value) => setForm(p => ({...p, [field]: value}))}
                 />
               </div>
