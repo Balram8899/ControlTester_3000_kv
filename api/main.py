@@ -188,6 +188,40 @@ app.add_middleware(
 app.include_router(assets_router)
 app.include_router(risk_assessment_router)
 
+
+# ----------------------------------------------------------------------------
+# Startup seed
+# ----------------------------------------------------------------------------
+def _seed_nist_controls() -> None:
+    """Insert NIST CSF seed controls if the controls collection is empty."""
+    import json
+    from pathlib import Path
+    try:
+        store = MongoControlsStore()
+        if not store.is_connected:
+            logger.warning("[SEED] MongoDB unavailable — skipping NIST seed")
+            return
+        if store.list_documents():
+            logger.info("[SEED] Controls collection not empty — skipping NIST seed")
+            return
+        seed_path = Path(__file__).parent.parent / "data" / "seeds" / "nist_csf_controls.json"
+        if not seed_path.exists():
+            logger.warning(f"[SEED] Seed file not found at {seed_path}")
+            return
+        records = json.loads(seed_path.read_text(encoding="utf-8"))
+        for record in records:
+            store.save_document(record)
+        total = sum(len(r.get("controls", [])) for r in records)
+        logger.info(f"[SEED] Seeded {total} NIST CSF controls from {seed_path.name}")
+    except Exception as exc:
+        logger.error(f"[SEED] NIST seed failed (non-fatal): {exc}")
+
+
+@app.on_event("startup")
+async def startup_event():
+    _seed_nist_controls()
+
+
 # ============================================================================
 # SESSION & MEMORY MANAGEMENT
 # ============================================================================
