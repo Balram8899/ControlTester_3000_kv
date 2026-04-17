@@ -183,3 +183,120 @@ def get_store() -> MongoAssetStore:
     if _store is None:
         _store = MongoAssetStore()
     return _store
+
+
+# ── LLM helper ────────────────────────────────────────────────────────────
+
+def _suggest_controls_llm(asset: Asset) -> list[dict]:
+    """Call LLM to suggest controls from all library sources."""
+    from langchain_google_genai import ChatGoogleGenerativeAI
+    from langchain.schema import HumanMessage
+    import json as _json
+
+    all_controls: list[dict] = []
+
+    try:
+        for c in MongoControlsStore()._col.find(
+            {}, {"_id": 1, "name": 1, "description": 1}
+        ).limit(80):
+            all_controls.append({
+                "control_id": str(c["_id"]),
+                "name": c.get("name", ""),
+                "description": c.get("description", ""),
+                "source": "controls_library",
+            })
+    except Exception as e:
+        logger.warning(f"controls_library fetch failed: {e}")
+
+    try:
+        for r in MongoLibraryStore()._col.find(
+            {}, {"_id": 1, "obligation": 1, "domain": 1, "framework_name": 1}
+        ).limit(80):
+            all_controls.append({
+                "control_id": str(r["_id"]),
+                "name": r.get("obligation", ""),
+                "description": f"{r.get('framework_name', '')} — {r.get('domain', '')}",
+                "source": "regulatory_library",
+            })
+    except Exception as e:
+        logger.warning(f"regulatory_library fetch failed: {e}")
+
+    if not all_controls:
+        return []
+
+    controls_text = "\n".join(
+        f"- ID:{c['control_id']} | {c['name']} | {c['description']} | source:{c['source']}"
+        for c in all_controls[:60]
+    )
+
+    prompt = f"""You are a cybersecurity risk expert. Select the most relevant controls for this asset.
+
+Asset: {asset.name} | Type: {asset.asset_type} | Hosting: {asset.hosting_type or 'N/A'}
+CIA Total: {asset.cia_total}/15 (Band: {asset.cia_band})
+Use: {asset.use}
+Jurisdiction: {asset.jurisdiction} | Classification: {asset.classification}
+
+Controls available:
+{controls_text}
+
+Return a JSON array of up to 10 controls:
+[{{"control_id": "...", "name": "...", "source": "...", "rationale": "one sentence"}}]
+Return ONLY valid JSON, no explanation."""
+
+    llm = ChatGoogleGenerativeAI(
+        model=os.environ.get("GOOGLE_LLM_MODEL", "gemini-2.0-flash"),
+        google_api_key=os.environ.get("GOOGLE_API_KEY"),
+    )
+    response = llm.invoke([HumanMessage(content=prompt)])
+    return _json.loads(response.content)
+
+
+# ── Route handlers ─────────────────────────────────────────────────────────
+
+@router.post("", status_code=201, response_model=Asset)
+def create_asset(body: AssetCreate):
+    return get_store().create(body)
+
+
+@router.get("", response_model=list[Asset])
+def list_assets(
+    asset_type: str | None = None,
+    cia_band: str | None = None,
+    status: str | None = None,
+):
+    return get_store().list(asset_type, cia_band, status)
+
+
+@router.get("/{asset_id}", response_model=Asset)
+def get_asset(asset_id: str):
+    asset = get_store().get(asset_id)
+    if not asset:
+        raise HTTPException(404, "Asset not found")
+    return asset
+
+
+@router.put("/{asset_id}", response_model=Asset)
+def update_asset(asset_id: str, body: AssetUpdate):
+    asset = get_store().update(asset_id, body)
+    if not asset:
+        raise HTTPException(404, "Asset not found")
+    return asset
+
+
+@router.delete("/{asset_id}", status_code=204)
+def delete_asset(asset_id: str):
+    if not get_store().delete(asset_id):
+        raise HTTPException(404, "Asset not found")
+
+
+@router.post("/{asset_id}/suggest-controls")
+def suggest_controls(asset_id: str):
+    asset = get_store().get(asset_id)
+    if not asset:
+        raise HTTPException(404, "Asset not found")
+    try:
+        suggestions = _suggest_controls_llm(asset)
+    except Exception as e:
+        logger.error(f"Control suggestion failed: {e}")
+        raise HTTPException(500, f"LLM suggestion failed: {str(e)}")
+    return {"asset_id": asset_id, "suggestions": suggestions}

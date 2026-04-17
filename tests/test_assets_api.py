@@ -61,3 +61,73 @@ def test_cia_total_and_band_computed_correctly():
     total2 = compute_cia_total(2, 2, 2)
     assert total2 == 6
     assert compute_cia_band(total2) == "Medium"
+
+
+from fastapi.testclient import TestClient
+from unittest.mock import patch, MagicMock
+
+
+def _asset_fixture(**overrides) -> Asset:
+    base = dict(
+        name="Payments API", description="Handles payments",
+        use="Process card payments", asset_type="Application",
+        hosting_type="SaaS", support_type="Vendor",
+        status="Operational", owner="Alice", custodian="Bob",
+        location="Cloud", jurisdiction="EU",
+        classification="Confidential",
+        confidentiality_score=5, integrity_score=5, availability_score=4,
+        id="abc123", cia_total=14, cia_band="Critical",
+        created_at="2026-04-17T00:00:00",
+        updated_at="2026-04-17T00:00:00",
+    )
+    return Asset(**{**base, **overrides})
+
+
+@patch("api.routers.assets.get_store")
+def test_create_asset_returns_201(mock_get_store):
+    from api.main import app
+    mock = MagicMock()
+    mock.create.return_value = _asset_fixture()
+    mock_get_store.return_value = mock
+    resp = TestClient(app).post("/assets", json=dict(
+        name="Payments API", description="Handles payments",
+        use="Process card payments", asset_type="Application",
+        support_type="Vendor", owner="Alice", custodian="Bob",
+        location="Cloud", jurisdiction="EU",
+        classification="Confidential",
+        confidentiality_score=5, integrity_score=5, availability_score=4,
+    ))
+    assert resp.status_code == 201
+    assert resp.json()["cia_band"] == "Critical"
+    assert resp.json()["cia_total"] == 14
+
+
+@patch("api.routers.assets.get_store")
+def test_list_assets_returns_200(mock_get_store):
+    from api.main import app
+    mock = MagicMock()
+    mock.list.return_value = []
+    mock_get_store.return_value = mock
+    resp = TestClient(app).get("/assets")
+    assert resp.status_code == 200
+    assert resp.json() == []
+
+
+@patch("api.routers.assets.get_store")
+def test_get_asset_404(mock_get_store):
+    from api.main import app
+    mock = MagicMock()
+    mock.get.return_value = None
+    mock_get_store.return_value = mock
+    resp = TestClient(app).get("/assets/nonexistent")
+    assert resp.status_code == 404
+
+
+@patch("api.routers.assets.get_store")
+def test_delete_asset_204(mock_get_store):
+    from api.main import app
+    mock = MagicMock()
+    mock.delete.return_value = True
+    mock_get_store.return_value = mock
+    resp = TestClient(app).delete("/assets/abc123")
+    assert resp.status_code == 204
