@@ -9,7 +9,8 @@ from fastapi import FastAPI, File, UploadFile, Form, HTTPException, status, Back
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.responses import FileResponse
-from pydantic import BaseModel, Field, validator
+from contextlib import asynccontextmanager
+from pydantic import BaseModel, Field, field_validator
 from typing import List, Optional, Dict, Any
 import tempfile
 import os
@@ -134,12 +135,22 @@ class WorkpaperResponse(BaseModel):
     message: str
 
 # ----------------------------------------------------------------------------
+# Lifespan
+# ----------------------------------------------------------------------------
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    _seed_nist_controls()  # resolved at call-time; defined later in module
+    yield
+
+
+# ----------------------------------------------------------------------------
 # FastAPI instance & CORS
 # ----------------------------------------------------------------------------
 app = FastAPI(
     title="Trace API",
     version="2.2.0",
     description="Cybersecurity audit service with memory management, session handling, and multi-source context integration.",
+    lifespan=lifespan,
     openapi_tags=[
         {"name": "meta", "description": "API information and health checks"},
         {"name": "models", "description": "Available language models"},
@@ -219,9 +230,7 @@ def _seed_nist_controls() -> None:
         logger.error(f"[SEED] NIST seed failed (non-fatal): {exc}")
 
 
-@app.on_event("startup")
-async def startup_event():
-    _seed_nist_controls()
+# Startup is handled via the lifespan context manager above.
 
 
 # ============================================================================
@@ -328,7 +337,8 @@ class KBReq(BaseModel):
     delay_between_batches: float = Field(_Cfg.DEFAULT_DELAY, ge=0.0, le=10.0)
     max_retries: int = Field(_Cfg.DEFAULT_RETRIES, ge=1, le=10)
 
-    @validator("selected_model")
+    @field_validator("selected_model")
+    @classmethod
     def _not_blank(cls, v):
         if not v.strip():
             raise ValueError("Model name must not be blank")
