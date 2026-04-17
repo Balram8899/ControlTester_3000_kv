@@ -168,7 +168,7 @@ class MongoAssetStore:
             merged["hosting_type"] = "Unspecified"
         merged = self._enrich(merged)
         merged["updated_at"] = datetime.utcnow().isoformat()
-        self.col.update_one({"_id": asset_id}, {"$set": merged})
+        self.col.update_one({"_id": asset_id}, {"$set": {k: v for k, v in merged.items() if k != "_id"}})
         return self._to_asset(merged)
 
     def delete(self, asset_id: str) -> bool:

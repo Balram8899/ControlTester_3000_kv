@@ -1556,7 +1556,6 @@ async def delete_rcm_report(report_id: str):
     summary="Upload regulatory documents and extract all obligations into the library",
 )
 async def library_ingest(
-    background_tasks: BackgroundTasks,
     selected_model: str = Form(..., description="LLM model to use"),
     regulation_files: List[UploadFile] = File(..., description="Regulatory documents (PDF, TXT, MD) — up to 10"),
 ):
@@ -1592,8 +1591,10 @@ async def library_ingest(
     if not file_jobs:
         raise HTTPException(status_code=422, detail={"error": "No valid files to ingest.", "errors": pre_errors, "request_id": rid})
 
-    # --- Phase 2: LLM-bound ingest runs in the background ---
+    # --- Phase 2: LLM-bound ingest runs synchronously ---
     _create_task(rid, {"type": "regulatory-ingest", "files": [n for _, n in file_jobs]})
+
+    _result: dict = {}
 
     def _bg_ingest():
         errors = list(pre_errors)
@@ -1649,9 +1650,13 @@ async def library_ingest(
                 "total_ingested": len(ingested),
                 "controls_remapped": _remap_result.get("controls_updated", 0),
             })
+            _result["ingested"] = ingested
+            _result["errors"] = errors
         except Exception as exc:
-            logger.error(f"[{rid}] Background ingest failed: {exc}\n{traceback.format_exc()}")
+            logger.error(f"[{rid}] Ingest failed: {exc}\n{traceback.format_exc()}")
             _fail_task(rid, str(exc))
+            _result["ingested"] = []
+            _result["errors"] = errors + [{"error": str(exc)}]
         finally:
             for p in tmp_paths:
                 try:
@@ -1659,8 +1664,26 @@ async def library_ingest(
                 except Exception:
                     pass
 
-    background_tasks.add_task(_bg_ingest)
-    return JSONResponse({"task_id": rid, "status": "running"}, status_code=202)
+    _bg_ingest()
+
+    if not _result.get("ingested"):
+        _errors = _result.get("errors", [])
+        error_str = "; ".join(
+            f"{e['filename']}: {e['error']}" for e in _errors if "filename" in e
+        )
+        raise HTTPException(status_code=422, detail={
+            "summary": "No regulatory documents were ingested successfully.",
+            "error": error_str,
+            "errors": _errors,
+            "request_id": rid,
+        })
+
+    return JSONResponse({
+        "task_id": rid,
+        "ingested": _result.get("ingested", []),
+        "errors": _result.get("errors", []),
+        "total_ingested": len(_result.get("ingested", [])),
+    }, status_code=200)
 
 
 @app.get(
