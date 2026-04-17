@@ -327,7 +327,8 @@ def analyze_assessment(ra_id: str):
     for asset_id, type_responses in by_asset.items():
         asset = asset_store.get(asset_id)
         asset_name = asset.name if asset else asset_id
-        cia_score = asset.cia_score if asset else 3.0
+        cia_total = asset.cia_total if asset else 9
+        cia_band = asset.cia_band if asset else "Medium"
         initial_band = ra.initial_inherent_ratings.get(asset_id, "Medium")
 
         # Build Q&A summary text
@@ -341,7 +342,7 @@ def analyze_assessment(ra_id: str):
         prompt = f"""You are a cybersecurity risk analyst. Analyse the following assessment responses for an asset and identify the top risks.
 
 Asset: {asset_name}
-CIA Score: {cia_score:.2f}/5.00
+CIA Total: {cia_total}/15 (Band: {cia_band})
 Initial Inherent Risk Rating (human estimate): {initial_band}
 
 Assessment Responses:
