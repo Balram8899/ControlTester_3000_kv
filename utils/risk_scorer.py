@@ -1,37 +1,42 @@
 # utils/risk_scorer.py
-CIA_NUMERIC: dict[str, int] = {"low": 1, "medium": 2, "high": 3}
+"""
+CIA scoring utilities.
 
-CRITICALITY_BANDS: list[tuple[float, float, str]] = [
+New model (SP1): numeric 1-5 per dimension, total 3-15, banded.
+compute_criticality kept as compatibility shim for risk_assessment.py until SP3.
+"""
+
+CIA_BAND_THRESHOLDS: list[tuple[int, int, str]] = [
+    (3,  5,  "Low"),
+    (6,  8,  "Medium"),
+    (9,  11, "High"),
+    (12, 15, "Critical"),
+]
+
+_CRITICALITY_BANDS: list[tuple[float, float, str]] = [
     (0.0,   2.222, "Low"),
     (2.222, 3.333, "Medium"),
     (3.333, 4.444, "High"),
     (4.444, 5.001, "Critical"),
 ]
 
-PERIODICITY_MAP: dict[str, str] = {
-    "Critical": "Quarterly",
-    "High":     "Semi-Annual",
-    "Medium":   "Annual",
-    "Low":      "Annual",
-}
+
+def compute_cia_total(confidentiality: int, integrity: int, availability: int) -> int:
+    """Sum three 1-5 CIA scores. Returns 3-15."""
+    return confidentiality + integrity + availability
 
 
-def compute_cia_score(confidentiality: str, integrity: str, availability: str) -> float:
-    """Compute CIA composite score on a 1–5 scale."""
-    c = CIA_NUMERIC[confidentiality.lower()]
-    i = CIA_NUMERIC[integrity.lower()]
-    a = CIA_NUMERIC[availability.lower()]
-    return (c + i + a) / 9 * 5
+def compute_cia_band(total: int) -> str:
+    """Map CIA total (3-15) to a band label."""
+    for low, high, label in CIA_BAND_THRESHOLDS:
+        if low <= total <= high:
+            return label
+    raise ValueError(f"CIA total {total} is out of valid range 3-15")
 
 
 def compute_criticality(cia_score: float) -> str:
-    """Map CIA score (1–5) to a criticality band."""
-    for low, high, label in CRITICALITY_BANDS:
+    """SP3 compatibility shim. Maps old 1-5 float score to a band. Remove in SP3."""
+    for low, high, label in _CRITICALITY_BANDS:
         if low <= cia_score < high:
             return label
     return "Critical"
-
-
-def compute_periodicity(criticality: str) -> str:
-    """Return recommended assessment periodicity for a criticality level."""
-    return PERIODICITY_MAP.get(criticality, "Annual")
