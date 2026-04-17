@@ -96,25 +96,6 @@ type ControlsViewMode = "document" | "merged";
 interface W1HResult { who: boolean; what: boolean; where: boolean; how: boolean; when: boolean; why: boolean; }
 interface CtrlW1H extends ExtractedControl { w1h: W1HResult; score: number; rag: "green" | "amber" | "red"; }
 
-const W1H_PATTERNS = {
-  who:  /\b(team|manager|officer|user|admin(?:istrator)?|staff|department|committee|board|unit|analyst|engineer|auditor|personnel|employee|designated|responsible|appointed)\b/i,
-  what: /\b(review|monitor|assess|validate|verify|approve|implement|configure|test|audit|report|maintain|update|enforce|restrict|prevent|detect|analy[sz]e|evaluate|track|log|scan|patch|backup|encrypt|authenticate|authorize)\b/i,
-  where:/\b(system|platform|portal|tool|database|server|network|application|interface|environment|infrastructure|cloud|endpoint|device|firewall|siem|repository|directory|vpn|erp|crm|email)\b/i,
-  how:  /\bvia\b|through\b|using\b|automatically\b|manually\b|mechanism\b|procedure\b|workflow\b/i,
-  when: /\b(daily|weekly|monthly|quarterly|annually|real.?time|continuous|periodic|scheduled|triggered|upon|within \d+|at least (every|once)|on a (daily|weekly|regular|periodic))\b/i,
-  why:  /\bto (identify|ensure|prevent|detect|protect|maintain|mitigate|reduce|improve|comply|meet|achieve|address|manage|avoid)\b|\bin order to\b|\bso that\b/i,
-};
-
-function detect5W1H(desc: string): W1HResult {
-  return {
-    who:   W1H_PATTERNS.who.test(desc),
-    what:  W1H_PATTERNS.what.test(desc),
-    where: W1H_PATTERNS.where.test(desc),
-    how:   W1H_PATTERNS.how.test(desc),
-    when:  W1H_PATTERNS.when.test(desc),
-    why:   W1H_PATTERNS.why.test(desc),
-  };
-}
 
 function ragFromScore(score: number): "green" | "amber" | "red" {
   return score >= 5 ? "green" : score === 4 ? "amber" : "red";
@@ -528,6 +509,7 @@ export default function ControlsLibraryPage() {
   const [qualityRagFilter, setQualityRagFilter] = useState<"all" | "green" | "amber" | "red">("all");
   const [selectedQualityControl, setSelectedQualityControl] = useState<CtrlW1H | null>(null);
   const [qualitySearch, setQualitySearch] = useState("");
+  const [ctrlsW1H, setCtrlsW1H] = useState<CtrlW1H[]>([]);
 
   // Clear library state
   const [clearingLibrary, setClearingLibrary] = useState(false);
@@ -606,6 +588,22 @@ export default function ControlsLibraryPage() {
     }
   };
 
+  const fetchQualityAnalysis = useCallback(async (controls: { control_id: string; name: string; description: string }[]) => {
+    if (controls.length === 0) return;
+    try {
+      const res = await fetch("/api/controls-library/quality-analysis", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ controls: controls.slice(0, 50) }),
+      });
+      if (!res.ok) throw new Error(`Quality analysis HTTP ${res.status}`);
+      const data = await res.json();
+      setCtrlsW1H(data.results ?? []);
+    } catch (err) {
+      console.warn("Quality analysis failed:", err);
+    }
+  }, []);
+
   const handleIngest = async () => {
     if (uploadFiles.length === 0) return;
     const selectedModel = localStorage.getItem("selectedModel") || "llama3";
@@ -635,6 +633,15 @@ export default function ControlsLibraryPage() {
       await fetchDocs();
       await fetchAllControls();
       refreshMetrics();
+
+      // Trigger backend 5W1H analysis on newly uploaded controls
+      fetchQualityAnalysis(
+        dashboardControls.map(c => ({
+          control_id: c.control_id ?? String((c as any).id ?? ""),
+          name: (c as any).control_name ?? c.control_id ?? "",
+          description: c.description ?? "",
+        }))
+      );
 
       const mongoFailed = ingested.some((r: any) => !r.mongo_saved);
       toast({
@@ -817,13 +824,7 @@ export default function ControlsLibraryPage() {
   const coveredCount = activeControls.filter(c => c.mapped_obligations?.length > 0).length;
   const coveragePct = activeControls.length > 0 ? Math.round((coveredCount / activeControls.length) * 100) : 0;
 
-  // ── 5W1H Quality Analytics (derived from dashboardControls) ──────────────────
-  const ctrlsW1H: CtrlW1H[] = dashboardControls.map(c => {
-    const w1h = detect5W1H(c.description ?? "");
-    const score = Object.values(w1h).filter(Boolean).length;
-    return { ...c, w1h, score, rag: ragFromScore(score) };
-  });
-
+  // ── 5W1H Quality Analytics (populated from backend /quality-analysis endpoint) ──
   const ragCounts = { green: 0, amber: 0, red: 0 };
   const w1hTotals: Record<keyof W1HResult, number> = { who: 0, what: 0, where: 0, how: 0, when: 0, why: 0 };
   const domainRag: Record<string, { green: number; amber: number; red: number }> = {};
