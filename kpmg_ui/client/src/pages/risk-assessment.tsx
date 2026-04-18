@@ -44,7 +44,7 @@ const ANSWER_STYLE: Record<AnswerType, string> = {
   na: "bg-slate-100 text-slate-500 border-slate-300",
 };
 
-const WIZARD_STEPS = ["Create", "Questionnaire", "Analyse", "Risks", "Residual"];
+const WIZARD_STEPS = ["Create", "Questionnaire", "Analyse", "Risks", "Residual", "Controls", "Report"];
 
 type RightTab = "dashboard" | "wizard";
 
@@ -60,9 +60,10 @@ interface LocalAnswer {
 export default function RiskAssessmentPage() {
   const {
     assessments, selectedAssessment, sections, residualResults,
-    isLoading, isAnalyzing, error,
+    isLoading, isAnalyzing, isGeneratingReport, error, report,
     fetchAssessments, selectAssessment, createAssessment,
     fetchSections, submitResponse, analyzeAssessment, addHumanRisk, fetchResidual,
+    suggestControls, generateReport,
   } = useRiskAssessment();
   const { assets, fetchAssets } = useAssetRegistry();
   const { toast } = useToast();
@@ -482,9 +483,14 @@ export default function RiskAssessmentPage() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-semibold text-slate-800">Residual Risk</h3>
-                    <Button size="sm" variant="outline" onClick={handleFetchResidual}>
-                      <FileBarChart className="w-4 h-4 mr-1" />Refresh
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={handleFetchResidual}>
+                        <FileBarChart className="w-4 h-4 mr-1" />Refresh
+                      </Button>
+                      <Button size="sm" onClick={() => setWizardStep(5)}>
+                        Suggest Controls <ChevronRight className="w-4 h-4 ml-1" />
+                      </Button>
+                    </div>
                   </div>
                   {residualResults.length === 0 && (
                     <Button onClick={handleFetchResidual}>Calculate Residual Risk</Button>
@@ -511,6 +517,67 @@ export default function RiskAssessmentPage() {
                       </CardContent>
                     </Card>
                   ))}
+                </div>
+              )}
+
+              {/* Step 5: Suggested Controls */}
+              {wizardStep === 5 && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-slate-800">Suggested Controls</h3>
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={async () => {
+                        try { await suggestControls(selectedAssessment.id); toast({ title: "Controls suggested" }); }
+                        catch { toast({ title: "Failed to suggest controls", variant: "destructive" }); }
+                      }}>
+                        <Sparkles className="w-4 h-4 mr-1" />Suggest Controls
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setWizardStep(6)}>
+                        Proceed to Report <ChevronRight className="w-4 h-4 ml-1" />
+                      </Button>
+                    </div>
+                  </div>
+                  {(selectedAssessment.suggested_controls ?? []).length === 0 && (
+                    <p className="text-slate-400 text-sm">Click "Suggest Controls" to rank controls from the library against your risks.</p>
+                  )}
+                  {(selectedAssessment.suggested_controls ?? []).map((s, i) => (
+                    <Card key={i}>
+                      <CardContent className="pt-4">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="font-medium text-sm">{s.control_title}</p>
+                            <p className="text-xs text-slate-500 mt-1">{s.rationale}</p>
+                          </div>
+                          <Badge variant="outline" className="text-xs">Relevance {s.relevance_score}/5</Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+
+              {/* Step 6: Report */}
+              {wizardStep === 6 && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-slate-800">Risk Assessment Report</h3>
+                    <Button size="sm" onClick={async () => {
+                      try { await generateReport(selectedAssessment.id); toast({ title: "Report generated" }); }
+                      catch { toast({ title: "Report failed", variant: "destructive" }); }
+                    }} disabled={isGeneratingReport}>
+                      {isGeneratingReport ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <FileBarChart className="w-4 h-4 mr-1" />}
+                      Generate Report
+                    </Button>
+                  </div>
+                  {report ? (
+                    <Card>
+                      <CardContent className="pt-4">
+                        <pre className="whitespace-pre-wrap text-xs text-slate-700 font-mono leading-relaxed">{report}</pre>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <p className="text-slate-400 text-sm">Click "Generate Report" to produce the 9-section Risk Assessment Report.</p>
+                  )}
                 </div>
               )}
             </div>
