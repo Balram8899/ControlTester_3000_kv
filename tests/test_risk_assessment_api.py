@@ -91,3 +91,43 @@ def test_get_assessment_404_when_missing():
         gs.return_value.get.return_value = None
         r = client.get("/risk-assessment/nonexistent")
     assert r.status_code == 404
+
+
+def test_suggest_controls_404_unknown_assessment():
+    with patch("api.routers.risk_assessment.get_store") as gs:
+        gs.return_value.get.return_value = None
+        r = client.post("/risk-assessment/missing/suggest-controls")
+    assert r.status_code == 404
+
+
+def test_suggest_controls_400_no_risks():
+    with patch("api.routers.risk_assessment.get_store") as gs:
+        from api.routers.risk_assessment import RiskAssessment
+        ra = RiskAssessment(
+            id="ra1", title="T", description="d", status="in_progress",
+            asset_ids=["a1"], responses=[], risks=[], applied_controls=[],
+            created_at="2026-01-01", updated_at="2026-01-01",
+        )
+        gs.return_value.get.return_value = ra
+        r = client.post("/risk-assessment/ra1/suggest-controls")
+    assert r.status_code == 400
+
+
+def test_generate_report_404_unknown_assessment():
+    with patch("api.routers.risk_assessment.get_store") as gs:
+        gs.return_value.get.return_value = None
+        r = client.post("/risk-assessment/missing/generate-report")
+    assert r.status_code == 404
+
+
+def test_generate_report_400_no_risks():
+    with patch("api.routers.risk_assessment.get_store") as gs:
+        from api.routers.risk_assessment import RiskAssessment
+        ra = RiskAssessment(
+            id="ra1", title="T", description="d", status="in_progress",
+            asset_ids=["a1"], responses=[], risks=[], applied_controls=[],
+            created_at="2026-01-01", updated_at="2026-01-01",
+        )
+        gs.return_value.get.return_value = ra
+        r = client.post("/risk-assessment/ra1/generate-report")
+    assert r.status_code == 400
