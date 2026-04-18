@@ -9,16 +9,16 @@ from typing import Any, Literal, Optional
 
 import pymongo
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
-from utils.risk_scorer import compute_criticality
+from utils.assessment_questions import get_sections
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/risk-assessment", tags=["risk-assessment"])
 
 StatusType = Literal["draft", "in_progress", "risks_identified", "controls_applied", "complete"]
 RiskBand = Literal["Low", "Medium", "High", "Critical"]
-AssessmentType = Literal["BIA", "LEGAL", "PIA"]
+AnswerType = Literal["yes", "no", "na"]
 
 
 # ── Pydantic models ──────────────────────────────────────────────────────────
@@ -27,14 +27,21 @@ class RiskAssessmentCreate(BaseModel):
     title: str
     description: str
     asset_ids: list[str]
-    initial_inherent_ratings: dict[str, str]  # asset_id -> band
+
+    @field_validator("asset_ids")
+    @classmethod
+    def _at_least_one(cls, v: list[str]) -> list[str]:
+        if not v:
+            raise ValueError("At least one asset_id is required")
+        return v
 
 
 class ResponseSubmit(BaseModel):
     asset_id: str
-    assessment_type: AssessmentType
+    section_id: str
     question_id: str
-    response_text: str
+    answer: AnswerType
+    details: str = ""
 
 
 class RiskOverride(BaseModel):
@@ -42,15 +49,15 @@ class RiskOverride(BaseModel):
     title: str
     description: str
     risk_category: str
-    likelihood_score: int   # 1-5
-    impact_score: int       # 1-5
+    likelihood_score: int
+    impact_score: int
     human_rationale: str
 
 
 class ControlApplication(BaseModel):
     risk_id: str
     control_id: str
-    source: str             # controls_library | regulatory_testing | human_added
+    source: str
     human_rationale: str = ""
 
 
@@ -60,10 +67,11 @@ class RiskAssessment(BaseModel):
     description: str
     status: StatusType
     asset_ids: list[str]
-    initial_inherent_ratings: dict[str, str]
     responses: list[dict]
     risks: list[dict]
     applied_controls: list[dict]
+    suggested_controls: list[dict] = []
+    report_markdown: Optional[str] = None
     created_at: str
     updated_at: str
 
@@ -82,6 +90,8 @@ class MongoRiskAssessmentStore:
     def _to_ra(self, doc: dict) -> RiskAssessment:
         doc = dict(doc)
         doc["id"] = str(doc.pop("_id"))
+        doc.setdefault("suggested_controls", [])
+        doc.setdefault("report_markdown", None)
         return RiskAssessment(**doc)
 
     def create(self, data: RiskAssessmentCreate) -> RiskAssessment:
@@ -92,10 +102,11 @@ class MongoRiskAssessmentStore:
             "description": data.description,
             "status": "draft",
             "asset_ids": data.asset_ids,
-            "initial_inherent_ratings": data.initial_inherent_ratings,
             "responses": [],
             "risks": [],
             "applied_controls": [],
+            "suggested_controls": [],
+            "report_markdown": None,
             "created_at": now,
             "updated_at": now,
         }
@@ -130,8 +141,7 @@ class MongoRiskAssessmentStore:
     def add_risk(self, ra_id: str, risk: dict) -> bool:
         result = self._col.update_one(
             {"_id": ra_id},
-            {"$push": {"risks": risk},
-             "$set": {"updated_at": datetime.utcnow().isoformat()}},
+            {"$push": {"risks": risk}, "$set": {"updated_at": datetime.utcnow().isoformat()}},
         )
         return result.modified_count == 1
 
@@ -143,8 +153,23 @@ class MongoRiskAssessmentStore:
         )
         return result.modified_count == 1
 
+    def set_suggested_controls(self, ra_id: str, suggestions: list[dict]) -> bool:
+        result = self._col.update_one(
+            {"_id": ra_id},
+            {"$set": {"suggested_controls": suggestions, "updated_at": datetime.utcnow().isoformat()}},
+        )
+        return result.modified_count == 1
+
+    def set_report(self, ra_id: str, markdown: str) -> bool:
+        result = self._col.update_one(
+            {"_id": ra_id},
+            {"$set": {"report_markdown": markdown, "status": "complete", "updated_at": datetime.utcnow().isoformat()}},
+        )
+        return result.modified_count == 1
+
 
 _store: MongoRiskAssessmentStore | None = None
+
 
 def get_store() -> MongoRiskAssessmentStore:
     global _store
@@ -155,21 +180,38 @@ def get_store() -> MongoRiskAssessmentStore:
 
 # ── Risk scoring helpers ─────────────────────────────────────────────────────
 
-def _inherent_risk_score(likelihood: float, impact: float) -> float:
-    return round(likelihood * impact, 2)
-
 def _inherent_risk_band(score: float) -> str:
     if score <= 4:   return "Low"
     if score <= 9:   return "Medium"
     if score <= 16:  return "High"
     return "Critical"
 
-def _control_effectiveness(open_issue_severity: str | None) -> float:
-    mapping = {"Low": 0.75, "Medium": 0.50, "High": 0.25, "Critical": 0.00}
-    return mapping.get(open_issue_severity or "", 1.00)
+
+def _rule_layer_scores(responses: list[dict]) -> tuple[int, int]:
+    """Compute rule-based likelihood + impact from Exposure/Control answers."""
+    section_map: dict[str, dict[str, str]] = {
+        s["id"]: {q["id"]: q["question_type"] for q in s["questions"]}
+        for s in get_sections()
+    }
+    exposure_yes = 0
+    control_no = 0
+    for r in responses:
+        qtype = section_map.get(r.get("section_id", ""), {}).get(r.get("question_id", ""))
+        if qtype == "Exposure" and r.get("answer") == "yes":
+            exposure_yes += 1
+        elif qtype == "Control" and r.get("answer") == "no":
+            control_no += 1
+    likelihood = min(5, max(1, round(1 + (exposure_yes / 5) * 4)))
+    impact = min(5, max(1, round(1 + (control_no / 5) * 4)))
+    return likelihood, impact
 
 
-# ── CRUD route handlers ──────────────────────────────────────────────────────
+# ── Route handlers ───────────────────────────────────────────────────────────
+
+@router.get("/sections")
+def get_assessment_sections():
+    return {"sections": get_sections()}
+
 
 @router.post("", status_code=201, response_model=RiskAssessment)
 def create_assessment(body: RiskAssessmentCreate):
@@ -197,9 +239,10 @@ def submit_response(ra_id: str, body: ResponseSubmit):
     response = {
         "id": str(uuid.uuid4()),
         "asset_id": body.asset_id,
-        "assessment_type": body.assessment_type,
+        "section_id": body.section_id,
         "question_id": body.question_id,
-        "response_text": body.response_text,
+        "answer": body.answer,
+        "details": body.details,
         "submitted_at": datetime.utcnow().isoformat(),
     }
     get_store().add_response(ra_id, response)
@@ -263,15 +306,11 @@ def get_residual(ra_id: str):
     ra = get_store().get(ra_id)
     if not ra:
         raise HTTPException(404, "Assessment not found")
-
     results = []
     for risk in ra.risks:
         risk_id = risk["id"]
         applied = [c for c in ra.applied_controls if c["risk_id"] == risk_id]
-        if applied:
-            avg_eff = sum(c.get("effectiveness_score", 1.0) for c in applied) / len(applied)
-        else:
-            avg_eff = 0.0  # no controls = no reduction
+        avg_eff = sum(c.get("effectiveness_score", 1.0) for c in applied) / len(applied) if applied else 0.0
         inherent = risk.get("inherent_risk_score", 0)
         residual = round(inherent * (1 - avg_eff), 2)
         results.append({
@@ -285,86 +324,69 @@ def get_residual(ra_id: str):
             "residual_risk_score": residual,
             "residual_risk_band": _inherent_risk_band(residual) if residual > 0 else "Low",
         })
-
     return {"assessment_id": ra_id, "residual_risks": results}
-
-
-@router.get("/questions/{assessment_type}")
-def get_assessment_questions(assessment_type: str):
-    from utils.assessment_questions import get_questions
-    questions = get_questions(assessment_type)
-    if not questions:
-        raise HTTPException(400, f"Unknown assessment type: {assessment_type}. Use BIA, LEGAL, or PIA.")
-    return {"assessment_type": assessment_type.upper(), "questions": questions}
 
 
 @router.post("/{ra_id}/analyze")
 def analyze_assessment(ra_id: str):
-    """Run LLM analysis on all Q&A responses to identify risks and compute inherent risk scores."""
-    from utils.llm_chain import _make_llm
+    """Hybrid rule-layer + LLM analysis (Persona 5: Technology Risk Assessor)."""
     from langchain.schema import HumanMessage
+    from utils.llm_provider import get_llm
     import json as _json
 
     ra = get_store().get(ra_id)
     if not ra:
         raise HTTPException(404, "Assessment not found")
     if not ra.responses:
-        raise HTTPException(400, "No responses yet. Submit Q&A responses first via POST /{ra_id}/respond")
+        raise HTTPException(400, "No responses yet. Submit questionnaire responses first.")
 
-    # Fetch asset details from MongoDB
     from api.routers.assets import get_store as get_asset_store
     asset_store = get_asset_store()
 
-    # Group responses by asset_id
-    by_asset: dict[str, dict[str, list[dict]]] = {}
+    by_asset: dict[str, list[dict]] = {}
     for resp in ra.responses:
-        aid = resp["asset_id"]
-        atype = resp["assessment_type"]
-        by_asset.setdefault(aid, {}).setdefault(atype, []).append(resp)
+        by_asset.setdefault(resp["asset_id"], []).append(resp)
 
     all_risks: list[dict] = []
 
-    for asset_id, type_responses in by_asset.items():
+    for asset_id, asset_responses in by_asset.items():
         asset = asset_store.get(asset_id)
         asset_name = asset.name if asset else asset_id
         cia_total = asset.cia_total if asset else 9
         cia_band = asset.cia_band if asset else "Medium"
-        initial_band = ra.initial_inherent_ratings.get(asset_id, "Medium")
 
-        # Build Q&A summary text
-        qa_lines = []
-        for atype, resps in type_responses.items():
-            qa_lines.append(f"\n=== {atype} Assessment ===")
-            for r in resps:
-                qa_lines.append(f"Q[{r['question_id']}]: {r['response_text']}")
-        qa_text = "\n".join(qa_lines)
+        rule_likelihood, rule_impact = _rule_layer_scores(asset_responses)
 
-        prompt = f"""You are a cybersecurity risk analyst. Analyse the following assessment responses for an asset and identify the top risks.
+        qa_text = "\n".join(
+            f"[{r['section_id']}] Q:{r['question_id']} | Answer:{r['answer']} | Details: {r.get('details', '')}"
+            for r in asset_responses
+        )
 
-Asset: {asset_name}
+        prompt = f"""You are a cybersecurity risk analyst. Analyse the following assessment responses for an application and identify specific risks.
+
+Application: {asset_name}
 CIA Total: {cia_total}/15 (Band: {cia_band})
-Initial Inherent Risk Rating (human estimate): {initial_band}
+Rule-based pre-score — Likelihood: {rule_likelihood}/5, Impact: {rule_impact}/5
 
-Assessment Responses:
+Assessment Responses (section | question | answer | details):
 {qa_text}
 
-Based on these responses, identify 2-4 specific risks for this asset.
+Based on these responses, identify 2-4 specific, actionable risks for this application.
 For each risk return a JSON object with:
-- title: short risk title
-- description: 1-2 sentence description
-- risk_category: one of [Operational, Regulatory, Privacy, Financial, Reputational]
-- likelihood_score: integer 1-5 (1=rare, 5=almost certain)
-- impact_score: integer 1-5 (1=negligible, 5=catastrophic)
+- title: short risk title (max 10 words)
+- description: 1-2 sentence description of the risk
+- risk_category: one of [Operational, Regulatory, Privacy, Financial, Reputational, Technical]
+- likelihood_score: integer 1-5 (calibrate from rule-based pre-score of {rule_likelihood})
+- impact_score: integer 1-5 (calibrate from rule-based pre-score of {rule_impact})
 - rationale: one sentence explaining the score
 
-Return ONLY a valid JSON array. Example:
-[{{"title":"...", "description":"...", "risk_category":"...", "likelihood_score":3, "impact_score":4, "rationale":"..."}}]"""
+Return ONLY a valid JSON array, no markdown, no explanation.
+Example: [{{"title":"Unauthorised data access","description":"...","risk_category":"Privacy","likelihood_score":3,"impact_score":4,"rationale":"..."}}]"""
 
         try:
-            llm = _make_llm(os.environ.get("OLLAMA_LLM_MODEL", "llama3:8b"), temperature=0.2)
+            llm = get_llm()
             response = llm.invoke([HumanMessage(content=prompt)])
             content = response.content.strip()
-            # Strip markdown code fences if present
             if content.startswith("```"):
                 content = content.split("```")[1]
                 if content.startswith("json"):
@@ -372,21 +394,18 @@ Return ONLY a valid JSON array. Example:
             llm_risks = _json.loads(content)
         except Exception as e:
             logger.error(f"LLM analysis failed for asset {asset_id}: {e}")
-            # Fallback: create a generic risk from initial rating
-            band_to_scores = {"Critical": (4, 5), "High": (3, 4), "Medium": (2, 3), "Low": (1, 2)}
-            l, i = band_to_scores.get(initial_band, (2, 3))
             llm_risks = [{
-                "title": f"Risk: {asset_name} exposure",
-                "description": f"Risk identified from initial assessment rating of {initial_band}.",
+                "title": f"{asset_name} — inherent risk",
+                "description": "Risk derived from rule-layer scoring (LLM analysis unavailable).",
                 "risk_category": "Operational",
-                "likelihood_score": l,
-                "impact_score": i,
-                "rationale": "Derived from initial inherent risk rating (LLM analysis unavailable).",
+                "likelihood_score": rule_likelihood,
+                "impact_score": rule_impact,
+                "rationale": "Derived from rule-based analysis of questionnaire responses.",
             }]
 
         for r in llm_risks:
-            l = int(r.get("likelihood_score", 3))
-            i = int(r.get("impact_score", 3))
+            l = int(r.get("likelihood_score", rule_likelihood))
+            i = int(r.get("impact_score", rule_impact))
             score = l * i
             all_risks.append({
                 "id": str(uuid.uuid4()),
@@ -406,8 +425,143 @@ Return ONLY a valid JSON array. Example:
             })
 
     get_store().set_risks(ra_id, all_risks)
-    return {
-        "assessment_id": ra_id,
-        "risks_identified": len(all_risks),
-        "risks": all_risks,
-    }
+    return {"assessment_id": ra_id, "risks_identified": len(all_risks), "risks": all_risks}
+
+
+@router.post("/{ra_id}/suggest-controls")
+def suggest_controls(ra_id: str):
+    """Persona 6: Control Selector — rank library controls per risk finding."""
+    from langchain.schema import HumanMessage
+    from utils.llm_provider import get_llm
+    from utils.controls_library import MongoControlsStore
+    import json as _json
+
+    ra = get_store().get(ra_id)
+    if not ra:
+        raise HTTPException(404, "Assessment not found")
+    if not ra.risks:
+        raise HTTPException(400, "No risks yet. Run /analyze first.")
+
+    ctrl_store = MongoControlsStore()
+    all_controls = ctrl_store.list()
+    controls_summary = "\n".join(
+        f"- [{c.id}] {c.title} (domain: {getattr(c, 'domain', 'General')})"
+        for c in all_controls[:100]
+    )
+
+    risk_summary = "\n".join(
+        f"- [{r['id']}] {r['title']} | category: {r['risk_category']} | band: {r['inherent_risk_band']}"
+        for r in ra.risks
+    )
+
+    prompt = f"""You are a control selection specialist for technology risk treatment.
+
+Select and rank controls ONLY from the provided master controls library for each identified risk.
+Do not recommend controls outside the provided library.
+
+Risks identified:
+{risk_summary}
+
+Available controls library (id | title | domain):
+{controls_summary}
+
+For each risk, return up to 3 ranked control suggestions.
+Return ONLY a valid JSON array, no markdown.
+Each element: {{"risk_id": "...", "control_id": "...", "control_title": "...", "rationale": "...", "relevance_score": 1-5}}"""
+
+    try:
+        llm = get_llm()
+        response = llm.invoke([HumanMessage(content=prompt)])
+        content = response.content.strip()
+        if content.startswith("```"):
+            content = content.split("```")[1]
+            if content.startswith("json"):
+                content = content[4:]
+        suggestions = _json.loads(content)
+    except Exception as e:
+        logger.error(f"Control suggestion LLM failed for {ra_id}: {e}")
+        suggestions = []
+
+    get_store().set_suggested_controls(ra_id, suggestions)
+    return {"assessment_id": ra_id, "suggestions": suggestions}
+
+
+@router.post("/{ra_id}/generate-report")
+def generate_report(ra_id: str):
+    """Persona 7: Assessment Report Writer — 9-section risk assessment report."""
+    from langchain.schema import HumanMessage
+    from utils.llm_provider import get_llm
+    from api.routers.assets import get_store as get_asset_store
+
+    ra = get_store().get(ra_id)
+    if not ra:
+        raise HTTPException(404, "Assessment not found")
+    if not ra.risks:
+        raise HTTPException(400, "No risks identified. Run /analyze first.")
+
+    asset_store = get_asset_store()
+    app_names = []
+    for aid in ra.asset_ids:
+        a = asset_store.get(aid)
+        app_names.append(a.name if a else aid)
+
+    risk_text = "\n".join(
+        f"- {r['title']} | {r['risk_category']} | {r['inherent_risk_band']} | {r.get('human_rationale', '')}"
+        for r in ra.risks
+    )
+    control_text = "\n".join(
+        f"- Risk {s['risk_id']}: {s['control_title']} (relevance {s['relevance_score']}/5)"
+        for s in (ra.suggested_controls or [])
+    ) or "No control suggestions generated yet."
+
+    prompt = f"""You are an assessment report writer for technology risk and audit audiences.
+
+Produce a professional Risk Assessment Report using only the provided data.
+Follow the required report structure exactly. Do not add extra sections.
+Keep language professional, direct, and suitable for technology, information-security, and audit personnel.
+
+Assessment: {ra.title}
+Description: {ra.description}
+Applications in scope: {', '.join(app_names)}
+Total responses: {len(ra.responses)}
+Risks identified: {len(ra.risks)}
+
+Risk findings:
+{risk_text}
+
+Suggested controls:
+{control_text}
+
+Required report structure (produce each section as a markdown heading):
+1. Report Header
+2. Executive Summary
+3. Assessment Scope
+4. Assessment Method
+5. Evidence Summary
+6. Application-by-Application Findings
+7. Cross-Application Risk Themes
+8. Prioritized Remediation Themes
+9. Issues Affecting Suggested Controls
+
+Return the full report as markdown only."""
+
+    try:
+        llm = get_llm()
+        response = llm.invoke([HumanMessage(content=prompt)])
+        report_md = response.content.strip()
+    except Exception as e:
+        logger.error(f"Report generation failed for {ra_id}: {e}")
+        report_md = f"# Risk Assessment Report\n\n**Report generation failed:** {e}\n\nPlease retry."
+
+    get_store().set_report(ra_id, report_md)
+    return {"assessment_id": ra_id, "report_markdown": report_md}
+
+
+@router.get("/{ra_id}/report")
+def get_report(ra_id: str):
+    ra = get_store().get(ra_id)
+    if not ra:
+        raise HTTPException(404, "Assessment not found")
+    if not ra.report_markdown:
+        raise HTTPException(404, "No report generated yet. Call POST /{ra_id}/generate-report first.")
+    return {"assessment_id": ra_id, "report_markdown": ra.report_markdown}
