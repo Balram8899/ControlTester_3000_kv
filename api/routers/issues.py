@@ -168,3 +168,112 @@ def get_store() -> MongoIssueStore:
     if _store is None:
         _store = MongoIssueStore()
     return _store
+
+
+@router.post("", status_code=201, response_model=Issue)
+def create_issue(body: IssueCreate):
+    return get_store().create(body)
+
+
+@router.get("", response_model=list[Issue])
+def list_issues(
+    severity: Optional[SeverityType] = None,
+    status: Optional[IssueStatusType] = None,
+    asset_id: Optional[str] = None,
+    control_id: Optional[str] = None,
+):
+    return get_store().list(
+        severity_f=severity,
+        status_f=status,
+        asset_id_f=asset_id,
+        control_id_f=control_id,
+    )
+
+
+@router.get("/{issue_id}/impact")
+def get_issue_impact(issue_id: str):
+    issue = get_store().get(issue_id)
+    if not issue:
+        raise HTTPException(404, "Issue not found")
+    active_severity = issue.severity if issue.status != "Closed" else None
+    effectiveness = compute_control_effectiveness(active_severity)
+    return {
+        "issue_id": issue_id,
+        "severity": issue.severity,
+        "status": issue.status,
+        "control_effectiveness": effectiveness,
+        "note": "Residual risk impact will be populated in Sub-Project 3 (Risk Assessment)",
+    }
+
+
+@router.post("/{issue_id}/evidence", response_model=Issue)
+async def upload_evidence(
+    issue_id: str,
+    file: UploadFile = File(...),
+    uploaded_by: str = Form(""),
+):
+    import base64
+    issue = get_store().get(issue_id)
+    if not issue:
+        raise HTTPException(404, "Issue not found")
+    content = await file.read()
+    content_b64 = base64.b64encode(content).decode()
+    result = get_store().add_evidence(issue_id, file.filename or "upload", content_b64, uploaded_by)
+    if not result:
+        raise HTTPException(500, "Failed to attach evidence")
+    return result
+
+
+@router.post("/{issue_id}/submit", response_model=Issue)
+def submit_issue(issue_id: str):
+    issue = get_store().get(issue_id)
+    if not issue:
+        raise HTTPException(404, "Issue not found")
+    if issue.status not in ("Open", "In Remediation"):
+        raise HTTPException(400, f"Cannot submit issue with status '{issue.status}'")
+    result = get_store().transition(issue_id, "Pending Sign-off")
+    if not result:
+        raise HTTPException(500, "Transition failed")
+    return result
+
+
+@router.post("/{issue_id}/approve", response_model=Issue)
+def approve_issue(issue_id: str, body: ApproveRequest):
+    issue = get_store().get(issue_id)
+    if not issue:
+        raise HTTPException(404, "Issue not found")
+    if issue.status != "Pending Sign-off":
+        raise HTTPException(400, "Issue is not pending sign-off")
+    new_status: IssueStatusType = "Closed" if body.decision == "approved" else "In Remediation"
+    result = get_store().add_approval(
+        issue_id,
+        decision=body.decision,
+        notes=body.notes,
+        approver=issue.approver,
+        new_status=new_status,
+    )
+    if not result:
+        raise HTTPException(500, "Approval failed")
+    return result
+
+
+@router.get("/{issue_id}", response_model=Issue)
+def get_issue(issue_id: str):
+    issue = get_store().get(issue_id)
+    if not issue:
+        raise HTTPException(404, "Issue not found")
+    return issue
+
+
+@router.put("/{issue_id}", response_model=Issue)
+def update_issue(issue_id: str, body: IssueUpdate):
+    issue = get_store().update(issue_id, body)
+    if not issue:
+        raise HTTPException(404, "Issue not found")
+    return issue
+
+
+@router.delete("/{issue_id}", status_code=204)
+def delete_issue(issue_id: str):
+    if not get_store().delete(issue_id):
+        raise HTTPException(404, "Issue not found")

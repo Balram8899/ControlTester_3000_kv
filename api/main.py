@@ -66,6 +66,7 @@ from utils.rcm_report_store import RCMReportStore
 from api.routers.assets import router as assets_router
 from api.routers.risk_assessment import router as risk_assessment_router
 from api.routers.controls_quality import router as controls_quality_router
+from api.routers.issues import router as issues_router
 
 # ----------------------------------------------------------------------------
 # Logging
@@ -200,6 +201,7 @@ app.add_middleware(
 app.include_router(assets_router)
 app.include_router(risk_assessment_router)
 app.include_router(controls_quality_router)
+app.include_router(issues_router)
 
 
 # ----------------------------------------------------------------------------
