@@ -45,3 +45,21 @@ def test_cia_total_invalid_dimension_six():
 def test_criticality_invalid_out_of_range():
     with pytest.raises(ValueError):
         compute_criticality(2)
+
+
+from utils.risk_scorer import compute_control_effectiveness
+
+def test_effectiveness_no_issues():
+    assert compute_control_effectiveness(None) == 1.00
+
+def test_effectiveness_low():
+    assert compute_control_effectiveness("Low") == 0.75
+
+def test_effectiveness_medium():
+    assert compute_control_effectiveness("Medium") == 0.50
+
+def test_effectiveness_high():
+    assert compute_control_effectiveness("High") == 0.25
+
+def test_effectiveness_critical():
+    assert compute_control_effectiveness("Critical") == 0.00

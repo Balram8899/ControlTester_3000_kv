@@ -20,3 +20,22 @@ def compute_criticality(cia_total: int) -> str:
         if low <= cia_total <= high:
             return label
     raise ValueError(f"CIA total {cia_total} is out of valid range 3–15")
+
+
+SEVERITY_EFFECTIVENESS: dict[str, float] = {
+    "Low":      0.75,
+    "Medium":   0.50,
+    "High":     0.25,
+    "Critical": 0.00,
+}
+
+
+def compute_control_effectiveness(open_issue_severity: str | None) -> float:
+    """Return control effectiveness factor (0.0–1.0) based on worst open issue severity.
+    Pass None when there are no open issues (effectiveness = 1.0).
+    """
+    if open_issue_severity is None:
+        return 1.00
+    if open_issue_severity not in SEVERITY_EFFECTIVENESS:
+        raise ValueError(f"Unknown severity '{open_issue_severity}'. Expected Low/Medium/High/Critical.")
+    return SEVERITY_EFFECTIVENESS[open_issue_severity]
