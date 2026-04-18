@@ -1,792 +1,445 @@
-import { useCallback, useState } from "react";
-import { useDropzone } from "react-dropzone";
+import { useEffect, useState } from "react";
 import {
-  Upload, FileText, X, Play, RotateCcw, Download, CheckCircle2,
-  AlertCircle, Clock, ChevronRight, ChevronLeft, FileWarning, Shield, Loader2
+  CheckCircle2, ChevronRight, FileBarChart,
+  Loader2, Plus, Shield, Sparkles,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import HeroSection from "@/components/HeroSection";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
-import { useControlTesting } from "@/contexts/ControlTestingContext";
-import ControlTestingKpis from "@/components/ControlTestingKpis";
+import {
+  useControlTesting,
+  TestResultType,
+  TestedControl,
+  LibraryControl,
+} from "@/contexts/ControlTestingContext";
 
-const CHECKLIST_PAGE_SIZE = 5;
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+const WIZARD_STEPS = ["Setup", "Controls", "Evidence", "Report"];
+
+const RESULT_COLOR: Record<TestResultType, string> = {
+  pass: "bg-emerald-100 text-emerald-700 border-emerald-300",
+  fail: "bg-red-100 text-red-700 border-red-300",
+  partial: "bg-amber-100 text-amber-700 border-amber-300",
+  not_tested: "bg-slate-100 text-slate-500 border-slate-300",
+};
+
+const RESULT_LABEL: Record<TestResultType, string> = {
+  pass: "Pass",
+  fail: "Fail",
+  partial: "Partial",
+  not_tested: "Not Tested",
+};
+
+const STATUS_COLOR: Record<string, string> = {
+  draft: "bg-slate-100 text-slate-600 border-slate-300",
+  in_progress: "bg-blue-100 text-blue-700 border-blue-300",
+  complete: "bg-emerald-100 text-emerald-700 border-emerald-300",
+};
+
+// ── Component ─────────────────────────────────────────────────────────────────
 
 export default function ControlTestingPage() {
-  const { toast } = useToast();
-  const [checklistPage, setChecklistPage] = useState(0);
   const {
-    sessionId,
-    currentStep,
-    testScriptFile,
-    controlsFound,
-    evidenceChecklist,
-    warnings,
-    evidenceFiles,
-    filesProcessed,
-    evidenceSummary,
-    appendFilesProcessed,
-    pendingControls,
-    readyToGenerate,
-    isProcessing,
-    workpaperFilename,
-    downloadUrl,
-    workpaperSummary,
-    resultMessage,
-    error,
-    setTestScriptFile,
-    setSessionData,
-    addEvidenceFiles,
-    setEvidenceFiles,
-    resetState,
+    sessions, selectedSession, libraryControls,
+    isLoading, isReviewing, isGeneratingReport, report,
+    fetchSessions, selectSession, createSession,
+    fetchLibraryControls, addControls, updateControl,
+    reviewEvidence, generateReport,
   } = useControlTesting();
+  const { toast } = useToast();
 
-  const onDropScript = useCallback(
-    (acceptedFiles: File[]) => {
-      if (acceptedFiles.length > 0) {
-        const file = acceptedFiles[0];
-        setTestScriptFile(file);
-        toast({
-          title: "Script uploaded",
-          description: `${file.name} ready for parsing`,
-        });
-      }
-    },
-    [setTestScriptFile, toast]
+  const [wizardStep, setWizardStep] = useState(0);
+  const [showCreate, setShowCreate] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newDesc, setNewDesc] = useState("");
+
+  const [selectedLibraryIds, setSelectedLibraryIds] = useState<Set<string>>(new Set());
+  const [controlSearch, setControlSearch] = useState("");
+
+  const [activeControlId, setActiveControlId] = useState<string | null>(null);
+  const [evidenceInput, setEvidenceInput] = useState("");
+  const [claimInput, setClaimInput] = useState("");
+
+  useEffect(() => { fetchSessions(); fetchLibraryControls(); }, []);
+
+  // ── KPIs ──────────────────────────────────────────────────────────────────
+
+  const total = sessions.length;
+  const complete = sessions.filter(s => s.status === "complete").length;
+  const allControls = sessions.flatMap(s => s.controls);
+  const failCount = allControls.filter(c => c.test_result === "fail").length;
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
+  const filteredLibrary = libraryControls.filter(c =>
+    controlSearch === "" ||
+    c.control_name.toLowerCase().includes(controlSearch.toLowerCase()) ||
+    c.domain.toLowerCase().includes(controlSearch.toLowerCase())
   );
 
-  const onDropEvidence = useCallback(
-    (acceptedFiles: File[]) => {
-      if (acceptedFiles.length > 0) {
-        addEvidenceFiles(acceptedFiles);
-        toast({
-          title: "Evidence files added",
-          description: `${acceptedFiles.length} file(s) added`,
-        });
-      }
-    },
-    [addEvidenceFiles, toast]
-  );
-
-  const { getRootProps: getScriptRootProps, getInputProps: getScriptInputProps, isDragActive: isScriptDragActive } =
-    useDropzone({
-      onDrop: onDropScript,
-      multiple: false,
-      accept: {
-        "application/pdf": [".pdf"],
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
-        "application/vnd.ms-excel": [".xls"],
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
-        "application/msword": [".doc"],
-        "application/x-yaml": [".yaml", ".yml"],
-        "text/yaml": [".yaml", ".yml"],
-        "text/csv": [".csv"],
-        "text/plain": [".txt"],
-      },
-    });
-
-  const { getRootProps: getEvidenceRootProps, getInputProps: getEvidenceInputProps, isDragActive: isEvidenceDragActive } =
-    useDropzone({
-      onDrop: onDropEvidence,
-      multiple: true,
-    });
-
-  const removeEvidenceFile = (index: number) => {
-    setEvidenceFiles(evidenceFiles.filter((_, i) => i !== index));
-  };
-
-  const handleStartAudit = async () => {
-    if (!testScriptFile) {
-      toast({ title: "No file", description: "Please upload a test script", variant: "destructive" });
+  async function handleCreate() {
+    if (!newTitle.trim()) {
+      toast({ title: "Title is required", variant: "destructive" });
       return;
     }
-
-    const selectedModel = localStorage.getItem("selectedModel") || "llama3";
-    setSessionData({ isProcessing: true, error: null });
-
     try {
-      const formData = new FormData();
-      formData.append("selected_model", selectedModel);
-      formData.append("test_script", testScriptFile);
-
-      const response = await fetch(`/api/audit/start`, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({ error: response.statusText }));
-        throw new Error(errData.error || errData.detail || `Server error: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      setSessionData({
-        sessionId: data.session_id,
-        currentStep: "review_checklist",
-        controlsFound: data.controls_found,
-        evidenceChecklist: data.evidence_checklist || [],
-        warnings: data.warnings || [],
-        isProcessing: false,
-      });
-
-      toast({
-        title: "Test Script Parsed",
-        description: `${data.controls_found} controls found. Please upload evidence files.`,
-      });
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to start audit";
-      setSessionData({ isProcessing: false, error: message });
-      toast({ title: "Error", description: message, variant: "destructive" });
-    }
-  };
-
-  const handleUploadEvidence = async () => {
-    if (evidenceFiles.length === 0) {
-      toast({ title: "No files", description: "Please upload evidence files", variant: "destructive" });
-      return;
-    }
-    if (!sessionId) return;
-
-    setSessionData({ isProcessing: true, error: null });
-
-    try {
-      const formData = new FormData();
-      formData.append("session_id", sessionId);
-      evidenceFiles.forEach((file) => {
-        formData.append("evidence_files", file);
-      });
-
-      const response = await fetch(`/api/audit/upload-evidence`, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({ error: response.statusText }));
-        throw new Error(errData.error || errData.detail || `Server error: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      appendFilesProcessed(data.files_processed || []);
-      setSessionData({
-        currentStep: "upload_evidence",
-        evidenceSummary: data.evidence_summary || null,
-        pendingControls: data.pending_controls || [],
-        readyToGenerate: data.ready_to_generate || false,
-        isProcessing: false,
-        evidenceFiles: [],
-      });
-
-      const accepted = (data.files_processed || []).filter(
-        (f: { validation_status: string }) => f.validation_status === "accepted"
-      ).length;
-      const rejected = (data.files_processed || []).filter(
-        (f: { validation_status: string }) => f.validation_status === "rejected"
-      ).length;
-
-      toast({
-        title: "Evidence Processed",
-        description: `${accepted} accepted, ${rejected} rejected. ${data.ready_to_generate ? "Ready to generate workpaper." : `${data.evidence_summary?.pending || 0} controls still need evidence.`}`,
-      });
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to upload evidence";
-      setSessionData({ isProcessing: false, error: message });
-      toast({ title: "Error", description: message, variant: "destructive" });
-    }
-  };
-
-  const handleGenerateWorkpaper = async () => {
-    if (!sessionId) return;
-
-    setSessionData({ isProcessing: true, currentStep: "generating", error: null });
-
-    try {
-      const formData = new FormData();
-      formData.append("session_id", sessionId);
-      if (!readyToGenerate) {
-        formData.append("force_generate", "true");
-      }
-
-      const response = await fetch(`/api/audit/generate-workpaper`, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({ error: response.statusText }));
-        throw new Error(errData.error || errData.detail || `Server error: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      setSessionData({
-        currentStep: "results",
-        workpaperFilename: data.workpaper_filename || null,
-        downloadUrl: data.download_url || null,
-        workpaperSummary: data.summary || null,
-        resultMessage: data.message || "Workpaper generated successfully",
-        isProcessing: false,
-      });
-
-      toast({
-        title: "Workpaper Generated",
-        description: data.message || "Audit workpaper is ready for download.",
-      });
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to generate workpaper";
-      setSessionData({ isProcessing: false, currentStep: "upload_evidence", error: message });
-      toast({ title: "Error", description: message, variant: "destructive" });
-    }
-  };
-
-  const handleDownloadWorkpaper = async () => {
-    if (!downloadUrl) return;
-    try {
-      const response = await fetch(`/api${downloadUrl}`);
-      if (!response.ok) throw new Error("Download failed");
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = workpaperFilename || "workpaper.xlsx";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast({ title: "Downloaded", description: "Workpaper saved" });
+      const s = await createSession(newTitle.trim(), newDesc.trim());
+      selectSession(s);
+      setShowCreate(false);
+      setNewTitle("");
+      setNewDesc("");
+      setWizardStep(0);
+      toast({ title: "Session created" });
     } catch {
-      toast({ title: "Error", description: "Failed to download workpaper", variant: "destructive" });
+      toast({ title: "Failed to create session", variant: "destructive" });
     }
-  };
+  }
 
-  const handleNewAudit = () => {
-    resetState();
-    setChecklistPage(0);
-    toast({ title: "Reset", description: "Ready for new audit" });
-  };
+  async function handleAddControls() {
+    if (!selectedSession || selectedLibraryIds.size === 0) return;
+    const toAdd: LibraryControl[] = libraryControls.filter(c => selectedLibraryIds.has(c.control_id));
+    try {
+      await addControls(selectedSession.id, toAdd);
+      setSelectedLibraryIds(new Set());
+      setWizardStep(1);
+      toast({ title: `${toAdd.length} control(s) added` });
+    } catch {
+      toast({ title: "Failed to add controls", variant: "destructive" });
+    }
+  }
 
-  const stepNumber = currentStep === "landing" ? 0
-    : currentStep === "upload_script" ? 1
-    : currentStep === "review_checklist" || currentStep === "upload_evidence" ? 2
-    : 3;
+  async function handleResult(ctrl: TestedControl, result: TestResultType) {
+    if (!selectedSession) return;
+    try {
+      await updateControl(selectedSession.id, ctrl.id, { test_result: result });
+    } catch {
+      toast({ title: "Failed to update result", variant: "destructive" });
+    }
+  }
+
+  async function handleNotes(ctrl: TestedControl, notes: string) {
+    if (!selectedSession) return;
+    await updateControl(selectedSession.id, ctrl.id, { tester_notes: notes });
+  }
+
+  async function handleReviewEvidence() {
+    if (!selectedSession || !activeControlId) return;
+    if (!evidenceInput.trim()) {
+      toast({ title: "Paste evidence text first", variant: "destructive" });
+      return;
+    }
+    try {
+      const review = await reviewEvidence(selectedSession.id, activeControlId, evidenceInput, claimInput);
+      toast({ title: `Evidence review: ${review.conclusion}` });
+      setEvidenceInput("");
+      setClaimInput("");
+    } catch {
+      toast({ title: "Evidence review failed", variant: "destructive" });
+    }
+  }
+
+  async function handleGenerateReport() {
+    if (!selectedSession) return;
+    try {
+      await generateReport(selectedSession.id);
+      toast({ title: "Report generated" });
+    } catch {
+      toast({ title: "Report generation failed", variant: "destructive" });
+    }
+  }
+
+  const activeControl = selectedSession?.controls.find(c => c.id === activeControlId) ?? null;
 
   return (
-    <div className="h-full flex flex-col">
-      <HeroSection title="AI Control Testing" subtitle="Upload a control test script, provide evidence, and generate audit workpapers" icon={Shield} />
-      <div className="flex-1 overflow-auto p-6">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="flex flex-col h-screen bg-slate-50">
+      <HeroSection
+        title="Control Testing"
+        subtitle="Test controls against evidence — evidence review, findings, and final audit report"
+        icon={Shield}
+      />
 
-        {/* Step indicators */}
-        <div className="flex items-center justify-center gap-2 mb-6">
-          {[
-            { num: 1, label: "Upload Script" },
-            { num: 2, label: "Provide Evidence" },
-            { num: 3, label: "Generate Workpaper" },
-          ].map((step, idx) => (
-            <div key={step.num} className="flex items-center gap-2">
-              <div
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                  stepNumber === step.num
-                    ? "bg-primary text-primary-foreground"
-                    : stepNumber > step.num
-                    ? "bg-primary/20 text-primary"
-                    : "bg-muted text-muted-foreground"
-                }`}
-                data-testid={`step-indicator-${step.num}`}
+      <div className="flex flex-1 overflow-hidden">
+        {/* ── Left panel: session list ── */}
+        <div className="w-72 bg-white border-r border-slate-200 flex flex-col">
+          <div className="p-4 border-b border-slate-100">
+            <Button className="w-full" size="sm" onClick={() => setShowCreate(true)}>
+              <Plus className="w-4 h-4 mr-2" /> New Session
+            </Button>
+          </div>
+          <ScrollArea className="flex-1">
+            {isLoading ? (
+              <div className="flex justify-center p-8"><Loader2 className="animate-spin w-5 h-5 text-slate-400" /></div>
+            ) : sessions.map(s => (
+              <button
+                key={s.id}
+                onClick={() => { selectSession(s); setWizardStep(s.status === "complete" ? 3 : s.controls.length > 0 ? 1 : 0); }}
+                className={`w-full text-left px-4 py-3 border-b border-slate-50 hover:bg-slate-50 transition-colors ${selectedSession?.id === s.id ? "bg-blue-50 border-l-2 border-l-blue-500" : ""}`}
               >
-                {stepNumber > step.num ? (
-                  <CheckCircle2 className="h-4 w-4" />
-                ) : (
-                  <span>{step.num}</span>
-                )}
-                <span className="hidden sm:inline">{step.label}</span>
-              </div>
-              {idx < 2 && <ChevronRight className="h-4 w-4 text-muted-foreground" />}
-            </div>
-          ))}
+                <p className="font-medium text-sm text-slate-800 truncate">{s.title}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge variant="outline" className={`text-xs ${STATUS_COLOR[s.status]}`}>
+                    {s.status.replace("_", " ")}
+                  </Badge>
+                  <span className="text-xs text-slate-400">{s.controls.length} ctrl{s.controls.length !== 1 ? "s" : ""}</span>
+                </div>
+              </button>
+            ))}
+          </ScrollArea>
         </div>
 
-        {error && (
-          <Card className="border-destructive">
-            <CardContent className="py-4">
-              <div className="flex items-center gap-2 text-destructive">
-                <AlertCircle className="h-5 w-5 flex-shrink-0" />
-                <p className="text-sm">{error}</p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {/* ── Right panel ── */}
+        <div className="flex-1 overflow-auto p-6">
+          {/* Create form */}
+          {showCreate && (
+            <Card className="max-w-lg mx-auto mb-6">
+              <CardHeader><CardTitle>New Testing Session</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <Input placeholder="Session title *" value={newTitle} onChange={e => setNewTitle(e.target.value)} />
+                <Textarea placeholder="Description (optional)" value={newDesc} onChange={e => setNewDesc(e.target.value)} rows={2} />
+                <div className="flex gap-2">
+                  <Button onClick={handleCreate}>Create</Button>
+                  <Button variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-        {currentStep === "upload_script" && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Upload Control Test Script
-              </CardTitle>
-              <CardDescription>
-                Upload a YAML test script that defines the controls to be tested and the evidence requirements
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div
-                {...getScriptRootProps()}
-                className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-                  isScriptDragActive
-                    ? "border-primary bg-primary/5"
-                    : "border-muted-foreground/25 hover:border-primary/50"
-                }`}
-                data-testid="dropzone-script"
-              >
-                <input {...getScriptInputProps()} data-testid="input-script-file" />
-                <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                {isScriptDragActive ? (
-                  <p className="text-primary font-medium">Drop test script here...</p>
-                ) : (
-                  <>
-                    <p className="text-foreground font-medium">
-                      Drag & drop your test script here
-                    </p>
-                    <p className="text-muted-foreground text-sm mt-1">
-                      or click to browse (.pdf, .xlsx, .xls, .docx, .doc, .yaml, .csv, .txt)
-                    </p>
-                  </>
-                )}
+          {/* Dashboard */}
+          {!selectedSession && !showCreate && (
+            <div>
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <Card><CardContent className="pt-6"><p className="text-2xl font-bold text-blue-600">{total}</p><p className="text-sm text-slate-500">Total Sessions</p></CardContent></Card>
+                <Card><CardContent className="pt-6"><p className="text-2xl font-bold text-emerald-600">{complete}</p><p className="text-sm text-slate-500">Complete</p></CardContent></Card>
+                <Card><CardContent className="pt-6"><p className="text-2xl font-bold text-red-500">{failCount}</p><p className="text-sm text-slate-500">Failed Controls</p></CardContent></Card>
               </div>
+              <p className="text-slate-400 text-sm">Select a session from the left or create a new one.</p>
+            </div>
+          )}
 
-              {testScriptFile && (
-                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-primary" />
-                    <span className="text-sm truncate max-w-xs">{testScriptFile.name}</span>
-                    <Badge variant="secondary" className="text-xs">
-                      {(testScriptFile.size / 1024).toFixed(1)} KB
-                    </Badge>
+          {/* Wizard */}
+          {selectedSession && (
+            <div className="max-w-3xl">
+              {/* Stepper */}
+              <div className="flex items-center gap-2 mb-6">
+                {WIZARD_STEPS.map((label, i) => (
+                  <div key={label} className="flex items-center gap-1">
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold border-2 ${i < wizardStep ? "bg-emerald-500 border-emerald-500 text-white" : i === wizardStep ? "bg-blue-500 border-blue-500 text-white" : "bg-white border-slate-300 text-slate-400"}`}>
+                      {i < wizardStep ? <CheckCircle2 className="w-4 h-4" /> : i + 1}
+                    </div>
+                    <span className={`text-xs font-medium ${i === wizardStep ? "text-blue-600" : "text-slate-400"}`}>{label}</span>
+                    {i < WIZARD_STEPS.length - 1 && <ChevronRight className="w-3 h-3 text-slate-300 ml-1" />}
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setTestScriptFile(null)}
-                    data-testid="button-remove-script"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
+                ))}
+              </div>
+
+              {/* Step 0: Setup */}
+              {wizardStep === 0 && (
+                <div className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">{selectedSession.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <p className="text-sm text-slate-500">{selectedSession.description || "No description."}</p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium text-slate-700">Select controls from library</p>
+                        <span className="text-xs text-slate-400">{selectedLibraryIds.size} selected</span>
+                      </div>
+                      <Input
+                        placeholder="Search by name or domain…"
+                        value={controlSearch}
+                        onChange={e => setControlSearch(e.target.value)}
+                        className="text-sm"
+                      />
+                      <div className="max-h-64 overflow-y-auto border rounded divide-y">
+                        {filteredLibrary.length === 0 && (
+                          <p className="text-xs text-slate-400 p-3">No controls in library yet. Upload controls via the Controls Library module.</p>
+                        )}
+                        {filteredLibrary.map(c => (
+                          <label key={c.control_id} className="flex items-start gap-2 p-2 hover:bg-slate-50 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              className="mt-0.5"
+                              checked={selectedLibraryIds.has(c.control_id)}
+                              onChange={e => {
+                                setSelectedLibraryIds(prev => {
+                                  const next = new Set(prev);
+                                  if (e.target.checked) next.add(c.control_id);
+                                  else next.delete(c.control_id);
+                                  return next;
+                                });
+                              }}
+                            />
+                            <div>
+                              <p className="text-sm font-medium text-slate-800">{c.control_name}</p>
+                              <p className="text-xs text-slate-500">{c.domain}</p>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                      <Button onClick={handleAddControls} disabled={selectedLibraryIds.size === 0}>
+                        Add Selected Controls <ChevronRight className="w-4 h-4 ml-1" />
+                      </Button>
+                    </CardContent>
+                  </Card>
+                  {selectedSession.controls.length > 0 && (
+                    <Button variant="outline" onClick={() => setWizardStep(1)}>
+                      Skip — view existing controls ({selectedSession.controls.length})
+                    </Button>
+                  )}
                 </div>
               )}
 
-              <Button
-                onClick={handleStartAudit}
-                disabled={!testScriptFile || isProcessing}
-                className="w-full"
-                data-testid="button-start-audit"
-              >
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Parsing Test Script...
-                  </>
-                ) : (
-                  <>
-                    <Play className="h-4 w-4 mr-2" />
-                    Parse Test Script
-                  </>
-                )}
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {(currentStep === "review_checklist" || currentStep === "upload_evidence") && (
-          <>
-            {warnings.length > 0 && (
-              <Card className="border-yellow-500/50">
-                <CardContent className="py-4">
-                  <div className="flex items-start gap-2">
-                    <FileWarning className="h-5 w-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-yellow-600 dark:text-yellow-400">Warnings</p>
-                      {warnings.map((w, i) => (
-                        <p key={i} className="text-sm text-muted-foreground">{w}</p>
-                      ))}
-                    </div>
+              {/* Step 1: Controls */}
+              {wizardStep === 1 && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-slate-800">Controls ({selectedSession.controls.length})</h3>
+                    <Button size="sm" onClick={() => setWizardStep(2)}>
+                      Evidence Review <ChevronRight className="w-4 h-4 ml-1" />
+                    </Button>
                   </div>
-                </CardContent>
-              </Card>
-            )}
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5" />
-                  Evidence Checklist
-                  <Badge variant="secondary">{controlsFound} controls</Badge>
-                </CardTitle>
-                <CardDescription>
-                  The test script requires evidence for each control listed below. Upload the appropriate files.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {evidenceChecklist
-                    .slice(checklistPage * CHECKLIST_PAGE_SIZE, (checklistPage + 1) * CHECKLIST_PAGE_SIZE)
-                    .map((item, index) => {
-                      const isSatisfied = filesProcessed.some(
-                        (fp) => fp.validation_status === "accepted" && fp.satisfies_controls?.includes(item.control_id)
-                      );
-                      return (
-                        <div
-                          key={item.control_id}
-                          className="flex items-start gap-3 p-3 rounded-lg bg-muted/30"
-                          data-testid={`checklist-item-${checklistPage * CHECKLIST_PAGE_SIZE + index}`}
-                        >
-                          <div className="mt-0.5">
-                            {isSatisfied ? (
-                              <CheckCircle2 className="h-5 w-5 text-green-500" />
-                            ) : (
-                              <Clock className="h-5 w-5 text-muted-foreground" />
-                            )}
+                  {selectedSession.controls.length === 0 && (
+                    <p className="text-slate-400 text-sm">No controls added. Go back to Setup.</p>
+                  )}
+                  {selectedSession.controls.map(ctrl => (
+                    <Card key={ctrl.id}>
+                      <CardContent className="pt-4 space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="font-medium text-sm text-slate-800">{ctrl.control_name}</p>
+                            <p className="text-xs text-slate-500">{ctrl.domain}</p>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <Badge variant="outline" className="text-xs font-mono">
-                                {item.control_id}
-                              </Badge>
-                              <Badge variant={isSatisfied ? "default" : "secondary"} className="text-xs">
-                                {isSatisfied ? "Received" : "Pending"}
-                              </Badge>
-                            </div>
-                            <p className="text-sm mt-1 text-muted-foreground truncate">
-                              {item.control_description}
-                            </p>
-                            <p className="text-xs mt-0.5 text-primary/80">
-                              Required: {item.evidence_required}
-                            </p>
-                          </div>
+                          <Badge variant="outline" className={`text-xs ${RESULT_COLOR[ctrl.test_result]}`}>
+                            {RESULT_LABEL[ctrl.test_result]}
+                          </Badge>
                         </div>
+                        <div className="flex gap-1">
+                          {(["pass", "fail", "partial", "not_tested"] as TestResultType[]).map(r => (
+                            <button
+                              key={r}
+                              onClick={() => handleResult(ctrl, r)}
+                              className={`px-2 py-0.5 rounded border text-xs transition-colors ${ctrl.test_result === r ? RESULT_COLOR[r] : "bg-white text-slate-500 border-slate-300 hover:bg-slate-50"}`}
+                            >
+                              {RESULT_LABEL[r]}
+                            </button>
+                          ))}
+                        </div>
+                        <Textarea
+                          placeholder="Tester notes…"
+                          defaultValue={ctrl.tester_notes}
+                          onBlur={e => handleNotes(ctrl, e.target.value)}
+                          rows={1}
+                          className="text-xs"
+                        />
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+
+              {/* Step 2: Evidence Review */}
+              {wizardStep === 2 && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-slate-800">Evidence Review</h3>
+                    <Button size="sm" onClick={() => setWizardStep(3)}>
+                      Generate Report <ChevronRight className="w-4 h-4 ml-1" />
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 max-h-48 overflow-y-auto">
+                    {selectedSession.controls.map(ctrl => {
+                      const reviewed = !!ctrl.evidence_review.conclusion;
+                      return (
+                        <button
+                          key={ctrl.id}
+                          onClick={() => setActiveControlId(ctrl.id)}
+                          className={`text-left p-3 rounded border text-sm transition-colors ${activeControlId === ctrl.id ? "bg-blue-50 border-blue-400" : "bg-white border-slate-200 hover:bg-slate-50"}`}
+                        >
+                          <p className="font-medium text-slate-800 truncate">{ctrl.control_name}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="outline" className={`text-xs ${RESULT_COLOR[ctrl.test_result]}`}>
+                              {RESULT_LABEL[ctrl.test_result]}
+                            </Badge>
+                            {reviewed && <CheckCircle2 className="w-3 h-3 text-emerald-500" />}
+                          </div>
+                        </button>
                       );
                     })}
-                </div>
-                {evidenceChecklist.length > CHECKLIST_PAGE_SIZE && (
-                  <div className="flex items-center justify-between mt-4 pt-3 border-t">
-                    <p className="text-sm text-muted-foreground">
-                      Showing {checklistPage * CHECKLIST_PAGE_SIZE + 1}–{Math.min((checklistPage + 1) * CHECKLIST_PAGE_SIZE, evidenceChecklist.length)} of {evidenceChecklist.length}
-                    </p>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        disabled={checklistPage === 0}
-                        onClick={() => setChecklistPage((p) => p - 1)}
-                        data-testid="button-checklist-prev"
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                      </Button>
-                      <span className="text-sm px-2 text-muted-foreground">
-                        {checklistPage + 1} / {Math.ceil(evidenceChecklist.length / CHECKLIST_PAGE_SIZE)}
-                      </span>
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        disabled={(checklistPage + 1) * CHECKLIST_PAGE_SIZE >= evidenceChecklist.length}
-                        onClick={() => setChecklistPage((p) => p + 1)}
-                        data-testid="button-checklist-next"
-                      >
-                        <ChevronRight className="h-4 w-4" />
-                      </Button>
-                    </div>
                   </div>
-                )}
-              </CardContent>
-            </Card>
 
-            {filesProcessed.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Validation Results
-                    {evidenceSummary && (
-                      <Badge variant="secondary">
-                        {evidenceSummary.received}/{evidenceSummary.total_controls} received
-                      </Badge>
-                    )}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {filesProcessed.map((fp, index) => (
-                      <div
-                        key={`${fp.filename}-${index}`}
-                        className={`flex items-start gap-3 p-3 rounded-lg ${
-                          fp.validation_status === "accepted"
-                            ? "bg-green-500/10"
-                            : "bg-destructive/10"
-                        }`}
-                        data-testid={`validation-result-${index}`}
-                      >
-                        {fp.validation_status === "accepted" ? (
-                          <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
-                        ) : (
-                          <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+                  {activeControl && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-sm">{activeControl.control_name}</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        {activeControl.evidence_review.conclusion && (
+                          <div className="p-3 bg-slate-50 rounded border text-xs space-y-1">
+                            <p><strong>Conclusion:</strong> {activeControl.evidence_review.conclusion}</p>
+                            <p><strong>Explanation:</strong> {activeControl.evidence_review.explanation}</p>
+                            <p><strong>Confidence:</strong> {activeControl.evidence_review.confidence}</p>
+                            <p><strong>Gaps:</strong> {activeControl.evidence_review.gaps}</p>
+                          </div>
                         )}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-sm font-medium truncate">{fp.filename}</span>
-                            <Badge
-                              variant={fp.validation_status === "accepted" ? "default" : "destructive"}
-                              className="text-xs"
-                            >
-                              {fp.validation_status}
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1">{fp.reason}</p>
-                          {fp.satisfies_controls && fp.satisfies_controls.length > 0 && (
-                            <div className="flex items-center gap-1 mt-1 flex-wrap">
-                              <span className="text-xs text-muted-foreground">Satisfies:</span>
-                              {fp.satisfies_controls.map((c) => (
-                                <Badge key={c} variant="outline" className="text-xs font-mono">
-                                  {c}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                        <Input
+                          placeholder="Claim under review (optional — defaults to control name)"
+                          value={claimInput}
+                          onChange={e => setClaimInput(e.target.value)}
+                          className="text-sm"
+                        />
+                        <Textarea
+                          placeholder="Paste evidence text here…"
+                          value={evidenceInput}
+                          onChange={e => setEvidenceInput(e.target.value)}
+                          rows={5}
+                          className="text-sm font-mono"
+                        />
+                        <Button onClick={handleReviewEvidence} disabled={isReviewing}>
+                          {isReviewing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Reviewing…</> : <><Sparkles className="w-4 h-4 mr-1" />Review Evidence</>}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  )}
+                  {!activeControl && (
+                    <p className="text-slate-400 text-sm">Select a control above to review its evidence.</p>
+                  )}
+                </div>
+              )}
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Upload className="h-5 w-5" />
-                  Upload Required Files
-                </CardTitle>
-                <CardDescription>
-                  Upload the files required by the test script. The system will validate each file against the checklist.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div
-                  {...getEvidenceRootProps()}
-                  className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-                    isEvidenceDragActive
-                      ? "border-primary bg-primary/5"
-                      : "border-muted-foreground/25 hover:border-primary/50"
-                  }`}
-                  data-testid="dropzone-evidence"
-                >
-                  <input {...getEvidenceInputProps()} data-testid="input-evidence-files" />
-                  <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  {isEvidenceDragActive ? (
-                    <p className="text-primary font-medium">Drop evidence files here...</p>
+              {/* Step 3: Report */}
+              {wizardStep === 3 && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-slate-800">Final Report</h3>
+                    <Button size="sm" onClick={handleGenerateReport} disabled={isGeneratingReport}>
+                      {isGeneratingReport
+                        ? <><Loader2 className="w-4 h-4 animate-spin mr-1" />Generating…</>
+                        : <><FileBarChart className="w-4 h-4 mr-1" />Generate Report</>}
+                    </Button>
+                  </div>
+                  {report ? (
+                    <Card>
+                      <CardContent className="pt-4">
+                        <pre className="whitespace-pre-wrap text-xs text-slate-700 font-mono leading-relaxed">{report}</pre>
+                      </CardContent>
+                    </Card>
                   ) : (
-                    <>
-                      <p className="text-foreground font-medium">
-                        Drag & drop required files here
-                      </p>
-                      <p className="text-muted-foreground text-sm mt-1">
-                        or click to browse (PDF, LOG, TXT, CSV, DOCX)
-                      </p>
-                    </>
+                    <p className="text-slate-400 text-sm">
+                      Click "Generate Report" to produce the domain-grouped Control Testing Report.
+                    </p>
                   )}
                 </div>
-
-                {evidenceFiles.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">
-                      Files to Upload ({evidenceFiles.length})
-                    </p>
-                    <div className="space-y-2 max-h-48 overflow-auto">
-                      {evidenceFiles.map((file, index) => (
-                        <div
-                          key={`${file.name}-${index}`}
-                          className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
-                          data-testid={`evidence-file-${index}`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <FileText className="h-4 w-4 text-primary" />
-                            <span className="text-sm truncate max-w-xs">{file.name}</span>
-                            <Badge variant="secondary" className="text-xs">
-                              {(file.size / 1024).toFixed(1)} KB
-                            </Badge>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => removeEvidenceFile(index)}
-                            data-testid={`button-remove-evidence-${index}`}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex items-center gap-3 flex-wrap">
-                  <Button
-                    onClick={handleUploadEvidence}
-                    disabled={evidenceFiles.length === 0 || isProcessing}
-                    data-testid="button-upload-evidence"
-                  >
-                    {isProcessing ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Validating Evidence...
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="h-4 w-4 mr-2" />
-                        Submit Evidence
-                      </>
-                    )}
-                  </Button>
-
-                  {readyToGenerate && (
-                    <Button
-                      onClick={handleGenerateWorkpaper}
-                      variant="default"
-                      data-testid="button-generate-workpaper"
-                    >
-                      <Play className="h-4 w-4 mr-2" />
-                      Generate Workpaper
-                    </Button>
-                  )}
-
-                  {!readyToGenerate && evidenceSummary && evidenceSummary.received > 0 && (
-                    <Button
-                      onClick={handleGenerateWorkpaper}
-                      variant="secondary"
-                      data-testid="button-force-generate"
-                    >
-                      <Play className="h-4 w-4 mr-2" />
-                      Generate with Partial Evidence
-                    </Button>
-                  )}
-                </div>
-
-                {pendingControls.length > 0 && !readyToGenerate && (
-                  <div className="mt-4 p-3 bg-muted/30 rounded-lg">
-                    <p className="text-sm font-medium mb-2 flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
-                      Still Needed ({pendingControls.length})
-                    </p>
-                    <div className="space-y-1">
-                      {pendingControls.map((pc) => (
-                        <div key={pc.control_id} className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Badge variant="outline" className="text-xs font-mono">{pc.control_id}</Badge>
-                          <span className="truncate">{pc.evidence_required || pc.control_description || ""}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </>
-        )}
-
-        {currentStep === "generating" && (
-          <Card>
-            <CardContent className="py-12">
-              <div className="flex flex-col items-center justify-center space-y-4">
-                <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                <p className="text-lg font-medium">Generating Audit Workpaper...</p>
-                <p className="text-sm text-muted-foreground text-center max-w-md">
-                  Analyzing evidence against controls using pre-built knowledge bases. This may take a few minutes.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {currentStep === "results" && (
-          <>
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-green-500" />
-                  Audit Complete
-                </CardTitle>
-                <CardDescription>{resultMessage}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-5">
-                {workpaperSummary && (
-                  <>
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span>{workpaperSummary.controls_tested} controls tested</span>
-                      <Badge variant="outline" className={
-                        workpaperSummary.overall_result === "COMPLIANT" ? "border-green-400 text-green-500 dark:text-green-400"
-                        : workpaperSummary.overall_result === "NON_COMPLIANT" ? "border-red-400 text-red-500 dark:text-red-400"
-                        : "border-yellow-400 text-yellow-500 dark:text-yellow-400"
-                      }>
-                        {(workpaperSummary.overall_result ?? "").replace(/_/g, " ")}
-                      </Badge>
-                    </div>
-
-                    {/* KPI cards */}
-                    <ControlTestingKpis
-                      controlsTested={workpaperSummary.controls_tested}
-                      issuesIdentified={workpaperSummary.fail_count + workpaperSummary.partial_count}
-                      severityCounts={workpaperSummary.severity_counts}
-                    />
-
-                    {/* Detailed pass/fail/partial/no-evidence breakdown */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      <div className="p-4 bg-green-500/10 rounded-lg text-center">
-                        <p className="text-2xl font-bold text-green-600 dark:text-green-400">{workpaperSummary.pass_count}</p>
-                        <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">Pass</p>
-                      </div>
-                      <div className="p-4 bg-destructive/10 rounded-lg text-center">
-                        <p className="text-2xl font-bold text-destructive">{workpaperSummary.fail_count}</p>
-                        <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">Fail</p>
-                      </div>
-                      <div className="p-4 bg-yellow-500/10 rounded-lg text-center">
-                        <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{workpaperSummary.partial_count}</p>
-                        <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">Partial</p>
-                      </div>
-                      <div className="p-4 bg-blue-500/10 rounded-lg text-center">
-                        <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{workpaperSummary.controls_with_evidence}</p>
-                        <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">Evidence Files</p>
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {downloadUrl && (
-                  <Button
-                    onClick={handleDownloadWorkpaper}
-                    className="w-full"
-                    data-testid="button-download-workpaper"
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Download Workpaper
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-
-            <div className="flex items-center justify-center gap-4">
-              <Button
-                variant="outline"
-                onClick={handleNewAudit}
-                data-testid="button-new-audit"
-              >
-                <RotateCcw className="h-4 w-4 mr-2" />
-                New Audit
-              </Button>
+              )}
             </div>
-          </>
-        )}
-      </div>
+          )}
+        </div>
       </div>
     </div>
   );
