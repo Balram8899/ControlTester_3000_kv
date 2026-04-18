@@ -1,8 +1,7 @@
 // kpmg_ui/client/src/pages/asset-registry.tsx
 import { useEffect, useState } from "react";
 import {
-  Database, Cpu, Server, Network, Monitor, Box, GitBranch,
-  Plus, Search, AlertTriangle, Shield, Loader2, Trash2, Zap, X,
+  Database, Cpu, Server, Network, Plus, Search, AlertTriangle, Shield, Loader2, Trash2, Zap, X,
 } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,23 +12,20 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import {
   useAssetRegistry,
-  Asset, AssetCreate, AssetType, HostingType, SupportType, StatusType, ClassType,
+  Asset, AssetCreate, AssetType,
 } from "@/contexts/AssetRegistryContext";
 import CiaRatingWidget from "@/components/CiaRatingWidget";
 
 // ── Icon map ────────────────────────────────────────────────────────────────
 
 const TYPE_ICON: Record<AssetType, any> = {
-  "Application":           Server,
-  "Hardware":              Cpu,
-  "Database":              Database,
-  "Interface/API":         GitBranch,
-  "Network Component":     Network,
-  "Desktop/Client Software": Monitor,
-  "Other":                 Box,
+  IT:      Server,
+  Data:    Database,
+  Process: Cpu,
+  Vendor:  Network,
 };
 
-const BAND_COLOR: Record<string, string> = {
+const CRITICALITY_COLOR: Record<string, string> = {
   Critical: "bg-red-100    text-red-700    border-red-300",
   High:     "bg-orange-100 text-orange-700 border-orange-300",
   Medium:   "bg-yellow-100 text-yellow-700 border-yellow-300",
@@ -39,17 +35,16 @@ const BAND_COLOR: Record<string, string> = {
 // ── Form default ────────────────────────────────────────────────────────────
 
 const EMPTY: AssetCreate = {
-  name: "", description: "", use: "",
-  asset_type: "Application",
-  hosting_type: "Unspecified",
-  support_type: "Company",
-  status: "Operational",
+  name: "", description: "",
+  type: "IT",
+  status: "Active",
   owner: "", custodian: "",
-  location: "", jurisdiction: "",
+  location: "On-premise",
+  jurisdiction: "",
   classification: "Internal",
-  confidentiality_score: 1,
-  integrity_score: 1,
-  availability_score: 1,
+  confidentiality: 1,
+  integrity: 1,
+  availability: 1,
 };
 
 // ── Page ────────────────────────────────────────────────────────────────────
@@ -73,27 +68,17 @@ export default function AssetRegistryPage() {
 
   const filtered = assets.filter(a =>
     a.name.toLowerCase().includes(search.toLowerCase()) ||
-    a.asset_type.toLowerCase().includes(search.toLowerCase())
+    a.type.toLowerCase().includes(search.toLowerCase())
   );
 
   const kpis = {
     total:    assets.length,
-    critical: assets.filter(a => a.cia_band === "Critical").length,
-    high:     assets.filter(a => a.cia_band === "High").length,
+    critical: assets.filter(a => a.criticality === "Critical").length,
+    high:     assets.filter(a => a.criticality === "High").length,
   };
 
   function updateForm(field: keyof AssetCreate, value: any) {
-    setForm(prev => {
-      const next = { ...prev, [field]: value };
-      // Auto-clear hosting_type when asset_type changes away from Application
-      if (field === "asset_type" && value !== "Application") {
-        next.hosting_type = undefined;
-      }
-      if (field === "asset_type" && value === "Application") {
-        next.hosting_type = "Unspecified";
-      }
-      return next;
-    });
+    setForm(prev => ({ ...prev, [field]: value }));
   }
 
   async function handleCreate() {
@@ -110,10 +95,8 @@ export default function AssetRegistryPage() {
   const isFormValid =
     form.name.trim() &&
     form.description.trim() &&
-    form.use.trim() &&
     form.owner.trim() &&
     form.custodian.trim() &&
-    form.location.trim() &&
     form.jurisdiction.trim();
 
   return (
@@ -149,7 +132,7 @@ export default function AssetRegistryPage() {
               </div>
             )}
             {filtered.map(asset => {
-              const Icon = TYPE_ICON[asset.asset_type] ?? Box;
+              const Icon = TYPE_ICON[asset.type] ?? Server;
               const selected = selectedAsset?.id === asset.id;
               return (
                 <div
@@ -166,12 +149,12 @@ export default function AssetRegistryPage() {
                       <Icon className="h-4 w-4 text-slate-400 flex-shrink-0" />
                       <span className="text-xs font-medium text-slate-800 truncate">{asset.name}</span>
                     </div>
-                    <Badge className={`text-[10px] px-1.5 py-0 border flex-shrink-0 ${BAND_COLOR[asset.cia_band]}`}>
-                      {asset.cia_band}
+                    <Badge className={`text-[10px] px-1.5 py-0 border flex-shrink-0 ${CRITICALITY_COLOR[asset.criticality]}`}>
+                      {asset.criticality}
                     </Badge>
                   </div>
                   <p className="text-[10px] text-slate-400 mt-1 ml-6">
-                    {asset.asset_type} · CIA {asset.cia_total}/15
+                    {asset.type} · CIA {asset.cia_total}/15
                   </p>
                 </div>
               );
@@ -239,7 +222,7 @@ export default function AssetRegistryPage() {
                           <div key={type} className="text-center p-2 rounded-lg bg-slate-50 border border-slate-100">
                             <Icon className="h-4 w-4 text-slate-400 mx-auto mb-1" />
                             <p className="text-lg font-bold text-slate-700">
-                              {assets.filter(a => a.asset_type === type).length}
+                              {assets.filter(a => a.type === type).length}
                             </p>
                             <p className="text-[9px] text-slate-400 truncate">{type}</p>
                           </div>
@@ -259,12 +242,12 @@ export default function AssetRegistryPage() {
                     <CardContent className="px-4 pb-3 space-y-1 text-xs text-slate-600">
                       <p><span className="font-medium">CIA Total:</span> {selectedAsset.cia_total}/15</p>
                       <p>
-                        <span className="font-medium">Band:</span>{" "}
-                        <Badge className={`text-[10px] ${BAND_COLOR[selectedAsset.cia_band]}`}>
-                          {selectedAsset.cia_band}
+                        <span className="font-medium">Criticality:</span>{" "}
+                        <Badge className={`text-[10px] ${CRITICALITY_COLOR[selectedAsset.criticality]}`}>
+                          {selectedAsset.criticality}
                         </Badge>
                       </p>
-                      <p><span className="font-medium">Type:</span> {selectedAsset.asset_type}</p>
+                      <p><span className="font-medium">Type:</span> {selectedAsset.type}</p>
                       <p><span className="font-medium">Owner:</span> {selectedAsset.owner} · <span className="font-medium">Custodian:</span> {selectedAsset.custodian}</p>
                     </CardContent>
                   </Card>
@@ -291,16 +274,14 @@ export default function AssetRegistryPage() {
 
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   {([
-                    ["Type",           selectedAsset.asset_type],
-                    ["Hosting",        selectedAsset.hosting_type ?? "N/A"],
-                    ["Support",        selectedAsset.support_type],
+                    ["Type",           selectedAsset.type],
+                    ["Location",       selectedAsset.location],
                     ["Status",         selectedAsset.status],
                     ["Classification", selectedAsset.classification],
                     ["Jurisdiction",   selectedAsset.jurisdiction],
-                    ["Location",       selectedAsset.location],
                     ["Owner",          selectedAsset.owner],
                     ["Custodian",      selectedAsset.custodian],
-                    ["Use",            selectedAsset.use],
+                    ["Description",    selectedAsset.description],
                   ] as [string, string][]).map(([l, v]) => (
                     <div key={l} className="p-2 bg-white rounded border border-slate-100">
                       <p className="text-slate-400 text-[10px]">{l}</p>
@@ -310,9 +291,9 @@ export default function AssetRegistryPage() {
                 </div>
 
                 <CiaRatingWidget
-                  confidentiality_score={selectedAsset.confidentiality_score}
-                  integrity_score={selectedAsset.integrity_score}
-                  availability_score={selectedAsset.availability_score}
+                  confidentiality={selectedAsset.confidentiality}
+                  integrity={selectedAsset.integrity}
+                  availability={selectedAsset.availability}
                   onChange={() => {}}
                   readOnly
                 />
@@ -391,23 +372,11 @@ export default function AssetRegistryPage() {
                 <div>
                   <label className="text-xs font-medium text-slate-600">Asset Type *</label>
                   <select className="mt-1 w-full h-8 text-xs border border-slate-200 rounded-md px-2"
-                    value={form.asset_type}
-                    onChange={e => updateForm("asset_type", e.target.value as AssetType)}>
+                    value={form.type}
+                    onChange={e => updateForm("type", e.target.value as AssetType)}>
                     {(Object.keys(TYPE_ICON) as AssetType[]).map(t => <option key={t}>{t}</option>)}
                   </select>
                 </div>
-
-                {form.asset_type === "Application" && (
-                  <div>
-                    <label className="text-xs font-medium text-slate-600">Hosting Type</label>
-                    <select className="mt-1 w-full h-8 text-xs border border-slate-200 rounded-md px-2"
-                      value={form.hosting_type ?? "Unspecified"}
-                      onChange={e => updateForm("hosting_type", e.target.value as HostingType)}>
-                      {(["PaaS","IaaS","SaaS","Internally Hosted","Desktop/Client Software","Not Hosted","Unspecified"] as HostingType[])
-                        .map(h => <option key={h}>{h}</option>)}
-                    </select>
-                  </div>
-                )}
 
                 <div>
                   <label className="text-xs font-medium text-slate-600">Description *</label>
@@ -416,28 +385,21 @@ export default function AssetRegistryPage() {
                     onChange={e => updateForm("description", e.target.value)} />
                 </div>
 
-                <div>
-                  <label className="text-xs font-medium text-slate-600">Use *</label>
-                  <Input className="mt-1 h-8 text-xs" placeholder="What is this asset used for?"
-                    value={form.use} onChange={e => updateForm("use", e.target.value)} />
-                </div>
-
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-xs font-medium text-slate-600">Support Type *</label>
+                    <label className="text-xs font-medium text-slate-600">Location *</label>
                     <select className="mt-1 w-full h-8 text-xs border border-slate-200 rounded-md px-2"
-                      value={form.support_type}
-                      onChange={e => updateForm("support_type", e.target.value as SupportType)}>
-                      {(["Company","Vendor","Business"] as SupportType[]).map(s => <option key={s}>{s}</option>)}
+                      value={form.location}
+                      onChange={e => updateForm("location", e.target.value as AssetCreate["location"])}>
+                      {(["On-premise", "Cloud", "Hybrid"] as AssetCreate["location"][]).map(l => <option key={l}>{l}</option>)}
                     </select>
                   </div>
                   <div>
                     <label className="text-xs font-medium text-slate-600">Status</label>
                     <select className="mt-1 w-full h-8 text-xs border border-slate-200 rounded-md px-2"
                       value={form.status}
-                      onChange={e => updateForm("status", e.target.value as StatusType)}>
-                      {(["Operational","Build in Progress","Planned Decommissioning","Decommissioned","Archived"] as StatusType[])
-                        .map(s => <option key={s}>{s}</option>)}
+                      onChange={e => updateForm("status", e.target.value as AssetCreate["status"])}>
+                      {(["Active", "Retired", "Under Review"] as NonNullable<AssetCreate["status"]>[]).map(s => <option key={s}>{s}</option>)}
                     </select>
                   </div>
                 </div>
@@ -457,30 +419,24 @@ export default function AssetRegistryPage() {
 
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-xs font-medium text-slate-600">Location *</label>
-                    <Input className="mt-1 h-8 text-xs" placeholder="e.g. AWS Sydney"
-                      value={form.location} onChange={e => updateForm("location", e.target.value)} />
-                  </div>
-                  <div>
                     <label className="text-xs font-medium text-slate-600">Jurisdiction *</label>
                     <Input className="mt-1 h-8 text-xs" placeholder="e.g. AU, EU, IN"
                       value={form.jurisdiction} onChange={e => updateForm("jurisdiction", e.target.value)} />
                   </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-medium text-slate-600">Classification *</label>
-                  <select className="mt-1 w-full h-8 text-xs border border-slate-200 rounded-md px-2"
-                    value={form.classification}
-                    onChange={e => updateForm("classification", e.target.value as ClassType)}>
-                    {(["Public","Internal","Confidential","Restricted"] as ClassType[]).map(c => <option key={c}>{c}</option>)}
-                  </select>
+                  <div>
+                    <label className="text-xs font-medium text-slate-600">Classification *</label>
+                    <select className="mt-1 w-full h-8 text-xs border border-slate-200 rounded-md px-2"
+                      value={form.classification}
+                      onChange={e => updateForm("classification", e.target.value as AssetCreate["classification"])}>
+                      {(["Public", "Internal", "Confidential", "Restricted"] as AssetCreate["classification"][]).map(c => <option key={c}>{c}</option>)}
+                    </select>
+                  </div>
                 </div>
 
                 <CiaRatingWidget
-                  confidentiality_score={form.confidentiality_score}
-                  integrity_score={form.integrity_score}
-                  availability_score={form.availability_score}
+                  confidentiality={form.confidentiality}
+                  integrity={form.integrity}
+                  availability={form.availability}
                   onChange={(field, value) => updateForm(field, value)}
                 />
 

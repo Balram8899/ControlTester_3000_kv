@@ -2,7 +2,7 @@
 import { Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-type CIADimension = "confidentiality_score" | "integrity_score" | "availability_score";
+type CIADimension = "confidentiality" | "integrity" | "availability";
 
 const SCORE_STYLE: Record<number, string> = {
   1: "bg-emerald-100 border-emerald-400 text-emerald-700 font-semibold",
@@ -92,19 +92,19 @@ function CiaAxis({
 }
 
 export default function CiaRatingWidget({
-  confidentiality_score,
-  integrity_score,
-  availability_score,
+  confidentiality,
+  integrity,
+  availability,
   onChange,
   readOnly = false,
 }: {
-  confidentiality_score: number;
-  integrity_score: number;
-  availability_score: number;
+  confidentiality: number;
+  integrity: number;
+  availability: number;
   onChange: (field: CIADimension, value: number) => void;
   readOnly?: boolean;
 }) {
-  const total = confidentiality_score + integrity_score + availability_score;
+  const total = confidentiality + integrity + availability;
   const band =
     total <= 5  ? "Low" :
     total <= 8  ? "Medium" :
@@ -124,9 +124,9 @@ export default function CiaRatingWidget({
           {total}/15 · {band}
         </div>
       </div>
-      <CiaAxis label="Confidentiality" field="confidentiality_score" value={confidentiality_score} onChange={onChange} readOnly={readOnly} />
-      <CiaAxis label="Integrity"       field="integrity_score"       value={integrity_score}       onChange={onChange} readOnly={readOnly} />
-      <CiaAxis label="Availability"    field="availability_score"    value={availability_score}    onChange={onChange} readOnly={readOnly} />
+      <CiaAxis label="Confidentiality" field="confidentiality" value={confidentiality} onChange={onChange} readOnly={readOnly} />
+      <CiaAxis label="Integrity"       field="integrity"       value={integrity}       onChange={onChange} readOnly={readOnly} />
+      <CiaAxis label="Availability"    field="availability"    value={availability}    onChange={onChange} readOnly={readOnly} />
     </div>
   );
 }

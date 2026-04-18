@@ -1,62 +1,41 @@
-// kpmg_ui/client/src/contexts/AssetRegistryContext.tsx
 import { createContext, useContext, useState, useCallback, ReactNode } from "react";
 
-export type AssetType =
-  | "Application" | "Hardware" | "Database" | "Interface/API"
-  | "Network Component" | "Desktop/Client Software" | "Other";
-
-export type HostingType =
-  | "PaaS" | "IaaS" | "SaaS" | "Internally Hosted"
-  | "Desktop/Client Software" | "Not Hosted" | "Unspecified";
-
-export type SupportType = "Company" | "Vendor" | "Business";
-
-export type StatusType =
-  | "Operational" | "Build in Progress" | "Planned Decommissioning"
-  | "Decommissioned" | "Archived";
-
-export type ClassType = "Public" | "Internal" | "Confidential" | "Restricted";
-export type CIABand = "Low" | "Medium" | "High" | "Critical";
+export type AssetType = "IT" | "Data" | "Process" | "Vendor";
 
 export interface Asset {
   id: string;
   name: string;
+  type: AssetType;
   description: string;
-  use: string;
-  asset_type: AssetType;
-  hosting_type: HostingType | null;
-  support_type: SupportType;
-  status: StatusType;
+  confidentiality: number;   // 1–5
+  integrity: number;         // 1–5
+  availability: number;      // 1–5
+  cia_total: number;         // 3–15
+  criticality: "Critical" | "High" | "Medium" | "Low";
+  last_assessment_id: string | null;
   owner: string;
   custodian: string;
-  location: string;
+  location: "On-premise" | "Cloud" | "Hybrid";
   jurisdiction: string;
-  classification: ClassType;
-  confidentiality_score: number;
-  integrity_score: number;
-  availability_score: number;
-  cia_total: number;
-  cia_band: CIABand;
+  classification: "Public" | "Internal" | "Confidential" | "Restricted";
+  status: "Active" | "Retired" | "Under Review";
   created_at: string;
   updated_at: string;
 }
 
 export interface AssetCreate {
   name: string;
+  type: AssetType;
   description: string;
-  use: string;
-  asset_type: AssetType;
-  hosting_type?: HostingType;
-  support_type: SupportType;
-  status?: StatusType;
+  confidentiality: number;   // 1–5
+  integrity: number;         // 1–5
+  availability: number;      // 1–5
   owner: string;
   custodian: string;
-  location: string;
+  location: "On-premise" | "Cloud" | "Hybrid";
   jurisdiction: string;
-  classification: ClassType;
-  confidentiality_score: number;
-  integrity_score: number;
-  availability_score: number;
+  classification: "Public" | "Internal" | "Confidential" | "Restricted";
+  status?: "Active" | "Retired" | "Under Review";
 }
 
 export interface ControlSuggestion {
@@ -73,7 +52,7 @@ interface Ctx {
   error: string | null;
   controlSuggestions: ControlSuggestion[];
   isSuggestingControls: boolean;
-  fetchAssets: (filters?: { asset_type?: string; cia_band?: string; status?: string }) => Promise<void>;
+  fetchAssets: (filters?: { type?: string; criticality?: string; status?: string }) => Promise<void>;
   selectAsset: (a: Asset | null) => void;
   createAsset: (data: AssetCreate) => Promise<Asset>;
   updateAsset: (id: string, data: Partial<AssetCreate>) => Promise<Asset>;
@@ -91,52 +70,37 @@ export function AssetRegistryProvider({ children }: { children: ReactNode }) {
   const [controlSuggestions, setControlSuggestions] = useState<ControlSuggestion[]>([]);
   const [isSuggestingControls, setIsSuggestingControls] = useState(false);
 
-  const fetchAssets = useCallback(async (
-    filters?: { asset_type?: string; cia_band?: string; status?: string }
-  ) => {
-    setIsLoading(true);
-    setError(null);
+  const fetchAssets = useCallback(async (filters?: { type?: string; criticality?: string; status?: string }) => {
+    setIsLoading(true); setError(null);
     try {
       const p = new URLSearchParams();
-      if (filters?.asset_type) p.set("asset_type", filters.asset_type);
-      if (filters?.cia_band)   p.set("cia_band",   filters.cia_band);
-      if (filters?.status)     p.set("status",     filters.status);
+      if (filters?.type) p.set("type", filters.type);
+      if (filters?.criticality) p.set("criticality", filters.criticality);
+      if (filters?.status) p.set("status", filters.status);
       const r = await fetch(`/api/assets?${p}`);
       if (!r.ok) throw new Error("Failed to fetch assets");
       setAssets(await r.json());
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setIsLoading(false);
-    }
+    } catch (e: any) { setError(e.message); }
+    finally { setIsLoading(false); }
   }, []);
 
   const selectAsset = useCallback((a: Asset | null) => {
-    setSelectedAsset(a);
-    setControlSuggestions([]);
+    setSelectedAsset(a); setControlSuggestions([]);
   }, []);
 
   const createAsset = useCallback(async (data: AssetCreate): Promise<Asset> => {
-    const r = await fetch("/api/assets", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
+    const r = await fetch("/api/assets", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
     if (!r.ok) throw new Error("Failed to create asset");
     const asset: Asset = await r.json();
-    setAssets(prev => [asset, ...prev]);
+    setAssets(p => [asset, ...p]);
     return asset;
   }, []);
 
   const updateAsset = useCallback(async (id: string, data: Partial<AssetCreate>): Promise<Asset> => {
-    const r = await fetch(`/api/assets/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
+    const r = await fetch(`/api/assets/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
     if (!r.ok) throw new Error("Failed to update asset");
     const updated: Asset = await r.json();
-    setAssets(prev => prev.map(a => a.id === id ? updated : a));
+    setAssets(p => p.map(a => a.id === id ? updated : a));
     if (selectedAsset?.id === id) setSelectedAsset(updated);
     return updated;
   }, [selectedAsset]);
@@ -144,29 +108,24 @@ export function AssetRegistryProvider({ children }: { children: ReactNode }) {
   const deleteAsset = useCallback(async (id: string): Promise<void> => {
     const r = await fetch(`/api/assets/${id}`, { method: "DELETE" });
     if (!r.ok) throw new Error("Failed to delete asset");
-    setAssets(prev => prev.filter(a => a.id !== id));
+    setAssets(p => p.filter(a => a.id !== id));
     if (selectedAsset?.id === id) setSelectedAsset(null);
   }, [selectedAsset]);
 
   const suggestControls = useCallback(async (assetId: string): Promise<void> => {
-    setIsSuggestingControls(true);
-    setControlSuggestions([]);
+    setIsSuggestingControls(true); setControlSuggestions([]);
     try {
       const r = await fetch(`/api/assets/${assetId}/suggest-controls`, { method: "POST" });
       if (!r.ok) throw new Error("Suggestion failed");
       const data = await r.json();
       setControlSuggestions(data.suggestions ?? []);
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setIsSuggestingControls(false);
-    }
+    } catch (e: any) { setError(e.message); }
+    finally { setIsSuggestingControls(false); }
   }, []);
 
   return (
     <AssetRegistryContext.Provider value={{
-      assets, selectedAsset, isLoading, error,
-      controlSuggestions, isSuggestingControls,
+      assets, selectedAsset, isLoading, error, controlSuggestions, isSuggestingControls,
       fetchAssets, selectAsset, createAsset, updateAsset, deleteAsset, suggestControls,
     }}>
       {children}
@@ -176,6 +135,6 @@ export function AssetRegistryProvider({ children }: { children: ReactNode }) {
 
 export function useAssetRegistry() {
   const ctx = useContext(AssetRegistryContext);
-  if (!ctx) throw new Error("useAssetRegistry must be used inside AssetRegistryProvider");
+  if (!ctx) throw new Error("useAssetRegistry must be inside AssetRegistryProvider");
   return ctx;
 }
