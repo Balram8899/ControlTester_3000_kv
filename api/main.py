@@ -2225,6 +2225,22 @@ async def controls_library_ingest(
             except Exception as exc:
                 logger.warning(f"[{rid}] Merge count failed (non-fatal): {exc}")
 
+            # Auto-trigger 5W1H quality analysis on newly ingested controls
+            quality_results: list = []
+            if ingested:
+                try:
+                    from api.routers.controls_quality import run_5w1h_for_controls
+                    doc_ids = {r["document_id"] for r in ingested}
+                    new_ctrls = [
+                        c for c in MongoControlsStore().all_controls()
+                        if c.get("document_id") in doc_ids
+                    ]
+                    if new_ctrls:
+                        quality_results = run_5w1h_for_controls(new_ctrls)
+                        logger.info(f"[{rid}] 5W1H analysis complete — {len(quality_results)} controls evaluated")
+                except Exception as exc:
+                    logger.warning(f"[{rid}] 5W1H auto-trigger failed (non-fatal): {exc}")
+
             _finish_task(rid, {
                 "success": True,
                 "request_id": rid,
@@ -2232,6 +2248,7 @@ async def controls_library_ingest(
                 "errors": errors,
                 "total_ingested": len(ingested),
                 "merged_count": merged_count,
+                "quality_results": quality_results,
             })
         except Exception as exc:
             logger.error(f"[{rid}] Background controls ingest failed: {exc}\n{traceback.format_exc()}")

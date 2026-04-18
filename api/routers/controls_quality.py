@@ -70,28 +70,39 @@ class QualityRequest(BaseModel):
 def _run_5w1h_llm(controls: list[ControlInput]) -> list[dict[str, Any]]:
     """Call LLM to evaluate 5W1H quality for a batch of controls."""
     import json as _json
-    import os
-    from langchain_google_genai import ChatGoogleGenerativeAI
+    import re as _re
     from langchain.schema import HumanMessage
+    from utils.llm_provider import get_llm
 
     controls_text = "\n".join(
         f"- ID:{c.control_id} | Name:{c.name} | Description:{c.description}"
         for c in controls
     )
     prompt = W1H_PROMPT.format(controls_text=controls_text)
-
-    llm = ChatGoogleGenerativeAI(
-        model=os.environ.get("GOOGLE_LLM_MODEL", "gemini-2.0-flash"),
-        google_api_key=os.environ.get("GOOGLE_API_KEY"),
-    )
+    llm = get_llm()
     response = llm.invoke([HumanMessage(content=prompt)])
     raw = response.content.strip()
-    # Strip markdown code fences if present
-    if raw.startswith("```"):
-        raw = raw.split("```")[1]
-        if raw.startswith("json"):
-            raw = raw[4:]
+    raw = _re.sub(r"^```[a-zA-Z]*\n?", "", raw)
+    raw = _re.sub(r"\n?```$", "", raw).strip()
     return _json.loads(raw)
+
+
+def run_5w1h_for_controls(raw_controls: list[dict]) -> list[dict[str, Any]]:
+    """Auto-trigger helper: accepts raw MongoDB control dicts, returns 5W1H results."""
+    if not raw_controls:
+        return []
+    inputs = [
+        ControlInput(
+            control_id=c.get("control_id", str(c.get("_id", ""))),
+            name=c.get("control_name", c.get("name", "")),
+            description=c.get("description", ""),
+        )
+        for c in raw_controls
+        if c.get("control_id") or c.get("_id")
+    ]
+    if not inputs:
+        return []
+    return _run_5w1h_llm(inputs)
 
 
 @router.post("/quality-analysis")
