@@ -29,7 +29,7 @@ from utils.llm_factory import make_llm
 logger = logging.getLogger(__name__)
 
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
-DB_NAME = "Trace_db"
+DB_NAME = "trace_db"
 COLLECTION_NAME = "frameworks_library"
 
 LIBRARY_GRAPH_DIR = "data/library_graphs/frameworks"
