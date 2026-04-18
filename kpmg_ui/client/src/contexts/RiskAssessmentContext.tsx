@@ -1,31 +1,32 @@
-// kpmg_ui/client/src/contexts/RiskAssessmentContext.tsx
 import { createContext, useContext, useState, useCallback, ReactNode } from "react";
 
+// ── Domain types ──────────────────────────────────────────────────────────
+
+export type AnswerType = "yes" | "no" | "na";
 export type StatusType = "draft" | "in_progress" | "risks_identified" | "controls_applied" | "complete";
 export type RiskBand = "Low" | "Medium" | "High" | "Critical";
-export type AssessmentType = "BIA" | "LEGAL" | "PIA";
+export type QuestionType = "Exposure" | "Control" | "Context";
 
-export interface RiskAssessment {
+export interface Question {
   id: string;
-  title: string;
-  description: string;
-  status: StatusType;
-  asset_ids: string[];
-  initial_inherent_ratings: Record<string, string>;
-  responses: ResponseRecord[];
-  risks: Risk[];
-  applied_controls: AppliedControl[];
-  created_at: string;
-  updated_at: string;
+  text: string;
+  question_type: QuestionType;
 }
 
-export interface ResponseRecord {
+export interface Section {
   id: string;
+  title: string;
+  questions: Question[];
+}
+
+export interface SectionResponse {
+  id?: string;
   asset_id: string;
-  assessment_type: AssessmentType;
+  section_id: string;
   question_id: string;
-  response_text: string;
-  submitted_at: string;
+  answer: AnswerType;
+  details: string;
+  submitted_at?: string;
 }
 
 export interface Risk {
@@ -40,7 +41,7 @@ export interface Risk {
   inherent_risk_band: RiskBand;
   residual_risk_score: number;
   residual_risk_band: RiskBand;
-  source: "llm_generated" | "human_added";
+  source: string;
   human_rationale: string;
   status: string;
 }
@@ -55,15 +56,15 @@ export interface AppliedControl {
   applied_at: string;
 }
 
-export interface Question {
-  id: string;
-  question_text: string;
-  guidance_text: string;
-  required: boolean;
-  order: number;
+export interface SuggestedControl {
+  risk_id: string;
+  control_id: string;
+  control_title: string;
+  rationale: string;
+  relevance_score: number;
 }
 
-export interface ResidualRiskResult {
+export interface ResidualResult {
   risk_id: string;
   risk_title: string;
   asset_id: string;
@@ -75,31 +76,57 @@ export interface ResidualRiskResult {
   residual_risk_band: RiskBand;
 }
 
+export interface RiskAssessment {
+  id: string;
+  title: string;
+  description: string;
+  status: StatusType;
+  asset_ids: string[];
+  responses: SectionResponse[];
+  risks: Risk[];
+  applied_controls: AppliedControl[];
+  suggested_controls: SuggestedControl[];
+  report_markdown: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface RiskAssessmentCreate {
   title: string;
   description: string;
   asset_ids: string[];
-  initial_inherent_ratings: Record<string, string>;
 }
+
+// ── Context interface ─────────────────────────────────────────────────────
 
 interface Ctx {
   assessments: RiskAssessment[];
   selectedAssessment: RiskAssessment | null;
-  questions: Record<AssessmentType, Question[]>;
-  residualResults: ResidualRiskResult[];
+  sections: Section[];
+  residualResults: ResidualResult[];
   isLoading: boolean;
   isAnalyzing: boolean;
+  isGeneratingReport: boolean;
   error: string | null;
+  report: string | null;
   fetchAssessments: () => Promise<void>;
   selectAssessment: (a: RiskAssessment | null) => void;
   createAssessment: (data: RiskAssessmentCreate) => Promise<RiskAssessment>;
-  fetchQuestions: (type: AssessmentType) => Promise<void>;
-  submitResponse: (raId: string, assetId: string, type: AssessmentType, questionId: string, text: string) => Promise<void>;
+  fetchSections: () => Promise<void>;
+  submitResponse: (
+    raId: string,
+    assetId: string,
+    sectionId: string,
+    questionId: string,
+    answer: AnswerType,
+    details: string,
+  ) => Promise<void>;
   analyzeAssessment: (raId: string) => Promise<void>;
   addHumanRisk: (raId: string, risk: Omit<Risk, "id" | "inherent_risk_score" | "inherent_risk_band" | "residual_risk_score" | "residual_risk_band" | "source" | "status">) => Promise<void>;
   applyControl: (raId: string, riskId: string, controlId: string, source: string, rationale: string) => Promise<void>;
   fetchResidual: (raId: string) => Promise<void>;
-  refreshAssessment: (raId: string) => Promise<void>;
+  suggestControls: (raId: string) => Promise<void>;
+  generateReport: (raId: string) => Promise<void>;
 }
 
 const RiskAssessmentContext = createContext<Ctx | null>(null);
@@ -107,33 +134,32 @@ const RiskAssessmentContext = createContext<Ctx | null>(null);
 export function RiskAssessmentProvider({ children }: { children: ReactNode }) {
   const [assessments, setAssessments] = useState<RiskAssessment[]>([]);
   const [selectedAssessment, setSelectedAssessment] = useState<RiskAssessment | null>(null);
-  const [questions, setQuestions] = useState<Record<AssessmentType, Question[]>>({ BIA: [], LEGAL: [], PIA: [] });
-  const [residualResults, setResidualResults] = useState<ResidualRiskResult[]>([]);
+  const [sections, setSections] = useState<Section[]>([]);
+  const [residualResults, setResidualResults] = useState<ResidualResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [report, setReport] = useState<string | null>(null);
 
   const fetchAssessments = useCallback(async () => {
-    setIsLoading(true); setError(null);
+    setIsLoading(true);
+    setError(null);
     try {
       const r = await fetch("/api/risk-assessment");
       if (!r.ok) throw new Error("Failed to fetch assessments");
       setAssessments(await r.json());
-    } catch (e: any) { setError(e.message); }
-    finally { setIsLoading(false); }
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
   const selectAssessment = useCallback((a: RiskAssessment | null) => {
     setSelectedAssessment(a);
     setResidualResults([]);
-  }, []);
-
-  const refreshAssessment = useCallback(async (raId: string) => {
-    const r = await fetch(`/api/risk-assessment/${raId}`);
-    if (!r.ok) return;
-    const updated: RiskAssessment = await r.json();
-    setAssessments(p => p.map(a => a.id === raId ? updated : a));
-    setSelectedAssessment(prev => prev?.id === raId ? updated : prev);
+    setReport(null);
   }, []);
 
   const createAssessment = useCallback(async (data: RiskAssessmentCreate): Promise<RiskAssessment> => {
@@ -144,69 +170,132 @@ export function RiskAssessmentProvider({ children }: { children: ReactNode }) {
     });
     if (!r.ok) throw new Error("Failed to create assessment");
     const ra: RiskAssessment = await r.json();
-    setAssessments(p => [ra, ...p]);
+    setAssessments(prev => [ra, ...prev]);
     return ra;
   }, []);
 
-  const fetchQuestions = useCallback(async (type: AssessmentType) => {
-    const r = await fetch(`/api/risk-assessment/questions/${type}`);
-    if (!r.ok) return;
-    const data = await r.json();
-    setQuestions(p => ({ ...p, [type]: data.questions }));
+  const fetchSections = useCallback(async () => {
+    try {
+      const r = await fetch("/api/risk-assessment/sections");
+      if (!r.ok) throw new Error("Failed to fetch sections");
+      const data = await r.json();
+      setSections(data.sections ?? []);
+    } catch (e: any) {
+      setError(e.message);
+    }
   }, []);
 
-  const submitResponse = useCallback(async (raId: string, assetId: string, type: AssessmentType, questionId: string, text: string) => {
+  const submitResponse = useCallback(async (
+    raId: string,
+    assetId: string,
+    sectionId: string,
+    questionId: string,
+    answer: AnswerType,
+    details: string,
+  ): Promise<void> => {
     const r = await fetch(`/api/risk-assessment/${raId}/respond`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ asset_id: assetId, assessment_type: type, question_id: questionId, response_text: text }),
+      body: JSON.stringify({ asset_id: assetId, section_id: sectionId, question_id: questionId, answer, details }),
     });
     if (!r.ok) throw new Error("Failed to submit response");
-    await refreshAssessment(raId);
-  }, [refreshAssessment]);
+    const updated = await fetch(`/api/risk-assessment/${raId}`);
+    if (updated.ok) {
+      const ra: RiskAssessment = await updated.json();
+      setSelectedAssessment(ra);
+      setAssessments(prev => prev.map(a => a.id === raId ? ra : a));
+    }
+  }, []);
 
-  const analyzeAssessment = useCallback(async (raId: string) => {
-    setIsAnalyzing(true); setError(null);
+  const analyzeAssessment = useCallback(async (raId: string): Promise<void> => {
+    setIsAnalyzing(true);
     try {
       const r = await fetch(`/api/risk-assessment/${raId}/analyze`, { method: "POST" });
       if (!r.ok) throw new Error("Analysis failed");
-      await refreshAssessment(raId);
-    } catch (e: any) { setError(e.message); }
-    finally { setIsAnalyzing(false); }
-  }, [refreshAssessment]);
+      const data = await r.json();
+      setSelectedAssessment(prev => prev ? { ...prev, risks: data.risks, status: "risks_identified" } : prev);
+      setAssessments(prev => prev.map(a => a.id === raId ? { ...a, risks: data.risks, status: "risks_identified" } : a));
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }, []);
 
-  const addHumanRisk = useCallback(async (raId: string, risk: any) => {
+  const addHumanRisk = useCallback(async (raId: string, risk: any): Promise<void> => {
     const r = await fetch(`/api/risk-assessment/${raId}/risks`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(risk),
     });
     if (!r.ok) throw new Error("Failed to add risk");
-    await refreshAssessment(raId);
-  }, [refreshAssessment]);
+    const data = await r.json();
+    setSelectedAssessment(prev => prev?.id === raId ? { ...prev, risks: [...prev.risks, data.risk] } : prev);
+  }, []);
 
-  const applyControl = useCallback(async (raId: string, riskId: string, controlId: string, source: string, rationale: string) => {
+  const applyControl = useCallback(async (
+    raId: string,
+    riskId: string,
+    controlId: string,
+    source: string,
+    rationale: string,
+  ): Promise<void> => {
     const r = await fetch(`/api/risk-assessment/${raId}/controls`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ risk_id: riskId, control_id: controlId, source, human_rationale: rationale }),
     });
     if (!r.ok) throw new Error("Failed to apply control");
-    await refreshAssessment(raId);
-  }, [refreshAssessment]);
+  }, []);
 
-  const fetchResidual = useCallback(async (raId: string) => {
-    const r = await fetch(`/api/risk-assessment/${raId}/residual`);
-    if (!r.ok) return;
+  const fetchResidual = useCallback(async (raId: string): Promise<void> => {
+    try {
+      const r = await fetch(`/api/risk-assessment/${raId}/residual`);
+      if (!r.ok) throw new Error("Failed to fetch residual");
+      const data = await r.json();
+      setResidualResults(data.residual_risks ?? []);
+    } catch (e: any) {
+      setError(e.message);
+    }
+  }, []);
+
+  const suggestControls = useCallback(async (raId: string): Promise<void> => {
+    const r = await fetch(`/api/risk-assessment/${raId}/suggest-controls`, { method: "POST" });
+    if (!r.ok) throw new Error("Failed to suggest controls");
     const data = await r.json();
-    setResidualResults(data.residual_risks ?? []);
+    setSelectedAssessment(prev =>
+      prev?.id === raId ? { ...prev, suggested_controls: data.suggestions ?? [] } : prev
+    );
+    setAssessments(prev =>
+      prev.map(a => a.id === raId ? { ...a, suggested_controls: data.suggestions ?? [] } : a)
+    );
+  }, []);
+
+  const generateReport = useCallback(async (raId: string): Promise<void> => {
+    setIsGeneratingReport(true);
+    try {
+      const r = await fetch(`/api/risk-assessment/${raId}/generate-report`, { method: "POST" });
+      if (!r.ok) throw new Error("Failed to generate report");
+      const data = await r.json();
+      setReport(data.report_markdown ?? null);
+      setSelectedAssessment(prev =>
+        prev?.id === raId ? { ...prev, report_markdown: data.report_markdown, status: "complete" } : prev
+      );
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setIsGeneratingReport(false);
+    }
   }, []);
 
   return (
     <RiskAssessmentContext.Provider value={{
-      assessments, selectedAssessment, questions, residualResults, isLoading, isAnalyzing, error,
-      fetchAssessments, selectAssessment, createAssessment, fetchQuestions,
-      submitResponse, analyzeAssessment, addHumanRisk, applyControl, fetchResidual, refreshAssessment,
+      assessments, selectedAssessment, sections, residualResults,
+      isLoading, isAnalyzing, isGeneratingReport, error, report,
+      fetchAssessments, selectAssessment, createAssessment,
+      fetchSections, submitResponse, analyzeAssessment,
+      addHumanRisk, applyControl, fetchResidual,
+      suggestControls, generateReport,
     }}>
       {children}
     </RiskAssessmentContext.Provider>
@@ -215,6 +304,6 @@ export function RiskAssessmentProvider({ children }: { children: ReactNode }) {
 
 export function useRiskAssessment() {
   const ctx = useContext(RiskAssessmentContext);
-  if (!ctx) throw new Error("useRiskAssessment must be inside RiskAssessmentProvider");
+  if (!ctx) throw new Error("useRiskAssessment must be used inside RiskAssessmentProvider");
   return ctx;
 }
