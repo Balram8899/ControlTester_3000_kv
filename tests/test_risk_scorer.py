@@ -1,5 +1,5 @@
 import pytest
-from utils.risk_scorer import compute_cia_total, compute_criticality
+from utils.risk_scorer import compute_cia_total, compute_criticality, compute_control_effectiveness
 
 def test_cia_total_max():
     assert compute_cia_total(5, 5, 5) == 15
@@ -46,8 +46,6 @@ def test_criticality_invalid_out_of_range():
     with pytest.raises(ValueError):
         compute_criticality(2)
 
-
-from utils.risk_scorer import compute_control_effectiveness
 
 def test_effectiveness_no_issues():
     assert compute_control_effectiveness(None) == 1.00
