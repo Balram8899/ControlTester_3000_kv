@@ -248,8 +248,13 @@ export default function RiskAssessmentPage() {
             </Button>
           </div>
           <ScrollArea className="flex-1">
+            {error && (
+              <div className="mx-3 mt-3 p-2 rounded bg-red-50 border border-red-200 text-xs text-red-600">{error}</div>
+            )}
             {isLoading ? (
               <div className="flex justify-center p-8"><Loader2 className="animate-spin w-5 h-5 text-slate-400" /></div>
+            ) : assessments.length === 0 ? (
+              <p className="text-xs text-slate-400 text-center py-10 px-4">No assessments yet. Create one to get started.</p>
             ) : assessments.map(a => (
               <button
                 key={a.id}
