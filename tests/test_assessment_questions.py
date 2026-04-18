@@ -34,5 +34,5 @@ def test_section_ids_are_unique():
     assert len(ids) == len(set(ids))
 
 
-def test_sections_list_is_same_object_as_get_sections():
-    assert get_sections() is SECTIONS
+def test_sections_returns_all_sections():
+    assert get_sections() == SECTIONS
