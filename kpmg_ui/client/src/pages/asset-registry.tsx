@@ -12,17 +12,36 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import {
   useAssetRegistry,
-  Asset, AssetCreate, AssetType,
+  Asset, AssetCreate, AssetType, HostingType, SupportType, AssetStatus,
 } from "@/contexts/AssetRegistryContext";
 import CiaRatingWidget from "@/components/CiaRatingWidget";
 
-// ── Icon map ────────────────────────────────────────────────────────────────
+// ── Constants ────────────────────────────────────────────────────────────────
 
-const TYPE_ICON: Record<AssetType, any> = {
-  IT:      Server,
-  Data:    Database,
-  Process: Cpu,
-  Vendor:  Network,
+const ASSET_TYPES: AssetType[] = [
+  "Application", "Hardware", "Database", "Interface/API",
+  "Network Component", "Desktop/Client Software", "Other",
+];
+
+const HOSTING_TYPES: HostingType[] = [
+  "PaaS", "IaaS", "SaaS", "Internally Hosted",
+  "Desktop/Client Software", "Not Hosted", "Unspecified",
+];
+
+const SUPPORT_TYPES: SupportType[] = ["Company", "Vendor", "Business"];
+
+const STATUS_VALUES: AssetStatus[] = [
+  "Operational", "Build in Progress", "Planned Decommissioning", "Decommissioned", "Archived",
+];
+
+const TYPE_ICON: Partial<Record<AssetType, any>> = {
+  Application:              Server,
+  Hardware:                 Cpu,
+  Database:                 Database,
+  "Interface/API":          Network,
+  "Network Component":      Network,
+  "Desktop/Client Software": Cpu,
+  Other:                    Server,
 };
 
 const CRITICALITY_COLOR: Record<string, string> = {
@@ -35,9 +54,11 @@ const CRITICALITY_COLOR: Record<string, string> = {
 // ── Form default ────────────────────────────────────────────────────────────
 
 const EMPTY: AssetCreate = {
-  name: "", description: "",
-  type: "IT",
-  status: "Active",
+  name: "", description: "", use: "",
+  type: "Application",
+  hosting_type: null,
+  support_type: null,
+  status: "Operational",
   owner: "", custodian: "",
   location: "On-premise",
   jurisdiction: "",
@@ -78,7 +99,14 @@ export default function AssetRegistryPage() {
   };
 
   function updateForm(field: keyof AssetCreate, value: any) {
-    setForm(prev => ({ ...prev, [field]: value }));
+    setForm(prev => {
+      const next = { ...prev, [field]: value };
+      // Clear hosting_type when switching away from Application
+      if (field === "type" && value !== "Application") {
+        next.hosting_type = null;
+      }
+      return next;
+    });
   }
 
   async function handleCreate() {
@@ -216,8 +244,8 @@ export default function AssetRegistryPage() {
                   </CardHeader>
                   <CardContent className="px-4 pb-3">
                     <div className="grid grid-cols-4 gap-2">
-                      {(Object.keys(TYPE_ICON) as AssetType[]).map(type => {
-                        const Icon = TYPE_ICON[type];
+                      {ASSET_TYPES.map(type => {
+                        const Icon = TYPE_ICON[type] ?? Server;
                         return (
                           <div key={type} className="text-center p-2 rounded-lg bg-slate-50 border border-slate-100">
                             <Icon className="h-4 w-4 text-slate-400 mx-auto mb-1" />
@@ -275,12 +303,17 @@ export default function AssetRegistryPage() {
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   {([
                     ["Type",           selectedAsset.type],
-                    ["Location",       selectedAsset.location],
                     ["Status",         selectedAsset.status],
+                    ["Location",       selectedAsset.location],
                     ["Classification", selectedAsset.classification],
                     ["Jurisdiction",   selectedAsset.jurisdiction],
                     ["Owner",          selectedAsset.owner],
                     ["Custodian",      selectedAsset.custodian],
+                    ["Support Type",   selectedAsset.support_type ?? "—"],
+                    ...(selectedAsset.type === "Application"
+                      ? [["Hosting Type", selectedAsset.hosting_type ?? "—"] as [string, string]]
+                      : []),
+                    ["Use",            selectedAsset.use || "—"],
                     ["Description",    selectedAsset.description],
                   ] as [string, string][]).map(([l, v]) => (
                     <div key={l} className="p-2 bg-white rounded border border-slate-100">
@@ -374,7 +407,30 @@ export default function AssetRegistryPage() {
                   <select className="mt-1 w-full h-8 text-xs border border-slate-200 rounded-md px-2"
                     value={form.type}
                     onChange={e => updateForm("type", e.target.value as AssetType)}>
-                    {(Object.keys(TYPE_ICON) as AssetType[]).map(t => <option key={t}>{t}</option>)}
+                    {ASSET_TYPES.map(t => <option key={t}>{t}</option>)}
+                  </select>
+                </div>
+
+                {/* Hosting Type — Application only */}
+                {form.type === "Application" && (
+                  <div>
+                    <label className="text-xs font-medium text-slate-600">Hosting Type</label>
+                    <select className="mt-1 w-full h-8 text-xs border border-slate-200 rounded-md px-2"
+                      value={form.hosting_type ?? ""}
+                      onChange={e => updateForm("hosting_type", e.target.value as HostingType || null)}>
+                      <option value="">— Select —</option>
+                      {HOSTING_TYPES.map(h => <option key={h}>{h}</option>)}
+                    </select>
+                  </div>
+                )}
+
+                <div>
+                  <label className="text-xs font-medium text-slate-600">Support Type</label>
+                  <select className="mt-1 w-full h-8 text-xs border border-slate-200 rounded-md px-2"
+                    value={form.support_type ?? ""}
+                    onChange={e => updateForm("support_type", e.target.value as SupportType || null)}>
+                    <option value="">— Select —</option>
+                    {SUPPORT_TYPES.map(s => <option key={s}>{s}</option>)}
                   </select>
                 </div>
 
@@ -383,6 +439,12 @@ export default function AssetRegistryPage() {
                   <textarea className="mt-1 w-full text-xs border border-slate-200 rounded-md px-2 py-1.5 resize-none"
                     rows={2} value={form.description}
                     onChange={e => updateForm("description", e.target.value)} />
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium text-slate-600">Use</label>
+                  <Input className="mt-1 h-8 text-xs" placeholder="How this asset is used"
+                    value={form.use ?? ""} onChange={e => updateForm("use", e.target.value)} />
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
@@ -398,8 +460,8 @@ export default function AssetRegistryPage() {
                     <label className="text-xs font-medium text-slate-600">Status</label>
                     <select className="mt-1 w-full h-8 text-xs border border-slate-200 rounded-md px-2"
                       value={form.status}
-                      onChange={e => updateForm("status", e.target.value as AssetCreate["status"])}>
-                      {(["Active", "Retired", "Under Review"] as NonNullable<AssetCreate["status"]>[]).map(s => <option key={s}>{s}</option>)}
+                      onChange={e => updateForm("status", e.target.value as AssetStatus)}>
+                      {STATUS_VALUES.map(s => <option key={s}>{s}</option>)}
                     </select>
                   </div>
                 </div>

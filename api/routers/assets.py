@@ -12,10 +12,12 @@ from utils.llm_provider import get_llm
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/assets", tags=["assets"])
 
-AssetType       = Literal["IT", "Data", "Process", "Vendor"]
+AssetType       = Literal["Application", "Hardware", "Database", "Interface/API", "Network Component", "Desktop/Client Software", "Other"]
+HostingType     = Literal["PaaS", "IaaS", "SaaS", "Internally Hosted", "Desktop/Client Software", "Not Hosted", "Unspecified"]
+SupportType     = Literal["Company", "Vendor", "Business"]
 LocationType    = Literal["On-premise", "Cloud", "Hybrid"]
 ClassType       = Literal["Public", "Internal", "Confidential", "Restricted"]
-StatusType      = Literal["Active", "Retired", "Under Review"]
+StatusType      = Literal["Operational", "Build in Progress", "Planned Decommissioning", "Decommissioned", "Archived"]
 CriticalityType = Literal["Critical", "High", "Medium", "Low"]
 
 
@@ -23,6 +25,9 @@ class AssetCreate(BaseModel):
     name: str
     type: AssetType
     description: str
+    use: str = ""
+    hosting_type: Optional[HostingType] = None
+    support_type: Optional[SupportType] = None
     confidentiality: int = Field(ge=1, le=5)
     integrity: int = Field(ge=1, le=5)
     availability: int = Field(ge=1, le=5)
@@ -31,13 +36,16 @@ class AssetCreate(BaseModel):
     location: LocationType
     jurisdiction: str
     classification: ClassType
-    status: StatusType = "Active"
+    status: StatusType = "Operational"
 
 
 class AssetUpdate(BaseModel):
     name: Optional[str] = None
     type: Optional[AssetType] = None
     description: Optional[str] = None
+    use: Optional[str] = None
+    hosting_type: Optional[HostingType] = None
+    support_type: Optional[SupportType] = None
     confidentiality: Optional[int] = Field(default=None, ge=1, le=5)
     integrity: Optional[int] = Field(default=None, ge=1, le=5)
     availability: Optional[int] = Field(default=None, ge=1, le=5)
@@ -77,6 +85,9 @@ class MongoAssetStore:
     def _to_asset(self, doc: dict) -> Asset:
         doc = dict(doc)
         doc["id"] = str(doc.pop("_id"))
+        doc.setdefault("use", "")
+        doc.setdefault("hosting_type", None)
+        doc.setdefault("support_type", None)
         return Asset(**doc)
 
     def create(self, data: AssetCreate) -> Asset:

@@ -5,7 +5,7 @@ from utils.risk_scorer import compute_cia_total, compute_criticality
 
 def test_asset_create_valid():
     a = AssetCreate(
-        name="Customer DB", type="IT", description="Primary customer database",
+        name="Customer DB", type="Application", description="Primary customer database",
         confidentiality=5, integrity=5, availability=3,
         owner="Alice", custodian="Bob", location="Cloud",
         jurisdiction="EU", classification="Confidential",
@@ -26,10 +26,10 @@ from unittest.mock import patch, MagicMock
 
 def _asset_fixture(**overrides) -> Asset:
     base = dict(
-        name="Test Asset", type="IT", description="desc",
+        name="Test Asset", type="Application", description="desc",
         confidentiality=4, integrity=3, availability=2,
         owner="Alice", custodian="Bob", location="Cloud",
-        jurisdiction="EU", classification="Confidential", status="Active",
+        jurisdiction="EU", classification="Confidential", status="Operational",
         id="abc", cia_total=9, criticality="High",
         created_at="2026-04-14T00:00:00",
         updated_at="2026-04-14T00:00:00",
@@ -44,7 +44,7 @@ def test_create_asset_returns_201(mock_get_store):
     mock.create.return_value = _asset_fixture()
     mock_get_store.return_value = mock
     resp = TestClient(app).post("/assets", json=dict(
-        name="Test Asset", type="IT", description="desc",
+        name="Test Asset", type="Application", description="desc",
         confidentiality=4, integrity=3, availability=2,
         owner="Alice", custodian="Bob", location="Cloud",
         jurisdiction="EU", classification="Confidential",

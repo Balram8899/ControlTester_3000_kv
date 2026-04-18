@@ -1,12 +1,18 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from "react";
 
-export type AssetType = "IT" | "Data" | "Process" | "Vendor";
+export type AssetType = "Application" | "Hardware" | "Database" | "Interface/API" | "Network Component" | "Desktop/Client Software" | "Other";
+export type HostingType = "PaaS" | "IaaS" | "SaaS" | "Internally Hosted" | "Desktop/Client Software" | "Not Hosted" | "Unspecified";
+export type SupportType = "Company" | "Vendor" | "Business";
+export type AssetStatus = "Operational" | "Build in Progress" | "Planned Decommissioning" | "Decommissioned" | "Archived";
 
 export interface Asset {
   id: string;
   name: string;
   type: AssetType;
   description: string;
+  use: string;
+  hosting_type: HostingType | null;
+  support_type: SupportType | null;
   confidentiality: number;   // 1–5
   integrity: number;         // 1–5
   availability: number;      // 1–5
@@ -18,7 +24,7 @@ export interface Asset {
   location: "On-premise" | "Cloud" | "Hybrid";
   jurisdiction: string;
   classification: "Public" | "Internal" | "Confidential" | "Restricted";
-  status: "Active" | "Retired" | "Under Review";
+  status: AssetStatus;
   created_at: string;
   updated_at: string;
 }
@@ -27,6 +33,9 @@ export interface AssetCreate {
   name: string;
   type: AssetType;
   description: string;
+  use?: string;
+  hosting_type?: HostingType | null;
+  support_type?: SupportType | null;
   confidentiality: number;   // 1–5
   integrity: number;         // 1–5
   availability: number;      // 1–5
@@ -35,7 +44,7 @@ export interface AssetCreate {
   location: "On-premise" | "Cloud" | "Hybrid";
   jurisdiction: string;
   classification: "Public" | "Internal" | "Confidential" | "Restricted";
-  status?: "Active" | "Retired" | "Under Review";
+  status?: AssetStatus;
 }
 
 export interface ControlSuggestion {
