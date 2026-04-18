@@ -1,7 +1,8 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from "react";
 
 export type Severity = "Low" | "Medium" | "High" | "Critical";
-export type IssueStatus = "Open" | "In Remediation" | "Pending Sign-off" | "Closed";
+export type IssueStatus = "Open" | "In Remediation" | "Pending Review" | "Closed" | "Returned";
+export type QueueStatus = "Pending" | "Accepted" | "Dismissed";
 
 export interface IssueEvidence {
   id: string;
@@ -14,7 +15,7 @@ export interface IssueEvidence {
 export interface IssueApproval {
   id: string;
   stage: number;
-  approver: string;
+  checker: string;
   decision: "approved" | "rejected";
   notes: string | null;
   decided_at: string;
@@ -26,14 +27,17 @@ export interface Issue {
   description: string;
   severity: Severity;
   status: IssueStatus;
-  asset_id: string | null;
-  control_id: string | null;
+  source_module: string | null;
+  asset_ids: string[];
+  control_ids: string[];
   risk_assessment_id: string | null;
   raised_by: string;
-  assigned_to: string;
-  approver: string;
+  owner: string;
+  checker: string;
   remediation_plan: string | null;
   target_date: string | null;
+  review_notes: string | null;
+  closure_notes: string | null;
   evidences: IssueEvidence[];
   approvals: IssueApproval[];
   created_at: string;
@@ -44,14 +48,17 @@ export interface IssueCreate {
   title: string;
   description: string;
   severity: Severity;
-  asset_id?: string;
-  control_id?: string;
+  source_module?: string;
+  asset_ids?: string[];
+  control_ids?: string[];
   risk_assessment_id?: string;
   raised_by: string;
-  assigned_to: string;
-  approver: string;
+  owner: string;
+  checker: string;
   remediation_plan?: string;
   target_date?: string;
+  review_notes?: string;
+  closure_notes?: string;
 }
 
 export interface IssueImpact {
@@ -62,6 +69,29 @@ export interface IssueImpact {
   note: string;
 }
 
+export interface ValidationQueueCreate {
+  title: string;
+  description: string;
+  severity: Severity;
+  source_module?: string;
+  asset_ids?: string[];
+  control_ids?: string[];
+}
+
+export interface ValidationQueueItem {
+  id: string;
+  title: string;
+  description: string;
+  severity: Severity;
+  source_module: string | null;
+  asset_ids: string[];
+  control_ids: string[];
+  queue_status: QueueStatus;
+  accepted_issue_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 interface Ctx {
   issues: Issue[];
   selectedIssue: Issue | null;
@@ -69,7 +99,9 @@ interface Ctx {
   error: string | null;
   impact: IssueImpact | null;
   isLoadingImpact: boolean;
-  fetchIssues: (filters?: { severity?: string; status?: string; asset_id?: string; control_id?: string }) => Promise<void>;
+  queueItems: ValidationQueueItem[];
+  isLoadingQueue: boolean;
+  fetchIssues: (filters?: { severity?: string; status?: string; asset_id?: string; control_id?: string; source_module?: string }) => Promise<void>;
   selectIssue: (i: Issue | null) => void;
   createIssue: (data: IssueCreate) => Promise<Issue>;
   updateIssue: (id: string, data: Partial<IssueCreate>) => Promise<Issue>;
@@ -78,6 +110,10 @@ interface Ctx {
   submitIssue: (issueId: string) => Promise<Issue>;
   approveIssue: (issueId: string, decision: "approved" | "rejected", notes?: string) => Promise<Issue>;
   fetchImpact: (issueId: string) => Promise<void>;
+  fetchQueue: (queueStatus?: QueueStatus) => Promise<void>;
+  addToQueue: (data: ValidationQueueCreate) => Promise<ValidationQueueItem>;
+  acceptQueueItem: (itemId: string, raisedBy: string, owner: string, checker: string) => Promise<ValidationQueueItem>;
+  dismissQueueItem: (itemId: string) => Promise<ValidationQueueItem>;
 }
 
 const IssueManagementContext = createContext<Ctx | null>(null);
@@ -89,15 +125,18 @@ export function IssueManagementProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [impact, setImpact] = useState<IssueImpact | null>(null);
   const [isLoadingImpact, setIsLoadingImpact] = useState(false);
+  const [queueItems, setQueueItems] = useState<ValidationQueueItem[]>([]);
+  const [isLoadingQueue, setIsLoadingQueue] = useState(false);
 
-  const fetchIssues = useCallback(async (filters?: { severity?: string; status?: string; asset_id?: string; control_id?: string }) => {
+  const fetchIssues = useCallback(async (filters?: { severity?: string; status?: string; asset_id?: string; control_id?: string; source_module?: string }) => {
     setIsLoading(true); setError(null);
     try {
       const p = new URLSearchParams();
-      if (filters?.severity)   p.set("severity", filters.severity);
-      if (filters?.status)     p.set("status", filters.status);
-      if (filters?.asset_id)   p.set("asset_id", filters.asset_id);
-      if (filters?.control_id) p.set("control_id", filters.control_id);
+      if (filters?.severity)      p.set("severity", filters.severity);
+      if (filters?.status)        p.set("status", filters.status);
+      if (filters?.asset_id)      p.set("asset_id", filters.asset_id);
+      if (filters?.control_id)    p.set("control_id", filters.control_id);
+      if (filters?.source_module) p.set("source_module", filters.source_module);
       const r = await fetch(`/api/issues?${p}`);
       if (!r.ok) throw new Error("Failed to fetch issues");
       setIssues(await r.json());
@@ -177,11 +216,54 @@ export function IssueManagementProvider({ children }: { children: ReactNode }) {
     finally { setIsLoadingImpact(false); }
   }, []);
 
+  const fetchQueue = useCallback(async (queueStatus?: QueueStatus): Promise<void> => {
+    setIsLoadingQueue(true);
+    try {
+      const p = new URLSearchParams();
+      if (queueStatus) p.set("queue_status", queueStatus);
+      const r = await fetch(`/api/validation-queue?${p}`);
+      if (!r.ok) throw new Error("Failed to fetch queue");
+      setQueueItems(await r.json());
+    } catch (e: any) { setError(e.message); }
+    finally { setIsLoadingQueue(false); }
+  }, []);
+
+  const addToQueue = useCallback(async (data: ValidationQueueCreate): Promise<ValidationQueueItem> => {
+    const r = await fetch("/api/validation-queue", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
+    if (!r.ok) throw new Error("Failed to add to queue");
+    const item: ValidationQueueItem = await r.json();
+    setQueueItems(p => [item, ...p]);
+    return item;
+  }, []);
+
+  const acceptQueueItem = useCallback(async (itemId: string, raisedBy: string, owner: string, checker: string): Promise<ValidationQueueItem> => {
+    const r = await fetch(`/api/validation-queue/${itemId}/accept`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ raised_by: raisedBy, owner, checker }),
+    });
+    if (!r.ok) throw new Error("Failed to accept queue item");
+    const updated: ValidationQueueItem = await r.json();
+    setQueueItems(p => p.map(i => i.id === itemId ? updated : i));
+    await fetchIssues();
+    return updated;
+  }, [fetchIssues]);
+
+  const dismissQueueItem = useCallback(async (itemId: string): Promise<ValidationQueueItem> => {
+    const r = await fetch(`/api/validation-queue/${itemId}/dismiss`, { method: "POST" });
+    if (!r.ok) throw new Error("Failed to dismiss queue item");
+    const updated: ValidationQueueItem = await r.json();
+    setQueueItems(p => p.map(i => i.id === itemId ? updated : i));
+    return updated;
+  }, []);
+
   return (
     <IssueManagementContext.Provider value={{
       issues, selectedIssue, isLoading, error, impact, isLoadingImpact,
+      queueItems, isLoadingQueue,
       fetchIssues, selectIssue, createIssue, updateIssue, deleteIssue,
       uploadEvidence, submitIssue, approveIssue, fetchImpact,
+      fetchQueue, addToQueue, acceptQueueItem, dismissQueueItem,
     }}>
       {children}
     </IssueManagementContext.Provider>

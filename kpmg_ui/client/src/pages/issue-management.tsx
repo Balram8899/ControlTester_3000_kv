@@ -22,32 +22,36 @@ const SEV_COLOR: Record<Severity, string> = {
 };
 
 const STATUS_ICON: Record<string, any> = {
-  "Open":              AlertTriangle,
-  "In Remediation":    Clock,
-  "Pending Sign-off":  Send,
-  "Closed":            CheckCircle,
+  "Open":            AlertTriangle,
+  "In Remediation":  Clock,
+  "Pending Review":  Send,
+  "Returned":        XCircle,
+  "Closed":          CheckCircle,
 };
 
 const EMPTY: IssueCreate = {
   title: "", description: "", severity: "Medium",
-  raised_by: "", assigned_to: "", approver: "",
+  raised_by: "", owner: "", checker: "",
 };
 
 export default function IssueManagementPage() {
   const {
     issues, selectedIssue, isLoading, impact, isLoadingImpact,
+    queueItems, isLoadingQueue,
     fetchIssues, selectIssue, createIssue, deleteIssue,
     uploadEvidence, submitIssue, approveIssue, fetchImpact,
+    fetchQueue, acceptQueueItem, dismissQueueItem,
   } = useIssueManagement();
   const { toast } = useToast();
   const [search, setSearch] = useState("");
-  const [tab, setTab] = useState<"dashboard" | "detail" | "remediation">("dashboard");
+  const [tab, setTab] = useState<"dashboard" | "detail" | "remediation" | "queue">("dashboard");
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<IssueCreate>(EMPTY);
   const [approveNotes, setApproveNotes] = useState("");
+  const [acceptUser, setAcceptUser] = useState({ raised_by: "", owner: "", checker: "" });
   const fileRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { fetchIssues(); }, []);
+  useEffect(() => { fetchIssues(); fetchQueue("Pending"); }, []);
   useEffect(() => { if (selectedIssue) fetchImpact(selectedIssue.id); }, [selectedIssue?.id]);
 
   const filtered = issues.filter(i =>
@@ -58,12 +62,14 @@ export default function IssueManagementPage() {
   const kpis = {
     open:     issues.filter(i => i.status === "Open").length,
     critical: issues.filter(i => i.severity === "Critical" && i.status !== "Closed").length,
-    pending:  issues.filter(i => i.status === "Pending Sign-off").length,
+    pending:  issues.filter(i => i.status === "Pending Review").length,
     overdue:  issues.filter(i =>
       i.target_date !== null && i.target_date !== undefined &&
       new Date(i.target_date) < new Date() && i.status !== "Closed"
     ).length,
   };
+
+  const pendingQueueCount = queueItems.filter(i => i.queue_status === "Pending").length;
 
   async function handleCreate() {
     try {
@@ -86,7 +92,7 @@ export default function IssueManagementPage() {
     if (!selectedIssue) return;
     try {
       await submitIssue(selectedIssue.id);
-      toast({ title: "Submitted for sign-off" });
+      toast({ title: "Submitted for review" });
     } catch (e: any) { toast({ title: e.message, variant: "destructive" }); }
   }
 
@@ -139,10 +145,14 @@ export default function IssueManagementPage() {
         {/* Right Panel */}
         <div className="flex-1 flex flex-col overflow-hidden bg-slate-50">
           <div className="flex gap-1 px-4 pt-3 border-b border-slate-200 bg-white">
-            {(["dashboard", "detail", "remediation"] as const).map(t => (
+            {(["dashboard", "detail", "remediation", "queue"] as const).map(t => (
               <button key={t} onClick={() => setTab(t)}
                 className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors ${tab === t ? "border-[#001E62] text-[#001E62]" : "border-transparent text-slate-500 hover:text-slate-700"}`}>
-                {t === "remediation" ? "Remediation Tracker" : t.charAt(0).toUpperCase() + t.slice(1)}
+                {t === "remediation"
+                  ? "Remediation Tracker"
+                  : t === "queue"
+                    ? `Validation Queue${pendingQueueCount > 0 ? ` (${pendingQueueCount})` : ""}`
+                    : t.charAt(0).toUpperCase() + t.slice(1)}
               </button>
             ))}
           </div>
@@ -155,7 +165,7 @@ export default function IssueManagementPage() {
                   {[
                     { label: "Open Issues",        value: kpis.open,     icon: AlertTriangle, color: "text-blue-600"    },
                     { label: "Critical",            value: kpis.critical, icon: XCircle,       color: "text-red-600"    },
-                    { label: "Pending Sign-off",    value: kpis.pending,  icon: Send,          color: "text-amber-600"  },
+                    { label: "Pending Review",      value: kpis.pending,  icon: Send,          color: "text-amber-600"  },
                     { label: "Overdue Remediation", value: kpis.overdue,  icon: Clock,         color: "text-orange-600" },
                   ].map(k => (
                     <Card key={k.label} className="border-slate-200">
@@ -177,7 +187,7 @@ export default function IssueManagementPage() {
                     <CardContent className="px-4 pb-3 space-y-1.5 text-xs text-slate-600">
                       <p><span className="font-medium">Severity:</span> <Badge className={`text-[10px] ${SEV_COLOR[selectedIssue.severity]}`}>{selectedIssue.severity}</Badge></p>
                       <p><span className="font-medium">Status:</span> {selectedIssue.status}</p>
-                      <p><span className="font-medium">Raised by:</span> {selectedIssue.raised_by} | <span className="font-medium">Assigned to:</span> {selectedIssue.assigned_to}</p>
+                      <p><span className="font-medium">Raised by:</span> {selectedIssue.raised_by} | <span className="font-medium">Owner:</span> {selectedIssue.owner}</p>
                       {impact && !isLoadingImpact && (
                         <div className="mt-2 p-2 rounded bg-amber-50 border border-amber-200">
                           <p className="flex items-center gap-1 text-amber-700 font-medium"><Shield className="h-3 w-3" /> Control Effectiveness</p>
@@ -204,9 +214,10 @@ export default function IssueManagementPage() {
                   {[
                     ["Severity",    selectedIssue.severity],
                     ["Status",      selectedIssue.status],
+                    ["Source",      selectedIssue.source_module ?? "Manual"],
                     ["Raised by",   selectedIssue.raised_by],
-                    ["Assigned to", selectedIssue.assigned_to],
-                    ["Approver",    selectedIssue.approver],
+                    ["Owner",       selectedIssue.owner],
+                    ["Checker",     selectedIssue.checker],
                     ["Target date", selectedIssue.target_date ?? "Not set"],
                   ].map(([l, v]) => (
                     <div key={l} className="p-2 bg-white rounded border border-slate-100">
@@ -221,10 +232,10 @@ export default function IssueManagementPage() {
                 </div>
                 {selectedIssue.approvals.length > 0 && (
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Approval History</p>
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Review History</p>
                     {selectedIssue.approvals.map((a: any) => (
                       <div key={a.id} className={`p-2 rounded border text-xs ${a.decision === "approved" ? "bg-emerald-50 border-emerald-200" : "bg-red-50 border-red-200"}`}>
-                        <p className="font-medium">{a.approver} — <span className="capitalize">{a.decision}</span></p>
+                        <p className="font-medium">{a.checker} — <span className="capitalize">{a.decision}</span></p>
                         {a.notes && <p className="text-slate-500 mt-0.5">{a.notes}</p>}
                         <p className="text-slate-400 text-[10px] mt-0.5">{a.decided_at}</p>
                       </div>
@@ -270,16 +281,16 @@ export default function IssueManagementPage() {
 
                 <div className="space-y-2">
                   <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Sign-off Workflow</p>
-                  {(selectedIssue.status === "Open" || selectedIssue.status === "In Remediation") && (
+                  {(selectedIssue.status === "Open" || selectedIssue.status === "In Remediation" || selectedIssue.status === "Returned") && (
                     <Button size="sm" className="w-full gap-1 text-xs" onClick={handleSubmit}>
-                      <Send className="h-3 w-3" /> Submit for Sign-off
+                      <Send className="h-3 w-3" /> Submit for Review
                     </Button>
                   )}
-                  {selectedIssue.status === "Pending Sign-off" && (
+                  {selectedIssue.status === "Pending Review" && (
                     <div className="space-y-2">
                       <textarea
                         className="w-full text-xs border border-slate-200 rounded-md px-2 py-1.5 resize-none"
-                        rows={2} placeholder="Approval notes (optional)…"
+                        rows={2} placeholder="Review notes (optional)…"
                         value={approveNotes} onChange={e => setApproveNotes(e.target.value)}
                       />
                       <div className="flex gap-2">
@@ -287,9 +298,14 @@ export default function IssueManagementPage() {
                           <ThumbsUp className="h-3 w-3" /> Approve & Close
                         </Button>
                         <Button size="sm" variant="outline" className="flex-1 gap-1 text-xs text-red-600 border-red-300" onClick={() => handleApprove("rejected")}>
-                          <ThumbsDown className="h-3 w-3" /> Reject
+                          <ThumbsDown className="h-3 w-3" /> Return
                         </Button>
                       </div>
+                    </div>
+                  )}
+                  {selectedIssue.status === "Returned" && (
+                    <div className="flex items-center gap-2 p-2 bg-orange-50 rounded border border-orange-200 text-xs text-orange-700">
+                      <XCircle className="h-4 w-4 flex-shrink-0" /> Returned by checker — update remediation plan and resubmit.
                     </div>
                   )}
                   {selectedIssue.status === "Closed" && (
@@ -301,6 +317,73 @@ export default function IssueManagementPage() {
               </div>
             )}
             {tab === "remediation" && !selectedIssue && <p className="text-xs text-slate-400 text-center mt-12">Select an issue to track remediation</p>}
+
+            {/* Validation Queue Tab */}
+            {tab === "queue" && (
+              <div className="space-y-3 max-w-lg">
+                <p className="text-xs text-slate-500">System-generated findings pending review. Accept to promote to an Issue, or Dismiss to discard.</p>
+                {isLoadingQueue && <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-slate-400" /></div>}
+                {queueItems.map(item => (
+                  <Card key={item.id} className={`border-slate-200 ${item.queue_status !== "Pending" ? "opacity-50" : ""}`}>
+                    <CardContent className="p-3 space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-xs font-semibold text-slate-800">{item.title}</p>
+                          <p className="text-[10px] text-slate-400 mt-0.5">{item.source_module ?? "Unknown source"} · {item.created_at.slice(0, 10)}</p>
+                        </div>
+                        <Badge className={`text-[10px] px-1.5 border flex-shrink-0 ${SEV_COLOR[item.severity]}`}>{item.severity}</Badge>
+                      </div>
+                      <p className="text-xs text-slate-600">{item.description}</p>
+                      {item.queue_status === "Pending" && (
+                        <div className="space-y-2 pt-1">
+                          <div className="grid grid-cols-3 gap-1">
+                            {(["raised_by", "owner", "checker"] as const).map(f => (
+                              <div key={f}>
+                                <p className="text-[10px] text-slate-400 capitalize">{f.replace("_", " ")}</p>
+                                <Input
+                                  className="h-6 text-[10px] px-1.5"
+                                  value={(acceptUser as any)[f]}
+                                  onChange={e => setAcceptUser(p => ({ ...p, [f]: e.target.value }))}
+                                  placeholder={f.replace("_", " ")}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                          <div className="flex gap-2">
+                            <Button size="sm" className="flex-1 text-xs gap-1 h-7 bg-emerald-600 hover:bg-emerald-700"
+                              disabled={!acceptUser.raised_by || !acceptUser.owner || !acceptUser.checker}
+                              onClick={async () => {
+                                try {
+                                  await acceptQueueItem(item.id, acceptUser.raised_by, acceptUser.owner, acceptUser.checker);
+                                  setAcceptUser({ raised_by: "", owner: "", checker: "" });
+                                  toast({ title: "Accepted — issue created" });
+                                } catch (e: any) { toast({ title: e.message, variant: "destructive" }); }
+                              }}>
+                              <CheckCircle className="h-3 w-3" /> Accept
+                            </Button>
+                            <Button size="sm" variant="outline" className="flex-1 text-xs gap-1 h-7 text-red-600 border-red-300"
+                              onClick={async () => {
+                                try {
+                                  await dismissQueueItem(item.id);
+                                  toast({ title: "Dismissed" });
+                                } catch (e: any) { toast({ title: e.message, variant: "destructive" }); }
+                              }}>
+                              <X className="h-3 w-3" /> Dismiss
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                      {item.queue_status !== "Pending" && (
+                        <p className="text-[10px] text-slate-400 italic capitalize">{item.queue_status}{item.accepted_issue_id ? " — Issue created" : ""}</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+                {!isLoadingQueue && queueItems.length === 0 && (
+                  <p className="text-xs text-slate-400 text-center py-8">Validation queue is empty</p>
+                )}
+              </div>
+            )}
           </ScrollArea>
         </div>
       </div>
@@ -329,7 +412,7 @@ export default function IssueManagementPage() {
                   </select>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
-                  {(["raised_by","assigned_to","approver"] as const).map(f => (
+                  {(["raised_by","owner","checker"] as const).map(f => (
                     <div key={f}><label className="text-xs font-medium text-slate-600 capitalize">{f.replace("_"," ")} *</label>
                       <Input className="mt-1 h-8 text-xs" value={form[f] as string} onChange={e => setForm(p => ({...p, [f]: e.target.value}))} />
                     </div>
@@ -340,7 +423,7 @@ export default function IssueManagementPage() {
             <div className="flex justify-end gap-2 px-5 py-3 border-t border-slate-100">
               <Button variant="outline" size="sm" onClick={() => setShowForm(false)}>Cancel</Button>
               <Button size="sm" onClick={handleCreate}
-                disabled={!form.title || !form.description || !form.raised_by || !form.assigned_to || !form.approver}>
+                disabled={!form.title || !form.description || !form.raised_by || !form.owner || !form.checker}>
                 Raise Issue
               </Button>
             </div>
