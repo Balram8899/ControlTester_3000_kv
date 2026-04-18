@@ -67,3 +67,24 @@ def test_review_evidence_404_unknown_control():
             json={"evidence_text": "Some text", "claim": "MFA is enforced"},
         )
     assert r.status_code == 404
+
+
+def test_generate_report_404_unknown_session():
+    with patch("api.routers.control_testing.get_store") as gs:
+        gs.return_value.get.return_value = None
+        r = client.post("/control-testing/missing/generate-report")
+    assert r.status_code == 404
+
+
+def test_generate_report_400_no_controls():
+    with patch("api.routers.control_testing.get_store") as gs:
+        gs.return_value.get.return_value = _make_session()
+        r = client.post("/control-testing/s1/generate-report")
+    assert r.status_code == 400
+
+
+def test_get_report_404_no_report():
+    with patch("api.routers.control_testing.get_store") as gs:
+        gs.return_value.get.return_value = _make_session()
+        r = client.get("/control-testing/s1/report")
+    assert r.status_code == 404

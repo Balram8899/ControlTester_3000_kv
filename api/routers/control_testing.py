@@ -320,3 +320,86 @@ Return ONLY the JSON object, no markdown."""
 
     get_store().update_control(session_id, control_id, review_fields)
     return {"ok": True, "review": review_data}
+
+
+@router.post("/{session_id}/generate-report")
+def generate_report(session_id: str):
+    """Control Testing Report Writer — domain-grouped final report."""
+    from langchain.schema import HumanMessage
+    from utils.llm_provider import get_llm
+
+    s = get_store().get(session_id)
+    if not s:
+        raise HTTPException(404, "Session not found")
+    if not s.controls:
+        raise HTTPException(400, "No controls in session. Add controls first.")
+
+    by_domain: dict[str, list[TestedControl]] = {}
+    for c in s.controls:
+        by_domain.setdefault(c.domain or "General", []).append(c)
+
+    domain_text = ""
+    for domain, ctrls in by_domain.items():
+        domain_text += f"\n### Domain: {domain}\n"
+        for c in ctrls:
+            result_label = c.test_result.replace("_", " ").title()
+            review_summary = c.evidence_review.conclusion or "No evidence review performed"
+            domain_text += (
+                f"- **{c.control_name}** [{result_label}]\n"
+                f"  Evidence review: {review_summary}. "
+                f"Confidence: {c.evidence_review.confidence or 'N/A'}. "
+                f"Gaps: {c.evidence_review.gaps or 'None identified'}.\n"
+                f"  Tester notes: {c.tester_notes or 'None.'}\n"
+            )
+
+    pass_count = sum(1 for c in s.controls if c.test_result == "pass")
+    fail_count = sum(1 for c in s.controls if c.test_result == "fail")
+    partial_count = sum(1 for c in s.controls if c.test_result == "partial")
+    not_tested = sum(1 for c in s.controls if c.test_result == "not_tested")
+
+    prompt = f"""You are a control testing report writer for audit and information security audiences.
+
+Produce a professional Control Testing Report using only the provided data.
+Follow the required report structure exactly. Do not add extra sections.
+Group findings by control domain. Keep language professional and suitable for audit personnel.
+Do not invent conclusions not supported by the test data.
+
+Session: {s.title}
+Description: {s.description}
+Total controls: {len(s.controls)}
+Pass: {pass_count} | Fail: {fail_count} | Partial: {partial_count} | Not Tested: {not_tested}
+
+Control findings by domain:
+{domain_text}
+
+Required report structure (produce each section as a markdown heading):
+1. Report Header
+2. Executive Summary
+3. Scope and Controls Tested
+4. Domain-by-Domain Findings
+5. Evidence Quality Summary
+6. Issues and Gaps
+7. Overall Conclusion
+
+Return the full report as markdown only."""
+
+    try:
+        llm = get_llm()
+        response = llm.invoke([HumanMessage(content=prompt)])
+        report_md = response.content.strip()
+    except Exception as e:
+        logger.error(f"Report generation failed for {session_id}: {e}")
+        report_md = f"# Control Testing Report\n\n**Report generation failed:** {e}\n\nPlease retry."
+
+    get_store().set_report(session_id, report_md)
+    return {"session_id": session_id, "report_markdown": report_md}
+
+
+@router.get("/{session_id}/report")
+def get_report(session_id: str):
+    s = get_store().get(session_id)
+    if not s:
+        raise HTTPException(404, "Session not found")
+    if not s.report_markdown:
+        raise HTTPException(404, "No report generated yet.")
+    return {"session_id": session_id, "report_markdown": s.report_markdown}
