@@ -68,6 +68,7 @@ from api.routers.risk_assessment import router as risk_assessment_router
 from api.routers.controls_quality import router as controls_quality_router
 from api.routers.issues import router as issues_router
 from api.routers.validation_queue import router as validation_queue_router
+from api.routers.control_testing import router as control_testing_router
 
 # ----------------------------------------------------------------------------
 # Logging
@@ -203,6 +204,7 @@ app.include_router(assets_router)
 app.include_router(risk_assessment_router)
 app.include_router(controls_quality_router)
 app.include_router(issues_router)
+app.include_router(control_testing_router)
 app.include_router(validation_queue_router)
 
 
