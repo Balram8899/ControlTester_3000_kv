@@ -14,6 +14,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import {
   useRiskAssessment,
+  AdHocApplication,
   AnswerType,
   Section,
 } from "@/contexts/RiskAssessmentContext";
@@ -76,6 +77,11 @@ export default function RiskAssessmentPage() {
   const [form, setForm] = useState<{ title: string; description: string; selectedAssetIds: string[] }>({
     title: "", description: "", selectedAssetIds: [],
   });
+  const [adHocApps, setAdHocApps] = useState<AdHocApplication[]>([]);
+  const [showAdHocForm, setShowAdHocForm] = useState(false);
+  const [adHocDraft, setAdHocDraft] = useState<AdHocApplication>({
+    name: "", description: "", assessment_context: "", confidentiality: 3, integrity: 3, availability: 3,
+  });
 
   // Q&A state
   const [qaAssetIdx, setQaAssetIdx] = useState(0);
@@ -131,8 +137,8 @@ export default function RiskAssessmentPage() {
   // ── Handlers ──────────────────────────────────────────────────────────
 
   async function handleCreate() {
-    if (!form.title || form.selectedAssetIds.length === 0) {
-      toast({ title: "Title and at least one asset required", variant: "destructive" });
+    if (!form.title || (form.selectedAssetIds.length === 0 && adHocApps.length === 0)) {
+      toast({ title: "Title and at least one application required", variant: "destructive" });
       return;
     }
     try {
@@ -140,9 +146,11 @@ export default function RiskAssessmentPage() {
         title: form.title,
         description: form.description,
         asset_ids: form.selectedAssetIds,
+        ad_hoc_applications: adHocApps,
       });
       selectAssessment(ra);
       setShowCreate(false);
+      setAdHocApps([]);
       setWizardStep(1);
       setRightTab("wizard");
       setQaAssetIdx(0);
@@ -151,6 +159,13 @@ export default function RiskAssessmentPage() {
     } catch {
       toast({ title: "Failed to create assessment", variant: "destructive" });
     }
+  }
+
+  function handleAddAdHoc() {
+    if (!adHocDraft.name?.trim()) return;
+    setAdHocApps(prev => [...prev, { ...adHocDraft }]);
+    setAdHocDraft({ name: "", description: "", assessment_context: "", confidentiality: 3, integrity: 3, availability: 3 });
+    setShowAdHocForm(false);
   }
 
   async function handleSubmitQa() {
@@ -241,7 +256,7 @@ export default function RiskAssessmentPage() {
                   <Badge variant="outline" className={`text-xs ${STATUS_COLOR[a.status]}`}>
                     {STATUS_LABELS[a.status]}
                   </Badge>
-                  <span className="text-xs text-slate-400">{a.asset_ids.length} app{a.asset_ids.length !== 1 ? "s" : ""}</span>
+                  <span className="text-xs text-slate-400">{a.asset_ids.length + (a.ad_hoc_applications?.length ?? 0)} app{(a.asset_ids.length + (a.ad_hoc_applications?.length ?? 0)) !== 1 ? "s" : ""}</span>
                 </div>
               </button>
             ))}
@@ -281,6 +296,46 @@ export default function RiskAssessmentPage() {
                     )}
                   </div>
                 </div>
+                {/* Ad hoc applications */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-medium text-slate-700">Ad hoc applications</p>
+                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setShowAdHocForm(v => !v)}>
+                      <Plus className="w-3 h-3 mr-1" /> Add
+                    </Button>
+                  </div>
+                  {adHocApps.map((app, i) => (
+                    <div key={i} className="flex items-center justify-between p-2 bg-slate-50 rounded border border-slate-200 mb-1 text-xs">
+                      <span className="font-medium text-slate-700">{app.name}</span>
+                      <button className="text-slate-400 hover:text-red-500 text-xs ml-2" onClick={() => setAdHocApps(p => p.filter((_, j) => j !== i))}>✕</button>
+                    </div>
+                  ))}
+                  {showAdHocForm && (
+                    <div className="border rounded p-3 space-y-2 bg-slate-50 mt-1">
+                      <Input placeholder="Application name *" className="h-7 text-xs"
+                        value={adHocDraft.name ?? ""} onChange={e => setAdHocDraft(p => ({ ...p, name: e.target.value }))} />
+                      <Textarea placeholder="Description" rows={1} className="text-xs"
+                        value={adHocDraft.description ?? ""} onChange={e => setAdHocDraft(p => ({ ...p, description: e.target.value }))} />
+                      <Input placeholder="Assessment context (what this assessment is about)" className="h-7 text-xs"
+                        value={adHocDraft.assessment_context ?? ""} onChange={e => setAdHocDraft(p => ({ ...p, assessment_context: e.target.value }))} />
+                      <div className="grid grid-cols-3 gap-2">
+                        {(["confidentiality", "integrity", "availability"] as const).map(f => (
+                          <div key={f}>
+                            <label className="text-[10px] text-slate-500 capitalize">{f} (1-5)</label>
+                            <Input type="number" min={1} max={5} className="h-7 text-xs"
+                              value={adHocDraft[f] ?? 3}
+                              onChange={e => setAdHocDraft(p => ({ ...p, [f]: Number(e.target.value) }))} />
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button size="sm" className="h-7 text-xs" onClick={handleAddAdHoc} disabled={!adHocDraft.name?.trim()}>Add</Button>
+                        <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setShowAdHocForm(false)}>Cancel</Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <div className="flex gap-2">
                   <Button onClick={handleCreate}>Create</Button>
                   <Button variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>

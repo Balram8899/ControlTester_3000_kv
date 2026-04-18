@@ -76,12 +76,36 @@ export interface ResidualResult {
   residual_risk_band: RiskBand;
 }
 
+export interface AdHocApplication {
+  id?: string;
+  name: string;
+  description?: string;
+  assessment_context?: string;
+  business_context?: string;
+  purpose?: string;
+  use?: string;
+  confidentiality?: number;
+  integrity?: number;
+  availability?: number;
+  hosting_type?: string | null;
+  support_type?: string | null;
+  owner?: string;
+  custodian?: string;
+  jurisdiction?: string;
+  classification?: string;
+  internet_exposure?: boolean;
+  data_sensitivity_summary?: string;
+  primary_users?: string;
+  key_integrations?: string;
+}
+
 export interface RiskAssessment {
   id: string;
   title: string;
   description: string;
   status: StatusType;
   asset_ids: string[];
+  ad_hoc_applications: AdHocApplication[];
   responses: SectionResponse[];
   risks: Risk[];
   applied_controls: AppliedControl[];
@@ -94,7 +118,8 @@ export interface RiskAssessment {
 export interface RiskAssessmentCreate {
   title: string;
   description: string;
-  asset_ids: string[];
+  asset_ids?: string[];
+  ad_hoc_applications?: AdHocApplication[];
 }
 
 // ── Context interface ─────────────────────────────────────────────────────

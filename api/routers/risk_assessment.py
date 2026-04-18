@@ -10,7 +10,7 @@ from typing import Any, Literal, Optional
 
 import pymongo
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from utils.assessment_questions import get_sections
 
@@ -24,17 +24,40 @@ AnswerType = Literal["yes", "no", "na"]
 
 # ── Pydantic models ──────────────────────────────────────────────────────────
 
+class AdHocApplication(BaseModel):
+    id: str = ""
+    name: str
+    description: str = ""
+    assessment_context: str = ""
+    business_context: str = ""
+    purpose: str = ""
+    use: str = ""
+    confidentiality: int = Field(default=3, ge=1, le=5)
+    integrity: int = Field(default=3, ge=1, le=5)
+    availability: int = Field(default=3, ge=1, le=5)
+    hosting_type: Optional[str] = None
+    support_type: Optional[str] = None
+    owner: str = ""
+    custodian: str = ""
+    jurisdiction: str = ""
+    classification: str = ""
+    internet_exposure: bool = False
+    data_sensitivity_summary: str = ""
+    primary_users: str = ""
+    key_integrations: str = ""
+
+
 class RiskAssessmentCreate(BaseModel):
     title: str
     description: str
-    asset_ids: list[str]
+    asset_ids: list[str] = []
+    ad_hoc_applications: list[AdHocApplication] = []
 
-    @field_validator("asset_ids")
-    @classmethod
-    def _at_least_one(cls, v: list[str]) -> list[str]:
-        if not v:
-            raise ValueError("At least one asset_id is required")
-        return v
+    @model_validator(mode="after")
+    def _at_least_one_subject(self) -> "RiskAssessmentCreate":
+        if not self.asset_ids and not self.ad_hoc_applications:
+            raise ValueError("At least one asset_id or ad_hoc_application is required")
+        return self
 
 
 class ResponseSubmit(BaseModel):
@@ -68,6 +91,7 @@ class RiskAssessment(BaseModel):
     description: str
     status: StatusType
     asset_ids: list[str]
+    ad_hoc_applications: list[dict] = []
     responses: list[dict]
     risks: list[dict]
     applied_controls: list[dict]
@@ -96,16 +120,26 @@ class MongoRiskAssessmentStore:
         doc.setdefault("applied_controls", [])
         doc.setdefault("suggested_controls", [])
         doc.setdefault("report_markdown", None)
+        doc.setdefault("ad_hoc_applications", [])
+        doc.setdefault("asset_ids", [])
         return RiskAssessment(**doc)
 
     def create(self, data: RiskAssessmentCreate) -> RiskAssessment:
         now = datetime.utcnow().isoformat()
+        # Assign generated IDs to ad hoc applications
+        ad_hoc = []
+        for app in data.ad_hoc_applications:
+            d = app.model_dump()
+            if not d.get("id"):
+                d["id"] = str(uuid.uuid4())
+            ad_hoc.append(d)
         doc: dict[str, Any] = {
             "_id": str(uuid.uuid4()),
             "title": data.title,
             "description": data.description,
             "status": "draft",
             "asset_ids": data.asset_ids,
+            "ad_hoc_applications": ad_hoc,
             "responses": [],
             "risks": [],
             "applied_controls": [],
