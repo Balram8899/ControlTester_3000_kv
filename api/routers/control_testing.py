@@ -241,3 +241,82 @@ def update_control(session_id: str, control_id: str, body: UpdateControlBody):
         raise HTTPException(400, "No fields to update")
     get_store().update_control(session_id, control_id, fields)
     return {"ok": True}
+
+
+@router.post("/{session_id}/controls/{control_id}/review-evidence")
+def review_evidence(session_id: str, control_id: str, body: ReviewEvidenceBody):
+    """Persona 4: Evidence Reviewer — assess evidence against a control claim."""
+    import re as _re
+    import json as _json
+    from langchain.schema import HumanMessage
+    from utils.llm_provider import get_llm
+
+    s = get_store().get(session_id)
+    if not s:
+        raise HTTPException(404, "Session not found")
+
+    ctrl = next((c for c in s.controls if c.id == control_id), None)
+    if not ctrl:
+        raise HTTPException(404, "Control not found in session")
+
+    claim = body.claim or f"The control '{ctrl.control_name}' is operating effectively"
+    evidence_text = body.evidence_text or ctrl.evidence_text
+
+    prompt = f"""You are an evidence reviewer for audit, risk, and security assessments.
+
+Your task is to review uploaded evidence in the specific context provided.
+You must evaluate whether the evidence:
+- supports the claim
+- partially supports the claim
+- contradicts the claim
+- is insufficient or irrelevant
+
+Always apply the review from the perspective of the current module and objective.
+Do not assess evidence generically.
+If the same file would mean different things in different contexts, use only the context provided for this task.
+
+Context:
+- Control: {ctrl.control_name}
+- Domain: {ctrl.domain}
+- Claim under review: {claim}
+
+Evidence provided:
+{evidence_text}
+
+Return a JSON object with exactly these fields:
+{{
+  "conclusion": "supports" | "partially supports" | "contradicts" | "insufficient/irrelevant",
+  "explanation": "short explanation (2-3 sentences)",
+  "confidence": "high" | "medium" | "low",
+  "gaps": "description of any material gaps or contradictions, or 'None identified'"
+}}
+
+Return ONLY the JSON object, no markdown."""
+
+    try:
+        llm = get_llm()
+        response = llm.invoke([HumanMessage(content=prompt)])
+        content = response.content.strip()
+        content = _re.sub(r"^```[a-zA-Z]*\n?", "", content)
+        content = _re.sub(r"\n?```$", "", content).strip()
+        review_data = _json.loads(content)
+    except Exception as e:
+        logger.error(f"Evidence review LLM failed for {session_id}/{control_id}: {e}")
+        review_data = {
+            "conclusion": "insufficient/irrelevant",
+            "explanation": f"Evidence review failed: {e}",
+            "confidence": "low",
+            "gaps": "LLM unavailable — manual review required.",
+        }
+
+    review_fields = {
+        "evidence_review.conclusion": review_data.get("conclusion", ""),
+        "evidence_review.explanation": review_data.get("explanation", ""),
+        "evidence_review.confidence": review_data.get("confidence", ""),
+        "evidence_review.gaps": review_data.get("gaps", ""),
+    }
+    if body.evidence_text:
+        review_fields["evidence_text"] = body.evidence_text
+
+    get_store().update_control(session_id, control_id, review_fields)
+    return {"ok": True, "review": review_data}

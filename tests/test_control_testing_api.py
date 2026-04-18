@@ -47,3 +47,23 @@ def test_delete_session_404():
         gs.return_value.get.return_value = None
         r = client.delete("/control-testing/missing")
     assert r.status_code == 404
+
+
+def test_review_evidence_404_unknown_session():
+    with patch("api.routers.control_testing.get_store") as gs:
+        gs.return_value.get.return_value = None
+        r = client.post(
+            "/control-testing/missing/controls/c1/review-evidence",
+            json={"evidence_text": "Some text", "claim": "MFA is enforced"},
+        )
+    assert r.status_code == 404
+
+
+def test_review_evidence_404_unknown_control():
+    with patch("api.routers.control_testing.get_store") as gs:
+        gs.return_value.get.return_value = _make_session()
+        r = client.post(
+            "/control-testing/s1/controls/no_such_control/review-evidence",
+            json={"evidence_text": "Some text", "claim": "MFA is enforced"},
+        )
+    assert r.status_code == 404
