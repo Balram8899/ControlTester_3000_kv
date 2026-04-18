@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import {
-  useIssueManagement, Issue, IssueCreate, Severity,
+  useIssueManagement, IssueCreate, Severity,
 } from "@/contexts/IssueManagementContext";
 
 const SEV_COLOR: Record<Severity, string> = {
@@ -44,6 +44,8 @@ export default function IssueManagementPage() {
   } = useIssueManagement();
   const { toast } = useToast();
   const [search, setSearch] = useState("");
+  const [filterSeverity, setFilterSeverity] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
   const [tab, setTab] = useState<"dashboard" | "detail" | "remediation" | "queue">("dashboard");
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<IssueCreate>(EMPTY);
@@ -55,8 +57,9 @@ export default function IssueManagementPage() {
   useEffect(() => { if (selectedIssue) fetchImpact(selectedIssue.id); }, [selectedIssue?.id]);
 
   const filtered = issues.filter(i =>
-    i.title.toLowerCase().includes(search.toLowerCase()) ||
-    i.severity.toLowerCase().includes(search.toLowerCase())
+    (search === "" || i.title.toLowerCase().includes(search.toLowerCase()) || i.description.toLowerCase().includes(search.toLowerCase())) &&
+    (filterSeverity === "" || i.severity === filterSeverity) &&
+    (filterStatus === "" || i.status === filterStatus)
   );
 
   const kpis = {
@@ -112,12 +115,26 @@ export default function IssueManagementPage() {
       <div className="flex flex-1 overflow-hidden">
         {/* Left Panel */}
         <div className="w-72 flex-shrink-0 border-r border-slate-200 flex flex-col bg-white">
-          <div className="p-3 border-b border-slate-100 flex gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-2 top-2.5 h-3.5 w-3.5 text-slate-400" />
-              <Input className="pl-7 h-8 text-xs" placeholder="Search issues…" value={search} onChange={e => setSearch(e.target.value)} />
+          <div className="p-3 border-b border-slate-100 space-y-2">
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-2 top-2.5 h-3.5 w-3.5 text-slate-400" />
+                <Input className="pl-7 h-8 text-xs" placeholder="Search issues…" value={search} onChange={e => setSearch(e.target.value)} />
+              </div>
+              <Button size="sm" className="h-8 px-2" onClick={() => setShowForm(true)}><Plus className="h-3.5 w-3.5" /></Button>
             </div>
-            <Button size="sm" className="h-8 px-2" onClick={() => setShowForm(true)}><Plus className="h-3.5 w-3.5" /></Button>
+            <div className="flex gap-2">
+              <select className="flex-1 h-7 text-[10px] border border-slate-200 rounded-md px-1.5 bg-white text-slate-600"
+                value={filterSeverity} onChange={e => setFilterSeverity(e.target.value)}>
+                <option value="">All severities</option>
+                {["Low","Medium","High","Critical"].map(s => <option key={s}>{s}</option>)}
+              </select>
+              <select className="flex-1 h-7 text-[10px] border border-slate-200 rounded-md px-1.5 bg-white text-slate-600"
+                value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+                <option value="">All statuses</option>
+                {["Open","In Remediation","Pending Review","Returned","Closed"].map(s => <option key={s}>{s}</option>)}
+              </select>
+            </div>
           </div>
           <ScrollArea className="flex-1">
             {isLoading && <div className="flex justify-center p-8"><Loader2 className="h-5 w-5 animate-spin text-slate-400" /></div>}
