@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import re as _re
 import uuid
 import logging
 from datetime import datetime
@@ -90,6 +91,9 @@ class MongoRiskAssessmentStore:
     def _to_ra(self, doc: dict) -> RiskAssessment:
         doc = dict(doc)
         doc["id"] = str(doc.pop("_id"))
+        doc.setdefault("responses", [])
+        doc.setdefault("risks", [])
+        doc.setdefault("applied_controls", [])
         doc.setdefault("suggested_controls", [])
         doc.setdefault("report_markdown", None)
         return RiskAssessment(**doc)
@@ -201,8 +205,11 @@ def _rule_layer_scores(responses: list[dict]) -> tuple[int, int]:
             exposure_yes += 1
         elif qtype == "Control" and r.get("answer") == "no":
             control_no += 1
-    likelihood = min(5, max(1, round(1 + (exposure_yes / 5) * 4)))
-    impact = min(5, max(1, round(1 + (control_no / 5) * 4)))
+    all_questions = [q for s in get_sections() for q in s["questions"]]
+    exposure_total = max(1, sum(1 for q in all_questions if q["question_type"] == "Exposure"))
+    control_total = max(1, sum(1 for q in all_questions if q["question_type"] == "Control"))
+    likelihood = min(5, max(1, round(1 + (exposure_yes / exposure_total) * 4)))
+    impact = min(5, max(1, round(1 + (control_no / control_total) * 4)))
     return likelihood, impact
 
 
@@ -294,7 +301,7 @@ def apply_control(ra_id: str, body: ControlApplication):
         "control_id": body.control_id,
         "source": body.source,
         "human_rationale": body.human_rationale,
-        "effectiveness_score": 1.0,
+        "effectiveness_score": 0.0,
         "applied_at": datetime.utcnow().isoformat(),
     }
     get_store().add_control(ra_id, control)
@@ -387,11 +394,11 @@ Example: [{{"title":"Unauthorised data access","description":"...","risk_categor
             llm = get_llm()
             response = llm.invoke([HumanMessage(content=prompt)])
             content = response.content.strip()
-            if content.startswith("```"):
-                content = content.split("```")[1]
-                if content.startswith("json"):
-                    content = content[4:]
+            content = _re.sub(r"^```[a-zA-Z]*\n?", "", content)
+            content = _re.sub(r"\n?```$", "", content).strip()
             llm_risks = _json.loads(content)
+            if not isinstance(llm_risks, list):
+                raise ValueError(f"Expected JSON array, got {type(llm_risks).__name__}")
         except Exception as e:
             logger.error(f"LLM analysis failed for asset {asset_id}: {e}")
             llm_risks = [{
@@ -404,17 +411,17 @@ Example: [{{"title":"Unauthorised data access","description":"...","risk_categor
             }]
 
         for r in llm_risks:
-            l = int(r.get("likelihood_score", rule_likelihood))
-            i = int(r.get("impact_score", rule_impact))
-            score = l * i
+            likelihood = int(r.get("likelihood_score", rule_likelihood))
+            impact_val = int(r.get("impact_score", rule_impact))
+            score = likelihood * impact_val
             all_risks.append({
                 "id": str(uuid.uuid4()),
                 "asset_id": asset_id,
                 "title": r.get("title", "Unnamed Risk"),
                 "description": r.get("description", ""),
                 "risk_category": r.get("risk_category", "Operational"),
-                "likelihood_score": l,
-                "impact_score": i,
+                "likelihood_score": likelihood,
+                "impact_score": impact_val,
                 "inherent_risk_score": score,
                 "inherent_risk_band": _inherent_risk_band(score),
                 "residual_risk_score": score,
@@ -473,11 +480,11 @@ Each element: {{"risk_id": "...", "control_id": "...", "control_title": "...", "
         llm = get_llm()
         response = llm.invoke([HumanMessage(content=prompt)])
         content = response.content.strip()
-        if content.startswith("```"):
-            content = content.split("```")[1]
-            if content.startswith("json"):
-                content = content[4:]
+        content = _re.sub(r"^```[a-zA-Z]*\n?", "", content)
+        content = _re.sub(r"\n?```$", "", content).strip()
         suggestions = _json.loads(content)
+        if not isinstance(suggestions, list):
+            raise ValueError(f"Expected JSON array, got {type(suggestions).__name__}")
     except Exception as e:
         logger.error(f"Control suggestion LLM failed for {ra_id}: {e}")
         suggestions = []
