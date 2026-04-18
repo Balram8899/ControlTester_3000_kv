@@ -10,30 +10,46 @@ def test_issue_create_valid():
         title="Missing MFA on admin accounts",
         description="Admin accounts do not enforce MFA.",
         severity="High",
-        raised_by="Alice", assigned_to="Bob", approver="Carol",
+        raised_by="Alice", owner="Bob", checker="Carol",
     )
     assert i.title == "Missing MFA on admin accounts"
     assert i.severity == "High"
+    assert i.asset_ids == []
+    assert i.control_ids == []
 
 
 def test_issue_defaults():
     i = Issue(
         title="t", description="d", severity="Low",
-        raised_by="A", assigned_to="B", approver="C",
+        raised_by="A", owner="B", checker="C",
         id="x", status="Open",
         evidences=[], approvals=[],
         created_at="2026-04-18T00:00:00",
         updated_at="2026-04-18T00:00:00",
     )
     assert i.status == "Open"
-    assert i.evidences == []
-    assert i.approvals == []
+    assert i.asset_ids == []
+    assert i.control_ids == []
+
+
+def test_issue_returned_status_valid():
+    i = Issue(
+        title="t", description="d", severity="Low",
+        raised_by="A", owner="B", checker="C",
+        id="x", status="Returned",
+        evidences=[], approvals=[],
+        created_at="2026-04-18T00:00:00",
+        updated_at="2026-04-18T00:00:00",
+    )
+    assert i.status == "Returned"
 
 
 def _issue_fixture(**overrides) -> Issue:
     base = dict(
         title="Missing MFA", description="No MFA on admin accounts.",
-        severity="High", raised_by="Alice", assigned_to="Bob", approver="Carol",
+        severity="High", source_module="Manual",
+        asset_ids=[], control_ids=[],
+        raised_by="Alice", owner="Bob", checker="Carol",
         id="issue-abc", status="Open",
         evidences=[], approvals=[],
         created_at="2026-04-18T00:00:00",
@@ -42,7 +58,7 @@ def _issue_fixture(**overrides) -> Issue:
     return Issue(**{**base, **overrides})
 
 
-# ── Task 3: CRUD endpoints ────────────────────────────────────────────────────
+# ── CRUD endpoints ────────────────────────────────────────────────────────────
 
 @patch("api.routers.issues.get_store")
 def test_create_issue_returns_201(mock_get_store):
@@ -52,7 +68,7 @@ def test_create_issue_returns_201(mock_get_store):
     mock_get_store.return_value = mock
     resp = TestClient(app).post("/issues", json=dict(
         title="Missing MFA", description="No MFA on admin accounts.",
-        severity="High", raised_by="Alice", assigned_to="Bob", approver="Carol",
+        severity="High", raised_by="Alice", owner="Bob", checker="Carol",
     ))
     assert resp.status_code == 201
     assert resp.json()["severity"] == "High"
@@ -79,7 +95,7 @@ def test_get_issue_404(mock_get_store):
     assert resp.status_code == 404
 
 
-# ── Task 4: Evidence upload ───────────────────────────────────────────────────
+# ── Evidence upload ───────────────────────────────────────────────────────────
 
 @patch("api.routers.issues.get_store")
 def test_upload_evidence_returns_200(mock_get_store):
@@ -100,40 +116,64 @@ def test_upload_evidence_returns_200(mock_get_store):
     assert resp.json()["evidences"][0]["filename"] == "log.txt"
 
 
-# ── Task 5: Submit/Approve workflow ──────────────────────────────────────────
+# ── Submit/Approve workflow ───────────────────────────────────────────────────
 
 @patch("api.routers.issues.get_store")
-def test_submit_transitions_to_pending(mock_get_store):
+def test_submit_transitions_to_pending_review(mock_get_store):
     from api.main import app
     mock = MagicMock()
     mock.get.return_value = _issue_fixture(status="In Remediation")
-    mock.transition.return_value = _issue_fixture(status="Pending Sign-off")
+    mock.transition.return_value = _issue_fixture(status="Pending Review")
     mock_get_store.return_value = mock
     resp = TestClient(app).post("/issues/issue-abc/submit")
     assert resp.status_code == 200
-    assert resp.json()["status"] == "Pending Sign-off"
+    assert resp.json()["status"] == "Pending Review"
 
 
 @patch("api.routers.issues.get_store")
 def test_submit_fails_if_already_pending(mock_get_store):
     from api.main import app
     mock = MagicMock()
-    mock.get.return_value = _issue_fixture(status="Pending Sign-off")
+    mock.get.return_value = _issue_fixture(status="Pending Review")
     mock_get_store.return_value = mock
     resp = TestClient(app).post("/issues/issue-abc/submit")
     assert resp.status_code == 400
 
 
 @patch("api.routers.issues.get_store")
+def test_submit_from_returned_allowed(mock_get_store):
+    from api.main import app
+    mock = MagicMock()
+    mock.get.return_value = _issue_fixture(status="Returned")
+    mock.transition.return_value = _issue_fixture(status="Pending Review")
+    mock_get_store.return_value = mock
+    resp = TestClient(app).post("/issues/issue-abc/submit")
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "Pending Review"
+
+
+@patch("api.routers.issues.get_store")
 def test_approve_closes_issue(mock_get_store):
     from api.main import app
     mock = MagicMock()
-    mock.get.return_value = _issue_fixture(status="Pending Sign-off")
+    mock.get.return_value = _issue_fixture(status="Pending Review")
     mock.add_approval.return_value = _issue_fixture(status="Closed")
     mock_get_store.return_value = mock
     resp = TestClient(app).post("/issues/issue-abc/approve", json={"decision": "approved", "notes": "LGTM"})
     assert resp.status_code == 200
     assert resp.json()["status"] == "Closed"
+
+
+@patch("api.routers.issues.get_store")
+def test_reject_returns_issue(mock_get_store):
+    from api.main import app
+    mock = MagicMock()
+    mock.get.return_value = _issue_fixture(status="Pending Review")
+    mock.add_approval.return_value = _issue_fixture(status="Returned")
+    mock_get_store.return_value = mock
+    resp = TestClient(app).post("/issues/issue-abc/approve", json={"decision": "rejected", "notes": "Needs more detail"})
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "Returned"
 
 
 @patch("api.routers.issues.get_store")
@@ -146,7 +186,7 @@ def test_approve_fails_if_not_pending(mock_get_store):
     assert resp.status_code == 400
 
 
-# ── Task 6: Impact endpoint ───────────────────────────────────────────────────
+# ── Impact endpoint ───────────────────────────────────────────────────────────
 
 @patch("api.routers.issues.get_store")
 def test_impact_returns_effectiveness(mock_get_store):

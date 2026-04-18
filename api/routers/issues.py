@@ -12,31 +12,36 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/issues", tags=["issues"])
 
 SeverityType    = Literal["Low", "Medium", "High", "Critical"]
-IssueStatusType = Literal["Open", "In Remediation", "Pending Sign-off", "Closed"]
+IssueStatusType = Literal["Open", "In Remediation", "Pending Review", "Closed", "Returned"]
 
 
 class IssueCreate(BaseModel):
     title: str
     description: str
     severity: SeverityType
-    asset_id: Optional[str] = None
-    control_id: Optional[str] = None
+    source_module: Optional[str] = None
+    asset_ids: list[str] = []
+    control_ids: list[str] = []
     risk_assessment_id: Optional[str] = None
     raised_by: str
-    assigned_to: str
-    approver: str
+    owner: str
+    checker: str
     remediation_plan: Optional[str] = None
     target_date: Optional[str] = None
+    review_notes: Optional[str] = None
+    closure_notes: Optional[str] = None
 
 
 class IssueUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     severity: Optional[SeverityType] = None
-    assigned_to: Optional[str] = None
-    approver: Optional[str] = None
+    owner: Optional[str] = None
+    checker: Optional[str] = None
     remediation_plan: Optional[str] = None
     target_date: Optional[str] = None
+    review_notes: Optional[str] = None
+    closure_notes: Optional[str] = None
 
 
 class ApproveRequest(BaseModel):
@@ -61,8 +66,8 @@ class MongoIssueStore:
         self.col = self.db["issues"]
         self.col.create_index("severity")
         self.col.create_index("status")
-        self.col.create_index("asset_id")
-        self.col.create_index("control_id")
+        self.col.create_index("asset_ids")
+        self.col.create_index("control_ids")
 
     def _to_issue(self, doc: dict) -> Issue:
         doc = dict(doc)
@@ -89,12 +94,14 @@ class MongoIssueStore:
         status_f: Optional[IssueStatusType] = None,
         asset_id_f: Optional[str] = None,
         control_id_f: Optional[str] = None,
+        source_module_f: Optional[str] = None,
     ) -> list[Issue]:
         q: dict[str, Any] = {}
-        if severity_f:   q["severity"]   = severity_f
-        if status_f:     q["status"]     = status_f
-        if asset_id_f:   q["asset_id"]   = asset_id_f
-        if control_id_f: q["control_id"] = control_id_f
+        if severity_f:      q["severity"]      = severity_f
+        if status_f:        q["status"]        = status_f
+        if asset_id_f:      q["asset_ids"]     = asset_id_f
+        if control_id_f:    q["control_ids"]   = control_id_f
+        if source_module_f: q["source_module"] = source_module_f
         return [self._to_issue(d) for d in self.col.find(q)]
 
     def get(self, issue_id: str) -> Issue | None:
@@ -143,12 +150,12 @@ class MongoIssueStore:
         )
         return self.get(issue_id)
 
-    def add_approval(self, issue_id: str, decision: str, notes: Optional[str], approver: str, new_status: IssueStatusType) -> Issue | None:
+    def add_approval(self, issue_id: str, decision: str, notes: Optional[str], checker: str, new_status: IssueStatusType) -> Issue | None:
         now = datetime.utcnow().isoformat()
         approval = {
             "id": str(uuid.uuid4()),
             "stage": 1,
-            "approver": approver,
+            "checker": checker,
             "decision": decision,
             "notes": notes,
             "decided_at": now,
@@ -181,12 +188,14 @@ def list_issues(
     status: Optional[IssueStatusType] = None,
     asset_id: Optional[str] = None,
     control_id: Optional[str] = None,
+    source_module: Optional[str] = None,
 ):
     return get_store().list(
         severity_f=severity,
         status_f=status,
         asset_id_f=asset_id,
         control_id_f=control_id,
+        source_module_f=source_module,
     )
 
 
@@ -229,9 +238,9 @@ def submit_issue(issue_id: str):
     issue = get_store().get(issue_id)
     if not issue:
         raise HTTPException(404, "Issue not found")
-    if issue.status not in ("Open", "In Remediation"):
+    if issue.status not in ("Open", "In Remediation", "Returned"):
         raise HTTPException(400, f"Cannot submit issue with status '{issue.status}'")
-    result = get_store().transition(issue_id, "Pending Sign-off")
+    result = get_store().transition(issue_id, "Pending Review")
     if not result:
         raise HTTPException(500, "Transition failed")
     return result
@@ -242,14 +251,14 @@ def approve_issue(issue_id: str, body: ApproveRequest):
     issue = get_store().get(issue_id)
     if not issue:
         raise HTTPException(404, "Issue not found")
-    if issue.status != "Pending Sign-off":
-        raise HTTPException(400, "Issue is not pending sign-off")
-    new_status: IssueStatusType = "Closed" if body.decision == "approved" else "In Remediation"
+    if issue.status != "Pending Review":
+        raise HTTPException(400, "Issue is not pending review")
+    new_status: IssueStatusType = "Closed" if body.decision == "approved" else "Returned"
     result = get_store().add_approval(
         issue_id,
         decision=body.decision,
         notes=body.notes,
-        approver=issue.approver,
+        checker=issue.checker,
         new_status=new_status,
     )
     if not result:
