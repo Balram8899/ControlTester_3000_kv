@@ -18,6 +18,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 
 COPY utils ./utils
 COPY api ./api
+COPY data ./data
 
 EXPOSE 8000
 
