@@ -7,6 +7,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from utils.risk_scorer import compute_cia_total, compute_criticality
+from utils.llm_provider import get_llm
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/assets", tags=["assets"])
@@ -120,6 +121,69 @@ def get_store() -> MongoAssetStore:
     return _store
 
 
+def _suggest_controls_llm(asset: Asset) -> list[dict]:
+    """Suggest controls using the configured LLM (Ollama by default)."""
+    from langchain.schema import HumanMessage
+    import json as _json
+
+    all_controls: list[dict] = []
+
+    try:
+        from utils.controls_library import MongoControlsStore
+        store = MongoControlsStore()
+        for c in store._col.find(
+            {}, {"_id": 1, "name": 1, "description": 1}
+        ).limit(80):
+            all_controls.append({
+                "control_id": str(c["_id"]),
+                "name": c.get("name", ""),
+                "description": c.get("description", ""),
+                "source": "controls_library",
+            })
+    except Exception as e:
+        logger.warning(f"controls_library fetch failed: {e}")
+
+    try:
+        from utils.regulatory_library import MongoLibraryStore
+        reg_store = MongoLibraryStore()
+        for r in reg_store._col.find(
+            {}, {"_id": 1, "obligation": 1, "domain": 1, "framework_name": 1}
+        ).limit(80):
+            all_controls.append({
+                "control_id": str(r["_id"]),
+                "name": r.get("obligation", ""),
+                "description": f"{r.get('framework_name', '')} — {r.get('domain', '')}",
+                "source": "regulatory_testing",
+            })
+    except Exception as e:
+        logger.warning(f"regulatory_library fetch failed: {e}")
+
+    if not all_controls:
+        return []
+
+    controls_text = "\n".join(
+        f"- ID:{c['control_id']} | {c['name']} | {c['description']} | source:{c['source']}"
+        for c in all_controls[:60]
+    )
+
+    prompt = f"""You are a cybersecurity risk expert. Select the most relevant controls for this asset.
+
+Asset: {asset.name} | Type: {asset.type} | C:{asset.confidentiality}/5 I:{asset.integrity}/5 A:{asset.availability}/5 | CIA Total:{asset.cia_total}/15
+Description: {asset.description}
+Jurisdiction: {asset.jurisdiction} | Classification: {asset.classification}
+
+Controls:
+{controls_text}
+
+Return a JSON array of up to 10 controls:
+[{{"control_id": "...", "name": "...", "source": "...", "rationale": "one sentence"}}]
+Return ONLY valid JSON. No markdown, no explanation."""
+
+    llm = get_llm(temperature=0.2)
+    response = llm.invoke([HumanMessage(content=prompt)])
+    return _json.loads(response.content)
+
+
 @router.post("", status_code=201, response_model=Asset)
 def create_asset(body: AssetCreate):
     return get_store().create(body)
@@ -139,6 +203,19 @@ def asset_assessment_history(asset_id: str):
     if not get_store().get(asset_id):
         raise HTTPException(404, "Asset not found")
     return {"asset_id": asset_id, "assessments": []}
+
+
+@router.post("/{asset_id}/suggest-controls")
+def suggest_controls(asset_id: str):
+    asset = get_store().get(asset_id)
+    if not asset:
+        raise HTTPException(404, "Asset not found")
+    try:
+        suggestions = _suggest_controls_llm(asset)
+    except Exception as e:
+        logger.error(f"Control suggestion failed: {e}")
+        raise HTTPException(500, f"LLM suggestion failed: {str(e)}")
+    return {"asset_id": asset_id, "suggestions": suggestions}
 
 
 @router.get("/{asset_id}", response_model=Asset)

@@ -72,3 +72,18 @@ def test_get_asset_404(mock_get_store):
     mock_get_store.return_value = mock
     resp = TestClient(app).get("/assets/nonexistent")
     assert resp.status_code == 404
+
+
+@patch("api.routers.assets.get_store")
+@patch("api.routers.assets._suggest_controls_llm")
+def test_suggest_controls_returns_suggestions(mock_llm, mock_get_store):
+    from api.main import app
+    mock_store = MagicMock()
+    mock_store.get.return_value = _asset_fixture()
+    mock_get_store.return_value = mock_store
+    mock_llm.return_value = [
+        {"control_id": "c1", "name": "Access Control", "source": "controls_library", "rationale": "High C asset"}
+    ]
+    resp = TestClient(app).post("/assets/abc/suggest-controls")
+    assert resp.status_code == 200
+    assert resp.json()["suggestions"][0]["source"] == "controls_library"
