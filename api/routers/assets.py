@@ -103,7 +103,8 @@ class MongoAssetStore:
         updates = data.model_dump(exclude_unset=True)
         merged = self._enrich({**existing, **updates})
         merged["updated_at"] = datetime.utcnow().isoformat()
-        self.col.update_one({"_id": asset_id}, {"$set": merged})
+        set_payload = {k: v for k, v in merged.items() if k != "_id"}
+        self.col.update_one({"_id": asset_id}, {"$set": set_payload})
         return self._to_asset(merged)
 
     def delete(self, asset_id: str) -> bool:
@@ -130,7 +131,14 @@ def list_assets(
     criticality: Optional[CriticalityType] = None,
     status: Optional[StatusType] = None,
 ):
-    return get_store().list(type, criticality, status)
+    return get_store().list(type_f=type, crit_f=criticality, status_f=status)
+
+
+@router.get("/{asset_id}/assessment-history")
+def asset_assessment_history(asset_id: str):
+    if not get_store().get(asset_id):
+        raise HTTPException(404, "Asset not found")
+    return {"asset_id": asset_id, "assessments": []}
 
 
 @router.get("/{asset_id}", response_model=Asset)
@@ -153,10 +161,3 @@ def update_asset(asset_id: str, body: AssetUpdate):
 def delete_asset(asset_id: str):
     if not get_store().delete(asset_id):
         raise HTTPException(404, "Asset not found")
-
-
-@router.get("/{asset_id}/assessment-history")
-def asset_assessment_history(asset_id: str):
-    if not get_store().get(asset_id):
-        raise HTTPException(404, "Asset not found")
-    return {"asset_id": asset_id, "assessments": []}
