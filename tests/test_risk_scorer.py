@@ -33,3 +33,15 @@ def test_criticality_low_min():
 
 def test_criticality_low_top():
     assert compute_criticality(5) == "Low"
+
+def test_cia_total_invalid_dimension_zero():
+    with pytest.raises(ValueError):
+        compute_cia_total(0, 3, 3)
+
+def test_cia_total_invalid_dimension_six():
+    with pytest.raises(ValueError):
+        compute_cia_total(3, 6, 3)
+
+def test_criticality_invalid_out_of_range():
+    with pytest.raises(ValueError):
+        compute_criticality(2)
