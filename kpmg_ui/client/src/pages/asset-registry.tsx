@@ -63,9 +63,9 @@ const EMPTY: AssetCreate = {
   location: "On-premise",
   jurisdiction: "",
   classification: "Internal",
-  confidentiality: 1,
-  integrity: 1,
-  availability: 1,
+  confidentiality: 1, confidentiality_min: 1,
+  integrity: 1,       integrity_min: 1,
+  availability: 1,    availability_min: 1,
 };
 
 // ── Page ────────────────────────────────────────────────────────────────────
@@ -122,10 +122,7 @@ export default function AssetRegistryPage() {
 
   const isFormValid =
     form.name.trim() &&
-    form.description.trim() &&
-    form.owner.trim() &&
-    form.custodian.trim() &&
-    form.jurisdiction.trim();
+    form.description.trim();
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -325,8 +322,11 @@ export default function AssetRegistryPage() {
 
                 <CiaRatingWidget
                   confidentiality={selectedAsset.confidentiality}
+                  confidentiality_min={selectedAsset.confidentiality_min ?? selectedAsset.confidentiality}
                   integrity={selectedAsset.integrity}
+                  integrity_min={selectedAsset.integrity_min ?? selectedAsset.integrity}
                   availability={selectedAsset.availability}
+                  availability_min={selectedAsset.availability_min ?? selectedAsset.availability}
                   onChange={() => {}}
                   readOnly
                 />
@@ -497,9 +497,15 @@ export default function AssetRegistryPage() {
 
                 <CiaRatingWidget
                   confidentiality={form.confidentiality}
+                  confidentiality_min={form.confidentiality_min}
                   integrity={form.integrity}
+                  integrity_min={form.integrity_min}
                   availability={form.availability}
-                  onChange={(field, value) => updateForm(field, value)}
+                  availability_min={form.availability_min}
+                  onChange={(field, min, max) => {
+                    updateForm(field, max);
+                    updateForm(`${field}_min` as keyof AssetCreate, min);
+                  }}
                 />
 
               </div>

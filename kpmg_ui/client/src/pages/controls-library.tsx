@@ -539,10 +539,20 @@ export default function ControlsLibraryPage() {
     setPendingQualityAnalysis(false);
   }, [pendingQualityAnalysis]);
 
-  // Auto-fetch merged stats when quality tab is active
+  // Auto-fetch merged stats and quality analysis when quality tab is active
   useEffect(() => {
-    if (dashboardTab === "quality" && dashboardControls.length > 0 && mergedCtrlStats === null && !mergedStatsLoading) {
-      fetchMergedStats();
+    if (dashboardTab === "quality" && dashboardControls.length > 0) {
+      if (mergedCtrlStats === null && !mergedStatsLoading) fetchMergedStats();
+      if (ctrlsW1H.length === 0) {
+        fetchQualityAnalysis(
+          dashboardControls.map(c => ({
+            control_id: c.control_id ?? String((c as any).id ?? ""),
+            name: (c as any).control_name ?? c.control_id ?? "",
+            description: c.description ?? "",
+          })),
+          dashboardControls,
+        );
+      }
     }
   }, [dashboardTab, dashboardControls.length]);
 
@@ -572,7 +582,7 @@ export default function ControlsLibraryPage() {
     fetchAllControls();
   };
 
-  const fetchAllControls = async () => {
+  const fetchAllControls = async (): Promise<ExtractedControl[]> => {
     setDashboardLoading(true);
     try {
       const res = await fetch("/api/controls-library/all-controls");
@@ -580,25 +590,49 @@ export default function ControlsLibraryPage() {
       const data = await res.json();
       if (data.success && Array.isArray(data.controls)) {
         setDashboardControls(data.controls);
+        return data.controls as ExtractedControl[];
       }
+      return [];
     } catch (err) {
       console.warn("fetchAllControls failed:", err);
+      return [];
     } finally {
       setDashboardLoading(false);
     }
   };
 
-  const fetchQualityAnalysis = useCallback(async (controls: { control_id: string; name: string; description: string }[]) => {
+  const fetchQualityAnalysis = useCallback(async (
+    controls: { control_id: string; name: string; description: string }[],
+    allControls: ExtractedControl[] = [],
+  ) => {
     if (controls.length === 0) return;
     try {
       const res = await fetch("/api/controls-library/quality-analysis", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ controls: controls.slice(0, 50) }),
+        body: JSON.stringify({ controls }),
       });
       if (!res.ok) throw new Error(`Quality analysis HTTP ${res.status}`);
       const data = await res.json();
-      setCtrlsW1H(data.results ?? []);
+      const ctrlMap = new Map(allControls.map(c => [c.control_id, c]));
+      const merged: CtrlW1H[] = (data.results ?? []).map((r: any) => {
+        const ctrl = ctrlMap.get(r.control_id) ?? {} as any;
+        return {
+          control_id: r.control_id,
+          control_name: r.control_name ?? ctrl.control_name ?? r.control_id,
+          description: ctrl.description ?? "",
+          document_reference: ctrl.document_reference ?? "",
+          domain: ctrl.domain ?? "",
+          control_type: ctrl.control_type ?? "",
+          keywords: ctrl.keywords ?? [],
+          specificity_level: ctrl.specificity_level ?? "",
+          mapped_obligations: ctrl.mapped_obligations ?? [],
+          w1h: { who: r.who ?? false, what: r.what ?? false, where: r.where ?? false, how: r.how ?? false, when: r.when ?? false, why: r.why ?? false },
+          score: r.score ?? 0,
+          rag: r.rag ?? "red",
+        } as CtrlW1H;
+      });
+      setCtrlsW1H(merged);
     } catch (err) {
       console.warn("Quality analysis failed:", err);
     }
@@ -631,16 +665,17 @@ export default function ControlsLibraryPage() {
       setIngestResults(ingested);
       setUploadFiles([]);
       await fetchDocs();
-      await fetchAllControls();
+      const freshControls = await fetchAllControls();
       refreshMetrics();
 
-      // Trigger backend 5W1H analysis on newly uploaded controls
+      // Trigger backend 5W1H analysis using freshly-fetched controls (not stale closure)
       fetchQualityAnalysis(
-        dashboardControls.map(c => ({
+        freshControls.map(c => ({
           control_id: c.control_id ?? String((c as any).id ?? ""),
           name: (c as any).control_name ?? c.control_id ?? "",
           description: c.description ?? "",
-        }))
+        })),
+        freshControls,
       );
 
       const mongoFailed = ingested.some((r: any) => !r.mongo_saved);

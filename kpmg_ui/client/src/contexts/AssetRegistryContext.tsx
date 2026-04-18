@@ -13,10 +13,13 @@ export interface Asset {
   use: string;
   hosting_type: HostingType | null;
   support_type: SupportType | null;
-  confidentiality: number;   // 1–5
-  integrity: number;         // 1–5
-  availability: number;      // 1–5
-  cia_total: number;         // 3–15
+  confidentiality: number;     // 1–5 (upper bound)
+  confidentiality_min: number; // 1–5 (lower bound)
+  integrity: number;
+  integrity_min: number;
+  availability: number;
+  availability_min: number;
+  cia_total: number;           // 3–15
   criticality: "Critical" | "High" | "Medium" | "Low";
   last_assessment_id: string | null;
   owner: string;
@@ -36,9 +39,12 @@ export interface AssetCreate {
   use?: string;
   hosting_type?: HostingType | null;
   support_type?: SupportType | null;
-  confidentiality: number;   // 1–5
-  integrity: number;         // 1–5
-  availability: number;      // 1–5
+  confidentiality: number;     // 1–5 (upper bound)
+  confidentiality_min: number; // 1–5 (lower bound)
+  integrity: number;
+  integrity_min: number;
+  availability: number;
+  availability_min: number;
   owner: string;
   custodian: string;
   location: "On-premise" | "Cloud" | "Hybrid";

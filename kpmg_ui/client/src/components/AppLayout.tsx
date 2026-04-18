@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import {
   Moon, Sun, LogOut, MessageSquare, FileSearch, Settings, TestTube,
   Scale, Library, ShieldCheck, ChevronLeft, ChevronRight, LayoutDashboard,
-  FileBarChart, BookOpen, AlertTriangle, ShieldOff,
+  FileBarChart, BookOpen, AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -28,12 +28,10 @@ export const HIDEABLE_TABS = [
   { title: "Final Report",    fullTitle: "Final Report",         path: "/evidence-assessment",  icon: FileSearch  },
   { title: "Control Testing", fullTitle: "AI Control Testing",   path: "/control-testing",      icon: TestTube    },
   { title: "Chat",            fullTitle: "AI Chat",              path: "/chat",                 icon: MessageSquare },
+  { title: "Issue Mgmt.",     fullTitle: "Issue Management",     path: "/issue-management",     icon: AlertTriangle },
 ];
 
-const COMING_SOON_TABS = [
-  { title: "Issue Mgmt.",     fullTitle: "Issue Management",     path: "/issue-management",     icon: AlertTriangle },
-  { title: "Exception Mgmt.", fullTitle: "Exception Management", path: "/exception-management", icon: ShieldOff   },
-];
+const COMING_SOON_TABS: typeof HIDEABLE_TABS = [];
 
 const SETTINGS_TAB = { title: "Settings", fullTitle: "Settings", path: "/settings", icon: Settings };
 

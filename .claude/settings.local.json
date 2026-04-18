@@ -26,7 +26,22 @@
       "mcp__plugin_socraticode_socraticode__codebase_health",
       "mcp__plugin_socraticode_socraticode__codebase_index",
       "mcp__plugin_socraticode_socraticode__codebase_status",
-      "mcp__plugin_socraticode_socraticode__codebase_search"
+      "mcp__plugin_socraticode_socraticode__codebase_search",
+      "Bash(python -c \"from api.main import app; print\\('OK'\\)\"222)",
+      "Bash(python -c \"import utils.llm_provider; print\\('OK'\\)\")",
+      "Bash(python -m pytest tests/test_risk_scorer.py::test_effectiveness_no_issues -v)",
+      "Bash(python -m pytest tests/test_issues_api.py -v)",
+      "Bash(python -m pytest tests/test_validation_queue.py tests/test_issues_api.py -v)",
+      "Bash(python -m pytest tests/test_assessment_questions.py -v)",
+      "Bash(python -m pytest tests/test_risk_assessment_api.py -v)",
+      "Bash(python -m pytest tests/test_risk_assessment_api.py::test_get_sections_returns_8 -v -s)",
+      "Bash(python -m pytest tests/ -q)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(python -m pytest tests/test_control_testing_api.py -v)",
+      "Bash(python -m pytest tests/test_assets_api.py -q)",
+      "Bash(python -m pytest tests/test_risk_assessment_api.py -q)",
+      "Bash(docker compose *)"
     ]
   }
 }

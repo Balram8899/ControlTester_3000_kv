@@ -21,6 +21,7 @@ import {
   Section,
 } from "@/contexts/RiskAssessmentContext";
 import { useAssetRegistry } from "@/contexts/AssetRegistryContext";
+import CiaRatingWidget from "@/components/CiaRatingWidget";
 
 // ── Constants ─────────────────────────────────────────────────────────────
 
@@ -47,7 +48,7 @@ const ANSWER_STYLE: Record<AnswerType, string> = {
   na: "bg-slate-100 text-slate-500 border-slate-300",
 };
 
-const WIZARD_STEPS = ["Create", "Questionnaire", "Analyse", "Risks", "Residual", "Controls", "Report"];
+const WIZARD_STEPS = ["Create", "Questionnaire", "Analyse", "Risks", "Controls", "Residual", "Report"];
 
 type RightTab = "dashboard" | "wizard";
 
@@ -65,8 +66,8 @@ export default function RiskAssessmentPage() {
     assessments, selectedAssessment, sections, residualResults,
     isLoading, isAnalyzing, isGeneratingReport, error, report,
     fetchAssessments, selectAssessment, createAssessment,
-    fetchSections, submitResponse, analyzeAssessment, addHumanRisk, fetchResidual,
-    suggestControls, generateReport,
+    fetchSections, submitResponseBatch, analyzeAssessment, addHumanRisk,
+    applyControl, fetchResidual, suggestControls, generateReport,
   } = useRiskAssessment();
   const { assets, fetchAssets } = useAssetRegistry();
   const { toast } = useToast();
@@ -93,6 +94,30 @@ export default function RiskAssessmentPage() {
   const [submittingQa, setSubmittingQa] = useState(false);
 
   useEffect(() => { fetchAssessments(); fetchAssets(); fetchSections(); }, []);
+
+  // Auto-trigger analysis on entering step 2
+  useEffect(() => {
+    if (wizardStep !== 2 || !selectedAssessment || isAnalyzing) return;
+    if (selectedAssessment.risks.length > 0) { setWizardStep(3); return; }
+    analyzeAssessment(selectedAssessment.id).then(() => setWizardStep(3)).catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wizardStep, selectedAssessment?.id]);
+
+  // Auto-suggest controls on entering step 4
+  useEffect(() => {
+    if (wizardStep !== 4 || !selectedAssessment) return;
+    if ((selectedAssessment.suggested_controls ?? []).length === 0) {
+      suggestControls(selectedAssessment.id).catch(() => {});
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wizardStep, selectedAssessment?.id]);
+
+  // Auto-fetch residual on entering step 5
+  useEffect(() => {
+    if (wizardStep !== 5 || !selectedAssessment) return;
+    fetchResidual(selectedAssessment.id).catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wizardStep, selectedAssessment?.id]);
 
   // ── KPIs ──────────────────────────────────────────────────────────────
 
@@ -133,7 +158,7 @@ export default function RiskAssessmentPage() {
 
   function answeredCount(assetId: string): number {
     const assetAnswers = answers[assetId] ?? {};
-    return Object.values(assetAnswers).flatMap(s => Object.values(s)).filter(a => a.answer !== "na").length;
+    return Object.values(assetAnswers).flatMap(s => Object.values(s)).length; // count all including N/A
   }
 
   // ── Handlers ──────────────────────────────────────────────────────────
@@ -175,29 +200,39 @@ export default function RiskAssessmentPage() {
     const assetId = selectedAssessment.asset_ids[qaAssetIdx];
     setSubmittingQa(true);
     try {
-      for (const section of sections) {
-        for (const question of section.questions) {
+      const responses = sections.flatMap(section =>
+        section.questions.map(question => {
           const local = answers[assetId]?.[section.id]?.[question.id];
-          if (local && local.answer !== "na") {
-            await submitResponse(
-              selectedAssessment.id, assetId, section.id, question.id, local.answer, local.details,
-            );
-          }
-        }
-      }
+          return {
+            asset_id: assetId,
+            section_id: section.id,
+            question_id: question.id,
+            answer: (local?.answer ?? "na") as AnswerType,
+            details: local?.details ?? "",
+          };
+        })
+      );
+      await submitResponseBatch(selectedAssessment.id, responses);
       if (qaAssetIdx < selectedAssessment.asset_ids.length - 1) {
         setQaAssetIdx(i => i + 1);
         setExpandedSection(sections[0]?.id ?? null);
         toast({ title: "Responses saved — next application" });
       } else {
         setWizardStep(2);
-        toast({ title: "All responses submitted — ready to analyse" });
+        toast({ title: "All responses submitted — running analysis…" });
       }
     } catch {
       toast({ title: "Failed to save responses", variant: "destructive" });
     } finally {
       setSubmittingQa(false);
     }
+  }
+
+  async function refreshAssessment(raId: string) {
+    try {
+      const r = await fetch(`/api/risk-assessment/${raId}`);
+      if (r.ok) { const ra = await r.json(); selectAssessment(ra); }
+    } catch { /* non-critical */ }
   }
 
   async function handleAnalyse() {
@@ -221,7 +256,7 @@ export default function RiskAssessmentPage() {
 
   function sectionProgress(assetId: string, section: Section): number {
     const sectionAnswers = answers[assetId]?.[section.id] ?? {};
-    return Object.values(sectionAnswers).filter(a => a.answer !== "na").length;
+    return Object.values(sectionAnswers).length; // count all answers including N/A
   }
 
   // ── Render ────────────────────────────────────────────────────────────
@@ -258,7 +293,7 @@ export default function RiskAssessmentPage() {
             ) : assessments.map(a => (
               <button
                 key={a.id}
-                onClick={() => { selectAssessment(a); setRightTab("wizard"); setWizardStep(a.status === "draft" ? 0 : a.status === "in_progress" ? 1 : a.status === "risks_identified" ? 3 : 4); }}
+                onClick={() => { selectAssessment(a); setRightTab("wizard"); setWizardStep(a.status === "draft" ? 0 : a.status === "in_progress" ? 1 : a.status === "risks_identified" ? 3 : a.status === "controls_applied" ? 5 : a.status === "complete" ? 6 : 3); }}
                 className={`w-full text-left px-4 py-3 border-b border-slate-50 hover:bg-slate-50 transition-colors ${selectedAssessment?.id === a.id ? "bg-blue-50 border-l-2 border-l-blue-500" : ""}`}
               >
                 <p className="font-medium text-sm text-slate-800 truncate">{a.title}</p>
@@ -280,8 +315,14 @@ export default function RiskAssessmentPage() {
             <Card className="max-w-lg mx-auto mb-6">
               <CardHeader><CardTitle>New Risk Assessment</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <Input placeholder="Assessment title *" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} />
-                <Textarea placeholder="High-level description" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={2} />
+                <div>
+                  <label className="text-sm font-medium text-slate-700 mb-1 block">Assessment title <span className="text-red-500">*</span></label>
+                  <Input placeholder="e.g. FY2025 Cloud App Risk Review" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-700 mb-1 block">Description</label>
+                  <Textarea placeholder="High-level description of the assessment scope" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={2} />
+                </div>
                 <div>
                   <p className="text-sm font-medium text-slate-700 mb-2">Select applications in scope *</p>
                   <div className="space-y-1 max-h-48 overflow-y-auto border rounded p-2">
@@ -328,16 +369,15 @@ export default function RiskAssessmentPage() {
                         value={adHocDraft.description ?? ""} onChange={e => setAdHocDraft(p => ({ ...p, description: e.target.value }))} />
                       <Input placeholder="Assessment context (what this assessment is about)" className="h-7 text-xs"
                         value={adHocDraft.assessment_context ?? ""} onChange={e => setAdHocDraft(p => ({ ...p, assessment_context: e.target.value }))} />
-                      <div className="grid grid-cols-3 gap-2">
-                        {(["confidentiality", "integrity", "availability"] as const).map(f => (
-                          <div key={f}>
-                            <label className="text-[10px] text-slate-500 capitalize">{f} (1-5)</label>
-                            <Input type="number" min={1} max={5} className="h-7 text-xs"
-                              value={adHocDraft[f] ?? 3}
-                              onChange={e => setAdHocDraft(p => ({ ...p, [f]: Number(e.target.value) }))} />
-                          </div>
-                        ))}
-                      </div>
+                      <CiaRatingWidget
+                        confidentiality={adHocDraft.confidentiality ?? 3}
+                        confidentiality_min={adHocDraft.confidentiality ?? 3}
+                        integrity={adHocDraft.integrity ?? 3}
+                        integrity_min={adHocDraft.integrity ?? 3}
+                        availability={adHocDraft.availability ?? 3}
+                        availability_min={adHocDraft.availability ?? 3}
+                        onChange={(field, _min, max) => setAdHocDraft(p => ({ ...p, [field]: max }))}
+                      />
                       <div className="flex gap-2">
                         <Button size="sm" className="h-7 text-xs" onClick={handleAddAdHoc} disabled={!adHocDraft.name?.trim()}>Add</Button>
                         <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setShowAdHocForm(false)}>Cancel</Button>
@@ -346,9 +386,13 @@ export default function RiskAssessmentPage() {
                   )}
                 </div>
 
-                <div className="flex gap-2">
-                  <Button onClick={handleCreate}>Create</Button>
+                <div className="flex gap-2 items-center">
+                  <Button onClick={handleCreate} disabled={!form.title.trim() || (form.selectedAssetIds.length === 0 && adHocApps.length === 0)}>Create</Button>
                   <Button variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>
+                  {!form.title.trim() && <span className="text-xs text-red-500">Title required</span>}
+                  {form.title.trim() && form.selectedAssetIds.length === 0 && adHocApps.length === 0 && (
+                    <span className="text-xs text-red-500">Select or add at least one application</span>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -406,6 +450,17 @@ export default function RiskAssessmentPage() {
               {/* Step 1: Questionnaire */}
               {wizardStep === 1 && (
                 <div className="space-y-4">
+                  {/* Sticky submit bar */}
+                  <div className="sticky top-0 z-10 bg-white/95 backdrop-blur border border-slate-200 rounded-lg px-4 py-2 flex items-center justify-between shadow-sm">
+                    <span className="text-xs text-slate-500">
+                      {selectedAssessment.asset_ids.indexOf(selectedAssessment.asset_ids[qaAssetIdx]) + 1} of {selectedAssessment.asset_ids.length} application(s)
+                      · {answeredCount(selectedAssessment.asset_ids[qaAssetIdx])} answered
+                    </span>
+                    <Button size="sm" onClick={handleSubmitQa} disabled={submittingQa}>
+                      {submittingQa && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                      {qaAssetIdx < selectedAssessment.asset_ids.length - 1 ? "Save & Next →" : "Submit All Responses →"}
+                    </Button>
+                  </div>
                   {/* Asset tab bar */}
                   <div className="flex gap-2">
                     {selectedAssessment.asset_ids.map((id, idx) => (
@@ -481,28 +536,20 @@ export default function RiskAssessmentPage() {
                     );
                   })}
 
-                  <Button onClick={handleSubmitQa} disabled={submittingQa} className="mt-2">
-                    {submittingQa && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    {qaAssetIdx < selectedAssessment.asset_ids.length - 1 ? "Save & Next Application" : "Submit All Responses"}
-                  </Button>
                 </div>
               )}
 
-              {/* Step 2: Analyse */}
+              {/* Step 2: Analyse — auto-triggered */}
               {wizardStep === 2 && (
                 <Card>
-                  <CardHeader><CardTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-violet-500" />Run Risk Analysis</CardTitle></CardHeader>
-                  <CardContent className="space-y-3">
-                    <p className="text-sm text-slate-600">
-                      The analysis uses a hybrid rule-layer + Gemini LLM model to identify 2–4 specific risks per application
-                      from your questionnaire responses.
+                  <CardContent className="pt-6 flex flex-col items-center gap-4 py-12">
+                    <Sparkles className="w-10 h-10 text-violet-400 animate-pulse" />
+                    <p className="font-semibold text-slate-700">Running Risk Analysis…</p>
+                    <Loader2 className="w-6 h-6 text-violet-500 animate-spin" />
+                    <p className="text-sm text-slate-500 text-center max-w-sm">
+                      Applying rule-based scoring and LLM analysis to identify specific risks per application.
+                      This may take a minute.
                     </p>
-                    <p className="text-sm text-slate-500">
-                      {selectedAssessment.responses.length} responses submitted across {selectedAssessment.asset_ids.length} application(s).
-                    </p>
-                    <Button onClick={handleAnalyse} disabled={isAnalyzing}>
-                      {isAnalyzing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Analysing…</> : "Run Analysis"}
-                    </Button>
                   </CardContent>
                 </Card>
               )}
@@ -512,8 +559,8 @@ export default function RiskAssessmentPage() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-semibold text-slate-800">Identified Risks ({selectedAssessment.risks.length})</h3>
-                    <Button size="sm" variant="outline" onClick={() => setWizardStep(4)}>
-                      View Residual <ChevronRight className="w-4 h-4 ml-1" />
+                    <Button size="sm" onClick={() => setWizardStep(4)}>
+                      Apply Controls <ChevronRight className="w-4 h-4 ml-1" />
                     </Button>
                   </div>
                   {selectedAssessment.risks.map(r => (
@@ -543,24 +590,108 @@ export default function RiskAssessmentPage() {
                 </div>
               )}
 
-              {/* Step 4: Residual */}
+              {/* Step 4: Controls */}
               {wizardStep === 4 && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-slate-800">Apply Controls to Risks</h3>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={async () => {
+                        try { await suggestControls(selectedAssessment.id); toast({ title: "Suggestions refreshed" }); }
+                        catch { toast({ title: "Failed to refresh suggestions", variant: "destructive" }); }
+                      }}>
+                        <Sparkles className="w-4 h-4 mr-1" />Refresh Suggestions
+                      </Button>
+                      <Button size="sm" onClick={() => setWizardStep(5)}>
+                        Calculate Residual <ChevronRight className="w-4 h-4 ml-1" />
+                      </Button>
+                    </div>
+                  </div>
+                  {selectedAssessment.risks.length === 0 && (
+                    <p className="text-slate-400 text-sm">No risks found. Go back and re-run analysis.</p>
+                  )}
+                  {selectedAssessment.risks.map(risk => {
+                    const suggestions = (selectedAssessment.suggested_controls ?? []).filter(s => s.risk_id === risk.id);
+                    const applied = selectedAssessment.applied_controls.filter(c => c.risk_id === risk.id);
+                    return (
+                      <Card key={risk.id}>
+                        <CardContent className="pt-4">
+                          <div className="flex items-start justify-between gap-2 mb-3">
+                            <div className="flex-1">
+                              <p className="font-medium text-sm text-slate-800">{risk.title}</p>
+                              <p className="text-xs text-slate-500 mt-0.5">{risk.description}</p>
+                            </div>
+                            <Badge variant="outline" className={BAND_COLOR[risk.inherent_risk_band]}>
+                              {risk.inherent_risk_band}
+                            </Badge>
+                          </div>
+                          {applied.length > 0 && (
+                            <div className="mb-3 space-y-1">
+                              <p className="text-xs font-semibold text-emerald-700">Applied ({applied.length})</p>
+                              {applied.map(c => (
+                                <div key={c.id} className="flex items-center gap-2 text-xs text-emerald-700 bg-emerald-50 rounded px-2 py-1">
+                                  <CheckCircle2 className="w-3 h-3 flex-shrink-0" />{c.control_id}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          {suggestions.length === 0 && applied.length === 0 && (
+                            <p className="text-xs text-slate-400 italic">Loading suggestions…</p>
+                          )}
+                          {suggestions.map((s, i) => {
+                            const alreadyApplied = applied.some(c => c.control_id === s.control_id);
+                            return (
+                              <div key={i} className="flex items-start justify-between gap-2 py-2 border-t">
+                                <div className="flex-1">
+                                  <p className="text-sm font-medium text-slate-700">{s.control_title}</p>
+                                  <p className="text-xs text-slate-400 mt-0.5">{s.rationale}</p>
+                                  <Badge variant="outline" className="text-xs mt-1">Relevance {s.relevance_score}/5</Badge>
+                                </div>
+                                {alreadyApplied ? (
+                                  <span className="text-xs text-emerald-600 flex items-center gap-1 pt-1 flex-shrink-0">
+                                    <CheckCircle2 className="w-3 h-3" />Applied
+                                  </span>
+                                ) : (
+                                  <Button size="sm" className="h-7 text-xs mt-1 flex-shrink-0" onClick={async () => {
+                                    try {
+                                      await applyControl(selectedAssessment.id, risk.id, s.control_id, "suggested", s.rationale);
+                                      await refreshAssessment(selectedAssessment.id);
+                                      toast({ title: "Control applied" });
+                                    } catch {
+                                      toast({ title: "Failed to apply control", variant: "destructive" });
+                                    }
+                                  }}>Apply</Button>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Step 5: Residual Risk — auto-triggered */}
+              {wizardStep === 5 && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-semibold text-slate-800">Residual Risk</h3>
                     <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={handleFetchResidual}>
+                      <Button size="sm" variant="outline" onClick={() => fetchResidual(selectedAssessment.id)}>
                         <FileBarChart className="w-4 h-4 mr-1" />Refresh
                       </Button>
-                      <Button size="sm" onClick={() => setWizardStep(5)}>
-                        Suggest Controls <ChevronRight className="w-4 h-4 ml-1" />
+                      <Button size="sm" onClick={() => setWizardStep(6)}>
+                        Generate Report <ChevronRight className="w-4 h-4 ml-1" />
                       </Button>
                     </div>
                   </div>
-                  {residualResults.length === 0 && (
-                    <Button onClick={handleFetchResidual}>Calculate Residual Risk</Button>
-                  )}
-                  {residualResults.map(r => (
+                  {residualResults.length === 0 ? (
+                    <div className="flex flex-col items-center py-10 gap-3">
+                      <Loader2 className="w-8 h-8 text-slate-400 animate-spin" />
+                      <p className="text-sm text-slate-500">Calculating residual risk…</p>
+                    </div>
+                  ) : residualResults.map(r => (
                     <Card key={r.risk_id}>
                       <CardContent className="pt-4">
                         <div className="flex items-center justify-between">
@@ -575,7 +706,7 @@ export default function RiskAssessmentPage() {
                           </div>
                         </div>
                         <div className="flex gap-4 mt-1 text-xs text-slate-500">
-                          <span>Controls: {r.controls_applied}</span>
+                          <span>Controls applied: {r.controls_applied}</span>
                           <span>Avg effectiveness: {(r.avg_effectiveness * 100).toFixed(0)}%</span>
                           <span>Residual score: {r.residual_risk_score}</span>
                         </div>
@@ -585,43 +716,7 @@ export default function RiskAssessmentPage() {
                 </div>
               )}
 
-              {/* Step 5: Suggested Controls */}
-              {wizardStep === 5 && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-semibold text-slate-800">Suggested Controls</h3>
-                    <div className="flex gap-2">
-                      <Button size="sm" onClick={async () => {
-                        try { await suggestControls(selectedAssessment.id); toast({ title: "Controls suggested" }); }
-                        catch { toast({ title: "Failed to suggest controls", variant: "destructive" }); }
-                      }}>
-                        <Sparkles className="w-4 h-4 mr-1" />Suggest Controls
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => setWizardStep(6)}>
-                        Proceed to Report <ChevronRight className="w-4 h-4 ml-1" />
-                      </Button>
-                    </div>
-                  </div>
-                  {(selectedAssessment.suggested_controls ?? []).length === 0 && (
-                    <p className="text-slate-400 text-sm">Click "Suggest Controls" to rank controls from the library against your risks.</p>
-                  )}
-                  {(selectedAssessment.suggested_controls ?? []).map((s, i) => (
-                    <Card key={i}>
-                      <CardContent className="pt-4">
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <p className="font-medium text-sm">{s.control_title}</p>
-                            <p className="text-xs text-slate-500 mt-1">{s.rationale}</p>
-                          </div>
-                          <Badge variant="outline" className="text-xs">Relevance {s.relevance_score}/5</Badge>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-
-              {/* Step 6: Report */}
+              {/* Step 6: Final Report */}
               {wizardStep === 6 && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between mb-2">

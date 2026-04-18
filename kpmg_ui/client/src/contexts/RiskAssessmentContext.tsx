@@ -146,6 +146,10 @@ interface Ctx {
     answer: AnswerType,
     details: string,
   ) => Promise<void>;
+  submitResponseBatch: (
+    raId: string,
+    responses: Array<{ asset_id: string; section_id: string; question_id: string; answer: AnswerType; details: string }>
+  ) => Promise<void>;
   analyzeAssessment: (raId: string) => Promise<void>;
   addHumanRisk: (raId: string, risk: Omit<Risk, "id" | "inherent_risk_score" | "inherent_risk_band" | "residual_risk_score" | "residual_risk_band" | "source" | "status">) => Promise<void>;
   applyControl: (raId: string, riskId: string, controlId: string, source: string, rationale: string) => Promise<void>;
@@ -230,6 +234,21 @@ export function RiskAssessmentProvider({ children }: { children: ReactNode }) {
       setSelectedAssessment(ra);
       setAssessments(prev => prev.map(a => a.id === raId ? ra : a));
     }
+  }, []);
+
+  const submitResponseBatch = useCallback(async (
+    raId: string,
+    responses: Array<{ asset_id: string; section_id: string; question_id: string; answer: AnswerType; details: string }>
+  ): Promise<void> => {
+    const r = await fetch(`/api/risk-assessment/${raId}/respond-batch`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ responses }),
+    });
+    if (!r.ok) throw new Error("Failed to submit responses");
+    const ra: RiskAssessment = await r.json();
+    setSelectedAssessment(ra);
+    setAssessments(prev => prev.map(a => a.id === raId ? ra : a));
   }, []);
 
   const analyzeAssessment = useCallback(async (raId: string): Promise<void> => {
@@ -318,7 +337,7 @@ export function RiskAssessmentProvider({ children }: { children: ReactNode }) {
       assessments, selectedAssessment, sections, residualResults,
       isLoading, isAnalyzing, isGeneratingReport, error, report,
       fetchAssessments, selectAssessment, createAssessment,
-      fetchSections, submitResponse, analyzeAssessment,
+      fetchSections, submitResponse, submitResponseBatch, analyzeAssessment,
       addHumanRisk, applyControl, fetchResidual,
       suggestControls, generateReport,
     }}>

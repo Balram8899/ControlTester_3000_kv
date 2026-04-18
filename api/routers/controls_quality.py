@@ -67,8 +67,11 @@ class QualityRequest(BaseModel):
         return v
 
 
+BATCH_SIZE = 10
+
+
 def _run_5w1h_llm(controls: list[ControlInput]) -> list[dict[str, Any]]:
-    """Call LLM to evaluate 5W1H quality for a batch of controls."""
+    """Call LLM to evaluate 5W1H quality for a single batch of controls (max BATCH_SIZE)."""
     import json as _json
     import re as _re
     from langchain.schema import HumanMessage
@@ -82,9 +85,36 @@ def _run_5w1h_llm(controls: list[ControlInput]) -> list[dict[str, Any]]:
     llm = get_llm()
     response = llm.invoke([HumanMessage(content=prompt)])
     raw = response.content.strip()
+    # Strip markdown fences
     raw = _re.sub(r"^```[a-zA-Z]*\n?", "", raw)
     raw = _re.sub(r"\n?```$", "", raw).strip()
-    return _json.loads(raw)
+    # Extract JSON array even if LLM prepended explanation text
+    match = _re.search(r"\[.*\]", raw, _re.DOTALL)
+    if match:
+        raw = match.group(0)
+    result = _json.loads(raw)
+    return result if isinstance(result, list) else [result]
+
+
+def _run_5w1h_batched(inputs: list[ControlInput]) -> list[dict[str, Any]]:
+    """Process controls in batches to avoid LLM context limits."""
+    results: list[dict[str, Any]] = []
+    for i in range(0, len(inputs), BATCH_SIZE):
+        batch = inputs[i: i + BATCH_SIZE]
+        try:
+            results.extend(_run_5w1h_llm(batch))
+        except Exception as e:
+            logger.error(f"5W1H batch {i//BATCH_SIZE + 1} failed: {e}")
+            # Emit placeholder entries so the caller still has all control IDs
+            for c in batch:
+                results.append({"control_id": c.control_id, "control_name": c.name,
+                                 "what": False, "why": False, "who": False,
+                                 "when": False, "where": False, "how": False,
+                                 "score": 0, "rag": "red", "queue_finding": True,
+                                 "rationale": {"what": "Analysis unavailable", "why": "Analysis unavailable",
+                                               "who": "Analysis unavailable", "when": "Analysis unavailable",
+                                               "where": "Analysis unavailable", "how": "Analysis unavailable"}})
+    return results
 
 
 def run_5w1h_for_controls(raw_controls: list[dict]) -> list[dict[str, Any]]:
@@ -102,14 +132,14 @@ def run_5w1h_for_controls(raw_controls: list[dict]) -> list[dict[str, Any]]:
     ]
     if not inputs:
         return []
-    return _run_5w1h_llm(inputs)
+    return _run_5w1h_batched(inputs)
 
 
 @router.post("/quality-analysis")
 def run_quality_analysis(body: QualityRequest):
     """Run 5W1H quality analysis on a batch of controls. Returns per-control results."""
     try:
-        results = _run_5w1h_llm(body.controls)
+        results = _run_5w1h_batched(body.controls)
     except Exception as e:
         logger.error(f"5W1H analysis failed: {e}")
         raise HTTPException(500, f"Quality analysis failed: {str(e)}")

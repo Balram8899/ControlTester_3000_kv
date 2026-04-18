@@ -85,6 +85,10 @@ class ControlApplication(BaseModel):
     human_rationale: str = ""
 
 
+class ResponseBatch(BaseModel):
+    responses: list[ResponseSubmit]
+
+
 class RiskAssessment(BaseModel):
     id: str
     title: str
@@ -200,6 +204,19 @@ class MongoRiskAssessmentStore:
         )
         return result.modified_count == 1
 
+    def add_responses_batch(self, ra_id: str, asset_id: str, new_responses: list[dict]) -> bool:
+        ra = self.get(ra_id)
+        if not ra:
+            return False
+        existing_other = [r for r in ra.responses if r.get("asset_id") != asset_id]
+        all_responses = existing_other + new_responses
+        result = self._col.update_one(
+            {"_id": ra_id},
+            {"$set": {"responses": all_responses, "status": "in_progress",
+                      "updated_at": datetime.utcnow().isoformat()}},
+        )
+        return result.modified_count == 1
+
     def set_report(self, ra_id: str, markdown: str) -> bool:
         result = self._col.update_one(
             {"_id": ra_id},
@@ -292,6 +309,32 @@ def submit_response(ra_id: str, body: ResponseSubmit):
     return {"ok": True, "response_id": response["id"]}
 
 
+@router.post("/{ra_id}/respond-batch", status_code=200)
+def submit_response_batch(ra_id: str, body: ResponseBatch):
+    ra = get_store().get(ra_id)
+    if not ra:
+        raise HTTPException(404, "Assessment not found")
+    if not body.responses:
+        raise HTTPException(400, "No responses provided")
+    now = datetime.utcnow().isoformat()
+    asset_id = body.responses[0].asset_id
+    new_responses = [
+        {
+            "id": str(uuid.uuid4()),
+            "asset_id": r.asset_id,
+            "section_id": r.section_id,
+            "question_id": r.question_id,
+            "answer": r.answer,
+            "details": r.details,
+            "submitted_at": now,
+        }
+        for r in body.responses
+    ]
+    get_store().add_responses_batch(ra_id, asset_id, new_responses)
+    updated = get_store().get(ra_id)
+    return updated
+
+
 @router.get("/{ra_id}/risks")
 def get_risks(ra_id: str):
     ra = get_store().get(ra_id)
@@ -381,7 +424,7 @@ def analyze_assessment(ra_id: str):
     if not ra:
         raise HTTPException(404, "Assessment not found")
     if not ra.responses:
-        raise HTTPException(400, "No responses yet. Submit questionnaire responses first.")
+        logger.warning(f"[{ra_id}] analyse called with no responses — proceeding with CIA-only scoring")
 
     from api.routers.assets import get_store as get_asset_store
     asset_store = get_asset_store()

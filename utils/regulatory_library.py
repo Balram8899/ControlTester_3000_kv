@@ -75,7 +75,7 @@ class ObligationExtractorAgent:
     # Ollama is configured with OLLAMA_NUM_PARALLEL=4 — use same parallelism
     MAX_WORKERS = 4
     # Larger batch = fewer total LLM calls
-    BATCH_SIZE = 5
+    BATCH_SIZE = 10
     # Skip chunks too short to contain obligations
     MIN_CHUNK_CHARS = 80
 
@@ -129,6 +129,12 @@ STRICT EXTRACTION RULES:
   • Pure business policies
   • Financial/legal/general governance statements
   • High-level statements with no control intent
+  • Document titles, citation clauses, or "These Directions shall be called…" type sentences
+  • Scope / applicability statements ("These Directions shall apply to…", "This applies to all entities…")
+  • Definitions, interpretation, or glossary sections ("In these Directions, X means…")
+  • Preambles, recitals, or section headings
+  • Sentences that merely name, identify, or describe the regulation itself
+- ONLY extract sentences that impose a concrete duty on an entity: implement, enforce, maintain, test, monitor, report, restrict, encrypt, review, assess, audit
 - Focus on CONTROL-LEVEL requirements (what must be implemented, enforced, monitored, or tested)
 
 For EACH obligation, return a JSON object with EXACTLY these fields:

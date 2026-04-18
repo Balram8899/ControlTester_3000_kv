@@ -28,14 +28,17 @@ class AssetCreate(BaseModel):
     use: str = ""
     hosting_type: Optional[HostingType] = None
     support_type: Optional[SupportType] = None
-    confidentiality: int = Field(ge=1, le=5)
-    integrity: int = Field(ge=1, le=5)
-    availability: int = Field(ge=1, le=5)
-    owner: str
-    custodian: str
-    location: LocationType
-    jurisdiction: str
-    classification: ClassType
+    confidentiality: int = Field(default=1, ge=1, le=5)      # upper bound
+    confidentiality_min: int = Field(default=1, ge=1, le=5)  # lower bound
+    integrity: int = Field(default=1, ge=1, le=5)
+    integrity_min: int = Field(default=1, ge=1, le=5)
+    availability: int = Field(default=1, ge=1, le=5)
+    availability_min: int = Field(default=1, ge=1, le=5)
+    owner: str = ""
+    custodian: str = ""
+    location: LocationType = "On-premise"
+    jurisdiction: str = ""
+    classification: ClassType = "Internal"
     status: StatusType = "Operational"
 
 

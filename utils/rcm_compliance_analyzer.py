@@ -1029,16 +1029,25 @@ def parse_rcm_excel(file_path: str) -> Dict[str, List[Dict[str, Any]]]:
                     
                 header_lower = header.lower()
                 
-                if 'control reference' in header_lower or 'control ref' in header_lower:
-                    col_map['reference'] = idx
-                elif 'control title' in header_lower or 'title' in header_lower:
+                # reference: anything that looks like a control ID / code / ref
+                if any(kw in header_lower for kw in ('control reference', 'control ref', 'control id', 'ctrl id', 'ctrl ref')) or \
+                   (('id' in header_lower or 'ref' in header_lower or 'code' in header_lower or 'number' in header_lower or 'no.' in header_lower) and 'description' not in header_lower and 'guidance' not in header_lower):
+                    if 'reference' not in col_map:
+                        col_map['reference'] = idx
+                # title: name / title columns
+                elif any(kw in header_lower for kw in ('control title', 'control name', 'ctrl title', 'ctrl name')) or \
+                     (header_lower in ('title', 'name', 'control')):
                     col_map['title'] = idx
-                elif 'control description' in header_lower or 'description' in header_lower:
+                # description: description / objective / detail / statement
+                elif any(kw in header_lower for kw in ('description', 'objective', 'detail', 'statement', 'narrative', 'activity')):
                     col_map['description'] = idx
-                elif header_lower == 'domain':
-                    col_map['domain'] = idx
-                elif 'sub domain' in header_lower or 'subdomain' in header_lower or 'sub-domain' in header_lower:
+                # subdomain before domain (more specific match first)
+                elif any(kw in header_lower for kw in ('sub domain', 'subdomain', 'sub-domain', 'theme', 'sub category', 'subcategory', 'sub-category')):
                     col_map['subdomain'] = idx
+                # domain: category / area / domain
+                elif any(kw in header_lower for kw in ('domain', 'category', 'area', 'process', 'section', 'pillar')) and 'description' not in header_lower:
+                    if 'domain' not in col_map:
+                        col_map['domain'] = idx
             
             logger.info(f"Column mapping: {col_map}")
             
