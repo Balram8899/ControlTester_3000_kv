@@ -117,3 +117,46 @@ def get_store() -> MongoAssetStore:
     if _store is None:
         _store = MongoAssetStore()
     return _store
+
+
+@router.post("", status_code=201, response_model=Asset)
+def create_asset(body: AssetCreate):
+    return get_store().create(body)
+
+
+@router.get("", response_model=list[Asset])
+def list_assets(
+    type: Optional[AssetType] = None,
+    criticality: Optional[CriticalityType] = None,
+    status: Optional[StatusType] = None,
+):
+    return get_store().list(type, criticality, status)
+
+
+@router.get("/{asset_id}", response_model=Asset)
+def get_asset(asset_id: str):
+    asset = get_store().get(asset_id)
+    if not asset:
+        raise HTTPException(404, "Asset not found")
+    return asset
+
+
+@router.put("/{asset_id}", response_model=Asset)
+def update_asset(asset_id: str, body: AssetUpdate):
+    asset = get_store().update(asset_id, body)
+    if not asset:
+        raise HTTPException(404, "Asset not found")
+    return asset
+
+
+@router.delete("/{asset_id}", status_code=204)
+def delete_asset(asset_id: str):
+    if not get_store().delete(asset_id):
+        raise HTTPException(404, "Asset not found")
+
+
+@router.get("/{asset_id}/assessment-history")
+def asset_assessment_history(asset_id: str):
+    if not get_store().get(asset_id):
+        raise HTTPException(404, "Asset not found")
+    return {"asset_id": asset_id, "assessments": []}
