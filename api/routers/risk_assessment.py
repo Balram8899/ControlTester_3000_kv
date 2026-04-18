@@ -133,12 +133,14 @@ class MongoRiskAssessmentStore:
             if not d.get("id"):
                 d["id"] = str(uuid.uuid4())
             ad_hoc.append(d)
+        # Merge ad hoc IDs into asset_ids so questionnaire loop covers them uniformly
+        all_asset_ids = list(data.asset_ids) + [a["id"] for a in ad_hoc]
         doc: dict[str, Any] = {
             "_id": str(uuid.uuid4()),
             "title": data.title,
             "description": data.description,
             "status": "draft",
-            "asset_ids": data.asset_ids,
+            "asset_ids": all_asset_ids,
             "ad_hoc_applications": ad_hoc,
             "responses": [],
             "risks": [],
@@ -390,11 +392,21 @@ def analyze_assessment(ra_id: str):
 
     all_risks: list[dict] = []
 
+    ad_hoc_map = {a["id"]: a for a in ra.ad_hoc_applications}
+
     for asset_id, asset_responses in by_asset.items():
         asset = asset_store.get(asset_id)
-        asset_name = asset.name if asset else asset_id
-        cia_total = asset.cia_total if asset else 9
-        cia_band = asset.cia_band if asset else "Medium"
+        ad_hoc = ad_hoc_map.get(asset_id)
+        asset_name = (asset.name if asset else None) or (ad_hoc.get("name") if ad_hoc else None) or asset_id
+        if asset:
+            cia_total = asset.cia_total
+            cia_band = asset.cia_band
+        elif ad_hoc:
+            cia_total = ad_hoc.get("confidentiality", 3) + ad_hoc.get("integrity", 3) + ad_hoc.get("availability", 3)
+            cia_band = "High" if cia_total >= 12 else "Medium" if cia_total >= 7 else "Low"
+        else:
+            cia_total = 9
+            cia_band = "Medium"
 
         rule_likelihood, rule_impact = _rule_layer_scores(asset_responses)
 

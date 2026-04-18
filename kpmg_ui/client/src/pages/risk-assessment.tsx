@@ -224,7 +224,10 @@ export default function RiskAssessmentPage() {
 
   // ── Render ────────────────────────────────────────────────────────────
 
-  const assetName = (id: string) => assets.find(a => a.id === id)?.name ?? id;
+  const assetName = (id: string) =>
+    assets.find(a => a.id === id)?.name ??
+    selectedAssessment?.ad_hoc_applications?.find(a => a.id === id)?.name ??
+    id;
 
   return (
     <div className="flex flex-col h-screen bg-slate-50">
