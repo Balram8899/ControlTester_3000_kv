@@ -74,6 +74,7 @@ class MongoAssetStore:
         return d
 
     def _to_asset(self, doc: dict) -> Asset:
+        doc = dict(doc)
         doc["id"] = str(doc.pop("_id"))
         return Asset(**doc)
 
@@ -85,7 +86,7 @@ class MongoAssetStore:
         self.col.insert_one({**doc, "_id": doc["id"]})
         return Asset(**doc)
 
-    def list(self, type_f=None, crit_f=None, status_f=None) -> list[Asset]:
+    def list(self, type_f: Optional[AssetType] = None, crit_f: Optional[CriticalityType] = None, status_f: Optional[StatusType] = None) -> list[Asset]:
         q: dict[str, Any] = {}
         if type_f:   q["type"] = type_f
         if crit_f:   q["criticality"] = crit_f
@@ -99,7 +100,7 @@ class MongoAssetStore:
     def update(self, asset_id: str, data: AssetUpdate) -> Asset | None:
         existing = self.col.find_one({"_id": asset_id})
         if not existing: return None
-        updates = {k: v for k, v in data.model_dump().items() if v is not None}
+        updates = data.model_dump(exclude_unset=True)
         merged = self._enrich({**existing, **updates})
         merged["updated_at"] = datetime.utcnow().isoformat()
         self.col.update_one({"_id": asset_id}, {"$set": merged})
