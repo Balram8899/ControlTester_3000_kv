@@ -31,6 +31,7 @@ import LandingPage from "@/pages/landing";
 import AssetRegistryPage from "@/pages/asset-registry";
 import { AssetRegistryProvider } from "@/contexts/AssetRegistryContext";
 import { RiskAssessmentProvider } from "@/contexts/RiskAssessmentContext";
+import { IssueManagementProvider } from "@/contexts/IssueManagementContext";
 
 // All pages are kept permanently mounted and CSS-hidden when inactive.
 // This prevents remount on every tab switch, so useEffect runs only once per
@@ -102,8 +103,10 @@ function App() {
                       <LibraryMetricsProvider>
                         <AssetRegistryProvider>
                           <RiskAssessmentProvider>
-                            <Toaster />
-                            <Router />
+                            <IssueManagementProvider>
+                              <Toaster />
+                              <Router />
+                            </IssueManagementProvider>
                           </RiskAssessmentProvider>
                         </AssetRegistryProvider>
                       </LibraryMetricsProvider>
