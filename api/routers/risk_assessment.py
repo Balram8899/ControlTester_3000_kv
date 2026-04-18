@@ -443,7 +443,7 @@ def analyze_assessment(ra_id: str):
         asset_name = (asset.name if asset else None) or (ad_hoc.get("name") if ad_hoc else None) or asset_id
         if asset:
             cia_total = asset.cia_total
-            cia_band = asset.cia_band
+            cia_band = "Critical" if cia_total >= 13 else "High" if cia_total >= 9 else "Medium" if cia_total >= 6 else "Low"
         elif ad_hoc:
             cia_total = ad_hoc.get("confidentiality", 3) + ad_hoc.get("integrity", 3) + ad_hoc.get("availability", 3)
             cia_band = "High" if cia_total >= 12 else "Medium" if cia_total >= 7 else "Low"
@@ -462,18 +462,18 @@ def analyze_assessment(ra_id: str):
 
 Application: {asset_name}
 CIA Total: {cia_total}/15 (Band: {cia_band})
-Rule-based pre-score — Likelihood: {rule_likelihood}/5, Impact: {rule_impact}/5
 
 Assessment Responses (section | question | answer | details):
 {qa_text}
 
-Based on these responses, identify 2-4 specific, actionable risks for this application.
+Based on these responses and the CIA profile, identify 2-4 specific, actionable risks for this application.
+Score based on the CIA band: Critical=high scores (4-5), High=moderate-high (3-4), Medium=moderate (2-3), Low=lower (1-2).
 For each risk return a JSON object with:
 - title: short risk title (max 10 words)
 - description: 1-2 sentence description of the risk
 - risk_category: one of [Operational, Regulatory, Privacy, Financial, Reputational, Technical]
-- likelihood_score: integer 1-5 (calibrate from rule-based pre-score of {rule_likelihood})
-- impact_score: integer 1-5 (calibrate from rule-based pre-score of {rule_impact})
+- likelihood_score: integer 1-5 (score independently based on application profile and answers)
+- impact_score: integer 1-5 (score independently based on application profile and answers)
 - rationale: one sentence explaining the score
 
 Return ONLY a valid JSON array, no markdown, no explanation.
