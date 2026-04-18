@@ -1,5 +1,7 @@
 // kpmg_ui/client/src/pages/risk-assessment.tsx
 import { useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   ChevronDown, ChevronRight,
   CheckCircle2, FileBarChart, Loader2, Plus, ShieldAlert, Sparkles,
@@ -630,7 +632,9 @@ export default function RiskAssessmentPage() {
                   {report ? (
                     <Card>
                       <CardContent className="pt-4">
-                        <pre className="whitespace-pre-wrap text-xs text-slate-700 font-mono leading-relaxed">{report}</pre>
+                        <div className="prose prose-sm max-w-none text-slate-700 [&_h1]:text-base [&_h2]:text-sm [&_h3]:text-xs [&_table]:text-xs [&_th]:bg-slate-50 [&_td]:border [&_th]:border [&_td]:px-2 [&_th]:px-2 [&_td]:py-1 [&_th]:py-1">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>{report}</ReactMarkdown>
+                        </div>
                       </CardContent>
                     </Card>
                   ) : (

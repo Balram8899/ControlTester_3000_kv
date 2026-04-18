@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   CheckCircle2, ChevronRight, FileBarChart,
   Loader2, Plus, Shield, Sparkles,
@@ -175,6 +177,8 @@ export default function ControlTestingPage() {
           <ScrollArea className="flex-1">
             {isLoading ? (
               <div className="flex justify-center p-8"><Loader2 className="animate-spin w-5 h-5 text-slate-400" /></div>
+            ) : sessions.length === 0 ? (
+              <p className="text-xs text-slate-400 text-center py-10 px-4">No sessions yet. Create one to get started.</p>
             ) : sessions.map(s => (
               <button
                 key={s.id}
@@ -427,7 +431,9 @@ export default function ControlTestingPage() {
                   {report ? (
                     <Card>
                       <CardContent className="pt-4">
-                        <pre className="whitespace-pre-wrap text-xs text-slate-700 font-mono leading-relaxed">{report}</pre>
+                        <div className="prose prose-sm max-w-none text-slate-700 [&_h1]:text-base [&_h2]:text-sm [&_h3]:text-xs [&_table]:text-xs [&_th]:bg-slate-50 [&_td]:border [&_th]:border [&_td]:px-2 [&_th]:px-2 [&_td]:py-1 [&_th]:py-1">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>{report}</ReactMarkdown>
+                        </div>
                       </CardContent>
                     </Card>
                   ) : (
