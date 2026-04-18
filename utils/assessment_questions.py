@@ -1,121 +1,104 @@
 # utils/assessment_questions.py
-"""Pre-defined question bank for BIA, Legal/Reg, and PIA assessments."""
+"""8-section application risk assessment question bank.
 
-QUESTION_BANK: dict[str, list[dict]] = {
-    "BIA": [
-        {
-            "id": "bia_1",
-            "question_text": "What is the maximum tolerable downtime (MTD) for this asset before business operations are critically impacted?",
-            "guidance_text": "Consider SLAs, business hours, and recovery time objectives (RTO/RPO).",
-            "required": True,
-            "order": 1,
-        },
-        {
-            "id": "bia_2",
-            "question_text": "What is the estimated financial impact per hour if this asset becomes unavailable?",
-            "guidance_text": "Include direct revenue loss, productivity loss, and contractual penalties.",
-            "required": True,
-            "order": 2,
-        },
-        {
-            "id": "bia_3",
-            "question_text": "How many users, customers, or downstream systems directly depend on this asset?",
-            "guidance_text": "Include internal staff, external users, and dependent applications.",
-            "required": True,
-            "order": 3,
-        },
-        {
-            "id": "bia_4",
-            "question_text": "What manual workarounds exist if this asset becomes unavailable?",
-            "guidance_text": "Describe alternative processes or backup systems that can be activated.",
-            "required": True,
-            "order": 4,
-        },
-        {
-            "id": "bia_5",
-            "question_text": "Does failure of this asset trigger cascading failures in other critical systems?",
-            "guidance_text": "List dependent systems and describe the nature of each dependency.",
-            "required": False,
-            "order": 5,
-        },
-    ],
-    "LEGAL": [
-        {
-            "id": "legal_1",
-            "question_text": "Which regulatory frameworks govern the data or processes managed by this asset?",
-            "guidance_text": "e.g. GDPR, DPDP, PCI-DSS, SOX, HIPAA, ISO 27001, RBI guidelines.",
-            "required": True,
-            "order": 1,
-        },
-        {
-            "id": "legal_2",
-            "question_text": "Are there mandatory breach notification timelines applicable to this asset?",
-            "guidance_text": "GDPR: 72 hours; DPDP: 6 hours; SEC: 4 business days. State applicable timelines.",
-            "required": True,
-            "order": 2,
-        },
-        {
-            "id": "legal_3",
-            "question_text": "What contractual or SLA obligations are tied to this asset's availability and security?",
-            "guidance_text": "Include customer contracts, vendor agreements, and insurance clauses.",
-            "required": True,
-            "order": 3,
-        },
-        {
-            "id": "legal_4",
-            "question_text": "What is the estimated maximum regulatory fine exposure if this asset is compromised?",
-            "guidance_text": "Estimate based on applicable regulation, data volume, and jurisdiction.",
-            "required": False,
-            "order": 4,
-        },
-        {
-            "id": "legal_5",
-            "question_text": "Are there data residency or sovereignty requirements restricting where this asset's data can be stored or processed?",
-            "guidance_text": "Consider cross-border data transfer restrictions under GDPR Chapter V, DPDP, etc.",
-            "required": False,
-            "order": 5,
-        },
-    ],
-    "PIA": [
-        {
-            "id": "pia_1",
-            "question_text": "Does this asset process, store, or transmit personally identifiable information (PII)?",
-            "guidance_text": "Include names, email addresses, IDs, financial data, health data, location data.",
-            "required": True,
-            "order": 1,
-        },
-        {
-            "id": "pia_2",
-            "question_text": "What categories of personal data does this asset handle?",
-            "guidance_text": "Classify as: basic identity, financial, health, biometric, children's data, or sensitive special categories.",
-            "required": True,
-            "order": 2,
-        },
-        {
-            "id": "pia_3",
-            "question_text": "Is personal data shared with or accessible by third parties or sub-processors?",
-            "guidance_text": "List all third-party recipients, their roles, and their jurisdictions.",
-            "required": True,
-            "order": 3,
-        },
-        {
-            "id": "pia_4",
-            "question_text": "What is the retention period for personal data processed by this asset, and what is the deletion mechanism?",
-            "guidance_text": "State the retention schedule and describe automated or manual deletion processes.",
-            "required": True,
-            "order": 4,
-        },
-        {
-            "id": "pia_5",
-            "question_text": "Are data subject rights mechanisms (access, erasure, portability, rectification) implemented for data held in this asset?",
-            "guidance_text": "Describe the process for handling Data Subject Access Requests (DSARs).",
-            "required": False,
-            "order": 5,
-        },
-    ],
-}
+Each question has a `question_type` used by the hybrid rule-layer scorer:
+  Exposure  — "Yes" answer RAISES inherent risk
+  Control   — "No" answer RAISES inherent risk (control absent)
+  Context   — Informational; passed to LLM analysis only
+"""
+
+SECTIONS: list[dict] = [
+    {
+        "id": "business_criticality",
+        "title": "Business Use and Criticality",
+        "questions": [
+            {"id": "bc_1", "text": "Is this application business-critical — would any unplanned downtime cause significant business or operational impact?", "question_type": "Exposure"},
+            {"id": "bc_2", "text": "Does this application directly support revenue-generating or customer-facing processes?", "question_type": "Exposure"},
+            {"id": "bc_3", "text": "Are there formally documented RTO/RPO requirements for this application?", "question_type": "Control"},
+            {"id": "bc_4", "text": "Have documented owners, escalation contacts, and a support model been assigned to this application?", "question_type": "Control"},
+            {"id": "bc_5", "text": "Does failure of this application trigger cascading failures in other critical systems?", "question_type": "Exposure"},
+        ],
+    },
+    {
+        "id": "data_handled",
+        "title": "Data Handled by the Application",
+        "questions": [
+            {"id": "dh_1", "text": "Does this application process, store, or transmit personal data (PII)?", "question_type": "Exposure"},
+            {"id": "dh_2", "text": "Does this application handle sensitive regulated data (financial, healthcare, payment card, or government data)?", "question_type": "Exposure"},
+            {"id": "dh_3", "text": "Is data classified according to the organisation's data classification policy?", "question_type": "Control"},
+            {"id": "dh_4", "text": "Are formal data retention and disposal procedures in place for this application?", "question_type": "Control"},
+            {"id": "dh_5", "text": "Does this application share data with third parties or external services?", "question_type": "Exposure"},
+        ],
+    },
+    {
+        "id": "identity_access",
+        "title": "Identity, Access, and Privileged Usage",
+        "questions": [
+            {"id": "ia_1", "text": "Are privileged or admin accounts separate from standard user accounts for this application?", "question_type": "Control"},
+            {"id": "ia_2", "text": "Is multi-factor authentication (MFA) enforced for all user access to this application?", "question_type": "Control"},
+            {"id": "ia_3", "text": "Are access reviews conducted on a regular basis (at least annually) for this application?", "question_type": "Control"},
+            {"id": "ia_4", "text": "Is there a formal offboarding process that revokes access to this application when staff leave?", "question_type": "Control"},
+            {"id": "ia_5", "text": "Are shared or generic accounts used to access this application?", "question_type": "Exposure"},
+        ],
+    },
+    {
+        "id": "exposure_architecture",
+        "title": "Exposure, Architecture, and Integrations",
+        "questions": [
+            {"id": "ea_1", "text": "Is this application accessible over the internet or from untrusted networks?", "question_type": "Exposure"},
+            {"id": "ea_2", "text": "Does this application integrate with external or third-party services?", "question_type": "Exposure"},
+            {"id": "ea_3", "text": "Are all API connections and integrations formally documented and inventoried?", "question_type": "Control"},
+            {"id": "ea_4", "text": "Is network segmentation or a DMZ in place to isolate this application from other systems?", "question_type": "Control"},
+            {"id": "ea_5", "text": "Has a formal threat model or architecture security review been conducted for this application?", "question_type": "Control"},
+        ],
+    },
+    {
+        "id": "secure_build_change",
+        "title": "Secure Build, Change, and Vulnerability Handling",
+        "questions": [
+            {"id": "sb_1", "text": "Is a formal change management process followed before deploying changes to this application?", "question_type": "Control"},
+            {"id": "sb_2", "text": "Are application dependencies and third-party libraries regularly reviewed for known vulnerabilities?", "question_type": "Control"},
+            {"id": "sb_3", "text": "Has a penetration test or security assessment been conducted for this application within the last 12 months?", "question_type": "Control"},
+            {"id": "sb_4", "text": "Are known security vulnerabilities tracked, prioritised, and remediated to a defined SLA?", "question_type": "Control"},
+            {"id": "sb_5", "text": "Is any part of this application running on unsupported or end-of-life software or infrastructure?", "question_type": "Exposure"},
+        ],
+    },
+    {
+        "id": "logging_monitoring",
+        "title": "Logging, Monitoring, and Detectability",
+        "questions": [
+            {"id": "lm_1", "text": "Are security-relevant events (authentication, access, errors, admin actions) logged for this application?", "question_type": "Control"},
+            {"id": "lm_2", "text": "Are logs retained for a defined minimum period and protected from tampering or deletion?", "question_type": "Control"},
+            {"id": "lm_3", "text": "Is there active alerting or monitoring on anomalous security events for this application?", "question_type": "Control"},
+            {"id": "lm_4", "text": "Would an unauthorised access or data exfiltration event go undetected for more than 24 hours?", "question_type": "Exposure"},
+            {"id": "lm_5", "text": "Are logs centralised and accessible to a security operations or incident response team?", "question_type": "Control"},
+        ],
+    },
+    {
+        "id": "resilience_backup",
+        "title": "Resilience, Backup, and Recoverability",
+        "questions": [
+            {"id": "rb_1", "text": "Are backups of application data performed regularly and tested for restorability?", "question_type": "Control"},
+            {"id": "rb_2", "text": "Is there a documented disaster recovery (DR) plan for this application?", "question_type": "Control"},
+            {"id": "rb_3", "text": "Has the DR plan been tested within the last 12 months?", "question_type": "Control"},
+            {"id": "rb_4", "text": "Does this application have a single point of failure with no redundancy?", "question_type": "Exposure"},
+            {"id": "rb_5", "text": "Are backups stored in a geographically or logically separate location from the primary system?", "question_type": "Control"},
+        ],
+    },
+    {
+        "id": "special_risk_indicators",
+        "title": "Special Risk Indicators",
+        "questions": [
+            {"id": "sr_1", "text": "Is this application subject to mandatory regulatory compliance requirements (e.g. GDPR, PCI DSS, HIPAA, SOX)?", "question_type": "Exposure"},
+            {"id": "sr_2", "text": "Has this application been involved in a confirmed security incident or data breach in the last 24 months?", "question_type": "Exposure"},
+            {"id": "sr_3", "text": "Are there open high or critical severity audit findings or remediation actions against this application?", "question_type": "Exposure"},
+            {"id": "sr_4", "text": "Is this application managed or hosted entirely by a third-party vendor with limited internal oversight?", "question_type": "Exposure"},
+            {"id": "sr_5", "text": "Is there an active and tracked remediation plan for known risks associated with this application?", "question_type": "Control"},
+        ],
+    },
+]
 
 
-def get_questions(assessment_type: str) -> list[dict]:
-    """Return questions for a given assessment type (BIA | LEGAL | PIA)."""
-    return QUESTION_BANK.get(assessment_type.upper(), [])
+def get_sections() -> list[dict]:
+    """Return all 8 assessment sections with their question banks."""
+    return SECTIONS
