@@ -181,7 +181,11 @@ Return ONLY valid JSON. No markdown, no explanation."""
 
     llm = get_llm(temperature=0.2)
     response = llm.invoke([HumanMessage(content=prompt)])
-    return _json.loads(response.content)
+    try:
+        return _json.loads(response.content)
+    except _json.JSONDecodeError:
+        logger.warning("LLM returned non-JSON response; returning empty suggestions")
+        return []
 
 
 @router.post("", status_code=201, response_model=Asset)
