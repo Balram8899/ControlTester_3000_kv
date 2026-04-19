@@ -1109,6 +1109,36 @@ async def load_graph_api(
 #-----------------------------------------------------------------------------
 # Regulatoy Compliance Endpoint Placeholder
 #-----------------------------------------------------------------------------
+def _library_document_to_comparison_markdown(doc: Dict[str, Any]) -> str:
+    title = (
+        doc.get("framework_name")
+        or doc.get("source_filename")
+        or doc.get("document_id")
+        or "Library Regulation"
+    )
+    authority = doc.get("issuing_authority") or "Unknown"
+    obligations = doc.get("obligations", [])
+
+    lines = [
+        f"# {title}",
+        "",
+        f"Issuing Authority: {authority}",
+        "",
+        "## Regulatory Requirements",
+    ]
+
+    for obligation in obligations:
+        domain = obligation.get("domain") or "General"
+        section = obligation.get("section_reference") or ""
+        text = obligation.get("obligation_text") or ""
+        prefix = f"[{domain}]"
+        if section:
+            prefix += f" [{section}]"
+        lines.append(f"- {prefix} {text}".strip())
+
+    return "\n".join(lines)
+
+
 @app.post(
     "/compare-regulations",
     tags=["analysis"],
@@ -1119,7 +1149,13 @@ async def compare_regulations(
     max_workers: int = Form(4, description="Reserved for future parallel processing"),
     save_artifacts: bool = Form(False, description="Save detailed analysis artifacts to disk"),
     output_format: str = Form("json", description="Response format: json or markdown"),
-    regulation_files: List[UploadFile] = File(..., description="Regulatory documents to compare (min 2)")
+    regulation_a_source: Optional[str] = Form(None, description="Source for regulation A: upload or library"),
+    regulation_a_document_id: Optional[str] = Form(None, description="Library document ID for regulation A"),
+    regulation_a_file: Optional[UploadFile] = File(None, description="Uploaded file for regulation A"),
+    regulation_b_source: Optional[str] = Form(None, description="Source for regulation B: upload or library"),
+    regulation_b_document_id: Optional[str] = Form(None, description="Library document ID for regulation B"),
+    regulation_b_file: Optional[UploadFile] = File(None, description="Uploaded file for regulation B"),
+    regulation_files: Optional[List[UploadFile]] = File(None, description="Legacy uploaded regulatory documents to compare (min 2)")
 ):
     """
     Compare regulatory frameworks with detailed stringency analysis.
@@ -1141,48 +1177,141 @@ async def compare_regulations(
     rid = _req_id()
     logger.info(f"[{rid}] Regulation comparison request - Model: {selected_model}")
 
-    # Validation
-    if len(regulation_files) < 2:
-        raise HTTPException(
-            status_code=400,
-            detail="At least two regulation files are required for comparison"
-        )
-    
-    if len(regulation_files) > 5:
-        raise HTTPException(
-            status_code=400,
-            detail="Maximum 5 documents supported per comparison"
-        )
-
     tmp_paths, filenames = [], []
     output_dir = None
 
     try:
-        # Save uploaded files
-        for uf in regulation_files:
-            # Validate file type
-            if not uf.filename.lower().endswith(supported_extension_tuple()):
+        def _slot_mode_requested() -> bool:
+            return any(
+                value is not None and value != ""
+                for value in [
+                    regulation_a_source,
+                    regulation_a_document_id,
+                    regulation_b_source,
+                    regulation_b_document_id,
+                ]
+            ) or regulation_a_file is not None or regulation_b_file is not None
+
+        slot_mode = _slot_mode_requested()
+
+        if slot_mode:
+            slot_specs = [
+                ("A", (regulation_a_source or "").strip().lower(), regulation_a_document_id, regulation_a_file),
+                ("B", (regulation_b_source or "").strip().lower(), regulation_b_document_id, regulation_b_file),
+            ]
+            store: Optional[MongoLibraryStore] = None
+
+            if any(not source for _, source, _, _ in slot_specs):
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Unsupported file type: {uf.filename}. Use PDF, DOCX, TXT, MD, CSV, XLSX, XLS, PNG, JPG, or JPEG."
+                    detail="Both regulation comparison slots must be configured before running the comparison",
                 )
-            
-            ext = Path(uf.filename).suffix or ".tmp"
-            tmp = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
-            content = await uf.read()
-            
-            if len(content) == 0:
+
+            for label, source, document_id, upload in slot_specs:
+                if source not in {"upload", "library"}:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Regulation {label} must specify source as 'upload' or 'library'",
+                    )
+
+                if source == "library":
+                    if not document_id:
+                        raise HTTPException(
+                            status_code=400,
+                            detail=f"Regulation {label} requires a library document selection",
+                        )
+                    if store is None:
+                        store = MongoLibraryStore()
+                    doc = store.get_document(document_id)
+                    if not doc:
+                        raise HTTPException(
+                            status_code=404,
+                            detail=f"Library document not found: {document_id}",
+                        )
+                    if not doc.get("obligations"):
+                        raise HTTPException(
+                            status_code=400,
+                            detail=f"Selected library document has no extracted obligations: {document_id}",
+                        )
+
+                    content = _library_document_to_comparison_markdown(doc).encode("utf-8")
+                    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".md")
+                    tmp.write(content)
+                    tmp.close()
+                    tmp_paths.append(tmp.name)
+                    filenames.append(
+                        doc.get("framework_name")
+                        or doc.get("source_filename")
+                        or document_id
+                    )
+                    logger.info(f"[{rid}] Library selection {label}: {filenames[-1]}")
+                    continue
+
+                if upload is None:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Regulation {label} requires an uploaded file",
+                    )
+                if not upload.filename.lower().endswith(supported_extension_tuple()):
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Unsupported file type: {upload.filename}. Use PDF, DOCX, TXT, MD, CSV, XLSX, XLS, PNG, JPG, or JPEG.",
+                    )
+
+                ext = Path(upload.filename).suffix or ".tmp"
+                tmp = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
+                content = await upload.read()
+                if len(content) == 0:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Empty file: {upload.filename}",
+                    )
+
+                tmp.write(content)
+                tmp.close()
+                tmp_paths.append(tmp.name)
+                filenames.append(upload.filename)
+                logger.info(f"[{rid}] Uploaded {label}: {upload.filename} ({len(content)} bytes)")
+        else:
+            regulation_files = regulation_files or []
+
+            # Validation
+            if len(regulation_files) < 2:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Empty file: {uf.filename}"
+                    detail="At least two regulation files are required for comparison"
                 )
-            
-            tmp.write(content)
-            tmp.close()
-            tmp_paths.append(tmp.name)
-            filenames.append(uf.filename)
-            
-            logger.info(f"[{rid}] Uploaded: {uf.filename} ({len(content)} bytes)")
+
+            if len(regulation_files) > 5:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Maximum 5 documents supported per comparison"
+                )
+
+            # Save uploaded files
+            for uf in regulation_files:
+                if not uf.filename.lower().endswith(supported_extension_tuple()):
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Unsupported file type: {uf.filename}. Use PDF, DOCX, TXT, MD, CSV, XLSX, XLS, PNG, JPG, or JPEG."
+                    )
+
+                ext = Path(uf.filename).suffix or ".tmp"
+                tmp = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
+                content = await uf.read()
+
+                if len(content) == 0:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Empty file: {uf.filename}"
+                    )
+
+                tmp.write(content)
+                tmp.close()
+                tmp_paths.append(tmp.name)
+                filenames.append(uf.filename)
+
+                logger.info(f"[{rid}] Uploaded: {uf.filename} ({len(content)} bytes)")
 
         kb_g = GRAPH_CACHE.get("global")
         logger.info(f"[{rid}] Starting analysis...")

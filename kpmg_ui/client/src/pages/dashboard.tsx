@@ -35,13 +35,13 @@ function AnalysisCard({
   onViewFull: () => void;
 }) {
   return (
-    <div className="rounded-2xl border bg-card overflow-hidden card-interactive group flex flex-col">
+    <div className="dashboard-panel card-interactive group flex flex-col overflow-hidden rounded-2xl border bg-card">
       <div className="h-1 shrink-0" style={{ background: accentColor }} />
       <div className="p-5 flex flex-col flex-1">
         <div className="flex items-start justify-between gap-2 mb-3">
-          <span className="text-sm font-semibold text-foreground leading-tight">{title}</span>
+          <span className="text-sm font-semibold text-[#0C233C] leading-tight">{title}</span>
           {preview && (
-            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground shrink-0 border">
+            <span className="landing-chip text-[10px] font-medium px-2 py-0.5 rounded-full shrink-0">
               PREVIEW
             </span>
           )}
@@ -65,7 +65,7 @@ function AnalysisCard({
 // ── Skeleton card ─────────────────────────────────────────────────────────────
 function AnalysisSkeleton() {
   return (
-    <div className="rounded-2xl border bg-card overflow-hidden animate-pulse">
+    <div className="dashboard-panel animate-pulse overflow-hidden rounded-2xl border bg-card">
       <div className="h-1 bg-muted" />
       <div className="p-5 space-y-3">
         <div className="h-3 w-36 bg-muted rounded" />
@@ -132,11 +132,11 @@ export default function DashboardPage() {
         <div className="max-w-6xl mx-auto space-y-6">
 
           {/* ── KPI Strip ── */}
-          <section className="osint-grid rounded-2xl p-4">
+          <section className="dashboard-band rounded-2xl p-4">
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
               {loading ? (
                 Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="rounded-2xl border bg-card p-4 animate-pulse">
+                  <div key={i} className="dashboard-panel rounded-2xl border bg-card p-4 animate-pulse">
                     <div className="h-2.5 w-20 bg-muted rounded mb-3" />
                     <div className="h-7 w-12 bg-muted rounded mb-2" />
                     <div className="h-2 w-16 bg-muted rounded" />
@@ -159,7 +159,7 @@ export default function DashboardPage() {
           {!loading && allDomains.length > 0 && (
             <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               {/* Bar Chart — Domain Coverage Comparison */}
-              <div className="lg:col-span-2 rounded-2xl border bg-card p-4 card-interactive">
+              <div className="dashboard-panel card-interactive lg:col-span-2 rounded-2xl border bg-card p-4">
                 <div className="flex items-center gap-2 mb-4">
                   <Activity className="h-4 w-4 text-[var(--pacific)]" />
                   <h3 className="text-sm font-semibold font-display">Domain Coverage</h3>
@@ -186,7 +186,7 @@ export default function DashboardPage() {
                     <Legend
                       verticalAlign="top"
                       align="right"
-                      wrapperStyle={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", paddingBottom: 8 }}
+                      wrapperStyle={{ fontSize: 11, fontFamily: "Arial, sans-serif", paddingBottom: 8 }}
                     />
                     <Bar dataKey="Regulations" fill="#00B8F5" radius={[3, 3, 0, 0]} />
                     <Bar dataKey="Controls" fill="#1E49E2" radius={[3, 3, 0, 0]} />
@@ -195,7 +195,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Donut Chart — Obligation Distribution */}
-              <div className="rounded-2xl border bg-card p-4 card-interactive">
+              <div className="dashboard-panel card-interactive rounded-2xl border bg-card p-4">
                 <div className="flex items-center gap-2 mb-4">
                   <Layers className="h-4 w-4 text-[var(--purple-accent)]" />
                   <h3 className="text-sm font-semibold font-display">Obligations</h3>
@@ -239,9 +239,9 @@ export default function DashboardPage() {
           {/* ── Analysis Results ── */}
           <section>
             <div className="mb-4">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.2em] font-mono">
-                Analysis Results
-              </p>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.2em]">
+                  Analysis Results
+                </p>
               <h2 className="text-lg font-bold mt-0.5">Explore Diagnostic Outputs</h2>
             </div>
 
@@ -250,12 +250,12 @@ export default function DashboardPage() {
                 {Array.from({ length: 4 }).map((_, i) => <AnalysisSkeleton key={i} />)}
               </div>
             ) : !librariesLoaded ? (
-              <div className="rounded-2xl border bg-card p-8 text-center text-muted-foreground">
+              <div className="dashboard-panel rounded-2xl border bg-card p-8 text-center text-muted-foreground">
                 <Library className="h-8 w-8 mx-auto mb-2 opacity-30" />
                 <p className="text-sm">Populate both libraries to unlock analysis insights</p>
               </div>
             ) : !hasAnalysisData ? (
-              <div className="rounded-2xl border bg-card p-8 text-center text-muted-foreground">
+              <div className="dashboard-panel rounded-2xl border bg-card p-8 text-center text-muted-foreground">
                 <Library className="h-8 w-8 mx-auto mb-2 opacity-30" />
                 <p className="text-sm font-medium">Partial data available</p>
                 <p className="text-xs mt-1">Load both the Regulatory and Controls libraries to see full analysis</p>
@@ -303,10 +303,10 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Full-width Regulation-Controls Coverage Card */}
-                <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-[#00338D] to-[#1E49E2] p-6 text-white">
+                <div className="dashboard-highlight rounded-2xl overflow-hidden p-6 text-white">
                   <div className="flex items-center justify-between gap-4 mb-6">
                     <div>
-                      <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-white/60 mb-0.5">
+                      <p className="text-[10px] uppercase tracking-[0.2em] text-white/60 mb-0.5">
                         Cross-Library Analysis
                       </p>
                       <h3 className="text-base font-bold">Regulation–Controls Coverage</h3>
@@ -372,7 +372,7 @@ export default function DashboardPage() {
           {/* ── System Status + Quick Links ── */}
           <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* System Status */}
-            <div className="rounded-2xl border bg-card p-4 card-interactive">
+            <div className="dashboard-panel card-interactive rounded-2xl border bg-card p-4">
               <div className="flex items-center gap-2 mb-4">
                 <Cpu className="h-4 w-4 text-[var(--terminal-green)]" />
                 <h3 className="text-sm font-semibold font-display">System Status</h3>
@@ -390,7 +390,7 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Database className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">Reg. Library</span>
+                    <span className="text-xs text-muted-foreground">Regulatory Library</span>
                   </div>
                   <span className={`text-xs font-mono ${regDocs.length > 0 ? "text-[var(--terminal-green)]" : "text-muted-foreground"}`}>
                     {regDocs.length > 0 ? `${regDocs.length} loaded` : "empty"}
@@ -423,7 +423,7 @@ export default function DashboardPage() {
               <button
                 key={path}
                 onClick={() => setLocation(path)}
-                className="rounded-2xl border bg-card p-4 text-left card-interactive group"
+                className="dashboard-panel card-interactive group rounded-2xl border bg-card p-4 text-left"
                 style={{ borderLeft: `3px solid ${color}` }}
               >
                 <div className="flex items-center gap-2 mb-2">

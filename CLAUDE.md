@@ -6,6 +6,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Trace** is a cybersecurity audit and compliance assessment platform. It uses a local LLM (Ollama with Llama3) and RAG (Retrieval-Augmented Generation) to help auditors analyze evidence, test controls, check regulatory compliance, and generate workpapers.
 
+## Code Navigation
+
+Core principle: search before reading.
+
+Use Socrati CLI to search the indexed codebase before opening files. The index gives you a map of the codebase in milliseconds; raw file reading is expensive and context-consuming.
+
+- Search with Socrati CLI first to locate the relevant files, symbols, and architecture.
+- Read only the small set of files that search identifies as relevant.
+- Avoid broad file-by-file exploration unless search results are insufficient.
+
 ## Services & Ports
 
 | Service | Port | Description |

@@ -52,12 +52,12 @@ export default function ControlTestingKpis({
 
       {/* Severity breakdown card — matches KpiCard visual style */}
       <div
-        className="rounded-2xl border bg-card text-card-foreground p-4 card-interactive osint-grid animate-fade-up"
+        className="dashboard-panel rounded-2xl border bg-card text-card-foreground p-4 card-interactive animate-fade-up"
         style={{ borderTop: "3px solid #EAAA00" }}
       >
         <div className="flex items-start justify-between">
           <div className="w-full">
-            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider font-mono">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.18em]">
               Severity Breakdown
             </p>
             {totalIssues === 0 ? (

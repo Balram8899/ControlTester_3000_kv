@@ -39,7 +39,7 @@ CONTROL_DOMAINS: Dict[str, List[str]] = {
     "change_management": ["change", "patch", "update", "deployment", "release"],
     "technology_refresh": ["end of support", "eos", "obsolete", "outdated", "lifecycle"],
     "access_control": ["access", "authentication", "authorization", "privilege", "mfa", "multi-factor"],
-    "va_pt": ["vulnerability", "penetration", "testing", "assessment", "va", "pt"],
+    "Vuln_Mgmt": ["vulnerability", "penetration", "testing", "assessment", "va", "pt"],
     "cryptography": ["cryptography", "encryption", "key management", "cipher", "crypto"],
     "data_security": ["data loss", "dlp", "data protection", "confidentiality", "data at rest"],
     "network_security": ["network", "firewall", "segmentation", "intrusion", "dmz"],

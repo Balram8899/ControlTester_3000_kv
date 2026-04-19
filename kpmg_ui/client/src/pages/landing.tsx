@@ -1,377 +1,263 @@
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCrossNav } from "@/contexts/CrossNavContext";
-import { Search, CheckSquare, BookOpen, AlertTriangle, ChevronRight, Database } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowRight,
+  BookOpen,
+  Database,
+  FileBarChart,
+  FileSearch,
+  LayoutDashboard,
+  Library,
+  LogOut,
+  MessageSquare,
+  Scale,
+  Settings,
+  ShieldCheck,
+  TestTube,
+  Workflow,
+  type LucideIcon,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import logo from "@/assets/kpmg (1).png";
 
-const CARD1_LINKS = [
-  "Risk – Controls Coverage",
-  "Regulation – Controls Coverage",
-  "Control Quality Analysis",
-  "Controls Duplicates",
-  "Benchmarking and Gap Assessment",
+type FeatureCard = {
+  title: string;
+  path: string;
+  description: string;
+  functionLabel: string;
+  accent: string;
+  icon: LucideIcon;
+};
+
+const FEATURE_CARDS: FeatureCard[] = [
+  {
+    title: "Dashboard",
+    path: "/",
+    description: "Portfolio view of regulatory content, control coverage, domain distribution, and diagnostic status across the active libraries.",
+    functionLabel: "Portfolio monitoring",
+    accent: "#00338D",
+    icon: LayoutDashboard,
+  },
+  {
+    title: "Regulatory Library",
+    path: "/regulatory-library",
+    description: "Ingest regulations, extract obligations, classify domains, and maintain the regulatory knowledge base used for gap and comparison analysis.",
+    functionLabel: "Regulatory ingestion",
+    accent: "#1E49E2",
+    icon: Library,
+  },
+  {
+    title: "Controls Library",
+    path: "/controls-library",
+    description: "Upload control inventories, normalize control records, evaluate mapping quality, and identify duplication across control sets.",
+    functionLabel: "Control diagnostics",
+    accent: "#009A44",
+    icon: ShieldCheck,
+  },
+  {
+    title: "Frameworks Library",
+    path: "/frameworks-library",
+    description: "Manage reference frameworks and supporting metadata used to organize regulatory and control analysis workflows.",
+    functionLabel: "Reference frameworks",
+    accent: "#7213EA",
+    icon: BookOpen,
+  },
+  {
+    title: "Regulatory Testing",
+    path: "/regulatory-testing",
+    description: "Run regulation-versus-regulation comparisons or assess uploaded RCM documents against regulatory obligations from uploads or library sources.",
+    functionLabel: "Comparative assessment",
+    accent: "#00B8F5",
+    icon: Scale,
+  },
+  {
+    title: "Reports",
+    path: "/reports",
+    description: "Review generated outputs for evidence assessment, control testing, regulatory testing, and related reporting artefacts in one place.",
+    functionLabel: "Report retrieval",
+    accent: "#0C233C",
+    icon: FileBarChart,
+  },
+  {
+    title: "Risk Assessment",
+    path: "/risk-assessment",
+    description: "Capture risk inputs, structure scoring, connect risks to controls, and generate risk assessment outputs for downstream reporting.",
+    functionLabel: "Risk scoring",
+    accent: "#EAAA00",
+    icon: AlertTriangle,
+  },
+  {
+    title: "Asset Registry",
+    path: "/asset-registry",
+    description: "Maintain a central asset register with CIA ratings, business criticality, ownership data, and control linkage context.",
+    functionLabel: "Asset intelligence",
+    accent: "#098E7E",
+    icon: Database,
+  },
+  {
+    title: "Final Report",
+    path: "/evidence-assessment",
+    description: "Execute evidence-based assessment workflows and compile structured final outputs from uploaded evidence packs.",
+    functionLabel: "Evidence synthesis",
+    accent: "#5B6B82",
+    icon: FileSearch,
+  },
+  {
+    title: "Control Testing",
+    path: "/control-testing",
+    description: "Coordinate AI-assisted control testing, track evidence, record outcomes, and generate domain-grouped testing workpapers.",
+    functionLabel: "Testing execution",
+    accent: "#E5001B",
+    icon: TestTube,
+  },
+  {
+    title: "Chat",
+    path: "/chat",
+    description: "Use conversational analysis to interrogate platform context, uploaded content, and working outputs during assessment workflows.",
+    functionLabel: "Analyst support",
+    accent: "#00B8F5",
+    icon: MessageSquare,
+  },
+  {
+    title: "Issue Management",
+    path: "/issue-management",
+    description: "Track findings, assign remediation actions, capture evidence, and monitor issue status against associated risks and controls.",
+    functionLabel: "Remediation tracking",
+    accent: "#F97316",
+    icon: Workflow,
+  },
+  {
+    title: "Settings",
+    path: "/settings",
+    description: "Configure model selection, workspace visibility, and application preferences used by the TRACE operating environment.",
+    functionLabel: "Platform configuration",
+    accent: "#64748B",
+    icon: Settings,
+  },
 ];
-
-const CARD2_LINKS = [
-  "Regulatory Frameworks",
-  "Obligation Mapping",
-  "Compliance Gap Analysis",
-];
-
-const CARD3_LINKS = [
-  "Testing Framework",
-  "Automation Playbook",
-  "Evidence Repository",
-];
-
-const CARD4_LINKS = [
-  "Risk Heatmap",
-  "Control-Risk Linkage",
-  "Risk Appetite Dashboard",
-];
-
-const CARD5_LINKS = ["Asset Inventory", "CIA Rating & Criticality", "Control Mapping", "Assessment Scheduling"];
-const CARD6_LINKS = ["Issue Tracking", "Remediation Plans", "Evidence Management", "Sign-off Workflow"];
 
 export default function LandingPage() {
   const [, setLocation] = useLocation();
   const { logout } = useAuth();
-  const { setPendingQualityAnalysis } = useCrossNav();
 
-  function handleSignOut() {
+  const handleSignOut = () => {
     logout();
     setLocation("/login");
-  }
-
-  function goToQualityAnalysis() {
-    setPendingQualityAnalysis(true);
-    setLocation("/controls-library");
-  }
-
-  const activeCardStyle = {
-    background: "#fff",
-    border: "2px solid #001E62",
-    boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
-  };
-
-  const inactiveCardStyle = {
-    background: "#f8fafc",
-    border: "1px solid #e2e8f0",
-    boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
-    opacity: 0.65,
   };
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ fontFamily: "Inter, sans-serif" }}>
-      {/* ── Top Nav ── */}
-      <nav
-        className="flex items-center justify-between px-8 py-3 flex-shrink-0"
-        style={{ background: "#0a0e1a", borderBottom: "1px solid rgba(255,255,255,0.08)" }}
-      >
-        <div className="flex items-center gap-2">
-          <span className="text-white font-bold text-sm tracking-wide">KPMG</span>
-          <span className="text-slate-500 text-sm">|</span>
-          <span className="font-bold text-sm tracking-widest" style={{ color: "var(--pacific, #00b2e3)" }}>
-            TRACE
-          </span>
-        </div>
-        <div className="flex items-center gap-3">
-          <span
-            className="text-xs font-semibold px-2.5 py-1 rounded tracking-wider"
-            style={{ background: "rgba(255,255,255,0.08)", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.12)" }}
-          >
-            KPMG CONFIDENTIAL
-          </span>
-          <button
-            onClick={handleSignOut}
-            className="text-xs font-semibold px-3 py-1.5 rounded tracking-wider transition-colors"
-            style={{ background: "rgba(255,255,255,0.06)", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.1)" }}
-            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.12)"; (e.currentTarget as HTMLButtonElement).style.color = "#e2e8f0"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.06)"; (e.currentTarget as HTMLButtonElement).style.color = "#94a3b8"; }}
-          >
-            SIGN OUT
-          </button>
-        </div>
-      </nav>
-
-      {/* ── Hero ── */}
-      <section
-        className="flex-shrink-0 flex flex-col justify-center px-16 py-16"
-        style={{ background: "linear-gradient(135deg, #001E62 0%, #0a1628 60%, #001030 100%)", minHeight: "40vh" }}
-      >
-        <div className="max-w-4xl">
-          <p className="text-xs tracking-[0.3em] uppercase mb-6 flex items-center gap-2" style={{ color: "rgba(255,255,255,0.45)" }}>
-            <span style={{ width: 28, height: 1, background: "rgba(255,255,255,0.3)", display: "inline-block" }} />
-            Agentic Solutions
-          </p>
-
-          <h1 className="text-6xl font-black mb-4 leading-tight tracking-tight">
-            <span className="text-white">KPMG </span>
-            <span style={{ color: "var(--pacific, #00b2e3)" }}>TRACE</span>
-          </h1>
-
-          <p className="text-base font-medium mb-3" style={{ color: "rgba(255,255,255,0.55)" }}>
-            Agentic Process &amp; Controls Excellence
-          </p>
-
-          <p className="text-sm leading-relaxed max-w-xl" style={{ color: "rgba(255,255,255,0.38)" }}>
-            A consolidated and fully agentified solution designed to transform how organisations design, test, measure and monitor technology controls.
-          </p>
-        </div>
-      </section>
-
-      {/* ── Proposition Cards ── */}
-      <section className="flex-1 px-16 py-12" style={{ background: "#f1f4f8" }}>
-        <div className="max-w-6xl mx-auto">
-          {/* Section header */}
-          <div className="flex items-end justify-between mb-8">
-            <div>
-              <p className="text-[10px] tracking-[0.3em] uppercase font-semibold mb-1" style={{ color: "var(--pacific, #00b2e3)" }}>
-                Proposition Areas
-              </p>
-              <h2 className="text-2xl font-bold" style={{ color: "#001E62" }}>
-                TRACE Accelerator Capabilities
-              </h2>
+    <div className="landing-shell flex min-h-screen flex-col" style={{ fontFamily: "Arial, sans-serif" }}>
+      <header className="landing-hero relative overflow-hidden">
+        <div className="absolute inset-0 osint-grid opacity-30 pointer-events-none" />
+        <div className="relative z-10 mx-auto flex w-full max-w-[1280px] items-center justify-between px-6 py-4 lg:px-10">
+          <div className="flex items-center gap-4">
+            <img src={logo} alt="KPMG" className="h-9 w-auto object-contain" />
+            <div className="hidden h-8 w-px bg-white/12 sm:block" />
+            <div className="hidden sm:block">
+              <p className="text-[11px] uppercase tracking-[0.32em] text-white">TRACE</p>
+              <p className="text-[10px] text-white/60">Technology Risk and Controls Exchange</p>
             </div>
-            <span className="text-xs font-medium px-3 py-1 rounded-full" style={{ background: "rgba(0,30,98,0.08)", color: "#001E62" }}>
-              5 of 6 live
-            </span>
           </div>
-
-          {/* Cards grid — 3 columns */}
-          <div className="grid grid-cols-3 gap-5">
-
-            {/* Card 1 — Controls Design Diagnostics */}
-            <div
-              className="rounded-lg flex flex-col transition-all duration-200 cursor-pointer"
-              style={activeCardStyle}
-              onClick={goToQualityAnalysis}
-              onMouseEnter={e => {
-                (e.currentTarget as HTMLDivElement).style.boxShadow = "0 8px 24px rgba(0,30,98,0.18)";
-                (e.currentTarget as HTMLDivElement).style.borderColor = "var(--pacific, #00b2e3)";
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLDivElement).style.boxShadow = "0 1px 3px rgba(0,0,0,0.06)";
-                (e.currentTarget as HTMLDivElement).style.borderColor = "#001E62";
-              }}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full border-white/20 bg-white/8 text-white hover:bg-white/14 hover:text-white"
+              onClick={() => setLocation("/")}
             >
-              <div className="p-5 flex-1">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="h-9 w-9 rounded-md flex items-center justify-center" style={{ background: "#001E62" }}>
-                    <Search className="h-4 w-4 text-white" />
-                  </div>
-                </div>
-                <h3 className="font-bold text-sm mb-2" style={{ color: "#001E62" }}>Controls Design Diagnostics</h3>
-                <p className="text-xs leading-relaxed" style={{ color: "#64748b" }}>
-                  A rapid assessment of the design of controls against recorded risks — evaluating coverage, completeness and the hygiene of controls design.
-                </p>
-              </div>
-              <div className="px-5 pb-5">
-                <div className="border-t pt-4" style={{ borderColor: "#e2e8f0" }}>
-                  <p className="text-xs font-semibold mb-2 flex items-center gap-1" style={{ color: "#001E62" }}>
-                    <ChevronRight className="h-3 w-3" /> Run Diagnostics
-                  </p>
-                  <div className="space-y-1.5">
-                    {CARD1_LINKS.map(link => (
-                      <p key={link} className="text-xs pl-4" style={{ color: "#3b82f6" }}>{link}</p>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 2 — Regulatory Analysis */}
-            <div
-              className="rounded-lg flex flex-col transition-all duration-200 cursor-pointer"
-              style={activeCardStyle}
-              onClick={() => setLocation("/regulatory-library")}
-              onMouseEnter={e => {
-                (e.currentTarget as HTMLDivElement).style.boxShadow = "0 8px 24px rgba(0,30,98,0.18)";
-                (e.currentTarget as HTMLDivElement).style.borderColor = "var(--pacific, #00b2e3)";
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLDivElement).style.boxShadow = "0 1px 3px rgba(0,0,0,0.06)";
-                (e.currentTarget as HTMLDivElement).style.borderColor = "#001E62";
-              }}
+              Open Dashboard
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="rounded-full text-white/70 hover:bg-white/10 hover:text-white"
+              onClick={handleSignOut}
             >
-              <div className="p-5 flex-1">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="h-9 w-9 rounded-md flex items-center justify-center" style={{ background: "#001E62" }}>
-                    <BookOpen className="h-4 w-4 text-white" />
-                  </div>
-                </div>
-                <h3 className="font-bold text-sm mb-2" style={{ color: "#001E62" }}>Regulatory Analysis</h3>
-                <p className="text-xs leading-relaxed" style={{ color: "#64748b" }}>
-                  Map controls against regulatory obligations across NIST, ISO 27001, SOC 2, PCI-DSS, GDPR and more — identifying gaps and coverage at a glance.
-                </p>
-              </div>
-              <div className="px-5 pb-5">
-                <div className="border-t pt-4" style={{ borderColor: "#e2e8f0" }}>
-                  <p className="text-xs font-semibold mb-2 flex items-center gap-1" style={{ color: "#001E62" }}>
-                    <ChevronRight className="h-3 w-3" /> Explore Frameworks
-                  </p>
-                  <div className="space-y-1.5">
-                    {CARD2_LINKS.map(link => (
-                      <p key={link} className="text-xs pl-4" style={{ color: "#3b82f6" }}>{link}</p>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 3 — Controls Testing */}
-            <div
-              className="rounded-lg flex flex-col transition-all duration-200 cursor-pointer"
-              style={activeCardStyle}
-              onClick={() => setLocation("/control-testing")}
-              onMouseEnter={e => {
-                (e.currentTarget as HTMLDivElement).style.boxShadow = "0 8px 24px rgba(0,30,98,0.18)";
-                (e.currentTarget as HTMLDivElement).style.borderColor = "var(--pacific, #00b2e3)";
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLDivElement).style.boxShadow = "0 1px 3px rgba(0,0,0,0.06)";
-                (e.currentTarget as HTMLDivElement).style.borderColor = "#001E62";
-              }}
-            >
-              <div className="p-5 flex-1">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="h-9 w-9 rounded-md flex items-center justify-center" style={{ background: "#001E62" }}>
-                    <CheckSquare className="h-4 w-4 text-white" />
-                  </div>
-                </div>
-                <h3 className="font-bold text-sm mb-2" style={{ color: "#001E62" }}>Controls Testing</h3>
-                <p className="text-xs leading-relaxed" style={{ color: "#64748b" }}>
-                  Automated and AI-assisted execution of controls tests across IT general controls, application controls and business process controls — with full audit trail.
-                </p>
-              </div>
-              <div className="px-5 pb-5">
-                <div className="border-t pt-4" style={{ borderColor: "#e2e8f0" }}>
-                  <p className="text-xs font-semibold mb-2 flex items-center gap-1" style={{ color: "#001E62" }}>
-                    <ChevronRight className="h-3 w-3" /> Launch Testing
-                  </p>
-                  <div className="space-y-1.5">
-                    {CARD3_LINKS.map(link => (
-                      <p key={link} className="text-xs pl-4" style={{ color: "#3b82f6" }}>{link}</p>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 4 — Risk Assessment */}
-            <div
-              className="rounded-lg flex flex-col transition-all duration-200 cursor-pointer"
-              style={activeCardStyle}
-              onClick={() => setLocation("/risk-assessment")}
-              onMouseEnter={e => {
-                (e.currentTarget as HTMLDivElement).style.boxShadow = "0 8px 24px rgba(0,30,98,0.18)";
-                (e.currentTarget as HTMLDivElement).style.borderColor = "var(--pacific, #00b2e3)";
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLDivElement).style.boxShadow = "0 1px 3px rgba(0,0,0,0.06)";
-                (e.currentTarget as HTMLDivElement).style.borderColor = "#001E62";
-              }}
-            >
-              <div className="p-5 flex-1">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="h-9 w-9 rounded-md flex items-center justify-center" style={{ background: "#001E62" }}>
-                    <AlertTriangle className="h-4 w-4 text-white" />
-                  </div>
-                </div>
-                <h3 className="font-bold text-sm mb-2" style={{ color: "#001E62" }}>Risk Assessment</h3>
-                <p className="text-xs leading-relaxed" style={{ color: "#64748b" }}>
-                  AI-driven risk identification and heatmap generation — linking risks to controls and surfacing coverage gaps across the enterprise risk landscape.
-                </p>
-              </div>
-              <div className="px-5 pb-5">
-                <div className="border-t pt-4" style={{ borderColor: "#e2e8f0" }}>
-                  <p className="text-xs font-semibold mb-2 flex items-center gap-1" style={{ color: "#001E62" }}>
-                    <ChevronRight className="h-3 w-3" /> View Risks
-                  </p>
-                  <div className="space-y-1.5">
-                    {CARD4_LINKS.map(link => (
-                      <p key={link} className="text-xs pl-4" style={{ color: "#3b82f6" }}>{link}</p>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 5 — Asset Registry */}
-            <div
-              className="rounded-lg flex flex-col transition-all duration-200 cursor-pointer"
-              style={activeCardStyle}
-              onClick={() => setLocation("/asset-registry")}
-              onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = "0 8px 24px rgba(0,30,98,0.18)"; (e.currentTarget as HTMLDivElement).style.borderColor = "var(--pacific, #00b2e3)"; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = "0 1px 3px rgba(0,0,0,0.06)"; (e.currentTarget as HTMLDivElement).style.borderColor = "#001E62"; }}
-            >
-              <div className="p-5 flex-1">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="h-9 w-9 rounded-md flex items-center justify-center" style={{ background: "#001E62" }}>
-                    <Database className="h-4 w-4 text-white" />
-                  </div>
-                </div>
-                <h3 className="font-bold text-sm mb-2" style={{ color: "#001E62" }}>Asset Registry</h3>
-                <p className="text-xs leading-relaxed" style={{ color: "#64748b" }}>
-                  Centralised register of IT, data, process, and vendor assets with CIA ratings, criticality scoring, and LLM-assisted control mapping.
-                </p>
-              </div>
-              <div className="px-5 pb-5">
-                <div className="border-t pt-4" style={{ borderColor: "#e2e8f0" }}>
-                  <p className="text-xs font-semibold mb-2 flex items-center gap-1" style={{ color: "#001E62" }}>
-                    <ChevronRight className="h-3 w-3" /> Manage Assets
-                  </p>
-                  <div className="space-y-1.5">
-                    {CARD5_LINKS.map(link => <p key={link} className="text-xs pl-4" style={{ color: "#3b82f6" }}>{link}</p>)}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 6 — Issue Management */}
-            <div
-              className="rounded-lg flex flex-col transition-all duration-200 cursor-pointer"
-              style={activeCardStyle}
-              onClick={() => setLocation("/issue-management")}
-              onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = "0 8px 24px rgba(0,30,98,0.18)"; (e.currentTarget as HTMLDivElement).style.borderColor = "var(--pacific, #00b2e3)"; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = "0 1px 3px rgba(0,0,0,0.06)"; (e.currentTarget as HTMLDivElement).style.borderColor = "#001E62"; }}
-            >
-              <div className="p-5 flex-1">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="h-9 w-9 rounded-md flex items-center justify-center" style={{ background: "#001E62" }}>
-                    <AlertTriangle className="h-4 w-4 text-white" />
-                  </div>
-                </div>
-                <h3 className="font-bold text-sm mb-2" style={{ color: "#001E62" }}>Issue Management</h3>
-                <p className="text-xs leading-relaxed" style={{ color: "#64748b" }}>
-                  Track issues against controls and assets with remediation plans, evidence upload, maker-checker sign-off, and live residual risk impact.
-                </p>
-              </div>
-              <div className="px-5 pb-5">
-                <div className="border-t pt-4" style={{ borderColor: "#e2e8f0" }}>
-                  <p className="text-xs font-semibold mb-2 flex items-center gap-1" style={{ color: "#001E62" }}>
-                    <ChevronRight className="h-3 w-3" /> Manage Issues
-                  </p>
-                  <div className="space-y-1.5">
-                    {CARD6_LINKS.map(link => <p key={link} className="text-xs pl-4" style={{ color: "#3b82f6" }}>{link}</p>)}
-                  </div>
-                </div>
-              </div>
-            </div>
-
+              <LogOut className="h-4 w-4" />
+              Sign Out
+            </Button>
           </div>
         </div>
-      </section>
 
-      {/* ── Footer ── */}
-      <footer
-        className="flex-shrink-0 flex items-center justify-center px-8 py-4"
-        style={{ background: "#0a0e1a", borderTop: "1px solid rgba(255,255,255,0.06)" }}
-      >
-        <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>
-          <span className="font-semibold" style={{ color: "rgba(255,255,255,0.45)" }}>KPMG Trace</span>
-          {"   "}© 2026 KPMG LLP, a UK limited liability partnership and a member firm of the KPMG global organisation.
-        </p>
-      </footer>
+        <div className="relative z-10 mx-auto flex w-full max-w-[1280px] flex-col gap-8 px-6 pb-14 pt-8 lg:px-10 lg:pb-20 lg:pt-10">
+          <div className="max-w-4xl">
+            <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.3em] text-white/60">
+              Control Environment Workspaces
+            </p>
+            <h1 className="max-w-4xl text-4xl font-bold leading-tight text-white sm:text-5xl">
+              Central entry point for TRACE assessment, testing, library, and reporting workflows.
+            </h1>
+            <p className="mt-5 max-w-3xl text-sm leading-7 text-white/72 sm:text-[15px]">
+              Use the workspace catalogue below to access regulatory ingestion, control diagnostics, RCM comparison,
+              evidence-based reporting, risk assessment, issue management, and related platform functions.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <span className="landing-chip rounded-full px-4 py-2 text-xs font-semibold">Cross-library diagnostics</span>
+            <span className="landing-chip rounded-full px-4 py-2 text-xs font-semibold">Regulation and RCM comparison</span>
+            <span className="landing-chip rounded-full px-4 py-2 text-xs font-semibold">Evidence and reporting workflows</span>
+          </div>
+        </div>
+      </header>
+
+      <main className="flex-1 px-6 py-8 lg:px-10 lg:py-10">
+        <div className="mx-auto max-w-[1280px] space-y-8">
+          <section className="dashboard-band rounded-[28px] px-6 py-5 lg:px-8">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#1E49E2]">
+                  Workspace Catalogue
+                </p>
+                <h2 className="mt-2 text-2xl font-bold text-[#0C233C]">Platform capabilities and operating modules</h2>
+              </div>
+              <div className="flex flex-wrap gap-3 text-sm text-slate-600">
+                <span className="landing-chip rounded-full px-3 py-1.5 text-xs font-semibold">{FEATURE_CARDS.length} workspaces</span>
+                <span className="landing-chip rounded-full px-3 py-1.5 text-xs font-semibold">All active functions retained</span>
+              </div>
+            </div>
+          </section>
+
+          <section className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {FEATURE_CARDS.map((feature) => {
+              const Icon = feature.icon;
+              return (
+                <button
+                  key={feature.path}
+                  type="button"
+                  onClick={() => setLocation(feature.path)}
+                  className="landing-feature-card card-interactive group flex h-full flex-col rounded-[26px] p-6 text-left transition-all duration-200"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div
+                      className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/50 bg-white"
+                      style={{ color: feature.accent }}
+                    >
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <span className="landing-chip rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em]">
+                      {feature.functionLabel}
+                    </span>
+                  </div>
+
+                  <div className="mt-5 flex-1">
+                    <h3 className="text-lg font-bold text-[#0C233C]">{feature.title}</h3>
+                    <p className="mt-3 text-sm leading-6 text-slate-600">{feature.description}</p>
+                  </div>
+
+                  <div className="mt-6 flex items-center justify-between border-t border-[#00338D]/10 pt-4">
+                    <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[#00338D]">
+                      Open workspace
+                    </span>
+                    <ArrowRight className="h-4 w-4 text-[#00338D] transition-transform duration-200 group-hover:translate-x-1" />
+                  </div>
+                </button>
+              );
+            })}
+          </section>
+        </div>
+      </main>
     </div>
   );
 }

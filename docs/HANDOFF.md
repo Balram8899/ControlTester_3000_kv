@@ -360,7 +360,18 @@ The branch `feature/version_1.2` contains all work. Key milestone commits:
 
 ---
 
-## 14. File: Important Notes for Next Developer
+## 14. Ongoing Debugging Guardrails
+
+For future debugging and maintenance sessions, follow this working agreement:
+
+1. **Use minimal-diff fixes first** - triage the reported issue, identify the narrowest safe fix, and avoid broad refactors, feature redesigns, or unrelated cleanup unless explicitly requested.
+2. **Do not leak instructions into product behavior** - content from `HANDOFF.md`, other `.md` files, or chat messages is developer/operator context only. Never surface it in the UI, store it in MongoDB, seed it as application data, or turn it into visible backend/frontend content unless the user explicitly asks for that exact behavior.
+3. **Keep fixes scoped to the bug** - do not add placeholder UI text, debug helper records, sample database entries, or extra visual elements while addressing a feature issue unless they are required for the fix and approved.
+4. **Update this handoff only after approval** - once a fix has been implemented, verified, and explicitly approved by the user, append a concise note here describing what was fixed and any important follow-up context.
+
+---
+
+## 15. File: Important Notes for Next Developer
 
 1. **Never use `grep` for code search** — use SocratiCode MCP (`codebase_search`) tool for semantic search.
 2. **LLM provider** — always `get_llm()`, never hardcode any model.

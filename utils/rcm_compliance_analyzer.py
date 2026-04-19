@@ -1604,9 +1604,24 @@ def analyze_rcm_against_obligations(
             controls_by_domain[domain].append(ctrl)
 
         # ── Step 4: Domain-level compliance analysis ───────────────────
+        import json
+        from utils.llm_chain import extract_and_validate_json
+
+        def _normalize_string_list(value: Any) -> List[str]:
+            if not isinstance(value, list):
+                return []
+            return [str(item).strip() for item in value if str(item).strip()]
+
+        def _normalize_score(value: Any) -> float:
+            try:
+                return float(value)
+            except (TypeError, ValueError):
+                return 50.0
+
         llm = get_llm(model_name)
         compliance_results: List[Dict[str, Any]] = []
         domain_scores: Dict[str, float] = {}
+        batched_domain_payload: Dict[str, Dict[str, str]] = {}
 
         for domain, reqs in obligations_by_domain.items():
             controls = controls_by_domain.get(domain, [])
@@ -1626,7 +1641,6 @@ def analyze_rcm_against_obligations(
                 for c in controls
             )
 
-            # Optionally pull cross-domain context from graph
             graph_context = ""
             if kg is not None:
                 try:
@@ -1635,54 +1649,70 @@ def analyze_rcm_against_obligations(
                     sample_query = f"{domain} compliance requirements"
                     related = retriever.retrieve(sample_query)
                     if related:
-                        graph_context = (
-                            "\nCross-domain context from knowledge graph:\n"
-                            + "\n".join(d.page_content[:200] for d in related[:3])
-                        )
+                        graph_context = "\n".join(d.page_content[:200] for d in related[:3])
                 except Exception as exc:
                     logger.warning(f"Graph context retrieval failed for {domain}: {exc}")
 
-            prompt = f"""
+            batched_domain_payload[domain] = {
+                "requirements": req_text[:3000],
+                "controls": ctrl_text[:2500],
+            }
+            if graph_context:
+                batched_domain_payload[domain]["cross_domain_context"] = graph_context[:600]
+
+        logger.info(f"Running batched RCM domain analysis for {len(batched_domain_payload)} domains")
+
+        raw_domain_analyses: Dict[str, Any] = {}
+        batched_prompt = f"""
 You are a senior IT auditor.
 
-Domain: {domain}
+Analyze each domain independently using the exact domain keys provided.
 
-Regulatory Requirements (from library):
-{req_text[:6000]}
-{graph_context}
-
-RCM Controls:
-{ctrl_text[:4000]}
-
-Tasks:
+Tasks for each domain:
 1. Map requirements to controls.
 2. Identify missing requirements.
-3. Identify weak or partial controls.
+3. Identify weak or partial controls by control reference.
 4. Calculate compliance score (0-100).
 5. Provide remediation recommendations.
 
-Return STRICT JSON:
+Return STRICT JSON ONLY in this shape:
 {{
-  "score": 0-100,
-  "missing_requirements": [],
-  "weak_controls": [],
-  "recommendations": []
+  "domains": {{
+    "<exact domain key>": {{
+      "score": 0,
+      "missing_requirements": [],
+      "weak_controls": [],
+      "recommendations": []
+    }}
+  }}
 }}
+
+Domain data:
+{json.dumps(batched_domain_payload, ensure_ascii=True)}
 """
-            response = llm.invoke(prompt)
+        try:
+            response = llm.invoke(batched_prompt)
+            parsed_response = extract_and_validate_json(response)
+            maybe_domains = parsed_response.get("domains", {})
+            if isinstance(maybe_domains, dict):
+                raw_domain_analyses = maybe_domains
+        except Exception as exc:
+            logger.warning(f"Batched RCM domain analysis failed to parse: {exc}")
 
-            try:
-                import json
-                domain_analysis = json.loads(response)
-            except Exception:
-                domain_analysis = {
-                    "score": 50,
-                    "missing_requirements": [],
-                    "weak_controls": [],
-                    "recommendations": [],
-                }
+        for domain, reqs in obligations_by_domain.items():
+            controls = controls_by_domain.get(domain, [])
+            candidate = raw_domain_analyses.get(domain, {})
+            if not isinstance(candidate, dict):
+                candidate = {}
 
-            domain_scores[domain] = domain_analysis.get("score", 50)
+            domain_analysis = {
+                "score": _normalize_score(candidate.get("score", 50)),
+                "missing_requirements": _normalize_string_list(candidate.get("missing_requirements")),
+                "weak_controls": _normalize_string_list(candidate.get("weak_controls")),
+                "recommendations": _normalize_string_list(candidate.get("recommendations")),
+            }
+
+            domain_scores[domain] = domain_analysis.get("score", 50.0)
 
             for ctrl in controls:
                 status = "COMPLIANT"

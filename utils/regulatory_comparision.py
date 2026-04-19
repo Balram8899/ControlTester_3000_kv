@@ -157,7 +157,8 @@ class ControlExtractorAgent:
 
     def __init__(self, model: str, kb_vectorstore=None, kb_graph=None):
         self.llm = _make_llm(model, temperature=0.1)
-        self.batch_size = 3  # Process multiple chunks together for context
+        self.batch_size = 1  # Keep prompts small so long regulations don't stall Ollama
+        self.max_chunk_chars = 1800
         self.kb_graph = kb_graph
 
     def _get_kb_context(self, batch_text: str) -> str:
@@ -175,13 +176,18 @@ class ControlExtractorAgent:
             print(f"[WARNING] KB context retrieval failed (non-fatal): {exc}")
             return ""
 
+    def _build_batch_text(self, batch: List) -> str:
+        return "\n\n---CHUNK---\n\n".join(
+            c.page_content[:self.max_chunk_chars] for c in batch
+        )
+
     def run(self, chunks: List) -> List[Dict]:
         controls = []
 
         # Process in batches for better context
         for i in range(0, len(chunks), self.batch_size):
             batch = chunks[i:i + self.batch_size]
-            batch_text = "\n\n---CHUNK---\n\n".join([c.page_content for c in batch])
+            batch_text = self._build_batch_text(batch)
 
             # Fetch KB context to enrich the extraction prompt
             kb_context = self._get_kb_context(batch_text)
