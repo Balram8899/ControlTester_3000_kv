@@ -3,14 +3,14 @@ import os
 
 def get_llm(temperature: float = 0.2):
     """Return configured LLM. Default: Ollama (llama3:8b). Set LLM_PROVIDER=gemini to use Gemini."""
-    provider = os.environ.get("LLM_PROVIDER", "ollama").lower()
+    provider = os.environ.get("LLM_PROVIDER", "gemini").lower()
     if provider == "gemini":
         from langchain_google_genai import ChatGoogleGenerativeAI
         api_key = os.environ.get("GOOGLE_API_KEY")
         if not api_key:
             raise EnvironmentError("GOOGLE_API_KEY must be set when LLM_PROVIDER=gemini")
         return ChatGoogleGenerativeAI(
-            model=os.environ.get("GOOGLE_LLM_MODEL", "gemini-1.5-flash"),
+            model=os.environ.get("GOOGLE_LLM_MODEL", "gemini-3-flash-preview"),
             google_api_key=api_key,
             temperature=temperature,
         )

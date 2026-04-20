@@ -450,7 +450,7 @@ def create_findings_sheet(
         ws.row_dimensions[excel_row].height = 45
 
     # ── Column widths ─────────────────────────────────────────────────────────
-    widths = {"A": 5, "B": 13, "C": 35, "D": 13, "E": 12,
+    widths = {"A": 3, "B": 13, "C": 35, "D": 13, "E": 12,
               "F": 12, "G": 14, "H": 10, "I": 10,
               "J": 40, "K": 40, "L": 28}
     for col, w in widths.items():

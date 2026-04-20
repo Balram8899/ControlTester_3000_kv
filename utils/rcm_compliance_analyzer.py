@@ -116,8 +116,8 @@ def get_text_splitter():
     from langchain.text_splitter import RecursiveCharacterTextSplitter
     
     return RecursiveCharacterTextSplitter(
-        chunk_size=1000,
-        chunk_overlap=200,
+        chunk_size=4000,
+        chunk_overlap=400,
         length_function=len
     )
 
@@ -133,14 +133,14 @@ class RegulatoryRequirementExtractor:
         """Extract requirements from documents."""
         requirements = []
         
-        for idx, doc in enumerate(documents[:10]):  # Limit to 10 docs
+        for idx, doc in enumerate(documents[:50]):
             try:
                 content = doc.page_content if hasattr(doc, 'page_content') else str(doc)
-                
+
                 prompt = f"""Extract regulatory requirements from this document.
-                
+
 Document excerpt:
-{content[:1000]}
+{content[:4000]}
 
 List the key requirements, controls, or obligations.
 Format: One requirement per line, starting with "REQ:"
@@ -201,7 +201,7 @@ class RCMControlExtractor:
                     prompt = f"""Extract control information from this RCM document.
 
 Document excerpt:
-{content[:1000]}
+{content[:8000]}
 
 List the controls with their IDs, titles, and descriptions.
 Format: CONTROL_ID: [id] | TITLE: [title] | DESC: [description]
@@ -250,40 +250,41 @@ class ComplianceAnalyzer:
         """Analyze compliance (simple list output)."""
         results = []
         
-        for ctrl in rcm_controls[:50]:  # Limit for performance
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+
+        def _analyze_ctrl(ctrl):
             prompt = f"""Analyze if this control meets the regulatory requirements.
 
 Control: {ctrl.get('control_id')} - {ctrl.get('title')}
 Description: {ctrl.get('description', '')}
 
 Requirements:
-{chr(10).join([f"- {r.get('text', '')[:200]}" for r in reg_requirements[:5]])}
+{chr(10).join([f"- {r.get('text', '')[:1000]}" for r in reg_requirements[:20]])}
 
 Status: COMPLIANT / PARTIAL / NON-COMPLIANT
 Gaps: [list gaps]
 """
-            
             try:
                 response = self.llm.invoke(prompt)
-                
                 status = 'UNKNOWN'
-                if 'COMPLIANT' in response:
-                    status = 'COMPLIANT'
+                if 'NON-COMPLIANT' in response:
+                    status = 'NON-COMPLIANT'
                 elif 'PARTIAL' in response:
                     status = 'PARTIAL'
-                elif 'NON-COMPLIANT' in response:
-                    status = 'NON-COMPLIANT'
-                
-                results.append({
-                    'control_id': ctrl.get('control_id'),
-                    'control_title': ctrl.get('title'),
-                    'status': status,
-                    'analysis': response[:300]
-                })
-                
+                elif 'COMPLIANT' in response:
+                    status = 'COMPLIANT'
+                return {'control_id': ctrl.get('control_id'), 'control_title': ctrl.get('title'), 'status': status, 'analysis': response}
             except Exception as e:
                 logger.error(f"Analysis failed for {ctrl.get('control_id')}: {e}")
-        
+                return None
+
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            futures = [executor.submit(_analyze_ctrl, ctrl) for ctrl in rcm_controls[:200]]
+            for future in as_completed(futures):
+                result = future.result()
+                if result:
+                    results.append(result)
+
         return results
     
     def analyze_compliance(self, requirements: List[Dict], controls: List[Dict]) -> Dict[str, Any]:

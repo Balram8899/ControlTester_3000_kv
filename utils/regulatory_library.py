@@ -72,10 +72,8 @@ class ObligationExtractorAgent:
     obligation typing in addition to the standard control fields.
     """
 
-    # Ollama is configured with OLLAMA_NUM_PARALLEL=4 — use same parallelism
-    MAX_WORKERS = 4
-    # Larger batch = fewer total LLM calls
-    BATCH_SIZE = 10
+    MAX_WORKERS = 10
+    BATCH_SIZE = 25
     # Skip chunks too short to contain obligations
     MIN_CHUNK_CHARS = 80
 

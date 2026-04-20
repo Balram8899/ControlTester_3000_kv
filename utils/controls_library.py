@@ -509,7 +509,7 @@ def build_and_save_library_graph(store: "MongoControlsStore", graph_dir: str) ->
 # ------------------------------------------------------------------
 _KNOWN_DOMAINS = {
     "governance", "third_party", "change_management", "technology_refresh",
-    "access_control", "va_pt", "cryptography", "data_security", "network_security",
+    "access_control", "Vulnerability Mgmt.", "cryptography", "data_security", "network_security",
     "business_continuity", "incident_response", "system_security", "cyber_operations",
     "audit", "online_services", "emerging_tech",
 }

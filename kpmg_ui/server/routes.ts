@@ -25,11 +25,19 @@ function proxyToFastAPI(req: Request, res: Response) {
     path: targetPath + query,
     method: req.method,
     headers,
+    timeout: 600_000, // 10 minutes — long-running LLM operations
   };
 
   const proxyReq = httpRequest(options, (proxyRes) => {
     res.writeHead(proxyRes.statusCode!, proxyRes.headers);
     proxyRes.pipe(res, { end: true });
+  });
+
+  proxyReq.on("timeout", () => {
+    proxyReq.destroy();
+    if (!res.headersSent) {
+      res.status(504).json({ error: "Analysis timeout", detail: "Operation exceeded 10 minutes." });
+    }
   });
 
   proxyReq.on("error", (err) => {
@@ -89,5 +97,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.all("/api/*", proxyToFastAPI);
 
   const httpServer = createServer(app);
+  httpServer.timeout = 600_000;
+  httpServer.keepAliveTimeout = 620_000;
   return httpServer;
 }

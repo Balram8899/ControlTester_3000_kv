@@ -460,8 +460,12 @@ async def health():
         "active_sessions": len(session_manager.sessions)
     }
 
-@app.get("/models", tags=["models"], summary="Available Ollama models")
+@app.get("/models", tags=["models"], summary="Available models")
 async def models():
+    import os
+    if os.environ.get("LLM_PROVIDER", "ollama").lower() == "gemini":
+        model = os.environ.get("GOOGLE_LLM_MODEL", "gemini-3-flash-preview")
+        return {"models": [model], "count": 1}
     try:
         names = get_ollama_model_names()
         return {"models": names, "count": len(names)}

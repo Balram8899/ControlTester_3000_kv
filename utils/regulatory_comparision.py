@@ -35,7 +35,7 @@ CONTROL_DOMAINS = {
     "change_management": ["change", "patch", "update", "deployment", "release"],
     "technology_refresh": ["end of support", "eos", "obsolete", "outdated", "lifecycle"],
     "access_control": ["access", "authentication", "authorization", "privilege", "mfa", "multi-factor"],
-    "va_pt": ["vulnerability", "penetration", "testing", "assessment", "va", "pt"],
+    "Vuln. Mgmt.": ["vulnerability", "penetration", "testing", "assessment", "va", "pt"],
     "cryptography": ["cryptography", "encryption", "key management", "cipher", "crypto"],
     "data_security": ["data loss", "dlp", "data protection", "confidentiality", "data at rest"],
     "network_security": ["network", "firewall", "segmentation", "intrusion", "dmz"],
@@ -157,8 +157,8 @@ class ControlExtractorAgent:
 
     def __init__(self, model: str, kb_vectorstore=None, kb_graph=None):
         self.llm = _make_llm(model, temperature=0.1)
-        self.batch_size = 1  # Keep prompts small so long regulations don't stall Ollama
-        self.max_chunk_chars = 1800
+        self.batch_size = 5
+        self.max_chunk_chars = 8000
         self.kb_graph = kb_graph
 
     def _get_kb_context(self, batch_text: str) -> str:
@@ -181,26 +181,18 @@ class ControlExtractorAgent:
             c.page_content[:self.max_chunk_chars] for c in batch
         )
 
-    def run(self, chunks: List) -> List[Dict]:
-        controls = []
-
-        # Process in batches for better context
-        for i in range(0, len(chunks), self.batch_size):
-            batch = chunks[i:i + self.batch_size]
-            batch_text = self._build_batch_text(batch)
-
-            # Fetch KB context to enrich the extraction prompt
-            kb_context = self._get_kb_context(batch_text)
-            kb_section = ""
-            if kb_context:
-                kb_section = f"""KNOWLEDGE BASE CONTEXT (relevant risk/control standards to guide classification):
+    def _process_batch(self, i: int, batch: List, total_batches: int) -> List[Dict]:
+        batch_text = self._build_batch_text(batch)
+        kb_context = self._get_kb_context(batch_text)
+        kb_section = ""
+        if kb_context:
+            kb_section = f"""KNOWLEDGE BASE CONTEXT (relevant risk/control standards to guide classification):
 {kb_context}
 
 Use the above context to better identify and classify controls in the text below.
 
 """
-
-            prompt = f"""{kb_section}Extract ALL cybersecurity and IT risk control requirements from this text.
+        prompt = f"""{kb_section}Extract ALL cybersecurity and IT risk control requirements from this text.
 
 For EACH control, return a JSON object with:
 - control_id: sequential number
@@ -221,28 +213,31 @@ TEXT:
 
 Return ONLY the JSON array."""
 
-            try:
-                raw = self.llm.invoke(prompt)
-                parsed = safe_json_loads(raw, default=[])
+        try:
+            print(f"[INFO] Extracting controls batch {i+1}/{total_batches}...")
+            raw = self.llm.invoke(prompt)
+            parsed = safe_json_loads(raw, default=[])
+            if not isinstance(parsed, list):
+                parsed = []
+            for control in parsed:
+                control["source"] = batch[0].metadata["source"]
+                control["chunk_index"] = i
+                if control.get("control_domain") == "general" or not control.get("control_domain"):
+                    control["control_domain"] = classify_domain(control.get("control_statement", ""))
+            return parsed
+        except Exception as e:
+            print(f"Error processing batch {i}: {e}")
+            return []
 
-                if not isinstance(parsed, list):
-                    parsed = []
-
-                # Add metadata
-                for control in parsed:
-                    control["source"] = batch[0].metadata["source"]
-                    control["chunk_index"] = i
-
-                    # Auto-classify domain if not properly set
-                    if control.get("control_domain") == "general" or not control.get("control_domain"):
-                        control["control_domain"] = classify_domain(control.get("control_statement", ""))
-
-                    controls.append(control)
-
-            except Exception as e:
-                print(f"Error processing batch {i}: {e}")
-                continue
-
+    def run(self, chunks: List) -> List[Dict]:
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        batches = [chunks[i:i + self.batch_size] for i in range(0, len(chunks), self.batch_size)]
+        total = len(batches)
+        controls = []
+        with ThreadPoolExecutor(max_workers=min(8, total)) as executor:
+            futures = {executor.submit(self._process_batch, i, batch, total): i for i, batch in enumerate(batches)}
+            for future in as_completed(futures):
+                controls.extend(future.result())
         return controls
 
 

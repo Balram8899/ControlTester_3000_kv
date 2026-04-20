@@ -1,8 +1,10 @@
 import os
 import requests
 
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "gemini").lower()
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 OLLAMA_LLM_MODEL = os.getenv("OLLAMA_LLM_MODEL", "llama3:8b")
+GOOGLE_LLM_MODEL = os.getenv("GOOGLE_LLM_MODEL", "gemini-3-flash-preview")
 
 
 def get_ollama_model_names():
@@ -20,6 +22,13 @@ def get_ollama_model_names():
 
 
 def get_google_model_names():
+    return [GOOGLE_LLM_MODEL]
+
+
+def get_model_names():
+    """Return available models for the configured provider."""
+    if LLM_PROVIDER == "gemini":
+        return get_google_model_names()
     return get_ollama_model_names()
 
 
@@ -29,4 +38,4 @@ def _ollama_models():
 
 
 def _google_models():
-    return _ollama_models()
+    return get_google_model_names()

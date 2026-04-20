@@ -41,7 +41,12 @@
       "Bash(python -m pytest tests/test_control_testing_api.py -v)",
       "Bash(python -m pytest tests/test_assets_api.py -q)",
       "Bash(python -m pytest tests/test_risk_assessment_api.py -q)",
-      "Bash(docker compose *)"
+      "Bash(docker compose *)",
+      "Read(//c/tmp/kpmg-branding-extracted/kpmg-branding/**)",
+      "Read(//tmp/kpmg-branding-extracted/kpmg-branding/**)",
+      "Read(//tmp/**)",
+      "Read(//c/Users/kvarm/AppData/Local/Temp/**)",
+      "Bash(kill %1)"
     ]
   }
 }

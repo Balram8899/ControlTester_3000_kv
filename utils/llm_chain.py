@@ -4,8 +4,6 @@ from utils.file_handlers import infer_control_domain, infer_doc_category
 from utils.assessment_schema import Assessment
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_ollama import ChatOllama, OllamaEmbeddings
-from langchain_core.output_parsers import StrOutputParser
 import logging
 from langchain.schema import Document
 from langchain.prompts import PromptTemplate
@@ -18,41 +16,16 @@ import json
 import io
 from PIL import Image, ImageDraw, ImageFont
 from typing import Optional
+from utils.llm_factory import (
+    make_llm as _make_llm,
+    make_embeddings as _make_embeddings,
+    OLLAMA_LLM_MODEL,
+    OLLAMA_EMBEDDING_MODEL,
+    GOOGLE_LLM_MODEL,
+    GOOGLE_EMBEDDING_MODEL,
+)
 
 warnings.filterwarnings("ignore", category=UserWarning, module="openpyxl")
-
-OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-OLLAMA_LLM_MODEL = os.getenv("OLLAMA_LLM_MODEL", "llama3:8b")
-OLLAMA_EMBEDDING_MODEL = os.getenv("OLLAMA_EMBEDDING_MODEL", "nomic-embed-text:latest")
-
-# Backward-compatible aliases for older imports across the codebase.
-GOOGLE_LLM_MODEL = OLLAMA_LLM_MODEL
-GOOGLE_EMBEDDING_MODEL = OLLAMA_EMBEDDING_MODEL
-
-
-def _resolve_embedding_model(selected_model: str | None) -> str:
-    """Return the embedding model to use for a given LLM selection."""
-    if selected_model and "embed" in selected_model.lower():
-        return selected_model
-    return OLLAMA_EMBEDDING_MODEL
-
-
-def _make_llm(model: str | None = None, temperature: float = 0.1):
-    """Return a string-producing Ollama chat model."""
-    return ChatOllama(
-        model=model or OLLAMA_LLM_MODEL,
-        base_url=OLLAMA_BASE_URL,
-        temperature=temperature,
-        keep_alive="30m",
-    ) | StrOutputParser()
-
-
-def _make_embeddings(model: str | None = None):
-    """Return Ollama embeddings."""
-    return OllamaEmbeddings(
-        model=model or OLLAMA_EMBEDDING_MODEL,
-        base_url=OLLAMA_BASE_URL,
-    )
 
 logging.basicConfig(
     level=logging.INFO,
@@ -64,17 +37,18 @@ logger = logging.getLogger(__name__)
 
 def initialize(selected_model: str, embedding_model: str | None = None):
     """
-    Initialize LLM (and optionally embeddings) using provided models.
+    Initialize LLM and embeddings via the provider factory (respects LLM_PROVIDER env var).
+    selected_model is ignored when LLM_PROVIDER=gemini; the factory uses GOOGLE_LLM_MODEL.
     """
     global llm
     global embeddings
-    llm = _make_llm(selected_model)
-    embeddings = _make_embeddings(embedding_model or _resolve_embedding_model(selected_model))
+    llm = _make_llm()
+    embeddings = _make_embeddings()
 
 
 text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=800,
-    chunk_overlap=100,
+    chunk_size=4000,
+    chunk_overlap=200,
     length_function=len,
     add_start_index=True,
     separators=["\n\n", "\n", ". ", "! ", "? ", " ", ""]

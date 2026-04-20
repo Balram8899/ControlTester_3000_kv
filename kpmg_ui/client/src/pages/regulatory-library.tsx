@@ -187,7 +187,7 @@ function MappedControlsSection({ controls, onControlClick }: { controls: MappedC
   );
 }
 
-// ── DialogOblRow — obligation row inside the cross-library metric popup ────────
+// ── DialogOblRow - obligation row inside the cross-library metric popup ────────
 function DialogOblRow({
   obl, mappedCtrls, onControlClick, onObligationClick,
 }: {
@@ -285,7 +285,7 @@ function DialogOblRow({
   );
 }
 
-// ── DashboardOblRow — stable row for dashboard obligations list ───────────────
+// ── DashboardOblRow - stable row for dashboard obligations list ───────────────
 function DashboardOblRow({
   obl, hue, dashboardViewMode, mappedCtrls, controlsLoaded, onControlClick,
 }: {
@@ -408,7 +408,7 @@ function DashboardOblRow({
   );
 }
 
-// ── ObligationCard — stable component so expand state survives filter changes ──
+// ── ObligationCard - stable component so expand state survives filter changes ──
 function ObligationCard({
   obl, heading, hasFullText, mappedCtrls, controlsLoaded, onControlClick,
 }: {
@@ -736,7 +736,7 @@ export default function RegulatoryLibraryPage() {
       toast({
         title: "Ingested",
         description: mongoFailed
-          ? `${data.total_ingested} document(s) extracted. ⚠ MongoDB save failed — obligations visible this session only.`
+          ? `${data.total_ingested} document(s) extracted. ⚠ MongoDB save failed - obligations visible this session only.`
           : `${data.total_ingested} document(s) added to library.${remapSuffix}`,
         variant: mongoFailed ? "destructive" : "default",
       });
@@ -828,7 +828,7 @@ export default function RegulatoryLibraryPage() {
       setSelectedLibraryDoc(doc);
       setLibraryDomainFilter("all");
       setLibrarySearch("");
-      toast({ title: "Warning", description: "Could not load obligations — showing document summary only.", variant: "destructive" });
+      toast({ title: "Warning", description: "Could not load obligations - showing document summary only.", variant: "destructive" });
     } finally {
       setDetailLoading(false);
     }
@@ -940,7 +940,7 @@ export default function RegulatoryLibraryPage() {
       (o.section_reference ?? "").toLowerCase().includes(librarySearch.toLowerCase()))
   ) ?? [];
 
-  // ── Dashboard obligations — filtered list ────────────────────────────────
+  // ── Dashboard obligations - filtered list ────────────────────────────────
   const filteredDashboardObligations = useMemo(() => {
     const activeObls = dashboardViewMode === "merged"
       ? (mergedObligations ?? [])
@@ -988,20 +988,29 @@ export default function RegulatoryLibraryPage() {
       <div className="flex-1 flex overflow-hidden">
 
       {/* ── LEFT PANEL ─────────────────────────────────────────────────────── */}
-      <div className="shrink-0 flex flex-col bg-background/50 overflow-hidden transition-[width] duration-200" style={{ width: leftPanelOpen ? panelWidth : 0 }}>
+      <div
+        className="shrink-0 flex flex-col overflow-hidden border-r border-[#00338D]/8 bg-[linear-gradient(180deg,#F8FBFF_0%,#F3F7FB_100%)] transition-[width] duration-200"
+        style={{ width: leftPanelOpen ? panelWidth : 0 }}
+      >
 
         {/* Upload section */}
-        <div className="p-4 border-b space-y-3">
-          <h2 className="text-sm font-semibold flex items-center gap-2">
-            <BookOpen className="h-4 w-4 text-primary" />
-            Add Documents
-          </h2>
+        <div className="space-y-3 border-b border-[#00338D]/8 bg-white/78 p-4">
+          <div className="space-y-1">
+            <p className="kpmg-section-label text-[#1E49E2]">Library intake</p>
+            <h2 className="flex items-center gap-2 text-sm font-semibold text-[var(--ink-strong)]">
+              <BookOpen className="h-4 w-4 text-[var(--kpmg-blue)]" />
+              Add Documents
+            </h2>
+            <p className="text-[12px] leading-5 text-[var(--ink-muted)]">
+              Ingest regulatory source files and update the central obligation library.
+            </p>
+          </div>
 
           <div
-            className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors ${
+            className={`rounded-[18px] border border-dashed p-5 text-center cursor-pointer transition-colors ${
               libraryFiles.length > 0
-                ? "border-primary/50 bg-primary/5"
-                : "border-muted-foreground/25 hover:border-primary/50"
+                ? "border-[#1E49E2]/35 bg-[#EEF4FF]"
+                : "border-[#00338D]/18 bg-white hover:border-[#1E49E2]/38 hover:bg-[#F7FAFF]"
             }`}
             onClick={() => document.getElementById("lib-file-input")?.click()}
           >
@@ -1017,31 +1026,34 @@ export default function RegulatoryLibraryPage() {
                 e.target.value = "";
               }}
             />
-            <Upload className="h-6 w-6 mx-auto text-muted-foreground mb-1" />
-            <p className="text-xs text-foreground font-medium">Click to browse</p>
-            <p className="text-xs text-muted-foreground">PDF, Word, TXT, MD, CSV, Excel or image</p>
+            <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-[14px] border border-[#00338D]/10 bg-[#F3F7FF]">
+              <Upload className="h-5 w-5 text-[var(--cobalt)]" />
+            </div>
+            <p className="text-sm font-semibold text-[var(--ink-strong)]">Select source documents</p>
+            <p className="mt-1 text-[12px] leading-5 text-[var(--ink-muted)]">PDF, Word, TXT, MD, CSV, Excel, or image</p>
+            <p className="mt-3 text-[11px] font-medium uppercase tracking-[0.16em] text-[var(--cobalt)]">Click to browse</p>
           </div>
 
           {libraryFiles.length > 0 && (
-            <div className="space-y-1.5">
-              <div className="max-h-32 overflow-auto space-y-1">
+            <div className="space-y-2">
+              <div className="max-h-36 overflow-auto space-y-1.5">
                 {libraryFiles.map((f, i) => (
-                  <div key={i} className="flex items-center justify-between text-xs bg-muted/50 rounded px-2 py-1">
-                    <span className="truncate flex-1 mr-1">{f.name}</span>
+                  <div key={i} className="flex items-center justify-between gap-2 rounded-[14px] border border-[#00338D]/8 bg-white px-3 py-2 text-xs shadow-[0_10px_22px_-24px_rgba(12,35,60,0.3)]">
+                    <span className="truncate flex-1 font-medium text-[var(--ink-strong)]">{f.name}</span>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-4 w-4 shrink-0"
+                      className="h-6 w-6 shrink-0 rounded-full text-[var(--ink-muted)] hover:bg-[#F3F7FF] hover:text-[var(--ink-strong)]"
                       onClick={() => setLibraryFiles(prev => prev.filter((_, j) => j !== i))}
                     >
-                      <X className="h-3 w-3" />
+                      <X className="h-3.5 w-3.5" />
                     </Button>
                   </div>
                 ))}
               </div>
               <Button
                 size="sm"
-                className="w-full text-xs"
+                className="h-9 w-full rounded-[14px] bg-[var(--kpmg-blue)] text-xs font-semibold hover:bg-[var(--cobalt)]"
                 disabled={libraryIngesting}
                 onClick={handleLibraryIngest}
               >
@@ -1052,8 +1064,8 @@ export default function RegulatoryLibraryPage() {
                   </>
                 ) : (
                   <>
-                    <Play className="h-3 w-3 mr-1.5" />
-                    Extract & Save
+                    <Play className="h-3.5 w-3.5 mr-1.5" />
+                    Extract and Save
                   </>
                 )}
               </Button>
@@ -1061,13 +1073,13 @@ export default function RegulatoryLibraryPage() {
           )}
 
           {libraryIngestResults.length > 0 && (
-            <div className="space-y-1">
-              <p className="text-xs font-medium text-green-600">Recently added</p>
+            <div className="space-y-1.5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--green)]">Recently added</p>
               {libraryIngestResults.map((r, i) => (
-                <div key={i} className="flex items-center justify-between text-xs p-1.5 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded">
-                  <span className="font-medium truncate">{r.framework_name || r.filename}</span>
+                <div key={i} className="flex items-center justify-between gap-2 rounded-[14px] border border-[var(--green)]/18 bg-[rgba(0,154,68,0.06)] p-2 text-xs">
+                  <span className="font-medium truncate text-[var(--ink-strong)]">{r.framework_name || r.filename}</span>
                   <div className="flex items-center gap-1 shrink-0 ml-1">
-                    <Badge variant="outline" className="text-green-700 border-green-400 text-[10px]">{r.total_obligations}</Badge>
+                    <Badge variant="outline" className="border-[var(--green)]/40 text-[10px] text-[var(--green)]">{r.total_obligations}</Badge>
                     {!r.mongo_saved && (
                       <Badge variant="outline" className="text-orange-600 border-orange-400 text-[10px]" title="Not persisted">⚠ no DB</Badge>
                     )}
@@ -1079,18 +1091,18 @@ export default function RegulatoryLibraryPage() {
         </div>
 
         {/* Library header with view toggles */}
-        <div className="flex items-center justify-between px-4 py-2 border-b gap-1">
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide shrink-0">
+        <div className="flex items-center justify-between gap-1 border-b border-[#00338D]/8 bg-white/70 px-4 py-2.5">
+          <span className="text-xs font-semibold text-[var(--ink-muted)] uppercase tracking-wide shrink-0">
             Library
             {libraryDocuments.length > 0 && (
-              <Badge variant="secondary" className="ml-2 text-[10px]">{libraryDocuments.length}</Badge>
+              <Badge variant="secondary" className="ml-2 rounded-full bg-[#EEF4FF] text-[10px] text-[var(--kpmg-blue)]">{libraryDocuments.length}</Badge>
             )}
           </span>
           <div className="flex items-center gap-1">
             <Button
               variant={rightPanelView === "dashboard" ? "secondary" : "ghost"}
               size="icon"
-              className="h-6 w-6"
+              className="h-7 w-7 rounded-[12px]"
               title="Library Dashboard"
               onClick={() => { setRightPanelView("dashboard"); setSelectedLibraryDoc(null); }}
             >
@@ -1099,20 +1111,20 @@ export default function RegulatoryLibraryPage() {
             <Button
               variant={rightPanelView === "gap-analysis" ? "secondary" : "ghost"}
               size="icon"
-              className="h-6 w-6"
+              className="h-7 w-7 rounded-[12px]"
               title="Gap Analysis"
               onClick={() => { setRightPanelView("gap-analysis"); setSelectedLibraryDoc(null); setGapResults(null); }}
             >
               <GitCompare className="h-3 w-3" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={fetchLibraryDocuments} disabled={libraryLoading}>
+            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-[12px]" onClick={fetchLibraryDocuments} disabled={libraryLoading}>
               <RotateCcw className={`h-3 w-3 ${libraryLoading ? "animate-spin" : ""}`} />
             </Button>
             {libraryDocuments.length > 0 && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10"
+                className="h-7 w-7 rounded-[12px] text-destructive hover:text-destructive hover:bg-destructive/10"
                 title="Clear entire library"
                 disabled={clearingLibrary}
                 onClick={() => setShowClearConfirm(true)}
@@ -1124,9 +1136,9 @@ export default function RegulatoryLibraryPage() {
         </div>
         {/* Inline clear confirmation */}
         {showClearConfirm && (
-          <div className="mx-3 my-2 p-3 rounded-lg border border-destructive/40 bg-destructive/5 space-y-2">
+          <div className="mx-3 my-2 space-y-2 rounded-[16px] border border-destructive/30 bg-white p-3 shadow-[0_12px_28px_-28px_rgba(229,0,27,0.45)]">
             <p className="text-xs font-medium text-destructive">Clear entire regulatory library?</p>
-            <p className="text-[11px] text-muted-foreground">This will permanently delete all {libraryDocuments.length} document(s) and their obligations.</p>
+            <p className="text-[11px] text-[var(--ink-muted)]">This will permanently delete all {libraryDocuments.length} document(s) and their obligations.</p>
             <div className="flex gap-2">
               <Button size="sm" variant="destructive" className="h-7 text-xs flex-1" onClick={handleClearLibrary} disabled={clearingLibrary}>
                 {clearingLibrary ? <><div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1.5" />Clearing...</> : "Yes, clear all"}
@@ -1145,24 +1157,24 @@ export default function RegulatoryLibraryPage() {
             </div>
           )}
           {!libraryLoading && libraryDocuments.length === 0 && (
-            <p className="text-xs text-muted-foreground text-center py-8 px-4">
+            <p className="px-4 py-8 text-center text-xs text-[var(--ink-muted)]">
               No documents yet. Upload a regulatory document above.
             </p>
           )}
           {!libraryLoading && libraryDocuments.length > 0 && (
-            <div className="p-2 space-y-1">
+            <div className="space-y-2 p-2">
               {libraryDocuments.map((doc, i) => {
                 const isSelected = selectedLibraryDoc?.document_id === doc.document_id;
                 const isGapChecked = gapSelectedIds.has(doc.document_id);
                 return (
                   <div
                     key={i}
-                    className={`rounded-lg border cursor-pointer transition-colors group ${
+                    className={`group cursor-pointer rounded-[18px] border bg-white shadow-[0_10px_24px_-28px_rgba(12,35,60,0.38)] transition-colors ${
                       isSelected
-                        ? "border-primary bg-primary/5"
+                        ? "border-[var(--kpmg-blue)] bg-[#EEF4FF]"
                         : isGapChecked
-                          ? "border-blue-500 bg-blue-500/5"
-                          : "hover:border-primary/50 hover:bg-muted/40"
+                          ? "border-blue-500 bg-[#EEF4FF]"
+                          : "hover:border-[#1E49E2]/40 hover:bg-[#F8FBFF]"
                     }`}
                     onClick={() => rightPanelView === "gap-analysis" ? toggleGapDoc(doc.document_id) : handleLibraryDocClick(doc)}
                   >
@@ -1171,14 +1183,14 @@ export default function RegulatoryLibraryPage() {
                         <div className={`w-4 h-4 rounded border-2 shrink-0 mt-0.5 flex items-center justify-center ${
                           isGapChecked ? "bg-blue-500 border-blue-500" : "border-muted-foreground/40"
                         }`}>
-                          {isGapChecked && <span className="text-white text-[10px] leading-none">✓</span>}
+                          {isGapChecked && <span className="text-white text-[10px] leading-none">?</span>}
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium break-words leading-snug">{doc.framework_name}</p>
-                        <p className="text-xs text-muted-foreground break-all leading-snug mt-0.5">{doc.source_filename}</p>
+                        <p className="text-sm font-semibold break-words leading-snug text-[var(--ink-strong)]">{doc.framework_name}</p>
+                        <p className="mt-0.5 text-xs break-all leading-snug text-[var(--ink-muted)]">{doc.source_filename}</p>
                         <div className="flex items-center gap-1.5 mt-1">
-                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                          <Badge variant="secondary" className="rounded-full bg-[#EEF4FF] px-2 py-0 text-[10px] text-[var(--kpmg-blue)]">
                             {doc.total_obligations} obligations
                           </Badge>
                         </div>
@@ -1187,7 +1199,7 @@ export default function RegulatoryLibraryPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-6 w-6 shrink-0 self-start mt-0.5 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive"
+                          className="mt-0.5 h-7 w-7 shrink-0 self-start rounded-full opacity-0 text-destructive hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
                           onClick={e => { e.stopPropagation(); handleLibraryDelete(doc.document_id); }}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -1248,11 +1260,11 @@ export default function RegulatoryLibraryPage() {
       <div className="flex-1 flex flex-col overflow-hidden">
 
         {/* ── PANEL TOGGLE ─────────────────────────────────────────────── */}
-        <div className="shrink-0 flex items-center px-2 py-1 border-b">
+        <div className="shrink-0 flex items-center border-b border-[#00338D]/8 bg-white/75 px-2 py-1.5">
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7"
+            className="h-8 w-8 rounded-[12px] text-[var(--ink-muted)] hover:bg-[#F3F7FF] hover:text-[var(--ink-strong)]"
             onClick={() => setLeftPanelOpen(o => !o)}
             title={leftPanelOpen ? "Collapse panel" : "Expand panel"}
           >
@@ -1265,13 +1277,13 @@ export default function RegulatoryLibraryPage() {
         {/* ── DASHBOARD VIEW ─────────────────────────────────────────────── */}
         {rightPanelView === "dashboard" && (
           libraryDocuments.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center">
-                <Library className="h-8 w-8 opacity-30" />
+            <div className="flex-1 flex flex-col items-center justify-center gap-4 text-[var(--ink-muted)]">
+              <div className="flex h-16 w-16 items-center justify-center rounded-[18px] border border-[#00338D]/10 bg-[#F3F7FF]">
+                <Library className="h-8 w-8 text-[var(--cobalt)]/40" />
               </div>
               <div className="text-center space-y-1">
-                <p className="text-sm font-medium">Library is empty</p>
-                <p className="text-xs text-muted-foreground">Upload regulatory documents on the left to begin</p>
+                <p className="text-sm font-semibold text-[var(--ink-strong)]">Library is empty</p>
+                <p className="text-xs text-[var(--ink-muted)]">Upload regulatory documents on the left to begin</p>
               </div>
             </div>
           ) : (
@@ -1281,10 +1293,11 @@ export default function RegulatoryLibraryPage() {
                 {/* Page heading */}
                 <div className="flex items-center justify-between">
                   <div>
-                    <h1 className="text-lg font-semibold tracking-tight">Library Dashboard</h1>
-                    <p className="text-xs text-muted-foreground mt-0.5">Aggregate metrics across all ingested regulations</p>
+                    <p className="kpmg-section-label text-[#1E49E2]">Regulatory overview</p>
+                    <h1 className="mt-1 text-[28px] font-bold tracking-[-0.02em] text-[var(--ink-strong)]">Library Dashboard</h1>
+                    <p className="mt-1 text-[12px] text-[var(--ink-muted)]">Aggregate metrics across all ingested regulations</p>
                   </div>
-                  <Badge variant="outline" className="text-xs gap-1.5 px-2.5 py-1">
+                  <Badge variant="outline" className="gap-1.5 rounded-full border-[#00338D]/10 bg-white px-2.5 py-1 text-xs text-[var(--ink-strong)]">
                     <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
                     {libraryDocuments.length} document{libraryDocuments.length !== 1 ? "s" : ""}
                   </Badge>
@@ -1297,12 +1310,12 @@ export default function RegulatoryLibraryPage() {
                     { label: "Obligations", value: totalObligations.toLocaleString(), sub: "total extracted", accent: "from-violet-500/10 to-violet-500/5 border-violet-200 dark:border-violet-800", icon: "📋" },
                     { label: "Domains", value: sortedDomains.length.toString(), sub: "areas covered", accent: "from-emerald-500/10 to-emerald-500/5 border-emerald-200 dark:border-emerald-800", icon: "🏷️" },
                   ].map(({ label, value, sub, accent, icon }) => (
-                    <div key={label} className={`rounded-xl border bg-gradient-to-br ${accent} p-4`}>
+                    <div key={label} className={`rounded-[18px] border bg-gradient-to-br ${accent} p-4 shadow-[0_14px_28px_-28px_rgba(12,35,60,0.28)]`}>
                       <div className="flex items-start justify-between">
                         <div>
-                          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">{label}</p>
-                          <p className="text-3xl font-bold mt-1 leading-none">{value}</p>
-                          <p className="text-[11px] text-muted-foreground mt-1.5">{sub}</p>
+                          <p className="text-[11px] font-medium text-[var(--ink-muted)] uppercase tracking-wider">{label}</p>
+                          <p className="text-3xl font-bold mt-1 leading-none text-[var(--ink-strong)]">{value}</p>
+                          <p className="text-[11px] text-[var(--ink-muted)] mt-1.5">{sub}</p>
                         </div>
                         <span className="text-xl opacity-60">{icon}</span>
                       </div>
@@ -1310,20 +1323,20 @@ export default function RegulatoryLibraryPage() {
                   ))}
                   {/* Merged KPI card */}
                   <div
-                    className="rounded-xl border bg-card p-4 cursor-pointer hover:border-primary/50 transition-colors"
+                    className="rounded-[18px] border border-[#00338D]/12 bg-card p-4 cursor-pointer shadow-[0_14px_28px_-28px_rgba(12,35,60,0.28)] hover:border-[#1E49E2]/35 hover:bg-[#F8FBFF] transition-colors"
                     onClick={mergedObligations !== null
                       ? () => setDashboardViewMode("merged")
                       : fetchMergedObligations
                     }
                   >
-                    <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Merged</p>
-                    <p className="text-3xl font-bold mt-1 leading-none flex items-center gap-1">
+                    <p className="text-[11px] font-medium text-[var(--ink-muted)] uppercase tracking-wider">Merged</p>
+                    <p className="text-3xl font-bold mt-1 leading-none flex items-center gap-1 text-[var(--ink-strong)]">
                       {mergedObligationsLoading
                         ? <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary inline-block" />
-                        : mergedObligations !== null ? mergedObligations.length : "—"
+                        : mergedObligations !== null ? mergedObligations.length : "-"
                       }
                     </p>
-                    <p className="text-[11px] text-muted-foreground mt-1.5">
+                    <p className="text-[11px] text-[var(--ink-muted)] mt-1.5">
                       {mergedObligations !== null ? "after deduplication" : "click to compute"}
                     </p>
                   </div>
@@ -1331,18 +1344,18 @@ export default function RegulatoryLibraryPage() {
 
                 {/* Cross-Library Analysis card */}
                 {(hasCrossData || (controlsLoaded && allControls.length === 0)) && (
-                  <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-[#00338D] to-[#1E49E2] p-5 text-white space-y-4">
+                  <div className="dashboard-highlight rounded-[18px] overflow-hidden p-5 text-white space-y-4">
                     <div className="flex items-center justify-between gap-4">
                       <div>
-                        <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-white/60 mb-0.5">
+                        <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#ACEAFF] mb-0.5">
                           Cross-Library Analysis
                         </p>
-                        <h3 className="text-base font-bold">Regulation–Controls Coverage</h3>
+                        <h3 className="text-base font-bold">Regulation-Control Coverage</h3>
                       </div>
                       <button
                         type="button"
                         onClick={() => setShowCrossAnalysis(v => !v)}
-                        className="shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full border border-white/30 text-white hover:bg-white/10 transition-colors flex items-center gap-1.5"
+                        className="kpmg-dark-outline-button shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors flex items-center gap-1.5"
                       >
                         {showCrossAnalysis ? "Hide Breakdown" : "View Full Analysis"} <ArrowRight className="h-3 w-3" />
                       </button>
@@ -1367,19 +1380,19 @@ export default function RegulatoryLibraryPage() {
                         ].map(({ value, label, color }) => (
                           <div key={label}>
                             <p className="text-2xl font-bold leading-none" style={{ color }}>{value}</p>
-                            <p className="text-[11px] text-white/60 mt-1">{label}</p>
+                            <p className="mt-1 text-[11px] text-[#DCE7FA]">{label}</p>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm text-white/50">Load the Controls Library to see cross-library metrics.</p>
+                      <p className="text-sm text-[#DCE7FA]">Load the Controls Library to see cross-library metrics.</p>
                     )}
 
                     {/* Framework pills */}
                     {frameworkNames.length > 0 && (
                       <div className="flex flex-wrap gap-2">
                         {frameworkNames.map((name, i) => (
-                          <span key={i} className="text-[11px] font-medium px-3 py-1 rounded-full border border-white/20 bg-white/10 text-white/80">
+                          <span key={i} className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-medium text-[#E4EEFB]">
                             {name}
                           </span>
                         ))}
@@ -1412,10 +1425,10 @@ export default function RegulatoryLibraryPage() {
                           value: String(gapObls.length),
                           color: gapObls.length === 0 ? "#00FF88" : "#EAAA00",
                           explanation: gapObls.length === 0
-                            ? "All obligations have at least one mapped control — no gaps."
+                            ? "All obligations have at least one mapped control - no gaps."
                             : `${gapObls.length} obligations have no mapped controls. These are compliance risk areas.`,
                           obligations: gapObls,
-                          dialogTitle: `Gap Obligations — No Control Coverage (${gapObls.length})`,
+                          dialogTitle: `Gap Obligations - No Control Coverage (${gapObls.length})`,
                         },
                         {
                           icon: "📋",
@@ -1437,26 +1450,26 @@ export default function RegulatoryLibraryPage() {
                         },
                       ];
                       return (
-                        <div className="mt-2 rounded-xl bg-white/10 border border-white/20 p-4 space-y-1">
-                          <p className="text-xs font-semibold text-white/80 uppercase tracking-wider mb-3">Metric Breakdown — click to view obligations</p>
+                        <div className="mt-2 rounded-[16px] border border-white/20 bg-white/10 p-4 space-y-1">
+                          <p className="text-xs font-semibold text-white/80 uppercase tracking-wider mb-3">Metric Breakdown - click to view obligations</p>
                           {metrics.map(({ icon, metric, value, color, explanation, obligations, dialogTitle }) => (
                             <button
                               key={metric}
                               type="button"
                               disabled={obligations.length === 0}
-                              className="w-full flex items-start gap-3 text-left rounded-lg px-3 py-2.5 hover:bg-white/10 transition-colors disabled:opacity-60 disabled:cursor-default group"
+                              className="group flex w-full items-start gap-3 rounded-[14px] px-3 py-2.5 text-left transition-colors hover:bg-white/10 disabled:opacity-60 disabled:cursor-default"
                               onClick={() => obligations.length > 0 && setCrossMetricDialog({ title: dialogTitle, obligations })}
                             >
                               <span className="text-lg shrink-0 mt-0.5">{icon}</span>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="text-xs font-semibold text-white/90">{metric}</span>
+                                  <span className="text-xs font-semibold text-white">{metric}</span>
                                   <span className="text-sm font-bold font-mono" style={{ color }}>{value}</span>
                                   {obligations.length > 0 && (
-                                    <ArrowRight className="h-3 w-3 text-white/40 ml-auto group-hover:text-white/70 transition-colors" />
+                                    <ArrowRight className="ml-auto h-3 w-3 text-[#C8D8F0] transition-colors group-hover:text-white" />
                                   )}
                                 </div>
-                                <p className="text-[11px] text-white/55 mt-0.5 leading-relaxed">{explanation}</p>
+                                <p className="mt-0.5 text-[11px] leading-relaxed text-[#DCE7FA]">{explanation}</p>
                               </div>
                             </button>
                           ))}
@@ -1466,21 +1479,21 @@ export default function RegulatoryLibraryPage() {
                   </div>
                 )}
 
-                {/* Domain Distribution — clickable filter bars */}
+                {/* Domain Distribution - clickable filter bars */}
                 {sortedDomains.length > 0 && (
-                  <div className="rounded-xl border bg-card p-4 space-y-3">
+                  <div className="rounded-[18px] border border-[#00338D]/10 bg-card p-4 space-y-3 shadow-[0_14px_28px_-28px_rgba(12,35,60,0.22)]">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-semibold">Domain Distribution</h3>
+                      <h3 className="text-sm font-semibold text-[var(--ink-strong)]">Domain Distribution</h3>
                       {dashboardDomainFilter !== "all" && (
                         <button
-                          className="text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+                          className="text-[10px] text-[var(--ink-muted)] hover:text-[var(--ink-strong)] underline underline-offset-2 transition-colors"
                           onClick={() => setDashboardDomainFilter("all")}
                         >
                           Clear filter
                         </button>
                       )}
                     </div>
-                    <p className="text-[11px] text-muted-foreground -mt-1">Click a bar to filter obligations below</p>
+                    <p className="-mt-1 text-[11px] text-[var(--ink-muted)]">Click a bar to filter obligations below</p>
                     <div className="space-y-1.5">
                       {sortedDomains.map(([domain, count], i) => {
                         const hue = HUES[i % HUES.length];
@@ -1490,8 +1503,8 @@ export default function RegulatoryLibraryPage() {
                         return (
                           <div
                             key={domain}
-                            className={`flex items-center gap-3 rounded-lg px-2 py-1 cursor-pointer transition-colors ${
-                              isActive ? "ring-1 ring-primary/30 bg-primary/5" : "hover:bg-muted/50"
+                            className={`flex items-center gap-3 rounded-[14px] px-3 py-2 cursor-pointer transition-colors ${
+                              isActive ? "ring-1 ring-[#1E49E2]/25 bg-[#EEF4FF]" : "hover:bg-[#F7FAFF]"
                             }`}
                             onClick={() => setDashboardDomainFilter(isActive ? "all" : domain)}
                           >
@@ -1501,7 +1514,7 @@ export default function RegulatoryLibraryPage() {
                             >
                               {domain.replace(/_/g, " ")}
                             </span>
-                            <div className="flex-1 h-3.5 bg-muted rounded-full overflow-hidden">
+                            <div className="flex-1 h-3.5 overflow-hidden rounded-full bg-[#E6EDF7]">
                               <div
                                 className="h-full rounded-full transition-all duration-500"
                                 style={{
@@ -1511,7 +1524,7 @@ export default function RegulatoryLibraryPage() {
                                 }}
                               />
                             </div>
-                            <span className="text-xs text-muted-foreground w-8 text-right shrink-0 font-medium">{count}</span>
+                            <span className="w-8 shrink-0 text-right text-xs font-medium text-[var(--ink-muted)]">{count}</span>
                           </div>
                         );
                       })}
@@ -1520,19 +1533,19 @@ export default function RegulatoryLibraryPage() {
                 )}
 
                 {/* All / Merged Obligations list */}
-                <div className="rounded-xl border bg-card overflow-hidden">
-                  <div className="p-3 border-b bg-muted/30 space-y-2">
+                <div className="overflow-hidden rounded-[18px] border border-[#00338D]/10 bg-card shadow-[0_14px_28px_-28px_rgba(12,35,60,0.22)]">
+                  <div className="space-y-2 border-b border-[#00338D]/8 bg-[#F8FAFD] p-3">
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
-                        <h3 className="text-sm font-semibold">
+                        <h3 className="text-sm font-semibold text-[var(--ink-strong)]">
                           {dashboardViewMode === "merged" ? "Merged Obligations" : "All Obligations"}
                           {dashboardDomainFilter !== "all" && (
-                            <span className="ml-2 text-[11px] font-normal text-muted-foreground capitalize">
-                              — {dashboardDomainFilter.replace(/_/g, " ")}
+                            <span className="ml-2 text-[11px] font-normal text-[var(--ink-muted)] capitalize">
+                              - {dashboardDomainFilter.replace(/_/g, " ")}
                             </span>
                           )}
                         </h3>
-                        <Badge variant="secondary" className="text-[10px]">
+                        <Badge variant="secondary" className="rounded-full bg-[#EEF4FF] text-[10px] text-[var(--kpmg-blue)]">
                           {filteredDashboardObligations.length} shown
                         </Badge>
                       </div>
@@ -1540,7 +1553,7 @@ export default function RegulatoryLibraryPage() {
                         <Button
                           size="sm"
                           variant={dashboardViewMode === "all" ? "default" : "outline"}
-                          className="h-7 text-xs"
+                          className="h-8 rounded-[12px] text-xs"
                           onClick={() => setDashboardViewMode("all")}
                         >
                           <BookOpen className="h-3 w-3 mr-1" />
@@ -1549,7 +1562,7 @@ export default function RegulatoryLibraryPage() {
                         <Button
                           size="sm"
                           variant={dashboardViewMode === "merged" ? "default" : "outline"}
-                          className="h-7 text-xs"
+                          className="h-8 rounded-[12px] text-xs"
                           onClick={mergedObligations !== null
                             ? () => setDashboardViewMode("merged")
                             : fetchMergedObligations
@@ -1565,10 +1578,10 @@ export default function RegulatoryLibraryPage() {
                       </div>
                     </div>
                     <div className="relative">
-                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--ink-muted)]" />
                       <Input
-                        className="pl-8 h-7 text-xs"
-                        placeholder="Search obligations…"
+                        className="h-8 rounded-[12px] border-[#00338D]/10 bg-white pl-8 text-xs"
+                        placeholder="Search obligations..."
                         value={dashboardSearch}
                         onChange={e => setDashboardSearch(e.target.value)}
                       />
@@ -2271,3 +2284,4 @@ export default function RegulatoryLibraryPage() {
     </div>
   );
 }
+
