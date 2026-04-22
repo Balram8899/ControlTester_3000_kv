@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1.7
 # Multi-stage build for Agent-Assess application
 FROM node:20-alpine AS base
 
@@ -10,8 +9,7 @@ WORKDIR /kpmg_ui
 COPY package.json package-lock.json* ./
 
 # Install dependencies
-RUN --mount=type=cache,target=/root/.npm \
-    npm ci
+RUN npm ci
 
 # Builder stage
 FROM base AS builder

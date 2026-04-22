@@ -1,0 +1,29 @@
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list
+  - generic [ref=e4]:
+    - generic [ref=e6]:
+      - img "KPMG"
+    - generic [ref=e7]:
+      - heading "Sign in" [level=1] [ref=e8]
+      - paragraph [ref=e9]: Technology risk assessment, control testing, and reporting platform.
+      - paragraph [ref=e10]: Authorised users only.
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]: Username
+        - textbox "Username" [ref=e14]:
+          - /placeholder: admin@bank.com
+          - text: admin@bank.com
+      - generic [ref=e15]:
+        - generic [ref=e16]: Password
+        - textbox "Password" [ref=e17]:
+          - /placeholder: Enter password
+      - button "Sign in" [ref=e18] [cursor=pointer]:
+        - text: Sign in
+        - img
+    - paragraph [ref=e19]:
+      - text: New user?
+      - button "Create an account" [ref=e20] [cursor=pointer]
+    - paragraph [ref=e21]:
+      - text: "@ 2026 KPMG India - TRACE confidential"
+      - text: Unauthorised access is prohibited.

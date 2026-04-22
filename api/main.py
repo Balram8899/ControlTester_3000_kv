@@ -30,6 +30,7 @@ from utils.test_script_parser import parse_test_script, validate_controls
 from utils.evidence_validator import validate_evidence_file
 from utils.audit_analyzer import analyze_all_controls, generate_overall_summary
 from utils.workpaper_filler import fill_workpaper_template
+from utils.llm_factory import resolve_llm_model_name
 
 # utils imports
 from utils.llm_chain import build_knowledge_base, assess_evidence_with_kb, generate_executive_summary
@@ -2755,6 +2756,7 @@ async def audit_start(
     Parses the test script and returns evidence checklist.
     """
     rid = _req_id()
+    selected_model = resolve_llm_model_name(selected_model)
     logger.info(f"[{rid}] POST /audit/start - model={selected_model}, file={test_script.filename}")
     
     # Cleanup expired sessions

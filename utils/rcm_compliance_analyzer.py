@@ -993,8 +993,9 @@ def parse_rcm_excel(file_path: str) -> Dict[str, List[Dict[str, Any]]]:
     Parse RCM Excel file with multiple sheets.
     
     Expected format:
-    - Row 1: Headers (Control Reference, Control Title, Control Description, Domain, Sub Domain)
-    - Row 2+: Control data
+    - Optional title/instruction rows
+    - Header row: Control Reference/ID, Control Title/Name, Control Description, Domain, Sub Domain
+    - Following rows: Control data
     
     Args:
         file_path: Path to Excel file
@@ -1008,28 +1009,14 @@ def parse_rcm_excel(file_path: str) -> Dict[str, List[Dict[str, Any]]]:
         wb = openpyxl.load_workbook(file_path, data_only=True)
         all_controls = {}
         
-        for sheet_name in wb.sheetnames:
-            ws = wb[sheet_name]
-            logger.info(f"Processing sheet: {sheet_name}")
-            
-            # Find header row (usually row 1)
-            headers = []
-            for cell in ws[1]:
-                if cell.value:
-                    headers.append(str(cell.value).strip())
-                else:
-                    headers.append(None)
-            
-            logger.info(f"Headers found: {headers}")
-            
-            # Map expected columns (flexible matching)
+        def _map_headers(headers: List[Optional[str]]) -> Dict[str, int]:
             col_map = {}
             for idx, header in enumerate(headers):
                 if not header:
                     continue
-                    
+
                 header_lower = header.lower()
-                
+
                 # reference: anything that looks like a control ID / code / ref
                 if any(kw in header_lower for kw in ('control reference', 'control ref', 'control id', 'ctrl id', 'ctrl ref')) or \
                    (('id' in header_lower or 'ref' in header_lower or 'code' in header_lower or 'number' in header_lower or 'no.' in header_lower) and 'description' not in header_lower and 'guidance' not in header_lower):
@@ -1049,7 +1036,47 @@ def parse_rcm_excel(file_path: str) -> Dict[str, List[Dict[str, Any]]]:
                 elif any(kw in header_lower for kw in ('domain', 'category', 'area', 'process', 'section', 'pillar')) and 'description' not in header_lower:
                     if 'domain' not in col_map:
                         col_map['domain'] = idx
+            return col_map
+
+        for sheet_name in wb.sheetnames:
+            ws = wb[sheet_name]
+            logger.info(f"Processing sheet: {sheet_name}")
             
+            # Find the header row. RCM files often have title/instruction rows above the table.
+            header_row_idx = None
+            headers: List[Optional[str]] = []
+            col_map: Dict[str, int] = {}
+            best_score = 0
+            max_scan_row = min(ws.max_row, 50)
+
+            for candidate_idx in range(1, max_scan_row + 1):
+                candidate_headers: List[Optional[str]] = []
+                for cell in ws[candidate_idx]:
+                    if cell.value:
+                        candidate_headers.append(str(cell.value).strip())
+                    else:
+                        candidate_headers.append(None)
+
+                candidate_map = _map_headers(candidate_headers)
+                score = len(candidate_map)
+                if 'reference' in candidate_map:
+                    score += 2
+                if 'title' in candidate_map or 'description' in candidate_map:
+                    score += 1
+
+                if score > best_score:
+                    best_score = score
+                    headers = candidate_headers
+                    col_map = candidate_map
+                    header_row_idx = candidate_idx
+
+                if 'reference' in candidate_map and ('title' in candidate_map or 'description' in candidate_map):
+                    headers = candidate_headers
+                    col_map = candidate_map
+                    header_row_idx = candidate_idx
+                    break
+
+            logger.info(f"Headers found on row {header_row_idx}: {headers}")
             logger.info(f"Column mapping: {col_map}")
             
             # Validate required columns
@@ -1057,9 +1084,9 @@ def parse_rcm_excel(file_path: str) -> Dict[str, List[Dict[str, Any]]]:
                 logger.warning(f"Sheet {sheet_name}: Missing 'Control Reference' column, skipping")
                 continue
             
-            # Extract controls (skip header row)
+            # Extract controls (skip rows through the detected header)
             controls = []
-            for row_idx in range(2, ws.max_row + 1):
+            for row_idx in range((header_row_idx or 1) + 1, ws.max_row + 1):
                 row = ws[row_idx]
                 
                 # Build control dict

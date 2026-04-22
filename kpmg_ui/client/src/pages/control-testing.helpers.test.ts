@@ -5,6 +5,7 @@ import {
   canGenerateWorkpaper,
   getControlTestingStepNumber,
 } from "./control-testing.helpers";
+import { resolveSelectedModel } from "@/lib/modelSelection";
 
 assert.equal(
   CONTROL_TESTING_API.start,
@@ -80,4 +81,28 @@ assert.equal(
   }),
   false,
   "Sessions without any accepted evidence should not offer workpaper generation yet",
+);
+
+assert.equal(
+  resolveSelectedModel("gemini-3-flash-preview", [
+    { value: "gemini-3-flash-preview", label: "Gemini 3 Flash Preview" },
+    { value: "gemini-2.5-flash", label: "Gemini 2.5 Flash" },
+  ]),
+  "gemini-3-flash-preview",
+  "A valid stored model should be preserved",
+);
+
+assert.equal(
+  resolveSelectedModel("gemini-2.0-flash", [
+    { value: "gemini-3-flash-preview", label: "Gemini 3 Flash Preview" },
+    { value: "gemini-2.5-flash", label: "Gemini 2.5 Flash" },
+  ]),
+  "gemini-3-flash-preview",
+  "An invalid stored model should fall back to the first available model",
+);
+
+assert.equal(
+  resolveSelectedModel("gemini-2.0-flash", undefined),
+  "gemini-2.0-flash",
+  "Without a fresh model list, the helper should preserve the stored model",
 );

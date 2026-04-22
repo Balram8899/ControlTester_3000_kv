@@ -36,29 +36,29 @@ export default function ControlTestingKpis({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
       <KpiCard
-        label="Controls Tested"
+        label="Controls tested"
         value={controlsTested}
-        subtitle="Total controls analyzed"
+        subtitle="Total controls analysed"
         accentColor="var(--kpmg-blue)"
         icon={<Shield className="h-5 w-5" />}
       />
       <KpiCard
-        label="Issues Identified"
+        label="Issues identified"
         value={issuesIdentified}
-        subtitle="Fail + Partial results"
+        subtitle="Fail and partial results"
         accentColor="#E5001B"
         icon={<AlertCircle className="h-5 w-5" />}
       />
 
       {/* Severity breakdown card — matches KpiCard visual style */}
       <div
-        className="dashboard-panel rounded-2xl border bg-card text-card-foreground p-4 card-interactive animate-fade-up"
+        className="dashboard-panel rounded-lg border bg-card text-card-foreground p-4 card-interactive animate-fade-up"
         style={{ borderTop: "3px solid #EAAA00" }}
       >
         <div className="flex items-start justify-between">
           <div className="w-full">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.18em]">
-              Severity Breakdown
+            <p className="text-[12px] font-semibold text-muted-foreground">
+              Severity breakdown
             </p>
             {totalIssues === 0 ? (
               <p className="text-sm text-muted-foreground mt-3">No issues found</p>

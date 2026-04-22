@@ -1,4 +1,5 @@
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { useCrossNav } from "@/contexts/CrossNavContext";
 import { useLibraryMetrics } from "@/contexts/LibraryMetricsContext";
 import {
@@ -38,6 +39,7 @@ import {
   AXIS_STYLE,
   GRID_STYLE,
 } from "@/lib/chartTheme";
+import { resolveSelectedModel, type SelectableModel } from "@/lib/modelSelection";
 
 function AnalysisCard({
   title,
@@ -59,14 +61,14 @@ function AnalysisCard({
   onViewFull: () => void;
 }) {
   return (
-        <div className="dashboard-panel card-interactive group flex flex-col overflow-hidden rounded-[18px] border bg-card">
+        <div className="dashboard-panel card-interactive group flex flex-col overflow-hidden rounded-lg border bg-card">
       <div className="h-1 shrink-0" style={{ background: accentColor }} />
       <div className="flex flex-1 flex-col p-5">
         <div className="mb-3 flex items-start justify-between gap-2">
           <span className="text-sm font-semibold leading-tight text-[var(--ink-strong)]">{title}</span>
           {preview && (
-            <span className="landing-chip shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium">
-              PREVIEW
+            <span className="landing-chip shrink-0 rounded-md px-2 py-0.5 text-[10px] font-medium">
+              Preview
             </span>
           )}
         </div>
@@ -81,7 +83,7 @@ function AnalysisCard({
           style={{ color: accentColor }}
           onClick={onViewFull}
         >
-          View Full Analysis <ArrowRight className="h-3 w-3" />
+          View full analysis <ArrowRight className="h-3 w-3" />
         </button>
       </div>
     </div>
@@ -90,7 +92,7 @@ function AnalysisCard({
 
 function AnalysisSkeleton() {
   return (
-    <div className="dashboard-panel animate-pulse overflow-hidden rounded-2xl border bg-card">
+    <div className="dashboard-panel animate-pulse overflow-hidden rounded-lg border bg-card">
       <div className="h-1 bg-muted" />
       <div className="space-y-3 p-5">
         <div className="h-3 w-36 rounded bg-muted" />
@@ -106,6 +108,9 @@ function AnalysisSkeleton() {
 export default function DashboardPage() {
   const [, setLocation] = useLocation();
   const { setPendingQualityAnalysis } = useCrossNav();
+  const { data: models } = useQuery<SelectableModel[]>({
+    queryKey: ["/api/models"],
+  });
 
   const {
     regDocs,
@@ -135,7 +140,10 @@ export default function DashboardPage() {
     refreshMetrics,
   } = useLibraryMetrics();
 
-  const selectedModel = typeof window !== "undefined" ? localStorage.getItem("selectedModel") : null;
+  const selectedModel = resolveSelectedModel(
+    typeof window !== "undefined" ? localStorage.getItem("selectedModel") : null,
+    models,
+  );
   const hasAnalysisData = !analysisLoading && allControls.length > 0 && totalObligations > 0;
   const librariesLoaded = !loading && (regDocs.length > 0 || ctrlDocs.length > 0);
   const obligationCoverageColor =
@@ -172,7 +180,7 @@ export default function DashboardPage() {
 
       <div className="flex-1 overflow-auto p-6">
         <div className="mx-auto max-w-6xl space-y-6">
-          <section className="dashboard-band rounded-2xl p-4">
+          <section className="dashboard-band rounded-lg p-4">
             <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="kpmg-section-label">Portfolio status</p>
@@ -185,7 +193,7 @@ export default function DashboardPage() {
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
               {loading ? (
                 Array.from({ length: 6 }).map((_, index) => (
-                  <div key={index} className="dashboard-panel rounded-2xl border bg-card p-4 animate-pulse">
+                  <div key={index} className="dashboard-panel rounded-lg border bg-card p-4 animate-pulse">
                     <div className="mb-3 h-2.5 w-20 rounded bg-muted" />
                     <div className="mb-2 h-7 w-12 rounded bg-muted" />
                     <div className="h-2 w-16 rounded bg-muted" />
@@ -208,14 +216,14 @@ export default function DashboardPage() {
                     icon={<Layers className="h-5 w-5" />}
                   />
                   <KpiCard
-                    label="Regulatory Domains"
+                    label="Regulatory domains"
                     value={regDomainCount}
                     subtitle="areas"
                     accentColor="var(--pacific)"
                     icon={<Scale className="h-5 w-5" />}
                   />
                   <KpiCard
-                    label="Policy Documents"
+                    label="Policy documents"
                     value={ctrlDocs.length}
                     subtitle="files"
                     accentColor="var(--dark-blue)"
@@ -229,7 +237,7 @@ export default function DashboardPage() {
                     icon={<ShieldCheck className="h-5 w-5" />}
                   />
                   <KpiCard
-                    label="Control Domains"
+                    label="Control domains"
                     value={ctrlDomainCount}
                     subtitle="areas"
                     accentColor="var(--amber)"
@@ -242,10 +250,10 @@ export default function DashboardPage() {
 
           {!loading && allDomains.length > 0 && (
             <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-              <div className="dashboard-panel card-interactive rounded-2xl border bg-card p-4 lg:col-span-2">
+              <div className="dashboard-panel card-interactive rounded-lg border bg-card p-4 lg:col-span-2">
                 <div className="mb-4 flex items-center gap-2">
                   <Activity className="h-4 w-4 text-[var(--pacific)]" />
-                  <h3 className="text-sm font-semibold font-display">Domain Coverage</h3>
+                  <h3 className="text-sm font-semibold font-display">Domain coverage</h3>
                   <span className="ml-auto text-[11px] text-muted-foreground">Regulations vs controls</span>
                 </div>
                 <ResponsiveContainer width="100%" height={260}>
@@ -277,10 +285,10 @@ export default function DashboardPage() {
                 </ResponsiveContainer>
               </div>
 
-              <div className="dashboard-panel card-interactive rounded-2xl border bg-card p-4">
+              <div className="dashboard-panel card-interactive rounded-lg border bg-card p-4">
                 <div className="mb-4 flex items-center gap-2">
                   <Layers className="h-4 w-4 text-[var(--kpmg-blue)]" />
-                  <h3 className="text-sm font-semibold font-display">Obligation Distribution</h3>
+                  <h3 className="text-sm font-semibold font-display">Obligation distribution</h3>
                 </div>
                 <ResponsiveContainer width="100%" height={200}>
                   <PieChart>
@@ -345,7 +353,7 @@ export default function DashboardPage() {
               <>
                 <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <AnalysisCard
-                    title="Controls-Obligations Coverage"
+                    title="Controls-obligations coverage"
                     accentColor="#009A44"
                     value={`${ctrlCoveragePct.toFixed(1)}%`}
                     valueColor="#009A44"
@@ -354,7 +362,7 @@ export default function DashboardPage() {
                     onViewFull={() => setLocation("/controls-library")}
                   />
                   <AnalysisCard
-                    title="Control Quality Analysis"
+                    title="Control quality analysis"
                     accentColor="#1E49E2"
                     value={`${avgMatchScore.toFixed(2)}/1.0`}
                     valueColor="#1E49E2"
@@ -366,7 +374,7 @@ export default function DashboardPage() {
                     }}
                   />
                   <AnalysisCard
-                    title="Control Duplicates"
+                    title="Control duplicates"
                     accentColor="#EAAA00"
                     value={String(potentialDuplicates)}
                     valueColor="#EAAA00"
@@ -375,7 +383,7 @@ export default function DashboardPage() {
                     onViewFull={() => setLocation("/controls-library")}
                   />
                   <AnalysisCard
-                    title="Domain Gap Assessment"
+                    title="Domain gap assessment"
                     accentColor="#00338D"
                     value={`${domainCoveragePct.toFixed(0)}%`}
                     valueColor="#00338D"
@@ -385,7 +393,7 @@ export default function DashboardPage() {
                   />
                 </div>
 
-                <div className="dashboard-highlight rounded-[18px] p-6 text-white">
+                <div className="dashboard-highlight rounded-lg p-6 text-white">
                   <div className="relative z-10">
                     <div className="mb-6 flex items-center justify-between gap-4">
                       <div>
@@ -397,9 +405,9 @@ export default function DashboardPage() {
                       <button
                         type="button"
                         onClick={() => setLocation("/regulatory-library")}
-                        className="kpmg-dark-outline-button shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors flex items-center gap-1.5"
+                        className="kpmg-dark-outline-button shrink-0 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors flex items-center gap-1.5"
                       >
-                        View Full Analysis <ArrowRight className="h-3 w-3" />
+                        View full analysis <ArrowRight className="h-3 w-3" />
                       </button>
                     </div>
 
@@ -440,7 +448,7 @@ export default function DashboardPage() {
                         {frameworkNames.map((name, index) => (
                           <span
                             key={index}
-                            className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-medium text-[#E4EEFB]"
+                            className="rounded-md border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-medium text-[#E4EEFB]"
                           >
                             {name}
                           </span>
@@ -454,10 +462,10 @@ export default function DashboardPage() {
           </section>
 
           <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <div className="dashboard-panel card-interactive rounded-2xl border bg-card p-4">
+            <div className="dashboard-panel card-interactive rounded-lg border bg-card p-4">
               <div className="mb-4 flex items-center gap-2">
                 <Cpu className="h-4 w-4 text-[var(--green)]" />
-                <h3 className="text-sm font-semibold font-display">System Status</h3>
+                <h3 className="text-sm font-semibold font-display">System status</h3>
               </div>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -470,7 +478,7 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Database className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">Regulatory Library</span>
+                    <span className="text-xs text-muted-foreground">Regulatory library</span>
                   </div>
                   <span className={`text-xs font-semibold ${regDocs.length > 0 ? "text-[var(--green)]" : "text-muted-foreground"}`}>
                     {regDocs.length > 0 ? `${regDocs.length} loaded` : "empty"}
@@ -479,7 +487,7 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Database className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">Controls Library</span>
+                    <span className="text-xs text-muted-foreground">Controls library</span>
                   </div>
                   <span className={`text-xs font-semibold ${ctrlDocs.length > 0 ? "text-[var(--green)]" : "text-muted-foreground"}`}>
                     {ctrlDocs.length > 0 ? `${ctrlDocs.length} loaded` : "empty"}
@@ -497,14 +505,14 @@ export default function DashboardPage() {
 
             {[
               {
-                label: "Regulatory Testing",
+                label: "Regulatory testing",
                 desc: "Run regulation comparison and RCM assessment workflows.",
                 path: "/regulatory-testing",
                 icon: <Scale className="h-4 w-4" />,
                 color: "var(--kpmg-blue)",
               },
               {
-                label: "Controls Library",
+                label: "Controls library",
                 desc: "Browse controls, quality signals, and mapping diagnostics.",
                 path: "/controls-library",
                 icon: <ShieldCheck className="h-4 w-4" />,
@@ -514,7 +522,7 @@ export default function DashboardPage() {
               <button
                 key={path}
                 onClick={() => setLocation(path)}
-                className="dashboard-panel card-interactive group rounded-2xl border bg-card p-4 text-left"
+                className="dashboard-panel card-interactive group rounded-lg border bg-card p-4 text-left"
                 style={{ borderLeft: `3px solid ${color}` }}
               >
                 <div className="mb-2 flex items-center gap-2">

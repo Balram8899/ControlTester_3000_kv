@@ -1,7 +1,51 @@
 import json
 from unittest.mock import MagicMock, patch
 
-from utils.rcm_compliance_analyzer import analyze_rcm_against_obligations
+import openpyxl
+
+from utils.rcm_compliance_analyzer import analyze_rcm_against_obligations, parse_rcm_excel
+
+
+def test_parse_rcm_excel_detects_header_after_title_rows(tmp_path):
+    workbook_path = tmp_path / "title-row-rcm.xlsx"
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "RCM"
+    ws.append(["FIRST NATIONAL BANK - TECHNOLOGY RISK & CONTROL MATRIX (RCM)"])
+    ws.append(["Frameworks: NIST SP 800-53 Rev 5 | ISO/IEC 27001:2022"])
+    ws.append([
+        "Control ID",
+        "Domain",
+        "Control Objective",
+        "Control Name",
+        "Control Description",
+        "Control Type",
+    ])
+    ws.append([
+        "IAM-01",
+        "Access Control",
+        "Restrict privileged access",
+        "Privileged access review",
+        "Privileged access is reviewed quarterly by control owners.",
+        "Detective",
+    ])
+    ws.append([
+        "LOG-01",
+        "Cyber Operations",
+        "Monitor security events",
+        "Security event monitoring",
+        "Security events are monitored and escalated for investigation.",
+        "Detective",
+    ])
+    wb.save(workbook_path)
+
+    parsed = parse_rcm_excel(str(workbook_path))
+
+    assert list(parsed) == ["RCM"]
+    assert [control["reference"] for control in parsed["RCM"]] == ["IAM-01", "LOG-01"]
+    assert parsed["RCM"][0]["title"] == "Privileged access review"
+    assert parsed["RCM"][0]["description"] == "Privileged access is reviewed quarterly by control owners."
+    assert parsed["RCM"][0]["domain"] == "Access Control"
 
 
 def test_analyze_rcm_against_obligations_batches_multi_domain_llm_analysis():

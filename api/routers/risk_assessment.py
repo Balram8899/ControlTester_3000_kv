@@ -1,10 +1,12 @@
 # api/routers/risk_assessment.py
 from __future__ import annotations
 
+import datetime as dt
 import os
 import re as _re
 import uuid
 import logging
+from collections import Counter
 from datetime import datetime
 from typing import Any, Literal, Optional
 
@@ -13,6 +15,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from utils.assessment_questions import get_sections
+from utils.risk_scorer import compute_cia_total, compute_criticality
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/risk-assessment", tags=["risk-assessment"])
@@ -266,6 +269,492 @@ def _rule_layer_scores(responses: list[dict]) -> tuple[int, int]:
     return likelihood, impact
 
 
+def _format_calendar_date(value: str | datetime | None) -> str:
+    if isinstance(value, str):
+        try:
+            value = dt.datetime.fromisoformat(value)
+        except ValueError:
+            return value
+    try:
+        return value.strftime("%B %d, %Y").replace(" 0", " ")
+    except Exception:
+        return "Unknown"
+
+
+def _cia_band_from_values(confidentiality: int, integrity: int, availability: int) -> tuple[int, str]:
+    total = compute_cia_total(confidentiality, integrity, availability)
+    return total, compute_criticality(total)
+
+
+def _resolve_subject_profile(asset_store: Any, asset_id: str, ad_hoc_map: dict[str, dict]) -> dict[str, Any]:
+    asset = asset_store.get(asset_id)
+    ad_hoc = ad_hoc_map.get(asset_id)
+    if asset:
+        return {
+            "id": asset_id,
+            "name": asset.name,
+            "description": getattr(asset, "description", ""),
+            "type": getattr(asset, "type", "Registered Asset"),
+            "owner": getattr(asset, "owner", ""),
+            "support_type": getattr(asset, "support_type", None),
+            "hosting_type": getattr(asset, "hosting_type", None),
+            "classification": getattr(asset, "classification", ""),
+            "jurisdiction": getattr(asset, "jurisdiction", ""),
+            "confidentiality": getattr(asset, "confidentiality", 0),
+            "integrity": getattr(asset, "integrity", 0),
+            "availability": getattr(asset, "availability", 0),
+            "cia_total": getattr(asset, "cia_total", 0),
+            "criticality": getattr(asset, "criticality", "Unknown"),
+        }
+    if ad_hoc:
+        cia_total, criticality = _cia_band_from_values(
+            ad_hoc.get("confidentiality", 3),
+            ad_hoc.get("integrity", 3),
+            ad_hoc.get("availability", 3),
+        )
+        return {
+            "id": asset_id,
+            "name": ad_hoc.get("name", asset_id),
+            "description": ad_hoc.get("description", ""),
+            "type": "Ad hoc application",
+            "owner": ad_hoc.get("owner", ""),
+            "support_type": ad_hoc.get("support_type", None),
+            "hosting_type": ad_hoc.get("hosting_type", None),
+            "classification": ad_hoc.get("classification", ""),
+            "jurisdiction": ad_hoc.get("jurisdiction", ""),
+            "confidentiality": ad_hoc.get("confidentiality", 3),
+            "integrity": ad_hoc.get("integrity", 3),
+            "availability": ad_hoc.get("availability", 3),
+            "cia_total": cia_total,
+            "criticality": criticality,
+        }
+    return {
+        "id": asset_id,
+        "name": asset_id,
+        "description": "",
+        "type": "Unknown subject",
+        "owner": "",
+        "support_type": None,
+        "hosting_type": None,
+        "classification": "",
+        "jurisdiction": "",
+        "confidentiality": 0,
+        "integrity": 0,
+        "availability": 0,
+        "cia_total": 0,
+        "criticality": "Unknown",
+    }
+
+
+def _clean_report_text(value: str) -> str:
+    replacements = {
+        "â€”": "-",
+        "â€“": "-",
+        "—": "-",
+        "–": "-",
+        "â€™": "'",
+        "’": "'",
+        "â€œ": '"',
+        "â€\x9d": '"',
+        "“": '"',
+        "”": '"',
+    }
+    for old, new in replacements.items():
+        value = value.replace(old, new)
+    return value
+
+
+_RISK_CATEGORY_DOMAIN_HINTS: dict[str, list[str]] = {
+    "Operational": ["access_control", "system_security", "cyber_operations", "business_continuity", "governance"],
+    "Technical": ["system_security", "network_security", "application_security", "access_control", "cyber_operations"],
+    "Privacy": ["data_security", "access_control", "cryptography", "online_services"],
+    "Regulatory": ["governance", "audit", "third_party", "data_security"],
+    "Financial": ["governance", "third_party", "business_continuity", "access_control"],
+    "Reputational": ["governance", "incident_response", "third_party", "cyber_operations"],
+}
+
+_RISK_KEYWORD_DOMAIN_HINTS: dict[str, list[str]] = {
+    "access": ["access_control"],
+    "identity": ["access_control"],
+    "authentication": ["access_control"],
+    "authorization": ["access_control"],
+    "privileged": ["access_control"],
+    "mfa": ["access_control"],
+    "monitoring": ["cyber_operations", "audit"],
+    "logging": ["cyber_operations", "audit"],
+    "incident": ["incident_response", "cyber_operations"],
+    "backup": ["business_continuity"],
+    "recovery": ["business_continuity"],
+    "availability": ["business_continuity"],
+    "encryption": ["cryptography", "data_security"],
+    "data": ["data_security"],
+    "network": ["network_security"],
+    "vulnerability": ["va_pt", "system_security"],
+    "patch": ["system_security", "change_management"],
+    "change": ["change_management"],
+    "vendor": ["third_party"],
+    "third": ["third_party"],
+    "party": ["third_party"],
+}
+
+
+def _tokenize_match_text(text: str) -> set[str]:
+    cleaned = _clean_report_text(str(text or "")).lower()
+    return {token for token in _re.findall(r"[a-z0-9]+", cleaned) if len(token) > 2}
+
+
+def _normalize_controls_for_suggestion(raw_controls: list[dict]) -> list[dict]:
+    normalized: list[dict] = []
+    seen_ids: set[str] = set()
+    for control in raw_controls:
+        control_id = str(control.get("control_id") or control.get("id") or "").strip()
+        control_title = str(
+            control.get("control_title")
+            or control.get("control_name")
+            or control.get("title")
+            or control.get("name")
+            or ""
+        ).strip()
+        if not control_id or not control_title or control_id in seen_ids:
+            continue
+        seen_ids.add(control_id)
+        normalized.append({
+            "control_id": control_id,
+            "control_title": _clean_report_text(control_title),
+            "description": _clean_report_text(str(control.get("description") or "")),
+            "domain": str(control.get("domain") or "General"),
+            "keywords": [str(keyword) for keyword in control.get("keywords", [])],
+        })
+    return normalized
+
+
+def _preferred_control_domains_for_risk(risk: dict) -> list[str]:
+    domains = list(_RISK_CATEGORY_DOMAIN_HINTS.get(str(risk.get("risk_category") or ""), []))
+    risk_text = " ".join([
+        str(risk.get("title") or ""),
+        str(risk.get("description") or ""),
+        str(risk.get("human_rationale") or ""),
+    ])
+    for token in _tokenize_match_text(risk_text):
+        domains.extend(_RISK_KEYWORD_DOMAIN_HINTS.get(token, []))
+    seen: set[str] = set()
+    ordered: list[str] = []
+    for domain in domains:
+        if domain and domain not in seen:
+            seen.add(domain)
+            ordered.append(domain)
+    return ordered
+
+
+def _score_control_for_risk(risk: dict, control: dict) -> tuple[int, list[str]]:
+    risk_tokens = _tokenize_match_text(
+        " ".join([
+            str(risk.get("title") or ""),
+            str(risk.get("description") or ""),
+            str(risk.get("human_rationale") or ""),
+            str(risk.get("risk_category") or ""),
+        ])
+    )
+    title_tokens = _tokenize_match_text(control.get("control_title", ""))
+    description_tokens = _tokenize_match_text(control.get("description", ""))
+    keyword_tokens = _tokenize_match_text(" ".join(control.get("keywords", [])))
+    control_tokens = title_tokens | description_tokens | keyword_tokens
+    shared_tokens = sorted(risk_tokens & control_tokens)
+    preferred_domains = _preferred_control_domains_for_risk(risk)
+
+    score = len(shared_tokens) + (2 * len(risk_tokens & title_tokens))
+    reasons: list[str] = []
+    if shared_tokens:
+        reasons.append(f"Shared terms: {', '.join(shared_tokens[:3])}")
+    if control.get("domain") in preferred_domains:
+        score += 2
+        reasons.append(f"Matches {control['domain']} control domain")
+        if preferred_domains and control.get("domain") == preferred_domains[0]:
+            score += 1
+    return score, reasons
+
+
+def _fallback_control_suggestions(risks: list[dict], controls: list[dict]) -> list[dict]:
+    suggestions: list[dict] = []
+    for risk in risks:
+        scored: list[tuple[int, dict, list[str]]] = []
+        for control in controls:
+            score, reasons = _score_control_for_risk(risk, control)
+            if score > 0:
+                scored.append((score, control, reasons))
+
+        if not scored:
+            preferred_domains = _preferred_control_domains_for_risk(risk)
+            for control in controls:
+                if control.get("domain") in preferred_domains:
+                    scored.append((1, control, [f"Matches {control['domain']} control domain"]))
+
+        if not scored:
+            scored = [(1, control, ["Selected as a baseline control-library safeguard for manual review."]) for control in controls[:3]]
+
+        ranked_controls = sorted(
+            scored,
+            key=lambda item: (-item[0], item[1].get("control_title", "")),
+        )[:3]
+
+        for score, control, reasons in ranked_controls:
+            suggestions.append({
+                "risk_id": risk["id"],
+                "control_id": control["control_id"],
+                "control_title": control["control_title"],
+                "rationale": "; ".join(reasons) if reasons else "Selected from the controls library for this risk.",
+                "relevance_score": max(1, min(5, score)),
+            })
+    return suggestions
+
+
+def _normalize_llm_suggestions(raw_suggestions: list[dict], risks: list[dict], controls: list[dict]) -> list[dict]:
+    controls_by_id = {control["control_id"]: control for control in controls}
+    valid_risk_ids = {risk["id"] for risk in risks}
+    default_risk_id = risks[0]["id"] if len(risks) == 1 else None
+    normalized: list[dict] = []
+    seen_pairs: set[tuple[str, str]] = set()
+
+    for item in raw_suggestions:
+        if not isinstance(item, dict):
+            continue
+        control_id = str(item.get("control_id") or "").strip()
+        if control_id not in controls_by_id:
+            continue
+        risk_id = str(item.get("risk_id") or "").strip()
+        if risk_id not in valid_risk_ids:
+            if default_risk_id is None:
+                continue
+            risk_id = default_risk_id
+        pair = (risk_id, control_id)
+        if pair in seen_pairs:
+            continue
+        seen_pairs.add(pair)
+        try:
+            relevance_score = int(item.get("relevance_score", 3))
+        except (TypeError, ValueError):
+            relevance_score = 3
+        control = controls_by_id[control_id]
+        normalized.append({
+            "risk_id": risk_id,
+            "control_id": control_id,
+            "control_title": _clean_report_text(str(item.get("control_title") or control["control_title"])),
+            "rationale": _clean_report_text(str(item.get("rationale") or "Selected from the controls library.")),
+            "relevance_score": max(1, min(5, relevance_score)),
+        })
+    return normalized
+
+
+def _build_risk_assessment_report(ra: RiskAssessment, asset_store: Any, generated_at: datetime | None = None) -> str:
+    generated_at = generated_at or datetime.utcnow()
+    ad_hoc_map = {a["id"]: a for a in ra.ad_hoc_applications}
+    responses_by_asset: dict[str, list[dict]] = {}
+    for response in ra.responses:
+        responses_by_asset.setdefault(response["asset_id"], []).append(response)
+
+    risks_by_asset: dict[str, list[dict]] = {}
+    for risk in ra.risks:
+        risks_by_asset.setdefault(risk["asset_id"], []).append(risk)
+
+    controls_by_risk: dict[str, list[str]] = {}
+    for control in ra.applied_controls:
+        controls_by_risk.setdefault(control["risk_id"], []).append(control["control_id"])
+
+    suggestions_by_risk: dict[str, list[dict]] = {}
+    for suggestion in (ra.suggested_controls or []):
+        suggestions_by_risk.setdefault(suggestion["risk_id"], []).append(suggestion)
+
+    sections = get_sections()
+    sections_total = len(sections)
+    question_count = sum(len(section["questions"]) for section in sections)
+    answer_counts = Counter((response.get("answer") or "").lower() for response in ra.responses)
+    risk_band_counts = Counter(risk.get("inherent_risk_band", "Unknown") for risk in ra.risks)
+    risk_category_counts = Counter(risk.get("risk_category", "Uncategorised") for risk in ra.risks)
+    subject_profiles = [
+        _resolve_subject_profile(asset_store, asset_id, ad_hoc_map)
+        for asset_id in ra.asset_ids
+    ]
+    ranked_risks = sorted(
+        ra.risks,
+        key=lambda risk: (-risk.get("inherent_risk_score", 0), risk.get("title", "")),
+    )
+    missing_suggestions = [risk for risk in ra.risks if not suggestions_by_risk.get(risk["id"])]
+
+    lines = [
+        "# Report Header",
+        f"Assessment Name: {ra.title}",
+        f"Assessment Description: {ra.description or 'Not provided'}",
+        f"Date of Report: {_format_calendar_date(generated_at)}",
+        f"Assessment Created: {_format_calendar_date(ra.created_at)}",
+        f"Assessment Updated: {_format_calendar_date(ra.updated_at)}",
+        f"Assessment Status: {ra.status.replace('_', ' ').title()}",
+        f"Applications in Scope: {len(subject_profiles)}",
+        "",
+        "# Executive Summary",
+    ]
+
+    summary = [
+        f"This assessment covers {len(subject_profiles)} application(s)",
+        f"with {len(ra.responses)} questionnaire response(s)",
+        f"and {len(ra.risks)} identified risk(s).",
+    ]
+    if ra.risks:
+        summary.append(
+            "Risk distribution by band is "
+            + ", ".join(f"{band}: {count}" for band, count in sorted(risk_band_counts.items()))
+            + "."
+        )
+    if ra.applied_controls:
+        summary.append(f"{len(ra.applied_controls)} control(s) have been applied to the recorded risks.")
+    else:
+        summary.append("No controls have been applied yet.")
+    if ra.suggested_controls:
+        summary.append(f"{len(ra.suggested_controls)} suggested control option(s) are available for review.")
+    else:
+        summary.append("No control suggestions have been generated yet, so remediation planning still requires manual review.")
+    lines.append(" ".join(summary))
+
+    lines.extend([
+        "",
+        "# Assessment Scope",
+        "Applications reviewed in this assessment:",
+    ])
+    for profile in subject_profiles:
+        lines.append(
+            f"- {profile['name']} ({profile['type']}) | CIA {profile['confidentiality']}/{profile['integrity']}/{profile['availability']} "
+            f"(total {profile['cia_total']}, criticality {profile['criticality']})"
+        )
+        if profile["description"]:
+            lines.append(f"  Description: {profile['description']}")
+        if profile["hosting_type"] or profile["support_type"]:
+            lines.append(
+                f"  Hosting: {profile['hosting_type'] or 'Unspecified'} | Support: {profile['support_type'] or 'Unspecified'}"
+            )
+        if profile["classification"] or profile["jurisdiction"]:
+            lines.append(
+                f"  Classification: {profile['classification'] or 'Unspecified'} | Jurisdiction: {profile['jurisdiction'] or 'Unspecified'}"
+            )
+
+    lines.extend([
+        "",
+        "# Assessment Method",
+        "The report is generated directly from stored assessment data to keep dates, counts, and application details exact.",
+        f"The questionnaire contains {sections_total} section(s) and {question_count} total question(s) per application.",
+        "Inherent risks are derived from the completed questionnaire responses and recorded risk entries.",
+        "Residual risk values are based on the controls currently applied to each recorded risk.",
+        "",
+        "# Evidence Summary",
+        f"Total Responses Recorded: {len(ra.responses)}",
+        "Response Breakdown",
+        f"- Yes: {answer_counts.get('yes', 0)}",
+        f"- No: {answer_counts.get('no', 0)}",
+        f"- N/A: {answer_counts.get('na', 0)}",
+        f"- Responses with analyst notes: {sum(1 for response in ra.responses if response.get('details', '').strip())}",
+        "",
+        "# Application-by-Application Findings",
+    ])
+
+    for profile in subject_profiles:
+        asset_id = profile["id"]
+        asset_responses = responses_by_asset.get(asset_id, [])
+        asset_risks = risks_by_asset.get(asset_id, [])
+        asset_answer_counts = Counter((response.get("answer") or "").lower() for response in asset_responses)
+        sections_answered = len({response.get("section_id") for response in asset_responses if response.get("section_id")})
+        notable_details = [response.get("details", "").strip() for response in asset_responses if response.get("details", "").strip()]
+
+        lines.extend([
+            f"## {profile['name']}",
+            f"Application Type: {profile['type']}",
+            f"Application Identifier: {asset_id}",
+            f"CIA Profile: C {profile['confidentiality']} | I {profile['integrity']} | A {profile['availability']} | Total {profile['cia_total']} ({profile['criticality']})",
+            f"Responses Recorded: {len(asset_responses)}",
+            "Response Breakdown",
+            f"- Yes: {asset_answer_counts.get('yes', 0)}",
+            f"- No: {asset_answer_counts.get('no', 0)}",
+            f"- N/A: {asset_answer_counts.get('na', 0)}",
+            f"- Sections Answered: {sections_answered} of {sections_total}",
+        ])
+        if notable_details:
+            lines.append("Key Analyst Notes")
+            for detail in notable_details[:5]:
+                lines.append(f"- {detail}")
+        lines.append("Risk Findings")
+        if asset_risks:
+            for risk in sorted(asset_risks, key=lambda item: (-item.get("inherent_risk_score", 0), item.get("title", ""))):
+                lines.append(
+                    f"- {risk['title']} | {risk['risk_category']} | Inherent {risk['inherent_risk_band']} "
+                    f"({risk['inherent_risk_score']}) | Residual {risk.get('residual_risk_band', 'Unknown')} "
+                    f"({risk.get('residual_risk_score', 0)})"
+                )
+                if risk.get("description"):
+                    lines.append(f"  Description: {risk['description']}")
+                if risk.get("human_rationale"):
+                    lines.append(f"  Rationale: {risk['human_rationale']}")
+                applied_controls = controls_by_risk.get(risk["id"], [])
+                if applied_controls:
+                    lines.append(f"  Applied Controls: {', '.join(applied_controls)}")
+                suggested_controls = suggestions_by_risk.get(risk["id"], [])
+                if suggested_controls:
+                    lines.append("  Suggested Controls:")
+                    for suggestion in suggested_controls[:3]:
+                        lines.append(
+                            f"  - {suggestion.get('control_title', suggestion.get('control_id', 'Unknown control'))} "
+                            f"(relevance {suggestion.get('relevance_score', 'n/a')}/5)"
+                        )
+                else:
+                    lines.append("  Suggested Controls: None generated")
+        else:
+            lines.append("- No risks recorded for this application.")
+        lines.append("")
+
+    lines.append("# Cross-Application Risk Themes")
+    if not ra.risks:
+        lines.append("No risk themes are available because no risks have been recorded.")
+    else:
+        lines.append("Risk themes observed across the assessment:")
+        for category, count in sorted(risk_category_counts.items()):
+            lines.append(f"- {category}: {count} risk(s)")
+        lines.append("Risk severity distribution:")
+        for band, count in sorted(risk_band_counts.items()):
+            lines.append(f"- {band}: {count}")
+
+    lines.extend([
+        "",
+        "# Prioritized Remediation Themes",
+    ])
+    if not ranked_risks:
+        lines.append("No remediation themes are available because no risks have been identified.")
+    else:
+        for index, risk in enumerate(ranked_risks, start=1):
+            lines.append(
+                f"{index}. {risk['title']} | {risk['risk_category']} | Inherent score {risk['inherent_risk_score']} ({risk['inherent_risk_band']})"
+            )
+            if suggestions_by_risk.get(risk["id"]):
+                top_suggestion = suggestions_by_risk[risk["id"]][0]
+                lines.append(
+                    f"   Recommended next control: {top_suggestion.get('control_title', top_suggestion.get('control_id', 'Unknown control'))}"
+                )
+            else:
+                lines.append("   Recommended next control: Manual control selection required.")
+
+    lines.extend([
+        "",
+        "# Issues Affecting Suggested Controls",
+    ])
+    if not ra.suggested_controls:
+        lines.append("No suggested controls have been generated for this assessment, so remediation planning remains incomplete.")
+    elif missing_suggestions:
+        lines.append("The following risks do not yet have suggested controls:")
+        for risk in missing_suggestions:
+            lines.append(f"- {risk['title']}")
+    else:
+        lines.append("Suggested controls are available for every recorded risk.")
+    if not ra.applied_controls:
+        lines.append("No controls have been applied yet, so residual risk reduction has not been demonstrated in the report data.")
+
+    return _clean_report_text("\n".join(lines).strip())
+
+
 # ── Route handlers ───────────────────────────────────────────────────────────
 
 @router.get("/sections")
@@ -443,10 +932,13 @@ def analyze_assessment(ra_id: str):
         asset_name = (asset.name if asset else None) or (ad_hoc.get("name") if ad_hoc else None) or asset_id
         if asset:
             cia_total = asset.cia_total
-            cia_band = "Critical" if cia_total >= 13 else "High" if cia_total >= 9 else "Medium" if cia_total >= 6 else "Low"
+            cia_band = compute_criticality(cia_total)
         elif ad_hoc:
-            cia_total = ad_hoc.get("confidentiality", 3) + ad_hoc.get("integrity", 3) + ad_hoc.get("availability", 3)
-            cia_band = "High" if cia_total >= 12 else "Medium" if cia_total >= 7 else "Low"
+            cia_total, cia_band = _cia_band_from_values(
+                ad_hoc.get("confidentiality", 3),
+                ad_hoc.get("integrity", 3),
+                ad_hoc.get("availability", 3),
+            )
         else:
             cia_total = 9
             cia_band = "Medium"
@@ -539,9 +1031,13 @@ def suggest_controls(ra_id: str):
         raise HTTPException(400, "No risks yet. Run /analyze first.")
 
     ctrl_store = MongoControlsStore()
-    all_controls = ctrl_store.list()
+    raw_controls = ctrl_store.all_controls() if hasattr(ctrl_store, "all_controls") else ctrl_store.list()
+    all_controls = _normalize_controls_for_suggestion(raw_controls)
+    if not all_controls:
+        get_store().set_suggested_controls(ra_id, [])
+        return {"assessment_id": ra_id, "suggestions": []}
     controls_summary = "\n".join(
-        f"- [{c.id}] {c.title} (domain: {getattr(c, 'domain', 'General')})"
+        f"- [{c['control_id']}] {c['control_title']} (domain: {c.get('domain', 'General')})"
         for c in all_controls[:100]
     )
 
@@ -571,12 +1067,15 @@ Each element: {{"risk_id": "...", "control_id": "...", "control_title": "...", "
         content = response.content.strip()
         content = _re.sub(r"^```[a-zA-Z]*\n?", "", content)
         content = _re.sub(r"\n?```$", "", content).strip()
-        suggestions = _json.loads(content)
-        if not isinstance(suggestions, list):
-            raise ValueError(f"Expected JSON array, got {type(suggestions).__name__}")
+        raw_suggestions = _json.loads(content)
+        if not isinstance(raw_suggestions, list):
+            raise ValueError(f"Expected JSON array, got {type(raw_suggestions).__name__}")
+        suggestions = _normalize_llm_suggestions(raw_suggestions, ra.risks, all_controls)
+        if not suggestions:
+            raise ValueError("LLM returned no usable control suggestions")
     except Exception as e:
         logger.error(f"Control suggestion LLM failed for {ra_id}: {e}")
-        suggestions = []
+        suggestions = _fallback_control_suggestions(ra.risks, all_controls)
 
     get_store().set_suggested_controls(ra_id, suggestions)
     return {"assessment_id": ra_id, "suggestions": suggestions}
@@ -585,8 +1084,6 @@ Each element: {{"risk_id": "...", "control_id": "...", "control_title": "...", "
 @router.post("/{ra_id}/generate-report")
 def generate_report(ra_id: str):
     """Persona 7: Assessment Report Writer — 9-section risk assessment report."""
-    from langchain.schema import HumanMessage
-    from utils.llm_provider import get_llm
     from api.routers.assets import get_store as get_asset_store
 
     ra = get_store().get(ra_id)
@@ -596,61 +1093,15 @@ def generate_report(ra_id: str):
         raise HTTPException(400, "No risks identified. Run /analyze first.")
 
     asset_store = get_asset_store()
-    app_names = []
-    for aid in ra.asset_ids:
-        a = asset_store.get(aid)
-        app_names.append(a.name if a else aid)
-
-    risk_text = "\n".join(
-        f"- {r['title']} | {r['risk_category']} | {r['inherent_risk_band']} | {r.get('human_rationale', '')}"
-        for r in ra.risks
-    )
-    control_text = "\n".join(
-        f"- Risk {s['risk_id']}: {s['control_title']} (relevance {s['relevance_score']}/5)"
-        for s in (ra.suggested_controls or [])
-    ) or "No control suggestions generated yet."
-
-    prompt = f"""You are an assessment report writer for technology risk and audit audiences.
-
-Produce a professional Risk Assessment Report using only the provided data.
-Follow the required report structure exactly. Do not add extra sections.
-Keep language professional, direct, and suitable for technology, information-security, and audit personnel.
-
-Assessment: {ra.title}
-Description: {ra.description}
-Applications in scope: {', '.join(app_names)}
-Total responses: {len(ra.responses)}
-Risks identified: {len(ra.risks)}
-
-Risk findings:
-{risk_text}
-
-Suggested controls:
-{control_text}
-
-Required report structure (produce each section as a markdown heading):
-1. Report Header
-2. Executive Summary
-3. Assessment Scope
-4. Assessment Method
-5. Evidence Summary
-6. Application-by-Application Findings
-7. Cross-Application Risk Themes
-8. Prioritized Remediation Themes
-9. Issues Affecting Suggested Controls
-
-Return the full report as markdown only."""
-
     try:
-        llm = get_llm()
-        response = llm.invoke([HumanMessage(content=prompt)])
-        report_md = response.content.strip()
+        report_md = _build_risk_assessment_report(ra, asset_store, generated_at=datetime.utcnow())
     except Exception as e:
         logger.error(f"Report generation failed for {ra_id}: {e}")
         report_md = f"# Risk Assessment Report\n\n**Report generation failed:** {e}\n\nPlease retry."
 
     get_store().set_report(ra_id, report_md)
     return {"assessment_id": ra_id, "report_markdown": report_md}
+
 
 
 @router.get("/{ra_id}/report")

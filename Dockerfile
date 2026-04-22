@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1.7
 # Legacy Streamlit image.
 # Docker Compose uses `api/Dockerfile` for FastAPI and `kpmg_ui/Dockerfile` for the web app.
 # Keep this file only if you still intentionally run the old Streamlit app directly.
@@ -18,8 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN install -d -m 755 /app/workbooks /app/temp_files
 
 COPY streamlit_requirements.txt .
-RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install --progress-bar off --prefer-binary -r streamlit_requirements.txt
+RUN pip install --progress-bar off --prefer-binary -r streamlit_requirements.txt
 
 COPY app.py ./
 COPY utils ./utils

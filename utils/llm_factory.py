@@ -20,14 +20,32 @@ OLLAMA_LLM_MODEL = os.getenv("OLLAMA_LLM_MODEL", "llama3:latest")
 OLLAMA_EMBEDDING_MODEL = os.getenv("OLLAMA_EMBEDDING_MODEL", "nomic-embed-text:latest")
 
 
+def get_llm_provider() -> str:
+    return os.getenv("LLM_PROVIDER", LLM_PROVIDER).lower()
+
+
+def resolve_llm_model_name(model: str | None = None) -> str:
+    """
+    Return the effective LLM model name for the active provider.
+
+    Gemini deployments in this app are configured server-side via GOOGLE_LLM_MODEL,
+    so stale browser-provided model names should not override the active model.
+    """
+    if get_llm_provider() == "gemini":
+        return os.getenv("GOOGLE_LLM_MODEL", GOOGLE_LLM_MODEL)
+
+    requested_model = (model or "").strip()
+    return requested_model or os.getenv("OLLAMA_LLM_MODEL", OLLAMA_LLM_MODEL)
+
+
 def make_llm(model: str | None = None, temperature: float = 0.1):
     """Return a string-producing LLM chain for the configured provider."""
-    if LLM_PROVIDER == "gemini":
+    if get_llm_provider() == "gemini":
         from langchain_google_genai import ChatGoogleGenerativeAI
         if not GOOGLE_API_KEY:
             raise EnvironmentError("GOOGLE_API_KEY must be set when LLM_PROVIDER=gemini")
         return ChatGoogleGenerativeAI(
-            model=model or GOOGLE_LLM_MODEL,
+            model=resolve_llm_model_name(model),
             google_api_key=GOOGLE_API_KEY,
             temperature=temperature,
             request_timeout=120,
@@ -35,7 +53,7 @@ def make_llm(model: str | None = None, temperature: float = 0.1):
 
     from langchain_ollama import ChatOllama
     return ChatOllama(
-        model=model or OLLAMA_LLM_MODEL,
+        model=resolve_llm_model_name(model),
         temperature=temperature,
         base_url=OLLAMA_BASE_URL,
     ) | StrOutputParser()
@@ -43,7 +61,7 @@ def make_llm(model: str | None = None, temperature: float = 0.1):
 
 def make_embeddings(model: str | None = None):
     """Return embeddings for the configured provider."""
-    if LLM_PROVIDER == "gemini":
+    if get_llm_provider() == "gemini":
         from langchain_google_genai import GoogleGenerativeAIEmbeddings
         if not GOOGLE_API_KEY:
             raise EnvironmentError("GOOGLE_API_KEY must be set when LLM_PROVIDER=gemini")

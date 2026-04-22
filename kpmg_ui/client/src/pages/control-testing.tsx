@@ -1,4 +1,5 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useDropzone } from "react-dropzone";
 import {
   AlertCircle,
@@ -30,12 +31,16 @@ import {
   CONTROL_TESTING_API,
   getControlTestingStepNumber,
 } from "@/pages/control-testing.helpers";
+import { resolveSelectedModel, type SelectableModel } from "@/lib/modelSelection";
 
 const CHECKLIST_PAGE_SIZE = 5;
 
 export default function ControlTestingPage() {
   const { toast } = useToast();
   const [checklistPage, setChecklistPage] = useState(0);
+  const { data: models } = useQuery<SelectableModel[]>({
+    queryKey: ["/api/models"],
+  });
   const {
     sessionId,
     currentStep,
@@ -61,6 +66,17 @@ export default function ControlTestingPage() {
     setEvidenceFiles,
     resetState,
   } = useControlTesting();
+
+  const selectedModel = resolveSelectedModel(
+    typeof window !== "undefined" ? localStorage.getItem("selectedModel") : "",
+    models,
+  );
+
+  useEffect(() => {
+    if (selectedModel) {
+      localStorage.setItem("selectedModel", selectedModel);
+    }
+  }, [selectedModel]);
 
   const onDropScript = useCallback(
     (acceptedFiles: File[]) => {
@@ -129,7 +145,15 @@ export default function ControlTestingPage() {
       return;
     }
 
-    const selectedModel = localStorage.getItem("selectedModel") || "llama3";
+    if (!selectedModel) {
+      toast({
+        title: "No model available",
+        description: "Open Settings and let the model list refresh before starting control testing.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSessionData({ isProcessing: true, error: null });
 
     try {
@@ -322,27 +346,22 @@ export default function ControlTestingPage() {
   return (
     <div className="h-full flex flex-col">
       <HeroSection
-        title="Control Testing"
+        title="Control testing"
         subtitle="Upload a test script, validate evidence against required controls, and generate an audit workpaper"
         icon={Shield}
       />
-      <div className="flex-1 overflow-auto p-6">
-        <div className="max-w-4xl mx-auto space-y-6">
-          <div className="flex items-center justify-center gap-2 mb-6">
+      <div className="control-workbench flex-1 overflow-auto p-6">
+        <div className="max-w-5xl mx-auto space-y-6">
+          <div className="control-stepper mb-6 flex flex-wrap items-center justify-center gap-2 rounded-lg p-2">
             {[
-              { num: 1, label: "Upload Script" },
-              { num: 2, label: "Validate Evidence" },
-              { num: 3, label: "Generate Workpaper" },
+              { num: 1, label: "Upload script" },
+              { num: 2, label: "Validate evidence" },
+              { num: 3, label: "Generate workpaper" },
             ].map((step, index) => (
               <div key={step.num} className="flex items-center gap-2">
                 <div
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                    stepNumber === step.num
-                      ? "bg-primary text-primary-foreground"
-                      : stepNumber > step.num
-                        ? "bg-primary/20 text-primary"
-                        : "bg-muted text-muted-foreground"
-                  }`}
+                  className="control-step flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors"
+                  data-state={stepNumber === step.num ? "active" : stepNumber > step.num ? "complete" : "pending"}
                   data-testid={`step-indicator-${step.num}`}
                 >
                   {stepNumber > step.num ? (
@@ -369,11 +388,11 @@ export default function ControlTestingPage() {
           )}
 
           {currentStep === "upload_script" && (
-            <Card>
+            <Card className="control-window-panel">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileSpreadsheet className="h-5 w-5" />
-                  Upload Test Script
+                  Upload test script
                 </CardTitle>
                 <CardDescription>
                   Upload the Excel test script that defines the controls, test steps, and expected evidence.
@@ -382,27 +401,24 @@ export default function ControlTestingPage() {
               <CardContent className="space-y-4">
                 <div
                   {...getScriptRootProps()}
-                  className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-                    isScriptDragActive
-                      ? "border-primary bg-primary/5"
-                      : "border-muted-foreground/25 hover:border-primary/50"
-                  }`}
+                  className="control-dropzone rounded-lg p-8 text-center cursor-pointer"
+                  data-active={isScriptDragActive}
                   data-testid="dropzone-script"
                 >
                   <input {...getScriptInputProps()} data-testid="input-script-file" />
                   <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   {isScriptDragActive ? (
-                    <p className="text-primary font-medium">Drop the test script here...</p>
+                      <p className="text-primary font-medium">Drop the test script here...</p>
                   ) : (
                     <>
                       <p className="text-foreground font-medium">Drag and drop the Excel test script here</p>
-                      <p className="text-muted-foreground text-sm mt-1">or click to browse (`.xlsx`, `.xlsm`)</p>
+                      <p className="text-muted-foreground text-sm mt-1">or click to browse (.xlsx, .xlsm)</p>
                     </>
                   )}
                 </div>
 
                 {testScriptFile && (
-                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                  <div className="control-file-row flex items-center justify-between rounded-lg p-3">
                     <div className="flex items-center gap-2">
                       <FileText className="h-4 w-4 text-primary" />
                       <span className="text-sm truncate max-w-xs">{testScriptFile.name}</span>
@@ -430,12 +446,12 @@ export default function ControlTestingPage() {
                   {isProcessing ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Parsing Test Script...
+                      Parsing test script...
                     </>
                   ) : (
                     <>
                       <Play className="h-4 w-4 mr-2" />
-                      Parse Test Script
+                      Parse test script
                     </>
                   )}
                 </Button>
@@ -463,11 +479,11 @@ export default function ControlTestingPage() {
                 </Card>
               )}
 
-              <Card>
+              <Card className="control-window-panel">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Shield className="h-5 w-5" />
-                    Evidence Checklist
+                    Evidence checklist
                     <Badge variant="secondary">{controlsFound} control(s)</Badge>
                   </CardTitle>
                   <CardDescription>
@@ -488,7 +504,7 @@ export default function ControlTestingPage() {
                         return (
                           <div
                             key={item.control_id}
-                            className="flex items-start gap-3 p-3 rounded-lg bg-muted/30"
+                            className="control-file-row flex items-start gap-3 rounded-lg p-3"
                             data-testid={`checklist-item-${checklistPage * CHECKLIST_PAGE_SIZE + index}`}
                           >
                             <div className="mt-0.5">
@@ -555,11 +571,11 @@ export default function ControlTestingPage() {
               </Card>
 
               {filesProcessed.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <FileText className="h-5 w-5" />
-                      Evidence Validation Results
+              <Card className="control-window-panel">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                      Evidence validation results
                       {evidenceSummary && (
                         <Badge variant="secondary">
                           {evidenceSummary.received}/{evidenceSummary.total_controls} received
@@ -572,8 +588,8 @@ export default function ControlTestingPage() {
                       {filesProcessed.map((file, index) => (
                         <div
                           key={`${file.filename}-${index}`}
-                          className={`flex items-start gap-3 p-3 rounded-lg ${
-                            file.validation_status === "accepted" ? "bg-green-500/10" : "bg-destructive/10"
+                            className={`flex items-start gap-3 rounded-lg p-3 ${
+                            file.validation_status === "accepted" ? "control-result-pass" : "control-result-fail"
                           }`}
                           data-testid={`validation-result-${index}`}
                         >
@@ -611,11 +627,11 @@ export default function ControlTestingPage() {
                 </Card>
               )}
 
-              <Card>
+              <Card className="control-window-panel">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Upload className="h-5 w-5" />
-                    Upload Evidence Files
+                    Upload evidence files
                   </CardTitle>
                   <CardDescription>
                     Submit the evidence files required by the checklist. Each file is validated and mapped to the relevant controls.
@@ -623,12 +639,9 @@ export default function ControlTestingPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div
-                    {...getEvidenceRootProps()}
-                    className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-                      isEvidenceDragActive
-                        ? "border-primary bg-primary/5"
-                        : "border-muted-foreground/25 hover:border-primary/50"
-                    }`}
+                  {...getEvidenceRootProps()}
+                    className="control-dropzone rounded-lg p-8 text-center cursor-pointer"
+                    data-active={isEvidenceDragActive}
                     data-testid="dropzone-evidence"
                   >
                     <input {...getEvidenceInputProps()} data-testid="input-evidence-files" />
@@ -652,7 +665,7 @@ export default function ControlTestingPage() {
                         {evidenceFiles.map((file, index) => (
                           <div
                             key={`${file.name}-${index}`}
-                            className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                            className="control-file-row flex items-center justify-between rounded-lg p-3"
                             data-testid={`evidence-file-${index}`}
                           >
                             <div className="flex items-center gap-2">
@@ -685,12 +698,12 @@ export default function ControlTestingPage() {
                       {isProcessing ? (
                         <>
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Validating Evidence...
+                          Validating evidence...
                         </>
                       ) : (
                         <>
                           <Upload className="h-4 w-4 mr-2" />
-                          Submit Evidence
+                          Submit evidence
                         </>
                       )}
                     </Button>
@@ -702,16 +715,16 @@ export default function ControlTestingPage() {
                         data-testid={readyToGenerate ? "button-generate-workpaper" : "button-force-generate"}
                       >
                         <Play className="h-4 w-4 mr-2" />
-                        {readyToGenerate ? "Generate Workpaper" : "Generate with Partial Evidence"}
+                        {readyToGenerate ? "Generate workpaper" : "Generate with partial evidence"}
                       </Button>
                     )}
                   </div>
 
                   {pendingControls.length > 0 && !readyToGenerate && (
-                    <div className="mt-4 p-3 bg-muted/30 rounded-lg">
+                    <div className="control-file-row mt-4 rounded-lg p-3">
                       <p className="text-sm font-medium mb-2 flex items-center gap-2">
                         <Clock className="h-4 w-4" />
-                        Outstanding Evidence ({pendingControls.length})
+                        Outstanding evidence ({pendingControls.length})
                       </p>
                       <div className="space-y-1">
                         {pendingControls.map((control) => (
@@ -733,11 +746,11 @@ export default function ControlTestingPage() {
           )}
 
           {currentStep === "generating" && (
-            <Card>
+            <Card className="control-window-panel">
               <CardContent className="py-12">
                 <div className="flex flex-col items-center justify-center space-y-4">
                   <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                  <p className="text-lg font-medium">Generating Audit Workpaper...</p>
+                  <p className="text-lg font-medium">Generating audit workpaper...</p>
                   <p className="text-sm text-muted-foreground text-center max-w-md">
                     The platform is validating control outcomes and preparing the workpaper. This can take a few minutes.
                   </p>
@@ -748,11 +761,11 @@ export default function ControlTestingPage() {
 
           {currentStep === "results" && (
             <>
-              <Card>
+              <Card className="control-window-panel">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <CheckCircle2 className="h-5 w-5 text-green-500" />
-                    Control Testing Complete
+                    Control testing complete
                   </CardTitle>
                   <CardDescription>{resultMessage}</CardDescription>
                 </CardHeader>
@@ -782,28 +795,28 @@ export default function ControlTestingPage() {
                       />
 
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        <div className="p-4 bg-green-500/10 rounded-lg text-center">
+                        <div className="control-result-pass rounded-lg p-4 text-center">
                           <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                             {workpaperSummary.pass_count}
                           </p>
-                          <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">Pass</p>
+                          <p className="text-xs text-muted-foreground mt-1">Pass</p>
                         </div>
-                        <div className="p-4 bg-destructive/10 rounded-lg text-center">
+                        <div className="control-result-fail rounded-lg p-4 text-center">
                           <p className="text-2xl font-bold text-destructive">{workpaperSummary.fail_count}</p>
-                          <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">Fail</p>
+                          <p className="text-xs text-muted-foreground mt-1">Fail</p>
                         </div>
-                        <div className="p-4 bg-yellow-500/10 rounded-lg text-center">
+                        <div className="rounded-lg border border-[rgba(234,170,0,0.2)] bg-[rgba(234,170,0,0.1)] p-4 text-center">
                           <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                             {workpaperSummary.partial_count}
                           </p>
-                          <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">Partial</p>
+                          <p className="text-xs text-muted-foreground mt-1">Partial</p>
                         </div>
-                        <div className="p-4 bg-blue-500/10 rounded-lg text-center">
+                        <div className="rounded-lg border border-[#00338D]/12 bg-[#EEF4FB] p-4 text-center">
                           <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                             {workpaperSummary.controls_with_evidence}
                           </p>
-                          <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">
-                            Controls With Evidence
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Controls with evidence
                           </p>
                         </div>
                       </div>
@@ -817,7 +830,7 @@ export default function ControlTestingPage() {
                       data-testid="button-download-workpaper"
                     >
                       <Download className="h-4 w-4 mr-2" />
-                      Download Workpaper
+                      Download workpaper
                     </Button>
                   )}
                 </CardContent>
@@ -826,7 +839,7 @@ export default function ControlTestingPage() {
               <div className="flex items-center justify-center gap-4">
                 <Button variant="outline" onClick={handleNewAudit} data-testid="button-new-audit">
                   <RotateCcw className="h-4 w-4 mr-2" />
-                  New Audit
+                  New audit
                 </Button>
               </div>
             </>

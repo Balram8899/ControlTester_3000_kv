@@ -29,9 +29,11 @@ import IssueManagementPage from "@/pages/issue-management";
 import ExceptionManagementPage from "@/pages/exception-management";
 import LandingPage from "@/pages/landing";
 import AssetRegistryPage from "@/pages/asset-registry";
+import FontMockupPage from "@/pages/font-mockup";
 import { AssetRegistryProvider } from "@/contexts/AssetRegistryContext";
 import { RiskAssessmentProvider } from "@/contexts/RiskAssessmentContext";
 import { IssueManagementProvider } from "@/contexts/IssueManagementContext";
+import { ACTIVE_PAGE_CLASSNAME, HIDDEN_PAGE_CLASSNAME } from "@/components/app-layout.helpers";
 
 // All pages are kept permanently mounted and CSS-hidden when inactive.
 // This prevents remount on every tab switch, so useEffect runs only once per
@@ -56,15 +58,21 @@ const PAGES = [
 function Router() {
   const [location, setLocation] = useLocation();
   const { user } = useAuth();
+  const isFontMockup = location === "/font-mockup";
 
   // Sync URL with auth state
   useEffect(() => {
+    if (isFontMockup) return;
     if (!user && location !== "/login") {
       setLocation("/login");
     } else if (user && location === "/login") {
       setLocation("/landing");
     }
-  }, [user, location]);
+  }, [user, location, isFontMockup]);
+
+  if (isFontMockup) {
+    return <FontMockupPage />;
+  }
 
   // Not authenticated — always show login immediately (URL will sync via effect above)
   if (!user) {
@@ -81,7 +89,7 @@ function Router() {
   return (
     <AppLayout>
       {PAGES.map(({ path, Page }) => (
-        <div key={path} className={location === path ? "h-full overflow-hidden" : "hidden"}>
+        <div key={path} className={location === path ? ACTIVE_PAGE_CLASSNAME : HIDDEN_PAGE_CLASSNAME}>
           <Page />
         </div>
       ))}

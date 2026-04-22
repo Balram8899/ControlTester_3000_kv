@@ -10,6 +10,7 @@ import os
 import uuid
 import hashlib
 import logging
+import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from typing import List, Dict, Optional, Any, Tuple
@@ -35,6 +36,23 @@ COLLECTION_NAME = "controls_library"
 LIBRARY_GRAPH_DIR = "data/library_graphs/controls"
 
 SIM_THRESHOLD_CONTROLS = 0.35  # Jaccard threshold for grouping similar controls
+MIN_MEANINGFUL_MAPPING_SCORE = 0.12
+STOPWORD_TOKENS = {
+    "the", "and", "for", "with", "that", "this", "from", "into", "their", "there",
+    "shall", "should", "must", "may", "can", "will", "are", "is", "was", "were",
+    "been", "being", "have", "has", "had", "not", "only", "also", "such", "than",
+    "then", "them", "they", "which", "who", "what", "when", "where", "while",
+    "into", "onto", "upon", "within", "through", "about", "under", "over", "each",
+    "all", "any", "both", "more", "most", "less", "least", "very", "much", "many",
+    "basis", "based", "place", "ensure", "using", "used", "include", "includes",
+    "including", "maintain", "maintained", "implement", "implemented", "review",
+    "reviewed", "require", "required", "procedure", "procedures", "process", "processes",
+    "policy", "policies", "control", "controls", "system", "systems", "technology",
+    "information", "resource", "resources", "organization", "organisations", "organization's",
+    "company", "formal", "necessary", "appropriate", "documented", "defined", "deployed",
+    "management", "function", "functions", "committee", "board", "meeting", "meet",
+    "quarterly", "annual", "annually", "periodic", "periodically",
+}
 
 CONTROL_TYPES = [
     "preventive",
@@ -222,6 +240,89 @@ def _jaccard(set_a: set, set_b: set) -> float:
     return len(set_a & set_b) / len(union)
 
 
+def _normalize_text(value: Any) -> str:
+    if value is None:
+        return ""
+    normalized = re.sub(r"[^a-z0-9]+", " ", str(value).lower()).strip()
+    return re.sub(r"\s+", " ", normalized)
+
+
+def _tokenize_values(*values: Any) -> set[str]:
+    tokens: set[str] = set()
+    for value in values:
+        if value is None:
+            continue
+        if isinstance(value, (list, tuple, set)):
+            for item in value:
+                tokens.update(_tokenize_values(item))
+            continue
+        normalized = _normalize_text(value)
+        for token in normalized.split():
+            if len(token) < 3 or token in STOPWORD_TOKENS:
+                continue
+            tokens.add(token)
+    return tokens
+
+
+def _extract_phrases(*values: Any) -> set[str]:
+    phrases: set[str] = set()
+    for value in values:
+        if value is None:
+            continue
+        if isinstance(value, (list, tuple, set)):
+            for item in value:
+                phrases.update(_extract_phrases(item))
+            continue
+        normalized = _normalize_text(value)
+        if len(normalized.split()) >= 2:
+            phrases.add(normalized)
+    return phrases
+
+
+def _score_obligation_match(control: Dict[str, Any], obligation: Dict[str, Any]) -> float:
+    control_name = control.get("control_name") or control.get("name") or ""
+    control_description = control.get("description") or ""
+    control_keywords = control.get("keywords", [])
+    obligation_text = obligation.get("obligation_text") or ""
+    obligation_keywords = obligation.get("keywords", [])
+
+    control_tokens = _tokenize_values(control_name, control_description, control_keywords)
+    obligation_tokens = _tokenize_values(obligation_text, obligation_keywords)
+    if not control_tokens or not obligation_tokens:
+        return 0.0
+
+    token_overlap = control_tokens & obligation_tokens
+    control_keyword_tokens = _tokenize_values(control_keywords)
+    obligation_keyword_tokens = _tokenize_values(obligation_keywords)
+    keyword_overlap = control_keyword_tokens & obligation_keyword_tokens
+
+    control_phrases = _extract_phrases(control_name, control_keywords)
+    obligation_phrases = _extract_phrases(obligation_text, obligation_keywords)
+    normalized_control_text = _normalize_text(f"{control_name} {control_description}")
+    normalized_obligation_text = _normalize_text(obligation_text)
+
+    phrase_matches = {
+        phrase
+        for phrase in control_phrases
+        if phrase in obligation_phrases or phrase in normalized_obligation_text
+    }
+    phrase_matches.update(
+        phrase
+        for phrase in obligation_phrases
+        if phrase in normalized_control_text
+    )
+
+    if len(token_overlap) < 2 and not keyword_overlap and not phrase_matches:
+        return 0.0
+
+    token_score = len(token_overlap) / len(control_tokens | obligation_tokens)
+    keyword_union = control_keyword_tokens | obligation_keyword_tokens
+    keyword_score = len(keyword_overlap) / len(keyword_union) if keyword_union else 0.0
+    phrase_score = min(len(phrase_matches), 2) * 0.25
+
+    return round(token_score + (keyword_score * 0.35) + phrase_score, 3)
+
+
 def merge_similar_controls(controls: List[Dict]) -> List[Dict]:
     """
     Group similar controls using Jaccard keyword similarity (threshold = SIM_THRESHOLD_CONTROLS).
@@ -315,31 +416,55 @@ def map_controls_to_obligations(
     For each control, find the most relevant regulatory obligations using
     domain filtering + keyword overlap scoring. No embeddings — pure keyword match.
     """
+    all_candidates: Optional[List[Dict[str, Any]]] = None
+    domain_cache: Dict[str, List[Dict[str, Any]]] = {}
+
     for ctrl in controls:
-        domain = ctrl.get("domain", "")
-        ctrl_keywords = set(k.lower() for k in ctrl.get("keywords", []))
-        ctrl_name_words = set(ctrl.get("control_name", "").lower().split())
-        ctrl_kw_full = ctrl_keywords | ctrl_name_words
+        domain = str(ctrl.get("domain", "") or "").strip()
 
-        try:
-            candidates = regulatory_store.search_obligations(domain=domain)
-        except Exception as exc:
-            logger.warning(f"[CONTROLS] Obligation lookup failed for domain={domain}: {exc}")
-            candidates = []
+        if domain not in domain_cache:
+            try:
+                domain_cache[domain] = regulatory_store.search_obligations(domain=domain) if domain else []
+            except Exception as exc:
+                logger.warning(f"[CONTROLS] Obligation lookup failed for domain={domain}: {exc}")
+                domain_cache[domain] = []
 
-        scored = []
-        for obl in candidates:
-            obl_kw = set(k.lower() for k in obl.get("keywords", []))
-            obl_words = set(obl.get("obligation_text", "").lower().split())
-            obl_kw_full = obl_kw | obl_words
+        scored = [
+            (_score_obligation_match(ctrl, obligation), obligation)
+            for obligation in domain_cache[domain]
+        ]
+        meaningful = [item for item in scored if item[0] >= MIN_MEANINGFUL_MAPPING_SCORE]
 
-            overlap = len(ctrl_kw_full & obl_kw_full)
-            union = len(ctrl_kw_full | obl_kw_full)
-            score = round(overlap / union, 3) if union else 0.0
-            scored.append((score, obl))
+        if not meaningful:
+            if all_candidates is None:
+                try:
+                    all_candidates = regulatory_store.search_obligations()
+                except Exception as exc:
+                    logger.warning(f"[CONTROLS] Global obligation lookup failed: {exc}")
+                    all_candidates = []
 
-        scored.sort(key=lambda x: x[0], reverse=True)
-        top = scored[:top_k]
+            scored = [
+                (_score_obligation_match(ctrl, obligation), obligation)
+                for obligation in all_candidates
+            ]
+            meaningful = [item for item in scored if item[0] >= MIN_MEANINGFUL_MAPPING_SCORE]
+
+        meaningful.sort(
+            key=lambda item: (item[0], item[1].get("domain") == domain),
+            reverse=True,
+        )
+
+        top: List[Tuple[float, Dict[str, Any]]] = []
+        seen_obligation_ids: set[str] = set()
+        for score, obligation in meaningful:
+            obligation_id = str(obligation.get("obligation_id") or "")
+            if obligation_id and obligation_id in seen_obligation_ids:
+                continue
+            if obligation_id:
+                seen_obligation_ids.add(obligation_id)
+            top.append((score, obligation))
+            if len(top) >= top_k:
+                break
 
         ctrl["mapped_obligations"] = [
             {
@@ -351,7 +476,6 @@ def map_controls_to_obligations(
                 "match_score": score,
             }
             for score, obl in top
-            if score > 0
         ]
 
     return controls

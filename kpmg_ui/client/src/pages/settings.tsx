@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { CheckCircle2, Network, Eye, EyeOff } from "lucide-react";
-import { HIDEABLE_TABS } from "@/components/AppLayout";
+import { HIDEABLE_TABS } from "@/components/app-layout.helpers";
 
 const NAV_HIDDEN_KEY = "nav_hidden_pages";
 
@@ -22,6 +22,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { resolveSelectedModel } from "@/lib/modelSelection";
 
 interface ContextFile {
   id: string;
@@ -169,14 +170,18 @@ export default function SettingsPage() {
 
 
   useEffect(() => {
-    if (selectedModel) {
-      localStorage.setItem("selectedModel", selectedModel);
+    if (!models || models.length === 0) {
+      return;
     }
-  }, [selectedModel]);
 
-  useEffect(() => {
-    if (models && models.length > 0 && !selectedModel) {
-      setSelectedModel(models[0].value);
+    const resolvedModel = resolveSelectedModel(selectedModel, models);
+    if (resolvedModel !== selectedModel) {
+      setSelectedModel(resolvedModel);
+      return;
+    }
+
+    if (resolvedModel) {
+      localStorage.setItem("selectedModel", resolvedModel);
     }
   }, [models, selectedModel]);
 

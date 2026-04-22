@@ -11,6 +11,7 @@ import re
 from langchain.output_parsers import PydanticOutputParser
 from pydantic import ValidationError
 import os
+import tempfile
 import warnings
 import json
 import io
@@ -448,6 +449,55 @@ def render_text_to_image(evidence_docs, font_size=14, width=1200, bg_color="whit
     return img
 
 
+def _load_evidence_documents(evidence_files, source: str) -> list[Document]:
+    """Load uploaded evidence files through the shared document ingestion pipeline."""
+    docs: list[Document] = []
+    if not evidence_files:
+        return docs
+
+    for file in evidence_files:
+        temp_path = None
+        filename = getattr(file, "name", getattr(file, "filename", "uploaded_evidence"))
+        suffix = os.path.splitext(filename)[1] or ".tmp"
+
+        try:
+            if hasattr(file, "seek"):
+                try:
+                    file.seek(0)
+                except Exception:
+                    pass
+
+            content = file.read()
+            if isinstance(content, str):
+                content = content.encode("utf-8")
+
+            temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+            temp_file.write(content)
+            temp_file.close()
+            temp_path = temp_file.name
+
+            docs.extend(
+                load_documents(
+                    temp_path,
+                    filename,
+                    extra_metadata={
+                        "file_name": filename,
+                        "file_type": suffix.replace(".", "").upper(),
+                        "source_context": source,
+                        "doc_category": infer_doc_category(filename),
+                        "control_domain": infer_control_domain(filename),
+                    },
+                )
+            )
+        except DocumentLoadError as exc:
+            logger.warning(f"Skipping unreadable evidence file: {exc}")
+        finally:
+            if temp_path and os.path.exists(temp_path):
+                os.unlink(temp_path)
+
+    return docs
+
+
 def assess_evidence_with_kb(
     evidence_files,
     selected_model: str,
@@ -461,7 +511,7 @@ def assess_evidence_with_kb(
     start = time.time()
     evid_texts, chunk_origin = [], []
 
-    evidence_docs = save_and_load_files(evidence_files, "Evidence Assessment result")
+    evidence_docs = _load_evidence_documents(evidence_files, "Evidence Assessment result")
     for i, doc in enumerate(evidence_docs):
         try:
             if not doc.page_content.strip():
