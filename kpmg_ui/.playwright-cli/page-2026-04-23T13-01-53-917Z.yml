@@ -1,0 +1,84 @@
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list
+  - generic [ref=e267]:
+    - generic [ref=e269]:
+      - generic [ref=e270]:
+        - button "KPMG | TRACE" [ref=e271] [cursor=pointer]:
+          - generic [ref=e272]: KPMG
+          - generic [ref=e273]: "|"
+          - generic [ref=e274]: TRACE
+        - generic [ref=e275]:
+          - generic [ref=e276]: /
+          - generic [ref=e277]: Controls Diagnostics
+      - button "Sign Out" [ref=e279] [cursor=pointer]:
+        - img
+        - text: Sign Out
+    - generic [ref=e281]:
+      - button "Back to Dashboard" [ref=e282] [cursor=pointer]:
+        - img [ref=e283]
+        - text: Back to Dashboard
+      - generic [ref=e287]: Controls Design Diagnostics
+      - heading "Diagnostics Hub" [level=1] [ref=e288]
+      - paragraph [ref=e289]: Upload your GRC data once. APEX runs all four diagnostic analyses simultaneously — Coverage, Quality, Duplicates, and Benchmarking — from a single dataset.
+    - main [ref=e290]:
+      - generic [ref=e291]:
+        - button "Process How It Works" [ref=e292] [cursor=pointer]:
+          - generic [ref=e293]:
+            - generic [ref=e294]: Process
+            - generic [ref=e295]: How It Works
+          - img [ref=e296]
+        - generic [ref=e298]:
+          - generic [ref=e299]:
+            - generic [ref=e300]: "1"
+            - generic [ref=e301]: Extract GRC Data
+            - paragraph [ref=e302]: Export your risk register and controls inventory (with verbatim control text) from your GRC platform. Both files are required to run all four analyses.
+          - generic [ref=e303]:
+            - generic [ref=e304]: "2"
+            - generic [ref=e305]: Upload & Run
+            - paragraph [ref=e306]: Upload both files below and click Run All Diagnostics. APEX processes 1,259+ controls across all four analytical modules simultaneously.
+          - generic [ref=e307]:
+            - generic [ref=e308]: "3"
+            - generic [ref=e309]: Explore Results
+            - paragraph [ref=e310]: Navigate to any of the four diagnostic pages. Results are pre-loaded and ready for review and export — no re-upload required.
+      - generic [ref=e311]:
+        - button "Data Inputs Upload GRC Extracts" [ref=e312] [cursor=pointer]:
+          - generic [ref=e313]:
+            - generic [ref=e314]: Data Inputs
+            - generic [ref=e315]: Upload GRC Extracts
+          - img [ref=e316]
+        - generic [ref=e318]:
+          - generic [ref=e319]:
+            - generic [ref=e320]:
+              - img [ref=e322]
+              - generic [ref=e325]:
+                - generic [ref=e326]: Risk Register
+                - generic [ref=e327]: CSV / XLSX
+            - paragraph [ref=e328]: Risk IDs, descriptions, risk ratings, process owners, categories.
+            - generic [ref=e329]:
+              - button "Choose File" [ref=e330] [cursor=pointer]:
+                - img [ref=e331]
+                - text: Choose File
+              - button "or load sample data →" [ref=e334] [cursor=pointer]
+          - generic [ref=e335]:
+            - generic [ref=e336]:
+              - img [ref=e338]
+              - generic [ref=e341]:
+                - generic [ref=e342]: Controls Inventory with Verbatim
+                - generic [ref=e343]: CSV / XLSX
+            - paragraph [ref=e344]: Control IDs, control text/description, type, owner, linked risk IDs, process area.
+            - generic [ref=e345]:
+              - button "Choose File" [ref=e346] [cursor=pointer]:
+                - img [ref=e347]
+                - text: Choose File
+              - button "or load sample data →" [ref=e350] [cursor=pointer]
+      - generic [ref=e351]:
+        - generic [ref=e352]:
+          - heading "Run All Diagnostics" [level=3] [ref=e353]
+          - paragraph [ref=e354]: Triggers Coverage, Quality, Duplicates and Benchmarking analyses simultaneously across the full control corpus. Results are pre-loaded into all four analysis pages — navigate to any after running.
+        - button "Run All Diagnostics" [ref=e355] [cursor=pointer]:
+          - img [ref=e356]
+          - text: Run All Diagnostics
+    - contentinfo [ref=e358]:
+      - generic [ref=e359]: © 2026 KPMG Assurance and Consulting Services LLP, an Indian Limited Liability Partnership and a member firm of the KPMG global organization of independent member firms affiliated with KPMG International Limited, a private English company limited by guarantee. All rights reserved.
+      - generic [ref=e360]: Confidential

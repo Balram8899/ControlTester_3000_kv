@@ -1,0 +1,6 @@
+{"type":"server-started","port":59730,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:59730","screen_dir":"C:\\Subho syste,\\ControlTester_3000_kv\\.superpowers\\brainstorm\\6840-20260423164640\\content","state_dir":"C:\\Subho syste,\\ControlTester_3000_kv\\.superpowers\\brainstorm\\6840-20260423164640\\state"}
+{"type":"screen-added","file":"C:\\Subho syste,\\ControlTester_3000_kv\\.superpowers\\brainstorm\\6840-20260423164640\\content\\trace-rollout-options.html"}
+{"type":"screen-added","file":"C:\\Subho syste,\\ControlTester_3000_kv\\.superpowers\\brainstorm\\6840-20260423164640\\content\\hero-forward-shell.html"}
+{"type":"screen-added","file":"C:\\Subho syste,\\ControlTester_3000_kv\\.superpowers\\brainstorm\\6840-20260423164640\\content\\hero-forward-page-families.html"}
+{"type":"screen-added","file":"C:\\Subho syste,\\ControlTester_3000_kv\\.superpowers\\brainstorm\\6840-20260423164640\\content\\waiting-terminal-1.html"}
+{"type":"server-stopped","reason":"idle timeout"}

@@ -46,3 +46,49 @@ def test_quality_analysis_empty_controls(mock_llm):
         json={"controls": []},
     )
     assert resp.status_code == 422
+
+
+@patch("utils.llm_provider.get_llm")
+def test_run_5w1h_llm_formats_prompt_and_parses_json(mock_get_llm):
+    from api.routers.controls_quality import ControlInput, _run_5w1h_llm
+
+    mock_llm = MagicMock()
+    mock_llm.invoke.return_value = MagicMock(content="""
+    [
+      {
+        "control_id": "c1",
+        "control_name": "Access Review",
+        "what": true,
+        "why": true,
+        "who": true,
+        "when": false,
+        "where": true,
+        "how": false,
+        "score": 4,
+        "rag": "amber",
+        "rationale": {
+          "what": "Control activity is stated.",
+          "why": "Objective is clear.",
+          "who": "Owner identified.",
+          "when": "No cadence specified.",
+          "where": "Scope is clear.",
+          "how": "Mechanism not described."
+        },
+        "queue_finding": true
+      }
+    ]
+    """)
+    mock_get_llm.return_value = mock_llm
+
+    results = _run_5w1h_llm([
+        ControlInput(
+            control_id="c1",
+            name="Access Review",
+            description="Quarterly access review by system owner",
+        )
+    ])
+
+    assert results[0]["control_id"] == "c1"
+    prompt = mock_llm.invoke.call_args[0][0][0].content
+    assert '"control_id"' in prompt
+    assert "Controls to evaluate:" in prompt

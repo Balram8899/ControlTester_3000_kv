@@ -1,0 +1,48 @@
+=C:\Subho syste,\ControlTester_3000_kv\.superpowers\brainstorm\24032-20260423164603 : The term '=C:\Subho 
+syste,\ControlTester_3000_kv\.superpowers\brainstorm\24032-20260423164603' is not recognized as the name of a cmdlet, 
+function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the 
+path is correct and try again.
+At line:1 char:1
++ ='C:\Subho syste,\ControlTester_3000_kv\.superpowers\brainstorm\24032 ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (=C:\Subho syste...-20260423164603:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+=127.0.0.1 : The term '=127.0.0.1' is not recognized as the name of a cmdlet, function, script file, or operable 
+program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:88
++ ... v\.superpowers\brainstorm\24032-20260423164603'; ='127.0.0.1'; ='loca ...
++                                                      ~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (=127.0.0.1:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+=localhost : The term '=localhost' is not recognized as the name of a cmdlet, function, script file, or operable 
+program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:102
++ ... \brainstorm\24032-20260423164603'; ='127.0.0.1'; ='localhost'; Remove ...
++                                                      ~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (=localhost:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+node:fs:1349
+  const result = binding.mkdir(
+                         ^
+
+Error: EPERM: operation not permitted, mkdir 'C:\tmp\brainstorm\content'
+    at Object.mkdirSync (node:fs:1349:26)
+    at startServer (C:\Users\kvarm\.codex\plugins\cache\openai-curated\superpowers\b7ed91c86dc6604b8217892f05c8866518c82852\skills\brainstorming\scripts\server.cjs:263:39)
+    at Object.<anonymous> (C:\Users\kvarm\.codex\plugins\cache\openai-curated\superpowers\b7ed91c86dc6604b8217892f05c8866518c82852\skills\brainstorming\scripts\server.cjs:351:3)
+    at Module._compile (node:internal/modules/cjs/loader:1812:14)
+    at Object..js (node:internal/modules/cjs/loader:1943:10)
+    at Module.load (node:internal/modules/cjs/loader:1533:32)
+    at Module._load (node:internal/modules/cjs/loader:1335:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)
+    at node:internal/main/run_main_module:33:47 {
+  errno: -4048,
+  code: 'EPERM',
+  syscall: 'mkdir',
+  path: 'C:\\tmp\\brainstorm\\content'
+}
+
+Node.js v24.14.1

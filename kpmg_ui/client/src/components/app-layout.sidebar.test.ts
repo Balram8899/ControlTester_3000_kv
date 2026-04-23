@@ -13,30 +13,36 @@ const brandOverrideCss = fs.readFileSync(
 
 assert.match(
   appLayoutSource,
-  /w-\[154px\]/,
-  "Sidebar should use the compact fixed-width rail from the KPMG reference",
+  /useState\(true\)/,
+  "Sidebar should start in the collapsed state used by the fork UI",
 );
 
 assert.match(
   appLayoutSource,
-  /kpmg-sidebar-logo-white/,
-  "Sidebar should render the KPMG logo using the white-on-blue treatment",
+  /Expand sidebar/,
+  "Sidebar should include the collapse and expand control from the fork UI",
 );
 
 assert.equal(
-  appLayoutSource.includes("Control workspace"),
+  appLayoutSource.includes("button-theme-toggle"),
   false,
-  "Sidebar should not show the previous workspace descriptor copy",
+  "Fork shell should not keep the local top-header theme toggle",
 );
 
 assert.match(
   appLayoutSource,
-  /Last refreshed/,
-  "Sidebar should include the quiet refresh timestamp footer",
+  /<Footer \/>/,
+  "App layout should render the shared footer below page content",
+);
+
+assert.match(
+  appLayoutSource,
+  /trace-shell-main/,
+  "App layout should wrap authenticated content in the shared hero-forward shell surface",
 );
 
 assert.match(
   brandOverrideCss,
   /filter:\s*brightness\(0\)\s+invert\(1\)/,
-  "Brand CSS should convert the transparent KPMG asset to white for the blue rail",
+  "Brand CSS should still support the white-logo treatment where it is used",
 );

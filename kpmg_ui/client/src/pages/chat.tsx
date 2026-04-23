@@ -6,6 +6,7 @@ import ChatMessages from "@/components/ChatMessages";
 import ChatInput from "@/components/ChatInput";
 import { Button } from "@/components/ui/button";
 import HeroSection from "@/components/HeroSection";
+import TracePageBody from "@/components/TracePageBody";
 import { Trash2, MessageSquare } from "lucide-react";
 import type { Message } from "@/types";
 
@@ -335,8 +336,8 @@ export default function ChatPage() {
       />
 
       {messages.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center px-6">
-          <div className="w-full max-w-3xl space-y-6">
+        <TracePageBody width="narrow" tint className="flex items-center">
+          <div className="w-full space-y-6">
             <div className="text-center space-y-3">
               <h2 className="text-2xl font-semibold text-foreground">
                 What can I help you with?
@@ -348,7 +349,7 @@ export default function ChatPage() {
 
             <ChatInput {...chatInputProps} />
           </div>
-        </div>
+        </TracePageBody>
       ) : (
         <>
           <ChatMessages messages={messages} />

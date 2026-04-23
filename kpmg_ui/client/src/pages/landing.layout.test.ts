@@ -18,6 +18,24 @@ assert.equal(
 
 assert.match(
   landingSource,
-  /rounded-\[22px\]/,
-  "Landing module tiles should use a rounded Material-style surface",
+  /landing-directory-panel/,
+  "Landing page should group retained modules inside the new directory panel sections",
+);
+
+assert.match(
+  landingSource,
+  /kpmg-summary-panel/,
+  "Landing page should include the transplanted operating summary panel",
+);
+
+assert.match(
+  landingSource,
+  /rounded-\[18px\]/,
+  "Landing page should use the new rounded section surfaces introduced by the transplanted UI",
+);
+
+assert.match(
+  landingSource,
+  /Select a workspace below to begin/,
+  "Landing page should preserve the workspace-entry call to action above the module directory",
 );

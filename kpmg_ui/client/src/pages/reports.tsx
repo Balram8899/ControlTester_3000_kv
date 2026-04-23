@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import HeroSection from "@/components/HeroSection";
+import TracePageBody from "@/components/TracePageBody";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -251,9 +252,7 @@ export default function ReportsPage() {
         }
       />
 
-      {/* Scrollable content */}
-      <div className="flex-1 overflow-auto p-6">
-        <div className="max-w-5xl mx-auto space-y-4">
+      <TracePageBody width="wide" contentClassName="space-y-4">
 
           {loading && reports.length === 0 ? (
             <div className="space-y-3">
@@ -614,8 +613,7 @@ export default function ReportsPage() {
               );
             })
           )}
-        </div>
-      </div>
+      </TracePageBody>
     </div>
   );
 }

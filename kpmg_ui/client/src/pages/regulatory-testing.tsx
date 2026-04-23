@@ -5,6 +5,8 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Button } from "@/components/ui/button";
 import HeroSection from "@/components/HeroSection";
+import TracePageBody from "@/components/TracePageBody";
+import HowItWorks from "@/components/HowItWorks";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -45,12 +47,12 @@ const REGULATION_FILE_ACCEPT = {
 
 const pageFontStyle = { fontFamily: "Arial, sans-serif" } as const;
 const surfaceCardClass = "border-[#00338D]/12 bg-white/95 shadow-[0_24px_70px_-36px_rgba(12,35,60,0.42)] backdrop-blur";
-const elevatedCardClass = "border-[#00338D]/16 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(244,248,255,0.96)_100%)] shadow-[0_28px_80px_-40px_rgba(0,51,141,0.45)]";
+const elevatedCardClass = "border border-[#E2E6EF] bg-white shadow-[0_8px_24px_-12px_rgba(12,35,60,0.12)] rounded-[18px]";
 const statCardClass = "rounded-2xl border border-[#00338D]/10 bg-[linear-gradient(180deg,rgba(248,250,255,0.98)_0%,rgba(238,244,255,0.95)_100%)] p-4 text-center shadow-sm";
 const tabListClass = "grid w-full rounded-2xl border border-[#00338D]/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(242,247,255,0.95)_100%)] p-1.5 shadow-sm";
 const tabTriggerClass = "rounded-xl text-[#0C233C] data-[state=active]:bg-[#00338D] data-[state=active]:text-white data-[state=active]:shadow-[0_12px_32px_-20px_rgba(0,51,141,0.8)]";
 const markdownClass = "prose prose-sm max-w-none pr-4 text-[#0C233C] prose-headings:text-[#0C233C] prose-headings:font-semibold prose-h1:text-2xl prose-h1:border-b prose-h1:border-[#00338D]/15 prose-h1:pb-2 prose-h1:mb-4 prose-h2:text-xl prose-h2:mt-6 prose-h2:mb-3 prose-h3:text-lg prose-h3:mt-4 prose-h3:mb-2 prose-p:text-slate-600 prose-p:leading-relaxed prose-strong:text-[#0C233C] prose-strong:font-semibold prose-ul:my-2 prose-li:text-slate-600 prose-li:my-1 prose-ol:my-2 prose-table:border-collapse prose-table:w-full prose-table:my-4 prose-th:border prose-th:border-[#00338D]/12 prose-th:bg-[#F3F7FF] prose-th:px-3 prose-th:py-2 prose-th:text-left prose-th:font-medium prose-th:text-[#0C233C] prose-td:border prose-td:border-[#00338D]/10 prose-td:px-3 prose-td:py-2 prose-td:text-slate-600 prose-tr:even:bg-[#F8FAFF] prose-a:text-[#00338D] prose-a:no-underline hover:prose-a:underline prose-code:bg-[#EEF4FF] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:text-[#00338D] prose-code:font-mono prose-blockquote:border-l-4 prose-blockquote:border-[#1E49E2] prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-slate-600 prose-hr:border-[#00338D]/12 prose-hr:my-6";
-const primaryButtonClass = "border-0 bg-[linear-gradient(135deg,#0C233C_0%,#00338D_58%,#1E49E2_100%)] text-white shadow-[0_18px_40px_-20px_rgba(0,51,141,0.7)] hover:brightness-105";
+const primaryButtonClass = "border-0 bg-[linear-gradient(135deg,#00338D_0%,#1E49E2_100%)] text-white shadow-[0_18px_40px_-20px_rgba(0,51,141,0.7)] hover:brightness-105";
 const secondaryButtonClass = "border border-[#00338D]/12 bg-white text-[#00338D] shadow-sm hover:bg-[#F3F7FF]";
 const outlineButtonClass = "border border-[#00338D]/18 bg-[rgba(255,255,255,0.85)] text-[#0C233C] hover:bg-[#F7FAFF]";
 
@@ -644,8 +646,15 @@ export default function RegulatoryTestingPage() {
   return (
     <div className="h-full flex flex-col" style={pageFontStyle}>
       <HeroSection title="Regulatory Testing" subtitle="Compare regulations or assess RCM documents against regulatory requirements" icon={Scale} />
-      <div className="flex-1 overflow-auto bg-[radial-gradient(circle_at_top_left,rgba(30,73,226,0.08),transparent_28%),linear-gradient(180deg,#F8FAFF_0%,#EEF4FF_52%,#F9FBFF_100%)] px-6 py-7">
-      <div className="mx-auto max-w-[1180px] space-y-6">
+      <TracePageBody width="wide" tint contentClassName="space-y-6">
+
+        <HowItWorks
+          steps={[
+            { number: 1, title: "Select Mode & Sources", desc: "Choose Regulation Comparison to benchmark two frameworks, or RCM Comparison to assess an RCM against a regulation. Pick the library or upload source documents.", color: "#7213EA" },
+            { number: 2, title: "Run Comparison", desc: "APEX parses obligations, aligns requirements, and identifies overlaps, gaps, and deltas between the selected documents.", color: "#1E49E2" },
+            { number: 3, title: "Review & Export", desc: "Explore mapped obligations, coverage gaps, and supporting citations. Export the analysis as a structured report for downstream review.", color: "#098E7E" },
+          ]}
+        />
 
         <div className="mx-auto flex w-fit flex-wrap justify-center gap-2 rounded-full border border-[#00338D]/12 bg-white/85 p-2 shadow-[0_18px_36px_-24px_rgba(12,35,60,0.4)] backdrop-blur">
           <Button
@@ -1575,8 +1584,7 @@ export default function RegulatoryTestingPage() {
             </div>
           </>
         )}
-      </div>
-      </div>
+      </TracePageBody>
     </div>
   );
 }

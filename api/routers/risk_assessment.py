@@ -389,7 +389,7 @@ _RISK_KEYWORD_DOMAIN_HINTS: dict[str, list[str]] = {
     "encryption": ["cryptography", "data_security"],
     "data": ["data_security"],
     "network": ["network_security"],
-    "vulnerability": ["va_pt", "system_security"],
+    "vulnerability": ["Vuln. Mgmt", "system_security"],
     "patch": ["system_security", "change_management"],
     "change": ["change_management"],
     "vendor": ["third_party"],

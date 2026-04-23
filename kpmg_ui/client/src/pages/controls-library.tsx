@@ -908,12 +908,12 @@ export default function ControlsLibraryPage() {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="h-full flex flex-col overflow-hidden select-none">
+    <div className="trace-workbench-shell h-full flex flex-col overflow-hidden select-none">
       <HeroSection title="Controls Library" subtitle="Browse, filter, and analyse enterprise security controls" icon={ShieldCheck} />
-      <div className="flex-1 flex overflow-hidden">
+      <div className="trace-workbench-layout">
 
       {/* ── LEFT PANEL ───────────────────────────────────────────────────────── */}
-      <div className="shrink-0 flex flex-col bg-background/50 overflow-hidden transition-[width] duration-200" style={{ width: leftPanelOpen ? panelWidth : 0 }}>
+      <div className="trace-workbench-rail shrink-0 flex flex-col bg-background/50 overflow-hidden transition-[width] duration-200" style={{ width: leftPanelOpen ? panelWidth : 0 }}>
 
         {/* Upload section */}
         <div className="p-4 border-b space-y-3">
@@ -1072,7 +1072,7 @@ export default function ControlsLibraryPage() {
         )}
 
         {/* Document list */}
-        <ScrollArea className="flex-1">
+        <ScrollArea className="trace-workbench-scroll flex-1">
           {docsLoading && (
             <div className="flex justify-center py-8">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
@@ -1154,10 +1154,10 @@ export default function ControlsLibraryPage() {
       )}
 
       {/* ── RIGHT PANEL ─────────────────────────────────────────────────────── */}
-      <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
+      <div className="trace-workbench-main flex-1 min-w-0 flex flex-col overflow-hidden">
 
         {/* ── PANEL TOGGLE ──────────────────────────────────────────────────── */}
-        <div className="shrink-0 flex items-center px-2 py-1 border-b">
+        <div className="trace-workbench-tabs shrink-0 flex items-center px-2 py-1 border-b">
           <Button
             variant="ghost"
             size="icon"
@@ -1187,7 +1187,7 @@ export default function ControlsLibraryPage() {
 
         {/* ── DASHBOARD ──────────────────────────────────────────────────────── */}
         {rightPanelView === "dashboard" && (
-          <ScrollArea className="flex-1">
+          <ScrollArea className="trace-workbench-scroll flex-1">
             <div className="p-5 space-y-5">
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <div className="flex items-center gap-2">
@@ -1743,7 +1743,7 @@ export default function ControlsLibraryPage() {
             </div>
 
             {/* Controls list */}
-            <ScrollArea className="flex-1">
+            <ScrollArea className="trace-workbench-scroll flex-1">
               <div className="p-4 space-y-3">
                 {detailLoading && (
                   <div className="flex justify-center py-12">

@@ -81,7 +81,7 @@ def _run_5w1h_llm(controls: list[ControlInput]) -> list[dict[str, Any]]:
         f"- ID:{c.control_id} | Name:{c.name} | Description:{c.description}"
         for c in controls
     )
-    prompt = W1H_PROMPT.format(controls_text=controls_text)
+    prompt = W1H_PROMPT.replace("{controls_text}", controls_text)
     llm = get_llm()
     response = llm.invoke([HumanMessage(content=prompt)])
     raw = response.content.strip()

@@ -1,0 +1,41 @@
+
+A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+[proxy] GET /regulatory-library/documents → FastAPI error: 
+[proxy] GET /controls-library/all-controls → FastAPI error: 
+[proxy] GET /controls-library/documents → FastAPI error: 
+[proxy] GET /controls-library/merged → FastAPI error: 
+[proxy] GET /regulatory-library/documents → FastAPI error: 
+[proxy] GET /assets → FastAPI error: 
+[proxy] GET /risk-assessment/sections → FastAPI error: 
+[proxy] GET /rcm-reports → FastAPI error: 
+[proxy] GET /risk-assessment → FastAPI error: 
+[proxy] GET /controls-library/documents → FastAPI error: 
+[proxy] GET /frameworks-library/documents → FastAPI error: 
+[proxy] GET /regulatory-library/documents → FastAPI error: 
+[proxy] POST /load-vectorstore → FastAPI error: 
+[proxy] POST /load-vectorstore → FastAPI error: 
+Error fetching models: [TypeError: fetch failed] {
+  [cause]: AggregateError [ECONNREFUSED]: 
+      at internalConnectMultiple (node:net:1142:49)
+      at afterConnectMultiple (node:net:1723:7) {
+    code: 'ECONNREFUSED',
+    [errors]: [ [Error], [Error] ]
+  }
+}
+[proxy] GET /issues → FastAPI error: 
+[proxy] GET /validation-queue → FastAPI error: 
+[proxy] GET /assets → FastAPI error: 
+[proxy] GET /controls-library/all-controls → FastAPI error: 
+[proxy] GET /frameworks-library/all-elements → FastAPI error: 
+[proxy] GET /regulatory-library/all-obligations → FastAPI error: 
+[proxy] POST /risk-assessment → FastAPI error: 
+Error fetching models: [TypeError: fetch failed] {
+  [cause]: AggregateError [ECONNREFUSED]: 
+      at internalConnectMultiple (node:net:1142:49)
+      at afterConnectMultiple (node:net:1723:7) {
+    code: 'ECONNREFUSED',
+    [errors]: [ [Error], [Error] ]
+  }
+}
+[proxy] GET /controls-library/documents → FastAPI error: 
+[proxy] GET /regulatory-library/documents → FastAPI error: 

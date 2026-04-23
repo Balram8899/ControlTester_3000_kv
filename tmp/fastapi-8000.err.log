@@ -1,0 +1,6 @@
+INFO:     Started server process [50432]
+INFO:     Waiting for application startup.
+2026-04-23 14:18:06,666 [ERROR] MongoDB connection failed: db already exists with different case already have: [Trace_db] trying to create [trace_db], full error: {'ok': 0.0, 'errmsg': 'db already exists with different case already have: [Trace_db] trying to create [trace_db]', 'code': 13297, 'codeName': 'DatabaseDifferCase'}
+2026-04-23 14:18:06,666 [WARNING] [SEED] MongoDB unavailable — skipping NIST seed
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)

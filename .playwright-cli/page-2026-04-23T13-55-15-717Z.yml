@@ -1,0 +1,1206 @@
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list
+  - generic [ref=e255]:
+    - complementary [ref=e256]:
+      - generic [ref=e257]:
+        - generic [ref=e259]: K
+        - button "Expand sidebar" [ref=e260] [cursor=pointer]:
+          - img [ref=e261]
+      - navigation [ref=e263]:
+        - generic [ref=e264]:
+          - button [ref=e265] [cursor=pointer]:
+            - img [ref=e266]
+          - button [ref=e271] [cursor=pointer]:
+            - img [ref=e272]
+          - button [ref=e274] [cursor=pointer]:
+            - img [ref=e275]
+          - button [ref=e278] [cursor=pointer]:
+            - img [ref=e279]
+          - button [ref=e281] [cursor=pointer]:
+            - img [ref=e282]
+          - button [ref=e286] [cursor=pointer]:
+            - img [ref=e287]
+          - button [ref=e290] [cursor=pointer]:
+            - img [ref=e291]
+          - button [ref=e296] [cursor=pointer]:
+            - img [ref=e297]
+          - button [ref=e302] [cursor=pointer]:
+            - img [ref=e303]
+          - button [ref=e305] [cursor=pointer]:
+            - img [ref=e306]
+          - button [ref=e308] [cursor=pointer]:
+            - img [ref=e309]
+          - button [ref=e311] [cursor=pointer]:
+            - img [ref=e312]
+      - generic [ref=e318]: A
+    - generic [ref=e319]:
+      - main [ref=e320]:
+        - generic [ref=e322]:
+          - generic [ref=e323]:
+            - generic [ref=e325]:
+              - generic [ref=e326]:
+                - button "KPMG | TRACE" [ref=e327] [cursor=pointer]:
+                  - generic [ref=e328]: KPMG
+                  - generic [ref=e329]: "|"
+                  - generic [ref=e330]: TRACE
+                - generic [ref=e331]:
+                  - generic [ref=e332]: /
+                  - generic [ref=e333]: Regulatory Library
+              - button "Sign Out" [ref=e335] [cursor=pointer]:
+                - img
+                - text: Sign Out
+            - generic [ref=e336]:
+              - generic [ref=e337]:
+                - img [ref=e339]
+                - generic [ref=e341]:
+                  - paragraph [ref=e342]: TRACE workspace
+                  - heading "Regulatory Library" [level=1] [ref=e343]
+                  - paragraph [ref=e344]: Browse and analyse regulatory frameworks and obligations
+              - generic [ref=e345]:
+                - generic [ref=e346]: Active workspace
+                - paragraph [ref=e347]: Consistent shell, larger work surfaces, and clearer summary framing.
+          - generic [ref=e348]:
+            - generic [ref=e349]:
+              - generic [ref=e350]:
+                - generic [ref=e351]:
+                  - paragraph [ref=e352]: Library intake
+                  - heading "Add Documents" [level=2] [ref=e353]:
+                    - img [ref=e354]
+                    - text: Add Documents
+                  - paragraph [ref=e356]: Ingest regulatory source files and update the central obligation library.
+                - generic [ref=e357] [cursor=pointer]:
+                  - img [ref=e359]
+                  - paragraph [ref=e362]: Select source documents
+                  - paragraph [ref=e363]: PDF, Word, TXT, MD, CSV, Excel, or image
+                  - paragraph [ref=e364]: Click to browse
+              - generic [ref=e365]:
+                - generic [ref=e366]:
+                  - text: Library
+                  - generic [ref=e367]: "2"
+                - generic [ref=e368]:
+                  - button "Library Dashboard" [ref=e369] [cursor=pointer]:
+                    - img
+                  - button "Gap Analysis" [ref=e370] [cursor=pointer]:
+                    - img
+                  - button [ref=e371] [cursor=pointer]:
+                    - img
+                  - button "Clear entire library" [ref=e372] [cursor=pointer]:
+                    - img
+              - generic [ref=e376]:
+                - generic [ref=e378] [cursor=pointer]:
+                  - generic [ref=e379]:
+                    - paragraph [ref=e380]: Reserve Bank of India (Information Technology Governance, Risk, Controls and Assurance Practices) Directions, 2023
+                    - paragraph [ref=e381]: RBI MD.pdf
+                    - generic [ref=e383]: 32 obligations
+                  - button [ref=e384]:
+                    - img
+                - generic [ref=e386] [cursor=pointer]:
+                  - generic [ref=e387]:
+                    - paragraph [ref=e388]: TM-G-1 General Principles for Technology Risk Management
+                    - paragraph [ref=e389]: HKMA TRM.pdf
+                    - generic [ref=e391]: 33 obligations
+                  - button [ref=e392]:
+                    - img
+            - generic "Drag to resize" [ref=e393]
+            - generic [ref=e394]:
+              - button "Collapse panel" [ref=e396] [cursor=pointer]:
+                - img
+              - generic [ref=e400]:
+                - generic [ref=e401]:
+                  - generic [ref=e402]:
+                    - paragraph [ref=e403]: Regulatory overview
+                    - heading "Library Dashboard" [level=1] [ref=e404]
+                    - paragraph [ref=e405]: Aggregate metrics across all ingested regulations
+                  - generic [ref=e406]: 2 documents
+                - generic [ref=e408]:
+                  - generic [ref=e410]:
+                    - generic [ref=e411]:
+                      - paragraph [ref=e412]: Documents
+                      - paragraph [ref=e413]: "2"
+                      - paragraph [ref=e414]: in library
+                    - generic [ref=e415]: 📄
+                  - generic [ref=e417]:
+                    - generic [ref=e418]:
+                      - paragraph [ref=e419]: Obligations
+                      - paragraph [ref=e420]: "65"
+                      - paragraph [ref=e421]: total extracted
+                    - generic [ref=e422]: 📋
+                  - generic [ref=e424]:
+                    - generic [ref=e425]:
+                      - paragraph [ref=e426]: Domains
+                      - paragraph [ref=e427]: "15"
+                      - paragraph [ref=e428]: areas covered
+                    - generic [ref=e429]: 🏷️
+                  - generic [ref=e430] [cursor=pointer]:
+                    - paragraph [ref=e431]: Merged
+                    - paragraph [ref=e432]: "-"
+                    - paragraph [ref=e433]: click to compute
+                - generic [ref=e434]:
+                  - generic [ref=e435]:
+                    - generic [ref=e436]:
+                      - paragraph [ref=e437]: Cross-Library Analysis
+                      - heading "Regulation-Control Coverage" [level=3] [ref=e438]
+                    - button "View Full Analysis" [ref=e439] [cursor=pointer]:
+                      - text: View Full Analysis
+                      - img [ref=e440]
+                  - generic [ref=e442]:
+                    - generic [ref=e443]:
+                      - paragraph [ref=e444]: 51%
+                      - paragraph [ref=e445]: obligations covered
+                    - generic [ref=e446]:
+                      - paragraph [ref=e447]: "65"
+                      - paragraph [ref=e448]: total obligations
+                    - generic [ref=e449]:
+                      - paragraph [ref=e450]: "32"
+                      - paragraph [ref=e451]: gap obligations
+                    - generic [ref=e452]:
+                      - paragraph [ref=e453]: "294"
+                      - paragraph [ref=e454]: controls assessed
+                  - generic [ref=e455]:
+                    - generic [ref=e456]: Reserve Bank of India (Information Technology Governance, Risk, Controls and Assurance Practices) Directions, 2023
+                    - generic [ref=e457]: TM-G-1 General Principles for Technology Risk Management
+                - generic [ref=e458]:
+                  - heading "Domain Distribution" [level=3] [ref=e460]
+                  - paragraph [ref=e461]: Click a bar to filter obligations below
+                  - generic [ref=e462]:
+                    - generic [ref=e463] [cursor=pointer]:
+                      - generic [ref=e464]: governance
+                      - generic [ref=e467]: "14"
+                    - generic [ref=e468] [cursor=pointer]:
+                      - generic [ref=e469]: cyber operations
+                      - generic [ref=e472]: "8"
+                    - generic [ref=e473] [cursor=pointer]:
+                      - generic [ref=e474]: business continuity
+                      - generic [ref=e477]: "7"
+                    - generic [ref=e478] [cursor=pointer]:
+                      - generic [ref=e479]: access control
+                      - generic [ref=e482]: "6"
+                    - generic [ref=e483] [cursor=pointer]:
+                      - generic [ref=e484]: third party
+                      - generic [ref=e487]: "4"
+                    - generic [ref=e488] [cursor=pointer]:
+                      - generic [ref=e489]: asset management
+                      - generic [ref=e492]: "3"
+                    - generic [ref=e493] [cursor=pointer]:
+                      - generic [ref=e494]: application security
+                      - generic [ref=e497]: "3"
+                    - generic [ref=e498] [cursor=pointer]:
+                      - generic [ref=e499]: data security
+                      - generic [ref=e502]: "3"
+                    - generic [ref=e503] [cursor=pointer]:
+                      - generic [ref=e504]: system security
+                      - generic [ref=e507]: "3"
+                    - generic [ref=e508] [cursor=pointer]:
+                      - generic [ref=e509]: incident response
+                      - generic [ref=e512]: "3"
+                    - generic [ref=e513] [cursor=pointer]:
+                      - generic [ref=e514]: audit
+                      - generic [ref=e517]: "3"
+                    - generic [ref=e518] [cursor=pointer]:
+                      - generic [ref=e519]: network security
+                      - generic [ref=e522]: "3"
+                    - generic [ref=e523] [cursor=pointer]:
+                      - generic [ref=e524]: change management
+                      - generic [ref=e527]: "2"
+                    - generic [ref=e528] [cursor=pointer]:
+                      - generic [ref=e529]: cryptography
+                      - generic [ref=e532]: "2"
+                    - generic [ref=e533] [cursor=pointer]:
+                      - generic [ref=e534]: va pt
+                      - generic [ref=e537]: "1"
+                - generic [ref=e538]:
+                  - generic [ref=e539]:
+                    - generic [ref=e540]:
+                      - generic [ref=e541]:
+                        - heading "All Obligations" [level=3] [ref=e542]
+                        - generic [ref=e543]: 65 shown
+                      - generic [ref=e544]:
+                        - button "All" [ref=e545] [cursor=pointer]:
+                          - img
+                          - text: All
+                        - button "Merged" [ref=e546] [cursor=pointer]:
+                          - img
+                          - text: Merged
+                    - generic [ref=e547]:
+                      - img [ref=e548]
+                      - textbox "Search obligations..." [ref=e551]
+                  - generic [ref=e552]:
+                    - generic [ref=e555]:
+                      - generic [ref=e556]:
+                        - code [ref=e557]: OBL-001
+                        - generic [ref=e558]: governance
+                        - generic [ref=e559]: mandatory
+                        - button "9" [ref=e560] [cursor=pointer]:
+                          - img [ref=e561]
+                          - text: "9"
+                          - img [ref=e564]
+                      - paragraph [ref=e566]: "REs shall put in place a robust IT Governance Framework based on the aforementioned focus areas that inter alia: i. specifies the governance structure and processes necessary to meet the RE’s business/ strategic objectives; ii. specifies the roles (including authority) and responsibilities of the Board of Directors (Board) / Board level Committee and Senior Management; and iii. includes adequate oversight mechanisms to ensure accountability and mitigation of IT and cyber/ information security risks."
+                      - generic [ref=e567]:
+                        - img [ref=e568]
+                        - generic [ref=e571]: Reserve Bank of India (Information Technology Governance, Risk, Controls and Assurance Practices) Directions, 2023
+                        - generic "RBI MD.pdf" [ref=e572]: (RBI MD.pdf)
+                        - generic [ref=e573]: §4(b)
+                    - generic [ref=e576]:
+                      - generic [ref=e577]:
+                        - code [ref=e578]: OBL-002
+                        - generic [ref=e579]: governance
+                        - generic [ref=e580]: mandatory
+                        - button "4" [ref=e581] [cursor=pointer]:
+                          - img [ref=e582]
+                          - text: "4"
+                          - img [ref=e585]
+                      - paragraph [ref=e587]: Enterprise-wide risk management policy or operational risk management policy shall also incorporate periodic assessment of IT-related risks (both inherent and potential risk).
+                      - generic [ref=e588]:
+                        - img [ref=e589]
+                        - generic [ref=e592]: Reserve Bank of India (Information Technology Governance, Risk, Controls and Assurance Practices) Directions, 2023
+                        - generic "RBI MD.pdf" [ref=e593]: (RBI MD.pdf)
+                        - generic [ref=e594]: §4(c)
+                    - generic [ref=e597]:
+                      - generic [ref=e598]:
+                        - code [ref=e599]: OBL-003
+                        - generic [ref=e600]: governance
+                        - generic [ref=e601]: mandatory
+                        - button "17" [ref=e602] [cursor=pointer]:
+                          - img [ref=e603]
+                          - text: "17"
+                          - img [ref=e606]
+                      - paragraph [ref=e608]: The strategies and policies related to IT, Information Assets, Business Continuity, Information Security, Cyber Security (including Incident Response and Recovery Management/ Cyber Crisis Management) shall be approved by the Board of Directors.
+                      - generic [ref=e609]:
+                        - img [ref=e610]
+                        - generic [ref=e613]: Reserve Bank of India (Information Technology Governance, Risk, Controls and Assurance Practices) Directions, 2023
+                        - generic "RBI MD.pdf" [ref=e614]: (RBI MD.pdf)
+                        - generic [ref=e615]: §5(a)
+                    - generic [ref=e618]:
+                      - generic [ref=e619]:
+                        - code [ref=e620]: OBL-004
+                        - generic [ref=e621]: governance
+                        - generic [ref=e622]: mandatory
+                        - button "2" [ref=e623] [cursor=pointer]:
+                          - img [ref=e624]
+                          - text: "2"
+                          - img [ref=e627]
+                      - paragraph [ref=e629]: Such strategies and policies shall be reviewed at least annually by the Board.
+                      - generic [ref=e630]:
+                        - img [ref=e631]
+                        - generic [ref=e634]: Reserve Bank of India (Information Technology Governance, Risk, Controls and Assurance Practices) Directions, 2023
+                        - generic "RBI MD.pdf" [ref=e635]: (RBI MD.pdf)
+                        - generic [ref=e636]: §5(b)
+                    - generic [ref=e639]:
+                      - generic [ref=e640]:
+                        - code [ref=e641]: OBL-005
+                        - generic [ref=e642]: governance
+                        - generic [ref=e643]: mandatory
+                        - button "4" [ref=e644] [cursor=pointer]:
+                          - img [ref=e645]
+                          - text: "4"
+                          - img [ref=e648]
+                      - paragraph [ref=e650]: REs shall establish a Board-level IT Strategy Committee (ITSC).
+                      - generic [ref=e651]:
+                        - img [ref=e652]
+                        - generic [ref=e655]: Reserve Bank of India (Information Technology Governance, Risk, Controls and Assurance Practices) Directions, 2023
+                        - generic "RBI MD.pdf" [ref=e656]: (RBI MD.pdf)
+                        - generic [ref=e657]: §6(a)
+                    - generic [ref=e660]:
+                      - generic [ref=e661]:
+                        - code [ref=e662]: OBL-006
+                        - generic [ref=e663]: governance
+                        - generic [ref=e664]: mandatory
+                        - button "3" [ref=e665] [cursor=pointer]:
+                          - img [ref=e666]
+                          - text: "3"
+                          - img [ref=e669]
+                      - paragraph [ref=e671]: The ITSC shall meet at least on a quarterly basis.
+                      - generic [ref=e672]:
+                        - img [ref=e673]
+                        - generic [ref=e676]: Reserve Bank of India (Information Technology Governance, Risk, Controls and Assurance Practices) Directions, 2023
+                        - generic "RBI MD.pdf" [ref=e677]: (RBI MD.pdf)
+                        - generic [ref=e678]: §6(c)
+                    - generic [ref=e681]:
+                      - generic [ref=e682]:
+                        - code [ref=e683]: OBL-007
+                        - generic [ref=e684]: business continuity
+                        - generic [ref=e685]: mandatory
+                        - button "5" [ref=e686] [cursor=pointer]:
+                          - img [ref=e687]
+                          - text: "5"
+                          - img [ref=e690]
+                      - paragraph [ref=e692]: Review, at least on annual basis, the adequacy and effectiveness of the Business Continuity Planning and Disaster Recovery Management of the RE.
+                      - generic [ref=e693]:
+                        - img [ref=e694]
+                        - generic [ref=e697]: Reserve Bank of India (Information Technology Governance, Risk, Controls and Assurance Practices) Directions, 2023
+                        - generic "RBI MD.pdf" [ref=e698]: (RBI MD.pdf)
+                        - generic [ref=e699]: §6(d)(vi)
+                    - generic [ref=e702]:
+                      - generic [ref=e703]:
+                        - code [ref=e704]: OBL-008
+                        - generic [ref=e705]: governance
+                        - generic [ref=e706]: mandatory
+                        - button "14" [ref=e707] [cursor=pointer]:
+                          - img [ref=e708]
+                          - text: "14"
+                          - img [ref=e711]
+                      - paragraph [ref=e713]: REs shall establish an IT Steering Committee with representation at Senior Management level from IT and business functions.
+                      - generic [ref=e714]:
+                        - img [ref=e715]
+                        - generic [ref=e718]: Reserve Bank of India (Information Technology Governance, Risk, Controls and Assurance Practices) Directions, 2023
+                        - generic "RBI MD.pdf" [ref=e719]: (RBI MD.pdf)
+                        - generic [ref=e720]: §7(b)
+                    - generic [ref=e723]:
+                      - generic [ref=e724]:
+                        - code [ref=e725]: OBL-009
+                        - generic [ref=e726]: governance
+                        - generic [ref=e727]: mandatory
+                        - button "6" [ref=e728] [cursor=pointer]:
+                          - img [ref=e729]
+                          - text: "6"
+                          - img [ref=e732]
+                      - paragraph [ref=e734]: REs shall appoint a sufficiently senior level, technically competent and experienced official in IT related aspects as Head of IT Function.
+                      - generic [ref=e735]:
+                        - img [ref=e736]
+                        - generic [ref=e739]: Reserve Bank of India (Information Technology Governance, Risk, Controls and Assurance Practices) Directions, 2023
+                        - generic "RBI MD.pdf" [ref=e740]: (RBI MD.pdf)
+                        - generic [ref=e741]: §8(a)
+                    - generic [ref=e744]:
+                      - generic [ref=e745]:
+                        - code [ref=e746]: OBL-010
+                        - generic [ref=e747]: cyber operations
+                        - generic [ref=e748]: mandatory
+                        - button "23" [ref=e749] [cursor=pointer]:
+                          - img [ref=e750]
+                          - text: "23"
+                          - img [ref=e753]
+                      - paragraph [ref=e755]: REs shall put in place a robust IT Service Management Framework for supporting their information systems and infrastructure to ensure the operational resilience of their entire IT environment (including DR sites).
+                      - generic [ref=e756]:
+                        - img [ref=e757]
+                        - generic [ref=e760]: Reserve Bank of India (Information Technology Governance, Risk, Controls and Assurance Practices) Directions, 2023
+                        - generic "RBI MD.pdf" [ref=e761]: (RBI MD.pdf)
+                        - generic [ref=e762]: §9(a)
+                    - generic [ref=e765]:
+                      - generic [ref=e766]:
+                        - code [ref=e767]: OBL-011
+                        - generic [ref=e768]: asset management
+                        - generic [ref=e769]: mandatory
+                        - button "8" [ref=e770] [cursor=pointer]:
+                          - img [ref=e771]
+                          - text: "8"
+                          - img [ref=e774]
+                      - paragraph [ref=e776]: REs shall ensure identification and mapping of the security classification (in terms of Confidentiality, Integrity, and Availability) of information assets based on their criticality to the REs’ operations.
+                      - generic [ref=e777]:
+                        - img [ref=e778]
+                        - generic [ref=e781]: Reserve Bank of India (Information Technology Governance, Risk, Controls and Assurance Practices) Directions, 2023
+                        - generic "RBI MD.pdf" [ref=e782]: (RBI MD.pdf)
+                        - generic [ref=e783]: §9(c)
+                    - generic [ref=e786]:
+                      - generic [ref=e787]:
+                        - code [ref=e788]: OBL-012
+                        - generic [ref=e789]: asset management
+                        - generic [ref=e790]: mandatory
+                        - button "2" [ref=e791] [cursor=pointer]:
+                          - img [ref=e792]
+                          - text: "2"
+                          - img [ref=e795]
+                      - paragraph [ref=e797]: For seamless continuity of business operations, REs shall avoid using outdated and unsupported hardware or software and shall monitor software’s end-of-support (EOS) date and Annual Maintenance Contract (AMC) dates of IT hardware on an ongoing basis.
+                      - generic [ref=e798]:
+                        - img [ref=e799]
+                        - generic [ref=e802]: Reserve Bank of India (Information Technology Governance, Risk, Controls and Assurance Practices) Directions, 2023
+                        - generic "RBI MD.pdf" [ref=e803]: (RBI MD.pdf)
+                        - generic [ref=e804]: §9(d)
+                    - generic [ref=e807]:
+                      - generic [ref=e808]:
+                        - code [ref=e809]: OBL-013
+                        - generic [ref=e810]: third party
+                        - generic [ref=e811]: mandatory
+                        - button "13" [ref=e812] [cursor=pointer]:
+                          - img [ref=e813]
+                          - text: "13"
+                          - img [ref=e816]
+                      - paragraph [ref=e818]: "REs shall, put in place appropriate vendor risk assessment process and controls proportionate to the assessed risk and materiality to, inter alia: i. mitigate concentration risk; ii. eliminate or address any conflict of interests; iii. mitigate risks associated with single point of failure; iv. comply with applicable legal, regulatory requirements and standards to protect customer data; v. provide high availability (for uninterrupted customer service); and vi. manage supply chain risks effectively."
+                      - generic [ref=e819]:
+                        - img [ref=e820]
+                        - generic [ref=e823]: Reserve Bank of India (Information Technology Governance, Risk, Controls and Assurance Practices) Directions, 2023
+                        - generic "RBI MD.pdf" [ref=e824]: (RBI MD.pdf)
+                        - generic [ref=e825]: §10
+                    - generic [ref=e828]:
+                      - generic [ref=e829]:
+                        - code [ref=e830]: OBL-014
+                        - generic [ref=e831]: cyber operations
+                        - generic [ref=e832]: mandatory
+                        - button "13" [ref=e833] [cursor=pointer]:
+                          - img [ref=e834]
+                          - text: "13"
+                          - img [ref=e837]
+                      - paragraph [ref=e839]: On an annual or more frequent basis, REs shall proactively assess capacity requirement of IT resources.
+                      - generic [ref=e840]:
+                        - img [ref=e841]
+                        - generic [ref=e844]: Reserve Bank of India (Information Technology Governance, Risk, Controls and Assurance Practices) Directions, 2023
+                        - generic "RBI MD.pdf" [ref=e845]: (RBI MD.pdf)
+                        - generic [ref=e846]: §11(b)
+                    - generic [ref=e849]:
+                      - generic [ref=e850]:
+                        - code [ref=e851]: OBL-015
+                        - generic [ref=e852]: application security
+                        - generic [ref=e853]: mandatory
+                        - button "14" [ref=e854] [cursor=pointer]:
+                          - img [ref=e855]
+                          - text: "14"
+                          - img [ref=e858]
+                      - paragraph [ref=e860]: REs shall obtain the source codes for all critical applications from their vendors. Where obtaining of the source code is not possible, REs shall put in place a source code escrow arrangement or other arrangements to adequately mitigate the risk of default by the vendor.
+                      - generic [ref=e861]:
+                        - img [ref=e862]
+                        - generic [ref=e865]: Reserve Bank of India (Information Technology Governance, Risk, Controls and Assurance Practices) Directions, 2023
+                        - generic "RBI MD.pdf" [ref=e866]: (RBI MD.pdf)
+                        - generic [ref=e867]: §12(f)
+                    - generic [ref=e870]:
+                      - generic [ref=e871]:
+                        - code [ref=e872]: OBL-016
+                        - generic [ref=e873]: application security
+                        - generic [ref=e874]: mandatory
+                        - button "5" [ref=e875] [cursor=pointer]:
+                          - img [ref=e876]
+                          - text: "5"
+                          - img [ref=e879]
+                      - paragraph [ref=e881]: REs shall obtain a certificate or a written confirmation from the application developer or vendor stating that the application is free of known vulnerabilities, malware, and any covert channels in the code.
+                      - generic [ref=e882]:
+                        - img [ref=e883]
+                        - generic [ref=e886]: Reserve Bank of India (Information Technology Governance, Risk, Controls and Assurance Practices) Directions, 2023
+                        - generic "RBI MD.pdf" [ref=e887]: (RBI MD.pdf)
+                        - generic [ref=e888]: §12(g)
+                    - generic [ref=e891]:
+                      - generic [ref=e892]:
+                        - code [ref=e893]: OBL-017
+                        - generic [ref=e894]: change management
+                        - generic [ref=e895]: mandatory
+                        - button "22" [ref=e896] [cursor=pointer]:
+                          - img [ref=e897]
+                          - text: "22"
+                          - img [ref=e900]
+                      - paragraph [ref=e902]: "REs shall put in place documented policy(ies) and procedures for change and patch management to ensure the following: (a)the business impact of implementing patches/ changes... are assessed; (b)the patches/ changes are applied/ implemented and reviewed in a secure and timely manner with necessary approvals; (c) any changes to an application system or data are justified by genuine business needs... and (d)mechanism is established to recover from failed changes/ patch deployment."
+                      - generic [ref=e903]:
+                        - img [ref=e904]
+                        - generic [ref=e907]: Reserve Bank of India (Information Technology Governance, Risk, Controls and Assurance Practices) Directions, 2023
+                        - generic "RBI MD.pdf" [ref=e908]: (RBI MD.pdf)
+                        - generic [ref=e909]: §13
+                    - generic [ref=e912]:
+                      - generic [ref=e913]:
+                        - code [ref=e914]: OBL-018
+                        - generic [ref=e915]: cyber operations
+                        - generic [ref=e916]: mandatory
+                        - button "13" [ref=e917] [cursor=pointer]:
+                          - img [ref=e918]
+                          - text: "13"
+                          - img [ref=e921]
+                      - paragraph [ref=e923]: Every IT application which can access or affect critical or sensitive information, shall have necessary audit and system logging capability and should provide audit trails.
+                      - generic [ref=e924]:
+                        - img [ref=e925]
+                        - generic [ref=e928]: Reserve Bank of India (Information Technology Governance, Risk, Controls and Assurance Practices) Directions, 2023
+                        - generic "RBI MD.pdf" [ref=e929]: (RBI MD.pdf)
+                        - generic [ref=e930]: §15(a)
+                    - generic [ref=e933]:
+                      - generic [ref=e934]:
+                        - code [ref=e935]: OBL-019
+                        - generic [ref=e936]: cyber operations
+                        - generic [ref=e937]: mandatory
+                        - button "18" [ref=e938] [cursor=pointer]:
+                          - img [ref=e939]
+                          - text: "18"
+                          - img [ref=e942]
+                      - paragraph [ref=e944]: REs shall put in place a system for regularly monitoring the audit trails and system logs to detect any unauthorised activity.
+                      - generic [ref=e945]:
+                        - img [ref=e946]
+                        - generic [ref=e949]: Reserve Bank of India (Information Technology Governance, Risk, Controls and Assurance Practices) Directions, 2023
+                        - generic "RBI MD.pdf" [ref=e950]: (RBI MD.pdf)
+                        - generic [ref=e951]: §15(c)
+                    - generic [ref=e954]:
+                      - generic [ref=e955]:
+                        - code [ref=e956]: OBL-020
+                        - generic [ref=e957]: cryptography
+                        - generic [ref=e958]: mandatory
+                        - button "6" [ref=e959] [cursor=pointer]:
+                          - img [ref=e960]
+                          - text: "6"
+                          - img [ref=e963]
+                      - paragraph [ref=e965]: The key length, algorithms, cipher suites and applicable protocols used in transmission channels, processing of data and authentication purpose shall be strong. REs shall adopt internationally accepted and published standards that are not deprecated/ demonstrated to be insecure/ vulnerable.
+                      - generic [ref=e966]:
+                        - img [ref=e967]
+                        - generic [ref=e970]: Reserve Bank of India (Information Technology Governance, Risk, Controls and Assurance Practices) Directions, 2023
+                        - generic "RBI MD.pdf" [ref=e971]: (RBI MD.pdf)
+                        - generic [ref=e972]: §16
+                    - generic [ref=e975]:
+                      - generic [ref=e976]:
+                        - code [ref=e977]: OBL-021
+                        - generic [ref=e978]: data security
+                        - generic [ref=e979]: mandatory
+                        - button "6" [ref=e980] [cursor=pointer]:
+                          - img [ref=e981]
+                          - text: "6"
+                          - img [ref=e984]
+                      - paragraph [ref=e986]: In order to prevent unauthorised modification of data, REs shall ensure that there is no manual intervention or manual modification in data while it is being transferred from one process to another or from one application to another, in respect of critical applications.
+                      - generic [ref=e987]:
+                        - img [ref=e988]
+                        - generic [ref=e991]: Reserve Bank of India (Information Technology Governance, Risk, Controls and Assurance Practices) Directions, 2023
+                        - generic "RBI MD.pdf" [ref=e992]: (RBI MD.pdf)
+                        - generic [ref=e993]: §17(a)
+                    - generic [ref=e996]:
+                      - generic [ref=e997]:
+                        - code [ref=e998]: OBL-022
+                        - generic [ref=e999]: system security
+                        - generic [ref=e1000]: recommended
+                        - button "3" [ref=e1001] [cursor=pointer]:
+                          - img [ref=e1002]
+                          - text: "3"
+                          - img [ref=e1005]
+                      - paragraph [ref=e1007]: The DC and DR sites should be geographically well separated so that both the sites are not affected by a similar threat associated to their location.
+                      - generic [ref=e1008]:
+                        - img [ref=e1009]
+                        - generic [ref=e1012]: Reserve Bank of India (Information Technology Governance, Risk, Controls and Assurance Practices) Directions, 2023
+                        - generic "RBI MD.pdf" [ref=e1013]: (RBI MD.pdf)
+                        - generic [ref=e1014]: §18(b)
+                    - generic [ref=e1017]:
+                      - generic [ref=e1018]:
+                        - code [ref=e1019]: OBL-023
+                        - generic [ref=e1020]: access control
+                        - generic [ref=e1021]: mandatory
+                        - button "16" [ref=e1022] [cursor=pointer]:
+                          - img [ref=e1023]
+                          - text: "16"
+                          - img [ref=e1026]
+                      - paragraph [ref=e1028]: REs shall adopt multi-factor authentication for privileged users of i) critical information systems and ii) for critical activities, basis the RE’s risk assessment.
+                      - generic [ref=e1029]:
+                        - img [ref=e1030]
+                        - generic [ref=e1033]: Reserve Bank of India (Information Technology Governance, Risk, Controls and Assurance Practices) Directions, 2023
+                        - generic "RBI MD.pdf" [ref=e1034]: (RBI MD.pdf)
+                        - generic [ref=e1035]: §19(c)
+                    - generic [ref=e1038]:
+                      - generic [ref=e1039]:
+                        - code [ref=e1040]: OBL-024
+                        - generic [ref=e1041]: access control
+                        - generic [ref=e1042]: mandatory
+                        - button "12" [ref=e1043] [cursor=pointer]:
+                          - img [ref=e1044]
+                          - text: "12"
+                          - img [ref=e1047]
+                      - paragraph [ref=e1049]: Implement multi-factor authentication for enterprise access (logical) to critical systems;
+                      - generic [ref=e1050]:
+                        - img [ref=e1051]
+                        - generic [ref=e1054]: Reserve Bank of India (Information Technology Governance, Risk, Controls and Assurance Practices) Directions, 2023
+                        - generic "RBI MD.pdf" [ref=e1055]: (RBI MD.pdf)
+                        - generic [ref=e1056]: §20(b)
+                    - generic [ref=e1059]:
+                      - generic [ref=e1060]:
+                        - code [ref=e1061]: OBL-025
+                        - generic [ref=e1062]: business continuity
+                        - generic [ref=e1063]: mandatory
+                        - button "5" [ref=e1064] [cursor=pointer]:
+                          - img [ref=e1065]
+                          - text: "5"
+                          - img [ref=e1068]
+                      - paragraph [ref=e1070]: REs shall define suitable metrics for system performance, recovery and business resumption, including Recovery Point Objective (RPO) and Recovery Time Objective (RTO), for all critical information systems.
+                      - generic [ref=e1071]:
+                        - img [ref=e1072]
+                        - generic [ref=e1075]: Reserve Bank of India (Information Technology Governance, Risk, Controls and Assurance Practices) Directions, 2023
+                        - generic "RBI MD.pdf" [ref=e1076]: (RBI MD.pdf)
+                        - generic [ref=e1077]: §21(a)
+                    - generic [ref=e1080]:
+                      - generic [ref=e1081]:
+                        - code [ref=e1082]: OBL-026
+                        - generic [ref=e1083]: governance
+                        - generic [ref=e1084]: mandatory
+                        - button "10" [ref=e1085] [cursor=pointer]:
+                          - img [ref=e1086]
+                          - text: "10"
+                          - img [ref=e1089]
+                      - paragraph [ref=e1091]: A senior level executive (preferably in the rank of a General Manager or an equivalent position) shall be designated as the Chief Information Security Officer (CISO).
+                      - generic [ref=e1092]:
+                        - img [ref=e1093]
+                        - generic [ref=e1096]: Reserve Bank of India (Information Technology Governance, Risk, Controls and Assurance Practices) Directions, 2023
+                        - generic "RBI MD.pdf" [ref=e1097]: (RBI MD.pdf)
+                        - generic [ref=e1098]: §24(c)
+                    - generic [ref=e1101]:
+                      - generic [ref=e1102]:
+                        - code [ref=e1103]: OBL-027
+                        - generic [ref=e1104]: cyber operations
+                        - generic [ref=e1105]: mandatory
+                        - button "6" [ref=e1106] [cursor=pointer]:
+                          - img [ref=e1107]
+                          - text: "6"
+                          - img [ref=e1110]
+                      - paragraph [ref=e1112]: The CISO’s Office shall manage and monitor Security Operations Centre (SOC) and drive cyber security related projects.
+                      - generic [ref=e1113]:
+                        - img [ref=e1114]
+                        - generic [ref=e1117]: Reserve Bank of India (Information Technology Governance, Risk, Controls and Assurance Practices) Directions, 2023
+                        - generic "RBI MD.pdf" [ref=e1118]: (RBI MD.pdf)
+                        - generic [ref=e1119]: §24(d)(iv)
+                    - generic [ref=e1122]:
+                      - generic [ref=e1123]:
+                        - code [ref=e1124]: OBL-028
+                        - generic [ref=e1125]: va pt
+                        - generic [ref=e1126]: mandatory
+                        - button "13" [ref=e1127] [cursor=pointer]:
+                          - img [ref=e1128]
+                          - text: "13"
+                          - img [ref=e1131]
+                      - paragraph [ref=e1133]: For critical information systems and/ or those in the De-Militarized Zone (DMZ) having customer interface, VA shall be conducted at least once in every six months and PT at least once in 12 months.
+                      - generic [ref=e1134]:
+                        - img [ref=e1135]
+                        - generic [ref=e1138]: Reserve Bank of India (Information Technology Governance, Risk, Controls and Assurance Practices) Directions, 2023
+                        - generic "RBI MD.pdf" [ref=e1139]: (RBI MD.pdf)
+                        - generic [ref=e1140]: §26(a)
+                    - generic [ref=e1143]:
+                      - generic [ref=e1144]:
+                        - code [ref=e1145]: OBL-029
+                        - generic [ref=e1146]: incident response
+                        - generic [ref=e1147]: mandatory
+                        - button "9" [ref=e1148] [cursor=pointer]:
+                          - img [ref=e1149]
+                          - text: "9"
+                          - img [ref=e1152]
+                      - paragraph [ref=e1154]: REs shall pro-actively notify CERT-In and RBI regarding incidents, as per regulatory requirements.
+                      - generic [ref=e1155]:
+                        - img [ref=e1156]
+                        - generic [ref=e1159]: Reserve Bank of India (Information Technology Governance, Risk, Controls and Assurance Practices) Directions, 2023
+                        - generic "RBI MD.pdf" [ref=e1160]: (RBI MD.pdf)
+                        - generic [ref=e1161]: §27(d)
+                    - generic [ref=e1164]:
+                      - generic [ref=e1165]:
+                        - code [ref=e1166]: OBL-030
+                        - generic [ref=e1167]: business continuity
+                        - generic [ref=e1168]: mandatory
+                        - button "5" [ref=e1169] [cursor=pointer]:
+                          - img [ref=e1170]
+                          - text: "5"
+                          - img [ref=e1173]
+                      - paragraph [ref=e1175]: Periodicity of DR drills for critical information systems shall be at least on a half-yearly basis and for other information systems, as per RE’s risk assessment.
+                      - generic [ref=e1176]:
+                        - img [ref=e1177]
+                        - generic [ref=e1180]: Reserve Bank of India (Information Technology Governance, Risk, Controls and Assurance Practices) Directions, 2023
+                        - generic "RBI MD.pdf" [ref=e1181]: (RBI MD.pdf)
+                        - generic [ref=e1182]: §29(a)
+                    - generic [ref=e1185]:
+                      - generic [ref=e1186]:
+                        - code [ref=e1187]: OBL-031
+                        - generic [ref=e1188]: business continuity
+                        - generic [ref=e1189]: mandatory
+                        - button "8" [ref=e1190] [cursor=pointer]:
+                          - img [ref=e1191]
+                          - text: "8"
+                          - img [ref=e1194]
+                      - paragraph [ref=e1196]: REs shall backup data and periodically restore such backed-up data to check its usability. The integrity of such backup data shall be preserved along with securing it from unauthorised access.
+                      - generic [ref=e1197]:
+                        - img [ref=e1198]
+                        - generic [ref=e1201]: Reserve Bank of India (Information Technology Governance, Risk, Controls and Assurance Practices) Directions, 2023
+                        - generic "RBI MD.pdf" [ref=e1202]: (RBI MD.pdf)
+                        - generic [ref=e1203]: §29(e)
+                    - generic [ref=e1206]:
+                      - generic [ref=e1207]:
+                        - code [ref=e1208]: OBL-032
+                        - generic [ref=e1209]: audit
+                        - generic [ref=e1210]: mandatory
+                        - button "5" [ref=e1211] [cursor=pointer]:
+                          - img [ref=e1212]
+                          - text: "5"
+                          - img [ref=e1215]
+                      - paragraph [ref=e1217]: REs shall put in place an IS Audit Policy. The IS Audit Policy shall contain a clear description of its mandate, purpose, authority, audit universe, periodicity of audit etc. The policy shall be approved by the ACB and reviewed at least annually.
+                      - generic [ref=e1218]:
+                        - img [ref=e1219]
+                        - generic [ref=e1222]: Reserve Bank of India (Information Technology Governance, Risk, Controls and Assurance Practices) Directions, 2023
+                        - generic "RBI MD.pdf" [ref=e1223]: (RBI MD.pdf)
+                        - generic [ref=e1224]: §30(b)
+                    - generic [ref=e1227]:
+                      - generic [ref=e1228]:
+                        - code [ref=e1229]: OBL-001
+                        - generic [ref=e1230]: governance
+                        - generic [ref=e1231]: mandatory
+                        - button "9" [ref=e1232] [cursor=pointer]:
+                          - img [ref=e1233]
+                          - text: "9"
+                          - img [ref=e1236]
+                      - paragraph [ref=e1238]: senior management, who may be assisted by a delegated sub-committee, is responsible for developing a set of IT control policies which establish the ground rules for IT controls.
+                      - generic [ref=e1239]:
+                        - img [ref=e1240]
+                        - generic [ref=e1243]: TM-G-1 General Principles for Technology Risk Management
+                        - generic "HKMA TRM.pdf" [ref=e1244]: (HKMA TRM.pdf)
+                        - generic [ref=e1245]: §2.1.1
+                    - generic [ref=e1248]:
+                      - generic [ref=e1249]:
+                        - code [ref=e1250]: OBL-002
+                        - generic [ref=e1251]: governance
+                        - generic [ref=e1252]: recommended
+                        - button "4" [ref=e1253] [cursor=pointer]:
+                          - img [ref=e1254]
+                          - text: "4"
+                          - img [ref=e1257]
+                      - paragraph [ref=e1259]: They should be reviewed regularly, and where necessary updated to accommodate changing operating environments and technologies.
+                      - generic [ref=e1260]:
+                        - img [ref=e1261]
+                        - generic [ref=e1264]: TM-G-1 General Principles for Technology Risk Management
+                        - generic "HKMA TRM.pdf" [ref=e1265]: (HKMA TRM.pdf)
+                        - generic [ref=e1266]: §2.1.2
+                    - generic [ref=e1269]:
+                      - generic [ref=e1270]:
+                        - code [ref=e1271]: OBL-003
+                        - generic [ref=e1272]: governance
+                        - generic [ref=e1273]: mandatory
+                        - button "17" [ref=e1274] [cursor=pointer]:
+                          - img [ref=e1275]
+                          - text: "17"
+                          - img [ref=e1278]
+                      - paragraph [ref=e1280]: Proper segregation of duties within and among various IT functions is crucial for ensuring an effective IT control environment.
+                      - generic [ref=e1281]:
+                        - img [ref=e1282]
+                        - generic [ref=e1285]: TM-G-1 General Principles for Technology Risk Management
+                        - generic "HKMA TRM.pdf" [ref=e1286]: (HKMA TRM.pdf)
+                        - generic [ref=e1287]: §2.2.2
+                    - generic [ref=e1290]:
+                      - generic [ref=e1291]:
+                        - code [ref=e1292]: OBL-004
+                        - generic [ref=e1293]: governance
+                        - generic [ref=e1294]: recommended
+                        - button "2" [ref=e1295] [cursor=pointer]:
+                          - img [ref=e1296]
+                          - text: "2"
+                          - img [ref=e1299]
+                      - paragraph [ref=e1301]: The IT strategy should be formally documented, endorsed by the Board or its designated committee and senior management, as well as reviewed and updated at least on an annual basis.
+                      - generic [ref=e1302]:
+                        - img [ref=e1303]
+                        - generic [ref=e1306]: TM-G-1 General Principles for Technology Risk Management
+                        - generic "HKMA TRM.pdf" [ref=e1307]: (HKMA TRM.pdf)
+                        - generic [ref=e1308]: §2.2.4
+                    - generic [ref=e1311]:
+                      - generic [ref=e1312]:
+                        - code [ref=e1313]: OBL-005
+                        - generic [ref=e1314]: governance
+                        - generic [ref=e1315]: recommended
+                        - button "4" [ref=e1316] [cursor=pointer]:
+                          - img [ref=e1317]
+                          - text: "4"
+                          - img [ref=e1320]
+                      - paragraph [ref=e1322]: The TRM function should formulate a formal technology risk acknowledgement and acceptance process for reviewing, evaluating and approving any major incidents of non-compliance with IT control policies.
+                      - generic [ref=e1323]:
+                        - img [ref=e1324]
+                        - generic [ref=e1327]: TM-G-1 General Principles for Technology Risk Management
+                        - generic "HKMA TRM.pdf" [ref=e1328]: (HKMA TRM.pdf)
+                        - generic [ref=e1329]: §2.3.4
+                    - generic [ref=e1332]:
+                      - generic [ref=e1333]:
+                        - code [ref=e1334]: OBL-006
+                        - generic [ref=e1335]: audit
+                        - generic [ref=e1336]: mandatory
+                        - button "3" [ref=e1337] [cursor=pointer]:
+                          - img [ref=e1338]
+                          - text: "3"
+                          - img [ref=e1341]
+                      - paragraph [ref=e1343]: As regards technology audits, AIs are expected to assess periodically their technology risk management process and IT controls.
+                      - generic [ref=e1344]:
+                        - img [ref=e1345]
+                        - generic [ref=e1348]: TM-G-1 General Principles for Technology Risk Management
+                        - generic "HKMA TRM.pdf" [ref=e1349]: (HKMA TRM.pdf)
+                        - generic [ref=e1350]: §2.4.1
+                    - generic [ref=e1353]:
+                      - generic [ref=e1354]:
+                        - code [ref=e1355]: OBL-007
+                        - generic [ref=e1356]: audit
+                        - generic [ref=e1357]: recommended
+                        - button "5" [ref=e1358] [cursor=pointer]:
+                          - img [ref=e1359]
+                          - text: "5"
+                          - img [ref=e1362]
+                      - paragraph [ref=e1364]: To ensure adequate coverage of the IT control environment and critical computer systems, an annual technology audit plan should be developed.
+                      - generic [ref=e1365]:
+                        - img [ref=e1366]
+                        - generic [ref=e1369]: TM-G-1 General Principles for Technology Risk Management
+                        - generic "HKMA TRM.pdf" [ref=e1370]: (HKMA TRM.pdf)
+                        - generic [ref=e1371]: §2.4.1
+                    - generic [ref=e1374]:
+                      - generic [ref=e1375]:
+                        - code [ref=e1376]: OBL-008
+                        - generic [ref=e1377]: data security
+                        - generic [ref=e1378]: recommended
+                        - button "14" [ref=e1379] [cursor=pointer]:
+                          - img [ref=e1380]
+                          - text: "14"
+                          - img [ref=e1383]
+                      - paragraph [ref=e1385]: AIs should ensure that all media are adequately protected, and establish secure processes for disposal and destruction of sensitive information in both paper and electronic media.
+                      - generic [ref=e1386]:
+                        - img [ref=e1387]
+                        - generic [ref=e1390]: TM-G-1 General Principles for Technology Risk Management
+                        - generic "HKMA TRM.pdf" [ref=e1391]: (HKMA TRM.pdf)
+                        - generic [ref=e1392]: §3.1.3
+                    - generic [ref=e1395]:
+                      - generic [ref=e1396]:
+                        - code [ref=e1397]: OBL-009
+                        - generic [ref=e1398]: cryptography
+                        - generic [ref=e1399]: recommended
+                        - button "6" [ref=e1400] [cursor=pointer]:
+                          - img [ref=e1401]
+                          - text: "6"
+                          - img [ref=e1404]
+                      - paragraph [ref=e1406]: If cryptographic technology is used to protect the confidentiality and integrity of AIs’ information, AIs should adopt industry-accepted cryptographic solutions and implement sound key management practices to safeguard the associated cryptographic keys.
+                      - generic [ref=e1407]:
+                        - img [ref=e1408]
+                        - generic [ref=e1411]: TM-G-1 General Principles for Technology Risk Management
+                        - generic "HKMA TRM.pdf" [ref=e1412]: (HKMA TRM.pdf)
+                        - generic [ref=e1413]: §3.1.4
+                    - generic [ref=e1416]:
+                      - generic [ref=e1417]:
+                        - code [ref=e1418]: OBL-010
+                        - generic [ref=e1419]: access control
+                        - generic [ref=e1420]: recommended
+                        - button "23" [ref=e1421] [cursor=pointer]:
+                          - img [ref=e1422]
+                          - text: "23"
+                          - img [ref=e1425]
+                      - paragraph [ref=e1427]: Access to the information and application systems should be restricted by an adequate authentication mechanism associated with access control rules.
+                      - generic [ref=e1428]:
+                        - img [ref=e1429]
+                        - generic [ref=e1432]: TM-G-1 General Principles for Technology Risk Management
+                        - generic "HKMA TRM.pdf" [ref=e1433]: (HKMA TRM.pdf)
+                        - generic [ref=e1434]: §3.2.1
+                    - generic [ref=e1437]:
+                      - generic [ref=e1438]:
+                        - code [ref=e1439]: OBL-011
+                        - generic [ref=e1440]: access control
+                        - generic [ref=e1441]: recommended
+                        - button "8" [ref=e1442] [cursor=pointer]:
+                          - img [ref=e1443]
+                          - text: "8"
+                          - img [ref=e1446]
+                      - paragraph [ref=e1448]: AIs should implement effective password rules to ensure that easy-to-guess passwords are avoided and passwords are changed on a periodic basis.
+                      - generic [ref=e1449]:
+                        - img [ref=e1450]
+                        - generic [ref=e1453]: TM-G-1 General Principles for Technology Risk Management
+                        - generic "HKMA TRM.pdf" [ref=e1454]: (HKMA TRM.pdf)
+                        - generic [ref=e1455]: §3.2.2
+                    - generic [ref=e1458]:
+                      - generic [ref=e1459]:
+                        - code [ref=e1460]: OBL-012
+                        - generic [ref=e1461]: access control
+                        - generic [ref=e1462]: recommended
+                        - button "2" [ref=e1463] [cursor=pointer]:
+                          - img [ref=e1464]
+                          - text: "2"
+                          - img [ref=e1467]
+                      - paragraph [ref=e1469]: Stronger authentication methods should be adopted for transactions/activities of higher risk (e.g. payment transactions, financial messages and mobile computing). These usually entail multiple factors for user authentication which combine something one knows (e.g. passwords) and something one has (e.g. a smart card or hardware security tokens).
+                      - generic [ref=e1470]:
+                        - img [ref=e1471]
+                        - generic [ref=e1474]: TM-G-1 General Principles for Technology Risk Management
+                        - generic "HKMA TRM.pdf" [ref=e1475]: (HKMA TRM.pdf)
+                        - generic [ref=e1476]: §3.2.2
+                    - generic [ref=e1479]:
+                      - generic [ref=e1480]:
+                        - code [ref=e1481]: OBL-013
+                        - generic [ref=e1482]: access control
+                        - generic [ref=e1483]: recommended
+                        - button "13" [ref=e1484] [cursor=pointer]:
+                          - img [ref=e1485]
+                          - text: "13"
+                          - img [ref=e1488]
+                      - paragraph [ref=e1490]: ensuring the performance of periodic user access re-certification (e.g. on an annual basis) that confirms whether user access rights remain appropriate and obsolete user accounts have been removed from the systems;
+                      - generic [ref=e1491]:
+                        - img [ref=e1492]
+                        - generic [ref=e1495]: TM-G-1 General Principles for Technology Risk Management
+                        - generic "HKMA TRM.pdf" [ref=e1496]: (HKMA TRM.pdf)
+                        - generic [ref=e1497]: §3.3.1
+                    - generic [ref=e1500]:
+                      - generic [ref=e1501]:
+                        - code [ref=e1502]: OBL-014
+                        - generic [ref=e1503]: cyber operations
+                        - generic [ref=e1504]: recommended
+                        - button "13" [ref=e1505] [cursor=pointer]:
+                          - img [ref=e1506]
+                          - text: "13"
+                          - img [ref=e1509]
+                      - paragraph [ref=e1511]: reviewing security logs and violation reports in a timely manner;
+                      - generic [ref=e1512]:
+                        - img [ref=e1513]
+                        - generic [ref=e1516]: TM-G-1 General Principles for Technology Risk Management
+                        - generic "HKMA TRM.pdf" [ref=e1517]: (HKMA TRM.pdf)
+                        - generic [ref=e1518]: §3.3.1
+                    - generic [ref=e1521]:
+                      - generic [ref=e1522]:
+                        - code [ref=e1523]: OBL-015
+                        - generic [ref=e1524]: incident response
+                        - generic [ref=e1525]: recommended
+                        - button "14" [ref=e1526] [cursor=pointer]:
+                          - img [ref=e1527]
+                          - text: "14"
+                          - img [ref=e1530]
+                      - paragraph [ref=e1532]: AIs should establish incident response and reporting procedures to handle information security-related incidents during or outside office hours.
+                      - generic [ref=e1533]:
+                        - img [ref=e1534]
+                        - generic [ref=e1537]: TM-G-1 General Principles for Technology Risk Management
+                        - generic "HKMA TRM.pdf" [ref=e1538]: (HKMA TRM.pdf)
+                        - generic [ref=e1539]: §3.3.3
+                    - generic [ref=e1542]:
+                      - generic [ref=e1543]:
+                        - code [ref=e1544]: OBL-016
+                        - generic [ref=e1545]: incident response
+                        - generic [ref=e1546]: recommended
+                        - button "5" [ref=e1547] [cursor=pointer]:
+                          - img [ref=e1548]
+                          - text: "5"
+                          - img [ref=e1551]
+                      - paragraph [ref=e1553]: The incident response and reporting procedures should include timely reporting to the HKMA of any confirmed IT-related fraud cases or major security breaches.
+                      - generic [ref=e1554]:
+                        - img [ref=e1555]
+                        - generic [ref=e1558]: TM-G-1 General Principles for Technology Risk Management
+                        - generic "HKMA TRM.pdf" [ref=e1559]: (HKMA TRM.pdf)
+                        - generic [ref=e1560]: §3.3.3
+                    - generic [ref=e1563]:
+                      - generic [ref=e1564]:
+                        - code [ref=e1565]: OBL-017
+                        - generic [ref=e1566]: system security
+                        - generic [ref=e1567]: recommended
+                        - button "22" [ref=e1568] [cursor=pointer]:
+                          - img [ref=e1569]
+                          - text: "22"
+                          - img [ref=e1572]
+                      - paragraph [ref=e1574]: operating systems, system software, databases and servers should be securely configured to meet the intended uses with all unnecessary services and programs disabled or removed.
+                      - generic [ref=e1575]:
+                        - img [ref=e1576]
+                        - generic [ref=e1579]: TM-G-1 General Principles for Technology Risk Management
+                        - generic "HKMA TRM.pdf" [ref=e1580]: (HKMA TRM.pdf)
+                        - generic [ref=e1581]: §3.4.1
+                    - generic [ref=e1584]:
+                      - generic [ref=e1585]:
+                        - code [ref=e1586]: OBL-018
+                        - generic [ref=e1587]: system security
+                        - generic [ref=e1588]: recommended
+                        - button "13" [ref=e1589] [cursor=pointer]:
+                          - img [ref=e1590]
+                          - text: "13"
+                          - img [ref=e1593]
+                      - paragraph [ref=e1595]: clear responsibilities should be established to ensure that the necessary patches and security updates developed from time to time by relevant vendors are identified, assessed, tested and applied to the systems in a timely manner;
+                      - generic [ref=e1596]:
+                        - img [ref=e1597]
+                        - generic [ref=e1600]: TM-G-1 General Principles for Technology Risk Management
+                        - generic "HKMA TRM.pdf" [ref=e1601]: (HKMA TRM.pdf)
+                        - generic [ref=e1602]: §3.4.1
+                    - generic [ref=e1605]:
+                      - generic [ref=e1606]:
+                        - code [ref=e1607]: OBL-019
+                        - generic [ref=e1608]: cyber operations
+                        - generic [ref=e1609]: recommended
+                        - button "18" [ref=e1610] [cursor=pointer]:
+                          - img [ref=e1611]
+                          - text: "18"
+                          - img [ref=e1614]
+                      - paragraph [ref=e1616]: adequate logging and monitoring of system and user activities should be in place to detect anomalies, and the logs should be securely protected from manipulation.
+                      - generic [ref=e1617]:
+                        - img [ref=e1618]
+                        - generic [ref=e1621]: TM-G-1 General Principles for Technology Risk Management
+                        - generic "HKMA TRM.pdf" [ref=e1622]: (HKMA TRM.pdf)
+                        - generic [ref=e1623]: §3.4.1
+                    - generic [ref=e1626]:
+                      - generic [ref=e1627]:
+                        - code [ref=e1628]: OBL-020
+                        - generic [ref=e1629]: cyber operations
+                        - generic [ref=e1630]: recommended
+                        - button "6" [ref=e1631] [cursor=pointer]:
+                          - img [ref=e1632]
+                          - text: "6"
+                          - img [ref=e1635]
+                      - paragraph [ref=e1637]: installation and timely update of anti-virus software provided by reputable vendors;
+                      - generic [ref=e1638]:
+                        - img [ref=e1639]
+                        - generic [ref=e1642]: TM-G-1 General Principles for Technology Risk Management
+                        - generic "HKMA TRM.pdf" [ref=e1643]: (HKMA TRM.pdf)
+                        - generic [ref=e1644]: §3.5.3
+                    - generic [ref=e1647]:
+                      - generic [ref=e1648]:
+                        - code [ref=e1649]: OBL-021
+                        - generic [ref=e1650]: application security
+                        - generic [ref=e1651]: recommended
+                        - button "6" [ref=e1652] [cursor=pointer]:
+                          - img [ref=e1653]
+                          - text: "6"
+                          - img [ref=e1656]
+                      - paragraph [ref=e1658]: System and user acceptance testing should be carried out in an environment separated from the production environment.
+                      - generic [ref=e1659]:
+                        - img [ref=e1660]
+                        - generic [ref=e1663]: TM-G-1 General Principles for Technology Risk Management
+                        - generic "HKMA TRM.pdf" [ref=e1664]: (HKMA TRM.pdf)
+                        - generic [ref=e1665]: §4.2.4
+                    - generic [ref=e1668]:
+                      - generic [ref=e1669]:
+                        - code [ref=e1670]: OBL-022
+                        - generic [ref=e1671]: data security
+                        - generic [ref=e1672]: recommended
+                        - button "3" [ref=e1673] [cursor=pointer]:
+                          - img [ref=e1674]
+                          - text: "3"
+                          - img [ref=e1677]
+                      - paragraph [ref=e1679]: Production data should not be used in development or acceptance testing unless the data has been de-sensitised (i.e. not disclosing personal or sensitive information) and prior approval from the information owner has been obtained.
+                      - generic [ref=e1680]:
+                        - img [ref=e1681]
+                        - generic [ref=e1684]: TM-G-1 General Principles for Technology Risk Management
+                        - generic "HKMA TRM.pdf" [ref=e1685]: (HKMA TRM.pdf)
+                        - generic [ref=e1686]: §4.2.4
+                    - generic [ref=e1689]:
+                      - generic [ref=e1690]:
+                        - code [ref=e1691]: OBL-023
+                        - generic [ref=e1692]: change management
+                        - generic [ref=e1693]: recommended
+                        - button "16" [ref=e1694] [cursor=pointer]:
+                          - img [ref=e1695]
+                          - text: "16"
+                          - img [ref=e1698]
+                      - paragraph [ref=e1700]: AIs should develop a formal change management process that includes... adequate segregation of duties. This is to ensure that no single person can effect changes to the production environment without the review and approval of other authorized personnel;
+                      - generic [ref=e1701]:
+                        - img [ref=e1702]
+                        - generic [ref=e1705]: TM-G-1 General Principles for Technology Risk Management
+                        - generic "HKMA TRM.pdf" [ref=e1706]: (HKMA TRM.pdf)
+                        - generic [ref=e1707]: §4.3.1
+                    - generic [ref=e1710]:
+                      - generic [ref=e1711]:
+                        - code [ref=e1712]: OBL-024
+                        - generic [ref=e1713]: business continuity
+                        - generic [ref=e1714]: recommended
+                        - button "12" [ref=e1715] [cursor=pointer]:
+                          - img [ref=e1716]
+                          - text: "12"
+                          - img [ref=e1719]
+                      - paragraph [ref=e1721]: The IT operations manual should also cover the procedures and requirements for on-site and off-site back-up of data and software in both the production and development environments (e.g. the frequency, scope and retention periods of back-up).
+                      - generic [ref=e1722]:
+                        - img [ref=e1723]
+                        - generic [ref=e1726]: TM-G-1 General Principles for Technology Risk Management
+                        - generic "HKMA TRM.pdf" [ref=e1727]: (HKMA TRM.pdf)
+                        - generic [ref=e1728]: §5.1.2
+                    - generic [ref=e1731]:
+                      - generic [ref=e1732]:
+                        - code [ref=e1733]: OBL-025
+                        - generic [ref=e1734]: asset management
+                        - generic [ref=e1735]: recommended
+                        - button "5" [ref=e1736] [cursor=pointer]:
+                          - img [ref=e1737]
+                          - text: "5"
+                          - img [ref=e1740]
+                      - paragraph [ref=e1742]: A hardware and facility inventory should be kept to control and track all hardware and software purchased and leased.
+                      - generic [ref=e1743]:
+                        - img [ref=e1744]
+                        - generic [ref=e1747]: TM-G-1 General Principles for Technology Risk Management
+                        - generic "HKMA TRM.pdf" [ref=e1748]: (HKMA TRM.pdf)
+                        - generic [ref=e1749]: §5.3.1
+                    - generic [ref=e1752]:
+                      - generic [ref=e1753]:
+                        - code [ref=e1754]: OBL-026
+                        - generic [ref=e1755]: business continuity
+                        - generic [ref=e1756]: recommended
+                        - button "10" [ref=e1757] [cursor=pointer]:
+                          - img [ref=e1758]
+                          - text: "10"
+                          - img [ref=e1761]
+                      - paragraph [ref=e1763]: AIs should develop an IT disaster recovery plan to ensure that critical application systems and technology services can be resumed in accordance with the business recovery requirements.
+                      - generic [ref=e1764]:
+                        - img [ref=e1765]
+                        - generic [ref=e1768]: TM-G-1 General Principles for Technology Risk Management
+                        - generic "HKMA TRM.pdf" [ref=e1769]: (HKMA TRM.pdf)
+                        - generic [ref=e1770]: §5.4.1
+                    - generic [ref=e1773]:
+                      - generic [ref=e1774]:
+                        - code [ref=e1775]: OBL-027
+                        - generic [ref=e1776]: network security
+                        - generic [ref=e1777]: recommended
+                        - button "6" [ref=e1778] [cursor=pointer]:
+                          - img [ref=e1779]
+                          - text: "6"
+                          - img [ref=e1782]
+                      - paragraph [ref=e1784]: The network should be monitored on a continuous basis. This would reduce the likelihood of network traffic overload and detect network intrusions.
+                      - generic [ref=e1785]:
+                        - img [ref=e1786]
+                        - generic [ref=e1789]: TM-G-1 General Principles for Technology Risk Management
+                        - generic "HKMA TRM.pdf" [ref=e1790]: (HKMA TRM.pdf)
+                        - generic [ref=e1791]: §6.1.4
+                    - generic [ref=e1794]:
+                      - generic [ref=e1795]:
+                        - code [ref=e1796]: OBL-028
+                        - generic [ref=e1797]: network security
+                        - generic [ref=e1798]: mandatory
+                        - button "13" [ref=e1799] [cursor=pointer]:
+                          - img [ref=e1800]
+                          - text: "13"
+                          - img [ref=e1803]
+                      - paragraph [ref=e1805]: Regular reviews of the security parameter settings of network devices such as routers, firewalls and network servers are required to ensure that they remain current.
+                      - generic [ref=e1806]:
+                        - img [ref=e1807]
+                        - generic [ref=e1810]: TM-G-1 General Principles for Technology Risk Management
+                        - generic "HKMA TRM.pdf" [ref=e1811]: (HKMA TRM.pdf)
+                        - generic [ref=e1812]: §6.2.3
+                    - generic [ref=e1815]:
+                      - generic [ref=e1816]:
+                        - code [ref=e1817]: OBL-029
+                        - generic [ref=e1818]: network security
+                        - generic [ref=e1819]: recommended
+                        - button "9" [ref=e1820] [cursor=pointer]:
+                          - img [ref=e1821]
+                          - text: "9"
+                          - img [ref=e1824]
+                      - paragraph [ref=e1826]: Audit trails of daily activities in critical network devices should be maintained and reviewed regularly.
+                      - generic [ref=e1827]:
+                        - img [ref=e1828]
+                        - generic [ref=e1831]: TM-G-1 General Principles for Technology Risk Management
+                        - generic "HKMA TRM.pdf" [ref=e1832]: (HKMA TRM.pdf)
+                        - generic [ref=e1833]: §6.2.3
+                    - generic [ref=e1836]:
+                      - generic [ref=e1837]:
+                        - code [ref=e1838]: OBL-030
+                        - generic [ref=e1839]: third party
+                        - generic [ref=e1840]: recommended
+                        - button "5" [ref=e1841] [cursor=pointer]:
+                          - img [ref=e1842]
+                          - text: "5"
+                          - img [ref=e1845]
+                      - paragraph [ref=e1847]: AIs should conduct an annual assessment to confirm the adequacy of the IT control environment of the provider of critical technology services.
+                      - generic [ref=e1848]:
+                        - img [ref=e1849]
+                        - generic [ref=e1852]: TM-G-1 General Principles for Technology Risk Management
+                        - generic "HKMA TRM.pdf" [ref=e1853]: (HKMA TRM.pdf)
+                        - generic [ref=e1854]: §7.1.1
+                    - generic [ref=e1857]:
+                      - generic [ref=e1858]:
+                        - code [ref=e1859]: OBL-031
+                        - generic [ref=e1860]: third party
+                        - generic [ref=e1861]: recommended
+                        - button "8" [ref=e1862] [cursor=pointer]:
+                          - img [ref=e1863]
+                          - text: "8"
+                          - img [ref=e1866]
+                      - paragraph [ref=e1868]: AIs should try to avoid placing excessive reliance on a single outside service provider in providing critical technology services;
+                      - generic [ref=e1869]:
+                        - img [ref=e1870]
+                        - generic [ref=e1873]: TM-G-1 General Principles for Technology Risk Management
+                        - generic "HKMA TRM.pdf" [ref=e1874]: (HKMA TRM.pdf)
+                        - generic [ref=e1875]: §7.1
+                    - generic [ref=e1878]:
+                      - generic [ref=e1879]:
+                        - code [ref=e1880]: OBL-032
+                        - generic [ref=e1881]: business continuity
+                        - generic [ref=e1882]: recommended
+                        - button "5" [ref=e1883] [cursor=pointer]:
+                          - img [ref=e1884]
+                          - text: "5"
+                          - img [ref=e1887]
+                      - paragraph [ref=e1889]: AIs should develop a contingency plan for critical outsourced technology services to protect them from unavailability of services due to unexpected problems of the technology service provider
+                      - generic [ref=e1890]:
+                        - img [ref=e1891]
+                        - generic [ref=e1894]: TM-G-1 General Principles for Technology Risk Management
+                        - generic "HKMA TRM.pdf" [ref=e1895]: (HKMA TRM.pdf)
+                        - generic [ref=e1896]: §7.1
+                    - generic [ref=e1899]:
+                      - generic [ref=e1900]:
+                        - code [ref=e1901]: OBL-033
+                        - generic [ref=e1902]: third party
+                        - generic [ref=e1903]: recommended
+                        - button "1" [ref=e1904] [cursor=pointer]:
+                          - img [ref=e1905]
+                          - text: "1"
+                          - img [ref=e1908]
+                      - paragraph [ref=e1910]: AIs should have in place guidelines on how to manage different kinds of major outside technology service providers.
+                      - generic [ref=e1911]:
+                        - img [ref=e1912]
+                        - generic [ref=e1915]: TM-G-1 General Principles for Technology Risk Management
+                        - generic "HKMA TRM.pdf" [ref=e1916]: (HKMA TRM.pdf)
+                        - generic [ref=e1917]: §7.2.1
+      - contentinfo [ref=e1920]:
+        - generic [ref=e1921]: © 2026 KPMG Assurance and Consulting Services LLP, an Indian Limited Liability Partnership and a member firm of the KPMG global organization of independent member firms affiliated with KPMG International Limited, a private English company limited by guarantee. All rights reserved.
+        - generic [ref=e1922]: Confidential

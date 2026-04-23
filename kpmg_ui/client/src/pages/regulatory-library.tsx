@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { useCrossNav } from "@/contexts/CrossNavContext";
 import { useLibraryMetrics } from "@/contexts/LibraryMetricsContext";
@@ -7,10 +7,11 @@ import remarkGfm from "remark-gfm";
 import {
   Upload, FileText, X, Play, RotateCcw, BookOpen, Search, Trash2, Library,
   LayoutDashboard, GitCompare, ChevronRight, AlertTriangle, CheckCircle2, Minus, Layers, Link2,
-  PanelLeftClose, PanelLeftOpen, Download, Network, ShieldCheck, ChevronDown, ArrowRight, TrendingUp,
+  PanelLeftClose, PanelLeftOpen, Download, Network, ShieldCheck, ChevronDown, ArrowRight, TrendingUp, Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import HeroSection from "@/components/HeroSection";
+import KpiCard from "@/components/KpiCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -19,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRegulatoryTesting, LibraryDocument } from "@/contexts/RegulatoryTestingContext";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { TraceMetricCard, TracePanel, TraceSectionHeading, TraceStatusRibbon } from "@/components/TraceAnalysisPrimitives";
 
 const ENFORCEMENT_COLOR: Record<string, string> = {
   mandatory:    "bg-red-100 text-red-700 border-red-300 dark:bg-red-950 dark:text-red-300",
@@ -29,6 +31,42 @@ const ENFORCEMENT_COLOR: Record<string, string> = {
 const HUES = [220, 160, 30, 280, 10, 190, 120, 50, 340, 260, 90, 200];
 
 type RightPanelView = "dashboard" | "obligations" | "gap-analysis";
+
+function WorkbenchModeButton({
+  active,
+  icon,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  icon: ReactNode;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold transition-colors ${
+        active
+          ? "bg-[#0C3B99] text-white shadow-[0_10px_24px_-18px_rgba(12,59,153,0.7)]"
+          : "bg-[#F3F7FF] text-[#5B7294] hover:bg-[#EAF1FF] hover:text-[#0C233C]"
+      }`}
+    >
+      {icon}
+      <span>{label}</span>
+    </button>
+  );
+}
+
+function LibraryStatPill({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[16px] border border-[#D8E3F2] bg-[#F8FBFF] px-3 py-2">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7E91AE]">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-[#0C233C]">{value}</p>
+    </div>
+  );
+}
 
 // ── Gap analysis result types ─────────────────────────────────────────────────
 interface GapDocInfo {
@@ -983,34 +1021,49 @@ export default function RegulatoryLibraryPage() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="h-full flex flex-col overflow-hidden select-none">
-      <HeroSection title="Regulatory Library" subtitle="Browse and analyse regulatory frameworks and obligations" icon={Library} />
-      <div className="flex-1 flex overflow-hidden">
+    <div className="trace-workbench-shell h-full min-h-0 flex flex-col overflow-hidden select-none">
+      <HeroSection
+        title="Regulatory Library"
+        subtitle="Curate source documents, review obligations, and compare frameworks in one workspace."
+        icon={Library}
+      />
+      <div className="trace-workbench-layout">
 
       {/* ── LEFT PANEL ─────────────────────────────────────────────────────── */}
       <div
-        className="shrink-0 flex flex-col overflow-hidden border-r border-[#00338D]/8 bg-[linear-gradient(180deg,#F8FBFF_0%,#F3F7FB_100%)] transition-[width] duration-200"
+        className="trace-workbench-rail min-h-0 shrink-0 flex flex-col overflow-hidden border-r border-[#00338D]/8 bg-[linear-gradient(180deg,#FCFDFF_0%,#F5F9FE_100%)] transition-[width] duration-200"
         style={{ width: leftPanelOpen ? panelWidth : 0 }}
       >
 
         {/* Upload section */}
-        <div className="space-y-3 border-b border-[#00338D]/8 bg-white/78 p-4">
-          <div className="space-y-1">
-            <p className="kpmg-section-label text-[#1E49E2]">Library intake</p>
-            <h2 className="flex items-center gap-2 text-sm font-semibold text-[var(--ink-strong)]">
-              <BookOpen className="h-4 w-4 text-[var(--kpmg-blue)]" />
-              Add Documents
-            </h2>
-            <p className="text-[12px] leading-5 text-[var(--ink-muted)]">
-              Ingest regulatory source files and update the central obligation library.
-            </p>
+        <div className="space-y-4 border-b border-[#00338D]/8 bg-white/88 p-4">
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <p className="kpmg-section-label text-[#1E49E2]">Library intake</p>
+              <div className="flex items-start justify-between gap-3">
+                <div className="space-y-1">
+                  <h2 className="text-[16px] font-bold tracking-[-0.02em] text-[#0C233C]">Add regulatory source files</h2>
+                  <p className="text-[12px] leading-5 text-[#5B7294]">
+                    Load regulatory documents, extract obligations, and keep the corpus ready for comparison.
+                  </p>
+                </div>
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] border border-[#D8E3F2] bg-[#F5F9FF]">
+                  <BookOpen className="h-4 w-4 text-[#1E49E2]" />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <LibraryStatPill label="documents" value={libraryDocuments.length.toString()} />
+              <LibraryStatPill label="obligations" value={totalObligations.toLocaleString()} />
+            </div>
           </div>
 
           <div
-            className={`rounded-[18px] border border-dashed p-5 text-center cursor-pointer transition-colors ${
+            className={`rounded-[22px] border border-dashed p-5 text-center transition-colors ${
               libraryFiles.length > 0
                 ? "border-[#1E49E2]/35 bg-[#EEF4FF]"
-                : "border-[#00338D]/18 bg-white hover:border-[#1E49E2]/38 hover:bg-[#F7FAFF]"
+                : "cursor-pointer border-[#C7D7F1] bg-[#F9FBFF] hover:border-[#1E49E2]/32 hover:bg-[#F3F7FF]"
             }`}
             onClick={() => document.getElementById("lib-file-input")?.click()}
           >
@@ -1026,24 +1079,30 @@ export default function RegulatoryLibraryPage() {
                 e.target.value = "";
               }}
             />
-            <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-[14px] border border-[#00338D]/10 bg-[#F3F7FF]">
-              <Upload className="h-5 w-5 text-[var(--cobalt)]" />
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-[16px] border border-[#D8E3F2] bg-white">
+              <Upload className="h-5 w-5 text-[#1E49E2]" />
             </div>
-            <p className="text-sm font-semibold text-[var(--ink-strong)]">Select source documents</p>
-            <p className="mt-1 text-[12px] leading-5 text-[var(--ink-muted)]">PDF, Word, TXT, MD, CSV, Excel, or image</p>
-            <p className="mt-3 text-[11px] font-medium uppercase tracking-[0.16em] text-[var(--cobalt)]">Click to browse</p>
+            <p className="text-sm font-semibold text-[#0C233C]">Select source documents</p>
+            <p className="mt-1 text-[12px] leading-5 text-[#5B7294]">PDF, Word, text, spreadsheets, or image files</p>
+            <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1E49E2]">Browse files</p>
           </div>
 
           {libraryFiles.length > 0 && (
-            <div className="space-y-2">
-              <div className="max-h-36 overflow-auto space-y-1.5">
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#7E91AE]">Queued uploads</p>
+                <Badge variant="outline" className="rounded-full border-[#C7D7F1] bg-white text-[10px] text-[#1E49E2]">
+                  {libraryFiles.length}
+                </Badge>
+              </div>
+              <div className="max-h-36 overflow-auto space-y-1.5 pr-1">
                 {libraryFiles.map((f, i) => (
-                  <div key={i} className="flex items-center justify-between gap-2 rounded-[14px] border border-[#00338D]/8 bg-white px-3 py-2 text-xs shadow-[0_10px_22px_-24px_rgba(12,35,60,0.3)]">
-                    <span className="truncate flex-1 font-medium text-[var(--ink-strong)]">{f.name}</span>
+                  <div key={i} className="flex items-center justify-between gap-2 rounded-[16px] border border-[#D8E3F2] bg-white px-3 py-2 text-xs shadow-[0_12px_24px_-28px_rgba(12,35,60,0.35)]">
+                    <span className="truncate flex-1 font-medium text-[#0C233C]">{f.name}</span>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-6 w-6 shrink-0 rounded-full text-[var(--ink-muted)] hover:bg-[#F3F7FF] hover:text-[var(--ink-strong)]"
+                      className="h-7 w-7 shrink-0 rounded-full text-[#7E91AE] hover:bg-[#F3F7FF] hover:text-[#0C233C]"
                       onClick={() => setLibraryFiles(prev => prev.filter((_, j) => j !== i))}
                     >
                       <X className="h-3.5 w-3.5" />
@@ -1053,19 +1112,19 @@ export default function RegulatoryLibraryPage() {
               </div>
               <Button
                 size="sm"
-                className="h-9 w-full rounded-[14px] bg-[var(--kpmg-blue)] text-xs font-semibold hover:bg-[var(--cobalt)]"
+                className="h-10 w-full rounded-[14px] bg-[#0C3B99] text-xs font-semibold hover:bg-[#153A96]"
                 disabled={libraryIngesting}
                 onClick={handleLibraryIngest}
               >
                 {libraryIngesting ? (
                   <>
-                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1.5" />
+                    <div className="mr-1.5 h-3 w-3 animate-spin rounded-full border-b-2 border-white" />
                     Extracting...
                   </>
                 ) : (
                   <>
-                    <Play className="h-3.5 w-3.5 mr-1.5" />
-                    Extract and Save
+                    <Play className="mr-1.5 h-3.5 w-3.5" />
+                    Extract and save
                   </>
                 )}
               </Button>
@@ -1074,12 +1133,12 @@ export default function RegulatoryLibraryPage() {
 
           {libraryIngestResults.length > 0 && (
             <div className="space-y-1.5">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--green)]">Recently added</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#009A44]">Recently added</p>
               {libraryIngestResults.map((r, i) => (
-                <div key={i} className="flex items-center justify-between gap-2 rounded-[14px] border border-[var(--green)]/18 bg-[rgba(0,154,68,0.06)] p-2 text-xs">
-                  <span className="font-medium truncate text-[var(--ink-strong)]">{r.framework_name || r.filename}</span>
-                  <div className="flex items-center gap-1 shrink-0 ml-1">
-                    <Badge variant="outline" className="border-[var(--green)]/40 text-[10px] text-[var(--green)]">{r.total_obligations}</Badge>
+                <div key={i} className="flex items-center justify-between gap-2 rounded-[16px] border border-[#BFE9D0] bg-[#F4FBF7] px-3 py-2 text-xs">
+                  <span className="font-medium truncate text-[#0C233C]">{r.framework_name || r.filename}</span>
+                  <div className="ml-1 flex items-center gap-1 shrink-0">
+                    <Badge variant="outline" className="border-[#7AD19D] bg-white text-[10px] text-[#009A44]">{r.total_obligations}</Badge>
                     {!r.mongo_saved && (
                       <Badge variant="outline" className="text-orange-600 border-orange-400 text-[10px]" title="Not persisted">⚠ no DB</Badge>
                     )}
@@ -1090,53 +1149,69 @@ export default function RegulatoryLibraryPage() {
           )}
         </div>
 
-        {/* Library header with view toggles */}
-        <div className="flex items-center justify-between gap-1 border-b border-[#00338D]/8 bg-white/70 px-4 py-2.5">
-          <span className="text-xs font-semibold text-[var(--ink-muted)] uppercase tracking-wide shrink-0">
-            Library
-            {libraryDocuments.length > 0 && (
-              <Badge variant="secondary" className="ml-2 rounded-full bg-[#EEF4FF] text-[10px] text-[var(--kpmg-blue)]">{libraryDocuments.length}</Badge>
-            )}
-          </span>
-          <div className="flex items-center gap-1">
-            <Button
-              variant={rightPanelView === "dashboard" ? "secondary" : "ghost"}
-              size="icon"
-              className="h-7 w-7 rounded-[12px]"
-              title="Library Dashboard"
+        <div className="space-y-3 border-b border-[#00338D]/8 bg-white/78 px-4 py-3">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#7E91AE]">Workspace</p>
+              <p className="mt-1 text-sm font-semibold text-[#0C233C]">Documents and comparison modes</p>
+            </div>
+            {libraryDocuments.length > 0 ? (
+              <Badge variant="outline" className="rounded-full border-[#D8E3F2] bg-white px-2.5 py-1 text-[10px] text-[#1E49E2]">
+                {libraryDocuments.length} loaded
+              </Badge>
+            ) : null}
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <WorkbenchModeButton
+              active={rightPanelView === "dashboard"}
+              icon={<LayoutDashboard className="h-3.5 w-3.5" />}
+              label="Dashboard"
               onClick={() => { setRightPanelView("dashboard"); setSelectedLibraryDoc(null); }}
-            >
-              <LayoutDashboard className="h-3 w-3" />
-            </Button>
-            <Button
-              variant={rightPanelView === "gap-analysis" ? "secondary" : "ghost"}
-              size="icon"
-              className="h-7 w-7 rounded-[12px]"
-              title="Gap Analysis"
+            />
+            <WorkbenchModeButton
+              active={rightPanelView === "gap-analysis"}
+              icon={<GitCompare className="h-3.5 w-3.5" />}
+              label="Gap analysis"
               onClick={() => { setRightPanelView("gap-analysis"); setSelectedLibraryDoc(null); setGapResults(null); }}
-            >
-              <GitCompare className="h-3 w-3" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-[12px]" onClick={fetchLibraryDocuments} disabled={libraryLoading}>
-              <RotateCcw className={`h-3 w-3 ${libraryLoading ? "animate-spin" : ""}`} />
-            </Button>
-            {libraryDocuments.length > 0 && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 rounded-[12px] text-destructive hover:text-destructive hover:bg-destructive/10"
-                title="Clear entire library"
-                disabled={clearingLibrary}
-                onClick={() => setShowClearConfirm(true)}
-              >
-                <Trash2 className="h-3 w-3" />
+            />
+          </div>
+
+          <div className="flex items-center justify-between gap-2 rounded-[16px] border border-[#D8E3F2] bg-[#F8FBFF] px-3 py-2">
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold text-[#0C233C]">
+                {rightPanelView === "gap-analysis"
+                  ? `${gapSelectedIds.size} document${gapSelectedIds.size !== 1 ? "s" : ""} selected`
+                  : selectedLibraryDoc?.framework_name || "Select a document to inspect obligations"}
+              </p>
+              <p className="mt-0.5 text-[11px] text-[#5B7294]">
+                {rightPanelView === "gap-analysis"
+                  ? "Choose at least two documents before running the comparison."
+                  : "Click a document below to move into obligation review."}
+              </p>
+            </div>
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-[12px]" onClick={fetchLibraryDocuments} disabled={libraryLoading}>
+                <RotateCcw className={`h-3.5 w-3.5 ${libraryLoading ? "animate-spin" : ""}`} />
               </Button>
-            )}
+              {libraryDocuments.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-[12px] text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  title="Clear entire library"
+                  disabled={clearingLibrary}
+                  onClick={() => setShowClearConfirm(true)}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              )}
+            </div>
           </div>
         </div>
         {/* Inline clear confirmation */}
         {showClearConfirm && (
-          <div className="mx-3 my-2 space-y-2 rounded-[16px] border border-destructive/30 bg-white p-3 shadow-[0_12px_28px_-28px_rgba(229,0,27,0.45)]">
+          <div className="mx-3 my-2 space-y-2 rounded-[18px] border border-destructive/25 bg-white p-3 shadow-[0_16px_28px_-28px_rgba(229,0,27,0.48)]">
             <p className="text-xs font-medium text-destructive">Clear entire regulatory library?</p>
             <p className="text-[11px] text-[var(--ink-muted)]">This will permanently delete all {libraryDocuments.length} document(s) and their obligations.</p>
             <div className="flex gap-2">
@@ -1150,16 +1225,22 @@ export default function RegulatoryLibraryPage() {
           </div>
         )}
 
-        <ScrollArea className="flex-1">
+        <ScrollArea className="trace-workbench-scroll flex-1">
           {libraryLoading && (
-            <div className="flex justify-center py-8">
+            <div className="flex justify-center py-10">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
             </div>
           )}
           {!libraryLoading && libraryDocuments.length === 0 && (
-            <p className="px-4 py-8 text-center text-xs text-[var(--ink-muted)]">
-              No documents yet. Upload a regulatory document above.
-            </p>
+            <div className="px-3 py-6">
+              <div className="rounded-[18px] border border-dashed border-[#D8E3F2] bg-white px-4 py-8 text-center">
+                <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-[15px] bg-[#F3F7FF] text-[#1E49E2]">
+                  <FileText className="h-4 w-4" />
+                </div>
+                <p className="mt-3 text-sm font-semibold text-[#0C233C]">No regulatory documents yet</p>
+                <p className="mt-1 text-xs leading-5 text-[#5B7294]">Upload a source file above to start building the library.</p>
+              </div>
+            </div>
           )}
           {!libraryLoading && libraryDocuments.length > 0 && (
             <div className="space-y-2 p-2">
@@ -1169,37 +1250,42 @@ export default function RegulatoryLibraryPage() {
                 return (
                   <div
                     key={i}
-                    className={`group cursor-pointer rounded-[18px] border bg-white shadow-[0_10px_24px_-28px_rgba(12,35,60,0.38)] transition-colors ${
+                    className={`group cursor-pointer rounded-[20px] border bg-white shadow-[0_14px_28px_-30px_rgba(12,35,60,0.42)] transition-all ${
                       isSelected
-                        ? "border-[var(--kpmg-blue)] bg-[#EEF4FF]"
+                        ? "border-[#1E49E2] bg-[#EEF4FF]"
                         : isGapChecked
-                          ? "border-blue-500 bg-[#EEF4FF]"
-                          : "hover:border-[#1E49E2]/40 hover:bg-[#F8FBFF]"
+                          ? "border-[#1E49E2]/45 bg-[#F5F9FF]"
+                          : "border-[#D8E3F2] hover:border-[#1E49E2]/36 hover:bg-[#F8FBFF] hover:shadow-[0_20px_36px_-34px_rgba(12,35,60,0.52)]"
                     }`}
                     onClick={() => rightPanelView === "gap-analysis" ? toggleGapDoc(doc.document_id) : handleLibraryDocClick(doc)}
                   >
-                    <div className="flex items-start justify-between p-2.5 gap-1">
+                    <div className="flex items-start justify-between gap-2 p-3">
                       {rightPanelView === "gap-analysis" && (
-                        <div className={`w-4 h-4 rounded border-2 shrink-0 mt-0.5 flex items-center justify-center ${
-                          isGapChecked ? "bg-blue-500 border-blue-500" : "border-muted-foreground/40"
+                        <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border ${
+                          isGapChecked ? "border-[#1E49E2] bg-[#1E49E2] text-white" : "border-[#B8C7DC] bg-white text-transparent"
                         }`}>
-                          {isGapChecked && <span className="text-white text-[10px] leading-none">?</span>}
+                          <Check className="h-3 w-3" />
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold break-words leading-snug text-[var(--ink-strong)]">{doc.framework_name}</p>
-                        <p className="mt-0.5 text-xs break-all leading-snug text-[var(--ink-muted)]">{doc.source_filename}</p>
-                        <div className="flex items-center gap-1.5 mt-1">
-                          <Badge variant="secondary" className="rounded-full bg-[#EEF4FF] px-2 py-0 text-[10px] text-[var(--kpmg-blue)]">
+                        <p className="text-sm font-semibold break-words leading-snug text-[#0C233C]">{doc.framework_name}</p>
+                        <p className="mt-1 text-xs break-all leading-snug text-[#5B7294]">{doc.source_filename}</p>
+                        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                          <Badge variant="secondary" className="rounded-full bg-[#EEF4FF] px-2.5 py-0.5 text-[10px] text-[#1E49E2]">
                             {doc.total_obligations} obligations
                           </Badge>
+                          {doc.issuing_authority ? (
+                            <Badge variant="outline" className="rounded-full border-[#D8E3F2] px-2.5 py-0.5 text-[10px] text-[#5B7294]">
+                              {doc.issuing_authority}
+                            </Badge>
+                          ) : null}
                         </div>
                       </div>
                       {rightPanelView !== "gap-analysis" && (
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="mt-0.5 h-7 w-7 shrink-0 self-start rounded-full opacity-0 text-destructive hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+                          className="mt-0.5 h-8 w-8 shrink-0 self-start rounded-full opacity-0 text-destructive hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
                           onClick={e => { e.stopPropagation(); handleLibraryDelete(doc.document_id); }}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -1215,29 +1301,29 @@ export default function RegulatoryLibraryPage() {
 
         {/* Gap analysis run button */}
         {rightPanelView === "gap-analysis" && (
-          <div className="p-3 border-t space-y-2">
-            <p className="text-xs text-muted-foreground text-center">
+          <div className="space-y-2 border-t border-[#00338D]/8 bg-white/88 p-3">
+            <p className="text-center text-xs text-[#5B7294]">
               {gapSelectedIds.size < 2
                 ? `Select ${2 - gapSelectedIds.size} more doc${gapSelectedIds.size === 0 ? "s" : ""}`
                 : `${gapSelectedIds.size} docs selected`}
             </p>
             <Button
               size="sm"
-              className="w-full text-xs"
+              className="h-10 w-full rounded-[14px] bg-[#0C3B99] text-xs font-semibold hover:bg-[#153A96]"
               disabled={gapSelectedIds.size < 2 || gapLoading}
               onClick={handleRunGapAnalysis}
             >
               {gapLoading ? (
-                <><div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1.5" />Analyzing...</>
+                <><div className="mr-1.5 h-3 w-3 animate-spin rounded-full border-b-2 border-white" />Analyzing...</>
               ) : (
-                <><GitCompare className="h-3 w-3 mr-1.5" />Run Analysis</>
+                <><GitCompare className="mr-1.5 h-3 w-3" />Run analysis</>
               )}
             </Button>
             {gapSelectedIds.size > 0 && (
               <Button
                 size="sm"
                 variant="ghost"
-                className="w-full text-xs text-muted-foreground"
+                className="w-full text-xs text-[#5B7294]"
                 onClick={() => { setGapSelectedIds(new Set()); setGapResults(null); }}
               >
                 Clear selection
@@ -1257,10 +1343,10 @@ export default function RegulatoryLibraryPage() {
       )}
 
       {/* ── RIGHT PANEL ─────────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="trace-workbench-main min-h-0 flex-1 flex flex-col overflow-hidden">
 
         {/* ── PANEL TOGGLE ─────────────────────────────────────────────── */}
-        <div className="shrink-0 flex items-center border-b border-[#00338D]/8 bg-white/75 px-2 py-1.5">
+        <div className="trace-workbench-tabs shrink-0 flex items-center border-b border-[#00338D]/8 bg-white/75 px-2 py-1.5">
           <Button
             variant="ghost"
             size="icon"
@@ -1287,22 +1373,191 @@ export default function RegulatoryLibraryPage() {
               </div>
             </div>
           ) : (
-            <ScrollArea className="flex-1">
+            <ScrollArea className="trace-workbench-scroll flex-1">
               <div className="p-5 space-y-5">
 
-                {/* Page heading */}
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="kpmg-section-label text-[#1E49E2]">Regulatory overview</p>
-                    <h1 className="mt-1 text-[28px] font-bold tracking-[-0.02em] text-[var(--ink-strong)]">Library Dashboard</h1>
-                    <p className="mt-1 text-[12px] text-[var(--ink-muted)]">Aggregate metrics across all ingested regulations</p>
-                  </div>
-                  <Badge variant="outline" className="gap-1.5 rounded-full border-[#00338D]/10 bg-white px-2.5 py-1 text-xs text-[var(--ink-strong)]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
-                    {libraryDocuments.length} document{libraryDocuments.length !== 1 ? "s" : ""}
-                  </Badge>
+                <TraceSectionHeading
+                  eyebrow="Regulatory overview"
+                  title="Library dashboard"
+                  action={(
+                    <Badge variant="outline" className="rounded-full border-[#D8E3F2] bg-white px-3 py-1.5 text-[11px] text-[#0C233C]">
+                      {libraryDocuments.length} document{libraryDocuments.length !== 1 ? "s" : ""}
+                    </Badge>
+                  )}
+                />
+
+                <TraceStatusRibbon
+                  title="Regulatory corpus is live"
+                  detail={
+                    hasCrossData
+                      ? `${coveredObligations.toLocaleString()} obligations are already mapped to controls across ${frameworkNames.length || libraryDocuments.length} frameworks.`
+                      : `${totalObligations.toLocaleString()} obligations extracted across the current regulatory corpus.`
+                  }
+                  action={(
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-full border-white/20 bg-white/8 px-4 text-white hover:bg-white/14 hover:text-white"
+                      onClick={() => setShowCrossAnalysis(v => !v)}
+                    >
+                      {showCrossAnalysis ? "Hide coverage detail" : "View coverage detail"}
+                    </Button>
+                  )}
+                />
+
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                  <KpiCard
+                    label="Documents"
+                    value={libraryDocuments.length.toString()}
+                    subtitle="frameworks currently loaded"
+                    accentColor="#1E49E2"
+                    icon={<FileText className="h-5 w-5" />}
+                  />
+                  <KpiCard
+                    label="Obligations"
+                    value={totalObligations.toLocaleString()}
+                    subtitle="requirements extracted from source documents"
+                    accentColor="#153A96"
+                    icon={<BookOpen className="h-5 w-5" />}
+                  />
+                  <KpiCard
+                    label="Domains"
+                    value={sortedDomains.length.toString()}
+                    subtitle="risk and regulatory areas covered"
+                    accentColor="#00A3A1"
+                    icon={<Layers className="h-5 w-5" />}
+                  />
+                  <KpiCard
+                    label="Merged"
+                    value={
+                      mergedObligationsLoading
+                        ? <span className="inline-block h-7 w-7 animate-spin rounded-full border-b-2 border-[#1E49E2]" />
+                        : mergedObligations !== null ? mergedObligations.length : "-"
+                    }
+                    subtitle={mergedObligations !== null ? "deduplicated obligation set" : "deduplication ready to compute"}
+                    accentColor="#5B7294"
+                    icon={<TrendingUp className="h-5 w-5" />}
+                  />
                 </div>
 
+                {(hasCrossData || (controlsLoaded && allControls.length === 0)) && (
+                  <TracePanel
+                    title="Regulation-control coverage"
+                    subtitle="How well the current controls library maps to extracted obligations."
+                  >
+                    {hasCrossData ? (
+                      <div className="grid gap-4 md:grid-cols-3">
+                        <TraceMetricCard
+                          label="Coverage"
+                          value={`${oblCoveragePct.toFixed(0)}%`}
+                          sub={`${coveredObligations.toLocaleString()} obligations mapped`}
+                          accentColor="#009A44"
+                          badge="Controls aligned"
+                          badgeClassName="bg-[#ECFBF1] text-[#009A44]"
+                        />
+                        <TraceMetricCard
+                          label="Gap Obligations"
+                          value={gapObligations.toLocaleString()}
+                          sub="requirements without mapped controls"
+                          accentColor="#EAAA00"
+                          badge="Requires review"
+                          badgeClassName="bg-[#FFF8E8] text-[#A66300]"
+                        />
+                        <TraceMetricCard
+                          label="Controls Assessed"
+                          value={allControls.length.toLocaleString()}
+                          sub={`${ctrlCoveragePct.toFixed(0)}% of controls have obligation links`}
+                          accentColor="#1E49E2"
+                          badge="Cross-library"
+                          badgeClassName="bg-[#EEF4FF] text-[#1E49E2]"
+                        />
+                      </div>
+                    ) : (
+                      <div className="rounded-[18px] border border-dashed border-[#D8E3F2] bg-[#F8FBFF] px-5 py-8 text-center">
+                        <p className="text-sm font-semibold text-[#0C233C]">Controls Library not loaded</p>
+                        <p className="mt-2 text-sm leading-6 text-[#5B7294]">
+                          Load the Controls Library to evaluate obligation coverage and surface regulatory gaps.
+                        </p>
+                      </div>
+                    )}
+
+                    {frameworkNames.length > 0 ? (
+                      <div className="mt-5 flex flex-wrap gap-2">
+                        {frameworkNames.map((name, i) => (
+                          <span key={i} className="rounded-full border border-[#D8E3F2] bg-[#F8FBFF] px-3 py-1.5 text-[11px] font-semibold text-[#4A6184]">
+                            {name}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
+
+                    {showCrossAnalysis && hasCrossData && (() => {
+                      const dedup = (obls: any[]) =>
+                        Array.from(new Map(obls.filter(o => o.obligation_id).map(o => [o.obligation_id, o])).values());
+
+                      const coveredObls = dedup(dashboardObligations.filter(o => o.obligation_id && coveredObligationIds.has(o.obligation_id)));
+                      const gapObls = dedup(dashboardObligations.filter(o => o.obligation_id && !coveredObligationIds.has(o.obligation_id)));
+                      const allObls = dedup(dashboardObligations);
+
+                      const metrics = [
+                        {
+                          icon: <TrendingUp className="h-4 w-4 text-[#009A44]" />,
+                          metric: "Covered obligations",
+                          value: `${oblCoveragePct.toFixed(1)}%`,
+                          explanation: `${coveredObls.length} of ${allObls.length} unique obligations are addressed by at least one control.`,
+                          obligations: coveredObls,
+                          dialogTitle: `Covered Obligations (${coveredObls.length})`,
+                        },
+                        {
+                          icon: <AlertTriangle className="h-4 w-4 text-[#A66300]" />,
+                          metric: "Gap obligations",
+                          value: String(gapObls.length),
+                          explanation: gapObls.length === 0
+                            ? "All obligations currently have at least one mapped control."
+                            : `${gapObls.length} obligations do not yet have mapped controls.`,
+                          obligations: gapObls,
+                          dialogTitle: `Gap Obligations (${gapObls.length})`,
+                        },
+                        {
+                          icon: <Layers className="h-4 w-4 text-[#1E49E2]" />,
+                          metric: "All obligations",
+                          value: allObls.length.toLocaleString(),
+                          explanation: `${allObls.length} unique obligations are currently in the unified regulatory corpus.`,
+                          obligations: allObls,
+                          dialogTitle: `All Obligations (${allObls.length})`,
+                        },
+                      ];
+
+                      return (
+                        <div className="mt-5 space-y-2 rounded-[18px] border border-[#D8E3F2] bg-[#F8FBFF] p-4">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#7E91AE]">Coverage detail</p>
+                          {metrics.map(({ icon, metric, value, explanation, obligations, dialogTitle }) => (
+                            <button
+                              key={metric}
+                              type="button"
+                              disabled={obligations.length === 0}
+                              className="group flex w-full items-start gap-3 rounded-[16px] border border-transparent bg-white px-4 py-3 text-left transition-colors hover:border-[#D8E3F2] hover:bg-[#FCFDFF] disabled:cursor-default disabled:opacity-60"
+                              onClick={() => obligations.length > 0 && setCrossMetricDialog({ title: dialogTitle, obligations })}
+                            >
+                              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#F3F7FF]">{icon}</span>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-semibold text-[#0C233C]">{metric}</span>
+                                  <span className="text-sm font-bold text-[#1E49E2]">{value}</span>
+                                  {obligations.length > 0 ? <ArrowRight className="ml-auto h-3.5 w-3.5 text-[#7E91AE]" /> : null}
+                                </div>
+                                <p className="mt-1 text-[12px] leading-5 text-[#5B7294]">{explanation}</p>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </TracePanel>
+                )}
+
+                {false && (
+                  <>
                 {/* KPI row */}
                 <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
                   {[
@@ -1479,39 +1734,36 @@ export default function RegulatoryLibraryPage() {
                   </div>
                 )}
 
+                  </>
+                )}
+
                 {/* Domain Distribution - clickable filter bars */}
                 {sortedDomains.length > 0 && (
-                  <div className="rounded-[18px] border border-[#00338D]/10 bg-card p-4 space-y-3 shadow-[0_14px_28px_-28px_rgba(12,35,60,0.22)]">
+                  <TracePanel title="Domain distribution" subtitle="Click a band to filter the obligation explorer below.">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-semibold text-[var(--ink-strong)]">Domain Distribution</h3>
                       {dashboardDomainFilter !== "all" && (
                         <button
-                          className="text-[10px] text-[var(--ink-muted)] hover:text-[var(--ink-strong)] underline underline-offset-2 transition-colors"
+                          className="text-[11px] font-medium text-[#5B7294] underline underline-offset-2 transition-colors hover:text-[#0C233C]"
                           onClick={() => setDashboardDomainFilter("all")}
                         >
                           Clear filter
                         </button>
                       )}
                     </div>
-                    <p className="-mt-1 text-[11px] text-[var(--ink-muted)]">Click a bar to filter obligations below</p>
-                    <div className="space-y-1.5">
-                      {sortedDomains.map(([domain, count], i) => {
-                        const hue = HUES[i % HUES.length];
+                    <div className="space-y-2">
+                      {sortedDomains.map(([domain, count]) => {
                         const maxCount = sortedDomains[0]?.[1] ?? 1;
                         const pct = Math.round((count / maxCount) * 100);
                         const isActive = dashboardDomainFilter === domain;
                         return (
                           <div
                             key={domain}
-                            className={`flex items-center gap-3 rounded-[14px] px-3 py-2 cursor-pointer transition-colors ${
-                              isActive ? "ring-1 ring-[#1E49E2]/25 bg-[#EEF4FF]" : "hover:bg-[#F7FAFF]"
+                            className={`flex items-center gap-3 rounded-[16px] px-3 py-2.5 cursor-pointer transition-colors ${
+                              isActive ? "border border-[#1E49E2]/20 bg-[#EEF4FF]" : "border border-transparent hover:bg-[#F7FAFF]"
                             }`}
                             onClick={() => setDashboardDomainFilter(isActive ? "all" : domain)}
                           >
-                            <span
-                              className="text-xs font-medium w-36 shrink-0 capitalize leading-tight"
-                              style={{ color: `hsl(${hue},60%,${isActive ? 35 : 40}%)` }}
-                            >
+                            <span className="w-40 shrink-0 text-xs font-medium capitalize leading-tight text-[#0C233C]">
                               {domain.replace(/_/g, " ")}
                             </span>
                             <div className="flex-1 h-3.5 overflow-hidden rounded-full bg-[#E6EDF7]">
@@ -1519,33 +1771,37 @@ export default function RegulatoryLibraryPage() {
                                 className="h-full rounded-full transition-all duration-500"
                                 style={{
                                   width: `${pct}%`,
-                                  background: `hsl(${hue},${isActive ? 70 : 55}%,${isActive ? 48 : 58}%)`,
+                                  background: "linear-gradient(90deg,#153A96 0%, #1E49E2 100%)",
                                   opacity: dashboardDomainFilter !== "all" && !isActive ? 0.35 : 1,
                                 }}
                               />
                             </div>
-                            <span className="w-8 shrink-0 text-right text-xs font-medium text-[var(--ink-muted)]">{count}</span>
+                            <span className="w-8 shrink-0 text-right text-xs font-medium text-[#5B7294]">{count}</span>
                           </div>
                         );
                       })}
                     </div>
-                  </div>
+                  </TracePanel>
                 )}
 
                 {/* All / Merged Obligations list */}
-                <div className="overflow-hidden rounded-[18px] border border-[#00338D]/10 bg-card shadow-[0_14px_28px_-28px_rgba(12,35,60,0.22)]">
-                  <div className="space-y-2 border-b border-[#00338D]/8 bg-[#F8FAFD] p-3">
+                <TracePanel
+                  title={dashboardViewMode === "merged" ? "Merged obligations" : "Obligation explorer"}
+                  subtitle="Search, filter, and review extracted obligations across the corpus."
+                  className="overflow-hidden"
+                >
+                  <div className="space-y-2 rounded-[18px] border border-[#DCE3EE] bg-[#F8FAFD] p-3">
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
-                        <h3 className="text-sm font-semibold text-[var(--ink-strong)]">
-                          {dashboardViewMode === "merged" ? "Merged Obligations" : "All Obligations"}
+                        <h3 className="text-sm font-semibold text-[#0C233C]">
+                          {dashboardViewMode === "merged" ? "Merged view" : "All obligations"}
                           {dashboardDomainFilter !== "all" && (
-                            <span className="ml-2 text-[11px] font-normal text-[var(--ink-muted)] capitalize">
+                            <span className="ml-2 text-[11px] font-normal capitalize text-[#5B7294]">
                               - {dashboardDomainFilter.replace(/_/g, " ")}
                             </span>
                           )}
                         </h3>
-                        <Badge variant="secondary" className="rounded-full bg-[#EEF4FF] text-[10px] text-[var(--kpmg-blue)]">
+                        <Badge variant="secondary" className="rounded-full bg-[#EEF4FF] text-[10px] text-[#1E49E2]">
                           {filteredDashboardObligations.length} shown
                         </Badge>
                       </div>
@@ -1578,9 +1834,9 @@ export default function RegulatoryLibraryPage() {
                       </div>
                     </div>
                     <div className="relative">
-                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--ink-muted)]" />
+                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#7E91AE]" />
                       <Input
-                        className="h-8 rounded-[12px] border-[#00338D]/10 bg-white pl-8 text-xs"
+                        className="h-9 rounded-[12px] border-[#D8E3F2] bg-white pl-8 text-xs"
                         placeholder="Search obligations..."
                         value={dashboardSearch}
                         onChange={e => setDashboardSearch(e.target.value)}
@@ -1593,11 +1849,11 @@ export default function RegulatoryLibraryPage() {
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
                     </div>
                   ) : filteredDashboardObligations.length === 0 ? (
-                    <p className="text-xs text-muted-foreground text-center py-6">
+                    <p className="py-6 text-center text-xs text-muted-foreground">
                       {dashboardObligations.length === 0 ? "No obligations loaded." : "No obligations match the current filter."}
                     </p>
                   ) : (
-                    <div className="divide-y">
+                    <div className="divide-y rounded-b-[18px] border border-t-0 border-[#DCE3EE] bg-white">
                       {filteredDashboardObligations.map((obl, i) => {
                         const hue = HUES[sortedDomains.findIndex(([d]) => d === obl.domain) % HUES.length];
                         const mappedCtrls = obligationControlMap.get(obl.obligation_id) ?? [];
@@ -1615,7 +1871,7 @@ export default function RegulatoryLibraryPage() {
                       })}
                     </div>
                   )}
-                </div>
+                </TracePanel>
 
               </div>
             </ScrollArea>
@@ -1769,7 +2025,7 @@ export default function RegulatoryLibraryPage() {
               </div>
 
               {/* Obligation list */}
-              <ScrollArea className="flex-1">
+              <ScrollArea className="trace-workbench-scroll flex-1">
                 <div className="p-4 space-y-3 pr-5">
                   {!selectedLibraryDoc.obligations && (
                     <div className="text-center py-12 space-y-2">
@@ -1831,7 +2087,7 @@ export default function RegulatoryLibraryPage() {
               </div>
             </div>
           ) : (
-            <ScrollArea className="flex-1">
+            <ScrollArea className="trace-workbench-scroll flex-1">
               <div className="p-5 space-y-5">
 
                 {/* Page heading */}

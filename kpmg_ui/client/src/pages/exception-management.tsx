@@ -1,5 +1,6 @@
 import { ShieldOff } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
+import TracePageBody from "@/components/TracePageBody";
 
 export default function ExceptionManagementPage() {
   return (
@@ -9,13 +10,13 @@ export default function ExceptionManagementPage() {
         subtitle="Log, review, and disposition control exceptions and waivers"
         icon={ShieldOff}
       />
-      <div className="flex-1 flex items-center justify-center">
+      <TracePageBody width="narrow" tint className="flex items-center">
         <div className="text-center space-y-3">
           <ShieldOff className="h-14 w-14 mx-auto text-muted-foreground/30" />
           <p className="text-lg font-semibold text-muted-foreground">Under Development</p>
           <p className="text-sm text-muted-foreground/60">This module is coming soon.</p>
         </div>
-      </div>
+      </TracePageBody>
     </div>
   );
 }

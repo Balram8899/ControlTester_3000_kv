@@ -1,0 +1,123 @@
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list
+  - generic [ref=e116]:
+    - generic [ref=e118]:
+      - generic [ref=e119]:
+        - generic [ref=e120]: KPMG
+        - generic [ref=e121]: "|"
+        - generic [ref=e122]: TRACE
+        - generic [ref=e123]:
+          - generic [ref=e124]: /
+          - generic [ref=e125]: Agentic Controls Platform
+      - button "Sign Out" [ref=e127] [cursor=pointer]:
+        - img
+        - text: Sign Out
+    - banner [ref=e128]:
+      - generic [ref=e129]:
+        - generic [ref=e130]:
+          - generic [ref=e133]: Landing point to the agentic solutions
+          - heading "Automate. Detect. Act. Your agentic insight & command centre for control risk and regulatory exposure." [level=1] [ref=e134]
+          - paragraph [ref=e135]: TRACE deploys autonomous agents across your control environment — continuously surfacing imminent risks, closing regulatory gaps before they escalate, and generating audit-ready evidence at machine speed. Move into any workspace to orchestrate testing, assessment, and reporting through a single agentic operating shell.
+          - paragraph [ref=e136]: Select a workspace below to begin
+        - complementary [ref=e137]:
+          - paragraph [ref=e138]: Operating summary
+          - heading "Solutions Overview" [level=2] [ref=e139]
+          - generic [ref=e140]:
+            - generic [ref=e141]:
+              - paragraph [ref=e142]: Solution Modules
+              - paragraph [ref=e143]: "13"
+              - paragraph [ref=e144]: Centralized access to retained modules across oversight, assessment, and reporting.
+            - generic [ref=e145]:
+              - paragraph [ref=e146]: Navigation bands
+              - paragraph [ref=e147]: "3"
+              - paragraph [ref=e148]: Operating capabilities are grouped into structured enterprise bands for faster orientation.
+            - generic [ref=e149]:
+              - paragraph [ref=e150]: Library foundations
+              - paragraph [ref=e151]: "4"
+              - paragraph [ref=e152]: Regulatory obligations, controls, frameworks, and asset context anchor the downstream analysis stack.
+    - main [ref=e153]:
+      - generic [ref=e154]:
+        - button "Oversight and Libraries Reference data, library operations, and portfolio monitoring surfaces. 5 modules" [ref=e156] [cursor=pointer]:
+          - generic [ref=e157]:
+            - paragraph [ref=e158]: Oversight and Libraries
+            - heading "Reference data, library operations, and portfolio monitoring surfaces." [level=3] [ref=e159]
+          - generic [ref=e160]:
+            - generic [ref=e161]: 5 modules
+            - img [ref=e162]
+        - generic [ref=e164]:
+          - button "Assessment and Testing Execution workflows for regulatory comparison, control testing, and evidence-led analysis. 6 modules" [expanded] [active] [ref=e165] [cursor=pointer]:
+            - generic [ref=e166]:
+              - paragraph [ref=e167]: Assessment and Testing
+              - heading "Execution workflows for regulatory comparison, control testing, and evidence-led analysis." [level=3] [ref=e168]
+            - generic [ref=e169]:
+              - generic [ref=e170]: 6 modules
+              - img [ref=e171]
+          - generic [ref=e188]:
+            - button "06 Controls Diagnostics Upload your GRC data once and run all four diagnostic analyses simultaneously — Risk-Controls Coverage, Control Quality, Duplicates, and Benchmarking — across your full control corpus. ▶ Enter workspace" [ref=e189] [cursor=pointer]:
+              - generic [ref=e190]:
+                - img [ref=e192]
+                - generic [ref=e195]: "06"
+              - heading "Controls Diagnostics" [level=4] [ref=e196]
+              - paragraph [ref=e197]: Upload your GRC data once and run all four diagnostic analyses simultaneously — Risk-Controls Coverage, Control Quality, Duplicates, and Benchmarking — across your full control corpus.
+              - generic [ref=e199]:
+                - text: ▶ Enter workspace
+                - img [ref=e200]
+            - button "07 Control Testing Coordinate AI-assisted control testing, validate supporting evidence, record outcomes, and generate testing workpapers. ▶ Enter workspace" [ref=e202] [cursor=pointer]:
+              - generic [ref=e203]:
+                - img [ref=e205]
+                - generic [ref=e207]: "07"
+              - heading "Control Testing" [level=4] [ref=e208]
+              - paragraph [ref=e209]: Coordinate AI-assisted control testing, validate supporting evidence, record outcomes, and generate testing workpapers.
+              - generic [ref=e211]:
+                - text: ▶ Enter workspace
+                - img [ref=e212]
+            - button "08 Risk Assessment Capture risk inputs, structure scoring, connect risks to controls, and generate risk assessment outputs for downstream reporting. ▶ Enter workspace" [ref=e214] [cursor=pointer]:
+              - generic [ref=e215]:
+                - img [ref=e217]
+                - generic [ref=e219]: "08"
+              - heading "Risk Assessment" [level=4] [ref=e220]
+              - paragraph [ref=e221]: Capture risk inputs, structure scoring, connect risks to controls, and generate risk assessment outputs for downstream reporting.
+              - generic [ref=e223]:
+                - text: ▶ Enter workspace
+                - img [ref=e224]
+            - button "09 Regulatory Testing Run regulation-versus-regulation comparisons or assess uploaded RCM documents against regulatory obligations from uploads or library sources. ▶ Enter workspace" [ref=e226] [cursor=pointer]:
+              - generic [ref=e227]:
+                - img [ref=e229]
+                - generic [ref=e233]: "09"
+              - heading "Regulatory Testing" [level=4] [ref=e234]
+              - paragraph [ref=e235]: Run regulation-versus-regulation comparisons or assess uploaded RCM documents against regulatory obligations from uploads or library sources.
+              - generic [ref=e237]:
+                - text: ▶ Enter workspace
+                - img [ref=e238]
+            - button "10 Final Report Execute evidence-based assessment workflows and compile structured final outputs from uploaded evidence packs. ▶ Enter workspace" [ref=e240] [cursor=pointer]:
+              - generic [ref=e241]:
+                - img [ref=e243]
+                - generic [ref=e248]: "10"
+              - heading "Final Report" [level=4] [ref=e249]
+              - paragraph [ref=e250]: Execute evidence-based assessment workflows and compile structured final outputs from uploaded evidence packs.
+              - generic [ref=e252]:
+                - text: ▶ Enter workspace
+                - img [ref=e253]
+            - button "11 Chat Use conversational analysis to interrogate platform context, uploaded content, and working outputs during assessment workflows. ▶ Enter workspace" [ref=e255] [cursor=pointer]:
+              - generic [ref=e256]:
+                - img [ref=e258]
+                - generic [ref=e260]: "11"
+              - heading "Chat" [level=4] [ref=e261]
+              - paragraph [ref=e262]: Use conversational analysis to interrogate platform context, uploaded content, and working outputs during assessment workflows.
+              - generic [ref=e264]:
+                - text: ▶ Enter workspace
+                - img [ref=e265]
+        - button "Reporting and Operations Distribution, retrieval, and remediation workflows for generated outputs. 2 modules" [ref=e174] [cursor=pointer]:
+          - generic [ref=e175]:
+            - paragraph [ref=e176]: Reporting and Operations
+            - heading "Distribution, retrieval, and remediation workflows for generated outputs." [level=3] [ref=e177]
+          - generic [ref=e178]:
+            - generic [ref=e179]: 2 modules
+            - img [ref=e180]
+        - generic [ref=e182]:
+          - paragraph [ref=e183]: KPMG TRACE - Agentic Controls Platform
+          - paragraph [ref=e184]: 13 modules - centralized operating environment
+    - contentinfo [ref=e185]:
+      - generic [ref=e186]: © 2026 KPMG Assurance and Consulting Services LLP, an Indian Limited Liability Partnership and a member firm of the KPMG global organization of independent member firms affiliated with KPMG International Limited, a private English company limited by guarantee. All rights reserved.
+      - generic [ref=e187]: Confidential

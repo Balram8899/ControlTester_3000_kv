@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { Upload, FileText, CheckCircle, Loader2, Download, Bot, Shield, Search, FileOutput } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import HeroSection from "@/components/HeroSection";
+import TracePageBody from "@/components/TracePageBody";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useEvidenceContext, AgentStatus } from "@/contexts/EvidenceContext";
@@ -302,8 +303,7 @@ export default function EvidenceAssessmentPage() {
   return (
     <div className="h-full flex flex-col">
       <HeroSection title="Final Report" subtitle="Upload evidence files for AI-powered multi-agent risk assessment" icon={Search} />
-      <div className="flex-1 overflow-auto">
-      <div className="max-w-5xl mx-auto p-6">
+      <TracePageBody width="wide">
         {!showAgents ? (
           <Card>
             <CardHeader>
@@ -444,8 +444,7 @@ export default function EvidenceAssessmentPage() {
             )}
           </div>
         )}
-      </div>
-      </div>
+      </TracePageBody>
     </div>
   );
 }

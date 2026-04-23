@@ -125,16 +125,16 @@ export default function AssetRegistryPage() {
     form.description.trim();
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="trace-workbench-shell flex flex-col h-full overflow-hidden">
       <HeroSection
         title="Asset Registry"
         subtitle="Manage assets, CIA ratings, and control mappings"
       />
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="trace-workbench-layout">
 
         {/* ── Left panel ── */}
-        <div className="w-72 flex-shrink-0 border-r border-slate-200 flex flex-col bg-white">
+        <div className="trace-workbench-rail w-72 flex-shrink-0 border-r border-slate-200 flex flex-col bg-white">
           <div className="p-3 border-b border-slate-100 flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-2 top-2.5 h-3.5 w-3.5 text-slate-400" />
@@ -150,7 +150,7 @@ export default function AssetRegistryPage() {
             </Button>
           </div>
 
-          <ScrollArea className="flex-1">
+          <ScrollArea className="trace-workbench-scroll flex-1">
             {isLoading && (
               <div className="flex justify-center p-8">
                 <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
@@ -191,10 +191,10 @@ export default function AssetRegistryPage() {
         </div>
 
         {/* ── Right panel ── */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-slate-50">
+        <div className="trace-workbench-main flex-1 flex flex-col overflow-hidden bg-slate-50">
 
           {/* Tab bar */}
-          <div className="flex gap-1 px-4 pt-3 border-b border-slate-200 bg-white">
+          <div className="trace-workbench-tabs flex gap-1 px-4 pt-3 border-b border-slate-200 bg-white">
             {(["dashboard", "detail", "controls"] as RightTab[]).map(t => (
               <button
                 key={t}
@@ -210,7 +210,7 @@ export default function AssetRegistryPage() {
             ))}
           </div>
 
-          <ScrollArea className="flex-1 p-4">
+          <ScrollArea className="trace-workbench-scroll flex-1 p-4">
 
             {/* Dashboard tab */}
             {tab === "dashboard" && (

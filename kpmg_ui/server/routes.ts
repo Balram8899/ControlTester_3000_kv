@@ -6,10 +6,35 @@ import { request as httpRequest } from "http";
 // In local dev: falls back to localhost:8000
 const FASTAPI_BASE = (process.env.VITE_API_URL || "http://localhost:8000").replace(/\/$/, "");
 
+function getForwardBody(req: Request, contentType: string): Buffer | undefined {
+  if (contentType.includes("multipart/form-data")) {
+    return undefined;
+  }
+
+  if (contentType.includes("application/x-www-form-urlencoded") && req.body) {
+    return Buffer.from(new URLSearchParams(req.body as Record<string, string>).toString());
+  }
+
+  if (contentType.includes("application/json")) {
+    const rawBody = (req as Request & { rawBody?: unknown }).rawBody;
+    if (Buffer.isBuffer(rawBody)) {
+      return rawBody;
+    }
+
+    if (req.body) {
+      return Buffer.from(JSON.stringify(req.body));
+    }
+  }
+
+  return undefined;
+}
+
 function proxyToFastAPI(req: Request, res: Response) {
   const targetPath = req.path.replace(/^\/api/, "") || "/";
   const query = req.url.includes("?") ? req.url.slice(req.url.indexOf("?")) : "";
   const url = new URL(FASTAPI_BASE);
+  const contentType = typeof req.headers["content-type"] === "string" ? req.headers["content-type"] : "";
+  const forwardBody = getForwardBody(req, contentType);
 
   // Forward headers, overriding host
   const headers: Record<string, string> = {};
@@ -18,6 +43,13 @@ function proxyToFastAPI(req: Request, res: Response) {
     else if (Array.isArray(v)) headers[k] = v[0];
   }
   headers["host"] = url.host;
+  delete headers["transfer-encoding"];
+  if (forwardBody) {
+    headers["content-length"] = String(forwardBody.length);
+    headers["content-type"] = contentType;
+  } else if (!contentType.includes("multipart/form-data")) {
+    delete headers["content-length"];
+  }
 
   const options = {
     hostname: url.hostname,
@@ -47,26 +79,11 @@ function proxyToFastAPI(req: Request, res: Response) {
     }
   });
 
-  const contentType = req.headers["content-type"] || "";
-
   if (contentType.includes("multipart/form-data")) {
     // Express does not parse multipart — pipe the raw stream directly
     req.pipe(proxyReq, { end: true });
-  } else if (contentType.includes("application/x-www-form-urlencoded") && req.body) {
-    // Already parsed by express.urlencoded — re-serialize
-    const params = new URLSearchParams(req.body as Record<string, string>).toString();
-    proxyReq.setHeader("content-type", "application/x-www-form-urlencoded");
-    proxyReq.setHeader("content-length", Buffer.byteLength(params));
-    proxyReq.write(params);
-    proxyReq.end();
-  } else if (contentType.includes("application/json") && req.body) {
-    // Already parsed by express.json — re-serialize
-    const bodyStr = JSON.stringify(req.body);
-    const bodyBuf = Buffer.from(bodyStr);
-    proxyReq.setHeader("content-type", "application/json");
-    proxyReq.setHeader("content-length", bodyBuf.length);
-    proxyReq.write(bodyBuf);
-    proxyReq.end();
+  } else if (forwardBody) {
+    proxyReq.end(forwardBody);
   } else {
     proxyReq.end();
   }

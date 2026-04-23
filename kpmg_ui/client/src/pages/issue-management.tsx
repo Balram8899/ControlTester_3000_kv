@@ -109,12 +109,12 @@ export default function IssueManagementPage() {
   }
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="trace-workbench-shell flex flex-col h-full overflow-hidden">
       <HeroSection title="Issue Management" subtitle="Track, triage, and resolve issues across engagements" />
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="trace-workbench-layout">
         {/* Left Panel */}
-        <div className="w-72 flex-shrink-0 border-r border-slate-200 flex flex-col bg-white">
+        <div className="trace-workbench-rail w-72 flex-shrink-0 border-r border-slate-200 flex flex-col bg-white">
           <div className="p-3 border-b border-slate-100 space-y-2">
             <div className="flex gap-2">
               <div className="relative flex-1">
@@ -136,7 +136,7 @@ export default function IssueManagementPage() {
               </select>
             </div>
           </div>
-          <ScrollArea className="flex-1">
+          <ScrollArea className="trace-workbench-scroll flex-1">
             {isLoading && <div className="flex justify-center p-8"><Loader2 className="h-5 w-5 animate-spin text-slate-400" /></div>}
             {filtered.map(issue => {
               const Icon = STATUS_ICON[issue.status] ?? AlertTriangle;
@@ -160,8 +160,8 @@ export default function IssueManagementPage() {
         </div>
 
         {/* Right Panel */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-slate-50">
-          <div className="flex gap-1 px-4 pt-3 border-b border-slate-200 bg-white">
+        <div className="trace-workbench-main flex-1 flex flex-col overflow-hidden bg-slate-50">
+          <div className="trace-workbench-tabs flex gap-1 px-4 pt-3 border-b border-slate-200 bg-white">
             {(["dashboard", "detail", "remediation", "queue"] as const).map(t => (
               <button key={t} onClick={() => setTab(t)}
                 className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors ${tab === t ? "border-[#001E62] text-[#001E62]" : "border-transparent text-slate-500 hover:text-slate-700"}`}>
@@ -174,7 +174,7 @@ export default function IssueManagementPage() {
             ))}
           </div>
 
-          <ScrollArea className="flex-1 p-4">
+          <ScrollArea className="trace-workbench-scroll flex-1 p-4">
             {/* Dashboard Tab */}
             {tab === "dashboard" && (
               <div className="space-y-4">

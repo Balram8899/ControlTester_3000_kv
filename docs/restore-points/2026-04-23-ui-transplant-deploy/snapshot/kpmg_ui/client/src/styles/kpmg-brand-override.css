@@ -1,0 +1,664 @@
+/* ================================================================
+   KPMG TRACE — Brand Design System
+   Remove the import in main.tsx to revert to defaults.
+   ================================================================ */
+
+:root {
+  --ink-strong:      #0C233C;
+  --ink:             #233853;
+  --ink-muted:       #5B6B82;
+  --ink-soft:        #7B8DA2;
+  --surface-base:    #F4F7FB;
+  --surface-raised:  #FFFFFF;
+  --surface-tint:    #EEF4FB;
+  --on-dark-strong:  #FFFFFF;
+  --on-dark:         #E4EEFB;
+  --on-dark-muted:   #C8D8F0;
+  --on-dark-soft:    #A6BCD9;
+  --on-dark-accent:  #ACEAFF;
+  /* ── KPMG Colour Palette ── */
+  --kpmg-blue:  #00338D;
+  --cobalt:     #1E49E2;
+  --dark-blue:  #0C233C;
+  --pacific:    #00B8F5;
+  --light-blue: #ACEAFF;
+  --purple:     #7213EA;
+  --pink:       #FD349C;
+  --teal:       #098E7E;
+  --green:      #009A44;
+  --amber:      #EAAA00;
+  --red:        #E5001B;
+
+  /* ── Semantic tokens — light mode ── */
+  --background:           216 55% 98%;
+  --foreground:           212 47% 15%;
+  --border:               214 35% 88%;
+  --card:                 0 0% 100%;
+  --card-foreground:      212 47% 15%;
+  --card-border:          214 38% 86%;
+
+  /* Sidebar → dark navy */
+  --sidebar:                    214 53% 14%;
+  --sidebar-foreground:         210 38% 92%;
+  --sidebar-border:             214 28% 20%;
+  --sidebar-primary:            194 100% 48%;
+  --sidebar-primary-foreground: 214 53% 14%;
+  --sidebar-accent:             214 30% 22%;
+  --sidebar-accent-foreground:  210 38% 95%;
+  --sidebar-ring:               194 100% 48%;
+
+  --popover:              0 0% 100%;
+  --popover-foreground:   212 47% 15%;
+  --popover-border:       214 38% 86%;
+  --primary:              218 100% 28%;
+  --primary-foreground:   0 0% 100%;
+  --secondary:            214 50% 95%;
+  --secondary-foreground: 214 44% 21%;
+  --muted:                214 44% 95%;
+  --muted-foreground:     214 17% 42%;
+  --accent:               214 52% 95%;
+  --accent-foreground:    214 44% 21%;
+  --input:                214 33% 87%;
+  --ring:                 225 77% 50%;
+  --chart-1:              218 100% 28%;
+  --chart-2:              225 77% 50%;
+  --chart-3:              194 100% 48%;
+  --chart-4:              171 87% 30%;
+  --chart-5:              43 100% 46%;
+
+  --font-sans:    Arial, sans-serif;
+  --font-display: Arial, sans-serif;
+  --font-mono:    "Courier New", monospace;
+  --radius:       0.75rem;
+
+  --osint-glow:      rgba(0, 51, 141, 0.12);
+  --scan-line-color: rgba(0, 51, 141, 0.015);
+  --grid-color:      rgba(0, 51, 141, 0.035);
+  --terminal-green:  #009a44;
+}
+
+.dark {
+  --background:           216 53% 8%;
+  --foreground:           210 38% 95%;
+  --border:               216 34% 19%;
+  --card:                 216 45% 10%;
+  --card-foreground:      210 38% 95%;
+  --card-border:          216 34% 20%;
+
+  --sidebar:                    215 55% 9%;
+  --sidebar-foreground:         210 38% 92%;
+  --sidebar-border:             216 28% 14%;
+  --sidebar-primary:            194 100% 48%;
+  --sidebar-primary-foreground: 216 53% 8%;
+  --sidebar-accent:             216 30% 14%;
+  --sidebar-accent-foreground:  210 38% 95%;
+  --sidebar-ring:               194 100% 48%;
+
+  --popover:              216 42% 11%;
+  --popover-foreground:   210 38% 95%;
+  --popover-border:       216 34% 22%;
+  --primary:              194 100% 48%;
+  --primary-foreground:   0 0% 100%;
+  --secondary:            216 30% 15%;
+  --secondary-foreground: 210 38% 95%;
+  --muted:                216 24% 14%;
+  --muted-foreground:     215 18% 70%;
+  --accent:               216 28% 16%;
+  --accent-foreground:    210 38% 95%;
+  --input:                216 24% 18%;
+  --ring:                 194 100% 48%;
+
+  --osint-glow:      rgba(30, 73, 226, 0.2);
+  --scan-line-color: rgba(0, 184, 245, 0.04);
+  --grid-color:      rgba(0, 184, 245, 0.045);
+  --font-mono:       "Courier New", monospace;
+}
+
+/* ================================================================
+   Base
+   ================================================================ */
+
+body {
+  background:
+    radial-gradient(circle at top right, rgba(30, 73, 226, 0.05), transparent 26%),
+    linear-gradient(180deg, #f7f9fc 0%, #f3f6fa 100%);
+  color: hsl(var(--foreground));
+  font-family: var(--font-sans);
+}
+
+.dark body {
+  background: #081a2f;
+}
+
+/* ── Typography ── */
+h1, h2, h3, h4 {
+  font-family: Arial, sans-serif;
+  font-weight: 700;
+}
+
+.font-display {
+  font-family: Arial, sans-serif;
+  font-weight: 700;
+}
+
+body, p, span, li {
+  font-family: Arial, sans-serif;
+}
+
+/* ── Refined scrollbars ── */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 51, 141, 0.16);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 51, 141, 0.28);
+}
+
+/* ================================================================
+   Shell Layout
+   ================================================================ */
+
+.kpmg-shell {
+  background:
+    radial-gradient(circle at top right, rgba(0, 184, 245, 0.04), transparent 22%),
+    radial-gradient(circle at bottom left, rgba(0, 51, 141, 0.035), transparent 26%),
+    #f4f7fb;
+}
+
+/* ── Sidebar — Dark Navy ── */
+.kpmg-shell-sidebar {
+  position: relative;
+  background: linear-gradient(180deg, #0c233c 0%, #081a2f 100%);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 8px 0 32px rgba(0, 0, 0, 0.24);
+}
+
+.kpmg-shell-sidebar::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, #00338d 0%, #1e49e2 58%, #00b8f5 100%);
+  pointer-events: none;
+}
+
+.kpmg-shell-sidebar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 35% at 0% 0%, rgba(0, 184, 245, 0.08) 0%, transparent 65%),
+    radial-gradient(ellipse 45% 25% at 100% 100%, rgba(30, 73, 226, 0.08) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.kpmg-sidebar-logo-white {
+  filter: brightness(0) invert(1);
+  opacity: 0.98;
+}
+
+.kpmg-shell-sidebar ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.kpmg-shell-sidebar ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ── Sidebar nav links ── */
+.kpmg-sidebar-link {
+  border-radius: 0.625rem;
+  border-left-width: 3px;
+  border-left-style: solid;
+  border-left-color: transparent;
+  color: var(--on-dark-muted);
+  transition: background 0.14s ease, color 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease, transform 0.14s ease;
+}
+
+.kpmg-sidebar-link:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.075);
+  color: var(--on-dark-strong);
+  transform: translateX(1px);
+}
+
+.kpmg-sidebar-link[data-active="true"] {
+  background: linear-gradient(90deg, rgba(0, 184, 245, 0.16) 0%, rgba(0, 184, 245, 0.07) 100%);
+  color: #ffffff;
+  border-left-color: #00B8F5;
+  box-shadow:
+    inset 0 0 0 1px rgba(172, 234, 255, 0.08),
+    0 16px 28px -24px rgba(0, 184, 245, 0.5);
+}
+
+/* ── Top header bar ── */
+.kpmg-shell-header {
+  position: relative;
+  background: rgba(255, 255, 255, 0.96);
+  border-bottom: 1px solid rgba(0, 51, 141, 0.1);
+  box-shadow: 0 10px 26px -24px rgba(12, 35, 60, 0.36);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.kpmg-shell-header::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, #00338d 0%, #1e49e2 58%, #00b8f5 100%);
+  pointer-events: none;
+}
+
+/* ================================================================
+   Hero Sections
+   ================================================================ */
+
+.hero-section {
+  background: linear-gradient(135deg, #0c233c 0%, #0f2f5f 52%, #1e49e2 100%);
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(172, 234, 255, 0.14);
+  box-shadow: 0 14px 30px -24px rgba(0, 51, 141, 0.38);
+}
+
+.hero-section::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, #00338D 0%, #1E49E2 58%, #00B8F5 100%);
+  pointer-events: none;
+}
+
+.hero-section::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 55% 110% at 95% 50%, rgba(0, 184, 245, 0.1) 0%, transparent 65%),
+    radial-gradient(ellipse 30% 75% at 5% 50%, rgba(30, 73, 226, 0.08) 0%, transparent 65%),
+    radial-gradient(circle at 80% 22%, rgba(114, 19, 234, 0.18), transparent 26%);
+  pointer-events: none;
+}
+
+.kpmg-on-dark-label {
+  color: var(--on-dark-accent);
+}
+
+.kpmg-on-dark-copy {
+  color: var(--on-dark);
+}
+
+.kpmg-on-dark-muted {
+  color: var(--on-dark-muted);
+}
+
+.kpmg-on-dark-soft {
+  color: var(--on-dark-soft);
+}
+
+.kpmg-dark-outline-button {
+  color: var(--on-dark-strong);
+  border-color: rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.kpmg-dark-outline-button:hover {
+  color: var(--on-dark-strong);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ================================================================
+   Cards
+   ================================================================ */
+
+.shadcn-card {
+  border-color: rgba(0, 51, 141, 0.1);
+  background: rgba(255, 255, 255, 0.99);
+  box-shadow: 0 1px 4px rgba(12, 35, 60, 0.05), 0 14px 36px -20px rgba(12, 35, 60, 0.16);
+}
+
+.dark .shadcn-card {
+  border-color: rgba(255, 255, 255, 0.07);
+  background: rgba(10, 20, 36, 0.98);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3), 0 22px 52px -32px rgba(0, 0, 0, 0.58);
+}
+
+.card-interactive {
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.card-interactive:hover {
+  transform: translateY(-3px);
+  border-color: rgba(0, 51, 141, 0.18) !important;
+  box-shadow: 0 6px 20px rgba(0, 51, 141, 0.1), 0 20px 44px -26px rgba(12, 35, 60, 0.2);
+}
+
+.dark .card-interactive:hover {
+  border-color: rgba(0, 184, 245, 0.22) !important;
+  box-shadow: 0 6px 20px rgba(0, 184, 245, 0.08), 0 20px 40px -24px rgba(0, 0, 0, 0.5);
+}
+
+/* ================================================================
+   Landing Page
+   ================================================================ */
+
+.landing-shell {
+  min-height: 100vh;
+  background: #F0F2F7;
+}
+
+.landing-hero {
+  background: #0C233C;
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 14px 38px -24px rgba(0, 0, 0, 0.4);
+}
+
+.landing-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, #00338D 0%, #1E49E2 58%, #00B8F5 100%);
+  pointer-events: none;
+}
+
+.landing-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 72% 38%, rgba(30, 73, 226, 0.35) 0%, transparent 45%),
+    radial-gradient(circle at 20% 60%, rgba(0, 184, 245, 0.2) 0%, transparent 40%),
+    radial-gradient(circle at 88% 72%, rgba(114, 19, 234, 0.14) 0%, transparent 28%);
+  pointer-events: none;
+  animation: orbShift 10s ease-in-out infinite alternate;
+}
+
+@keyframes orbShift {
+  0%   { opacity: 0.85; transform: scale(1) translate(0, 0); }
+  50%  { opacity: 1;    transform: scale(1.04) translate(12px, -8px); }
+  100% { opacity: 0.9;  transform: scale(0.97) translate(-8px, 10px); }
+}
+
+.landing-nav {
+  background: rgba(10, 14, 26, 0.88);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* ── APEX-style feature cards ── */
+.apex-card {
+  position: relative;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #E2E6EF;
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.05);
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.apex-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--card-accent, #00338D);
+  border-radius: 16px 16px 0 0;
+}
+
+.apex-card:hover {
+  box-shadow: 0 16px 48px rgba(0,51,141,0.14), 0 4px 12px rgba(0,0,0,0.06);
+  transform: translateY(-4px);
+}
+
+.apex-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.apex-card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.apex-card-number {
+  font-weight: 800;
+  font-size: 13px;
+  color: #E2E6EF;
+  letter-spacing: -0.5px;
+}
+
+.apex-card-title {
+  font-weight: 700;
+  font-size: 18px;
+  color: #0C233C;
+  line-height: 1.2;
+  margin-bottom: 10px;
+  letter-spacing: -0.3px;
+}
+
+.apex-card-description {
+  font-size: 14px;
+  color: #5A6478;
+  line-height: 1.65;
+  flex: 1;
+  margin-bottom: 24px;
+}
+
+.apex-card-links {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-top: 1px solid #E2E6EF;
+  padding-top: 14px;
+}
+
+.apex-card-link {
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+.apex-card-link:hover {
+  background: color-mix(in srgb, var(--card-accent, #00338D) 8%, transparent);
+}
+
+/* keep old class for any stray references */
+.landing-feature-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(0, 51, 141, 0.09);
+  background: rgba(255, 255, 255, 0.99);
+  box-shadow: 0 1px 4px rgba(12, 35, 60, 0.05), 0 10px 26px -22px rgba(12, 35, 60, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.landing-feature-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(0, 51, 141, 0.28) 0%, rgba(0, 184, 245, 0.05) 100%);
+}
+
+.landing-directory-panel {
+  border: 1px solid rgba(0, 51, 141, 0.08);
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 1px 4px rgba(12, 35, 60, 0.04), 0 14px 28px -24px rgba(12, 35, 60, 0.14);
+}
+
+.landing-directory-row {
+  border-top: 1px solid rgba(0, 51, 141, 0.08);
+  transition: background 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+}
+
+.landing-directory-row:hover {
+  background: rgba(243, 247, 255, 0.9);
+  border-top-color: rgba(0, 51, 141, 0.14);
+}
+
+.landing-directory-row:first-child {
+  border-top: 0;
+}
+
+.landing-feature-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(0, 51, 141, 0.18);
+  box-shadow: 0 6px 18px rgba(0, 51, 141, 0.09), 0 20px 44px -26px rgba(12, 35, 60, 0.18);
+}
+
+.landing-chip {
+  border: 1px solid rgba(0, 51, 141, 0.1);
+  background: rgba(243, 247, 255, 0.98);
+  color: var(--ink-muted);
+}
+
+/* ================================================================
+   Dashboard
+   ================================================================ */
+
+.dashboard-band {
+  border: 1px solid rgba(0, 51, 141, 0.08);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 253, 0.95) 100%);
+  box-shadow: 0 1px 4px rgba(12, 35, 60, 0.04), 0 16px 30px -26px rgba(12, 35, 60, 0.18);
+}
+
+.dashboard-highlight {
+  background: linear-gradient(145deg, #0c233c 0%, #12366c 54%, #1e49e2 100%);
+  box-shadow: 0 16px 48px -28px rgba(0, 51, 141, 0.48);
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboard-highlight::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, #00338D 0%, #1E49E2 58%, #00B8F5 100%);
+  pointer-events: none;
+}
+
+.dashboard-highlight::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 82% 18%, rgba(114, 19, 234, 0.18), transparent 26%),
+    radial-gradient(ellipse 50% 100% at 100% 56%, rgba(172, 234, 255, 0.1), transparent 58%);
+  pointer-events: none;
+}
+
+.dashboard-panel {
+  border: 1px solid rgba(0, 51, 141, 0.09);
+  background: rgba(255, 255, 255, 0.99);
+  box-shadow: 0 1px 4px rgba(12, 35, 60, 0.04), 0 12px 28px -20px rgba(12, 35, 60, 0.12);
+}
+
+/* ================================================================
+   Summary Panel (landing hero stats)
+   ================================================================ */
+
+.kpmg-summary-panel {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(180deg, rgba(18, 47, 95, 0.82) 0%, rgba(24, 61, 124, 0.72) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 22px 44px -34px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.kpmg-summary-stat {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ================================================================
+   Labels & Tags
+   ================================================================ */
+
+.kpmg-section-label {
+  color: var(--ink-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  font-family: Arial, sans-serif;
+}
+
+.kpmg-module-tag {
+  color: var(--cobalt);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.kpmg-value-note {
+  color: var(--ink-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+/* ================================================================
+   Animations
+   ================================================================ */
+
+@keyframes kpmg-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes kpmg-globe-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes kpmg-globe-spin-reverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+.animate-panel-in {
+  animation: kpmg-fade-in 0.28s ease forwards;
+}
+
+/* ================================================================
+   OSINT / scan-line overrides (disabled in brand mode)
+   ================================================================ */
+
+.osint-grid {
+  background-image: none;
+}
+
+.osint-scanline::before,
+.dark .osint-scanline::before {
+  display: none;
+}

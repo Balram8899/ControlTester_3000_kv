@@ -1,0 +1,264 @@
+<style>
+  .family-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-top: 24px;
+  }
+
+  .family-card {
+    border: 1px solid rgba(12, 35, 60, 0.1);
+    border-radius: 20px;
+    overflow: hidden;
+    background: #ffffff;
+    box-shadow: 0 24px 56px -38px rgba(12, 35, 60, 0.42);
+  }
+
+  .family-preview {
+    padding: 16px;
+    background:
+      radial-gradient(circle at 85% 20%, rgba(30, 73, 226, 0.14) 0%, transparent 28%),
+      linear-gradient(180deg, #f9fbff 0%, #f1f5fa 100%);
+  }
+
+  .family-shell {
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(12, 35, 60, 0.08);
+    background: #edf2f7;
+  }
+
+  .family-top {
+    height: 22px;
+    background: #0c233c;
+    position: relative;
+  }
+
+  .family-top::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 2px;
+    background: linear-gradient(90deg, #00338d 0%, #1e49e2 58%, #00b8f5 100%);
+  }
+
+  .family-body {
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    min-height: 210px;
+  }
+
+  .family-rail {
+    background: linear-gradient(180deg, #102a46 0%, #081b31 100%);
+  }
+
+  .family-content {
+    padding: 12px;
+    display: grid;
+    gap: 10px;
+    align-content: start;
+  }
+
+  .family-hero {
+    min-height: 56px;
+    border-radius: 14px;
+    background: linear-gradient(90deg, #4a0ea8 0%, #7213ea 38%, #1e49e2 100%);
+  }
+
+  .family-hero.slim {
+    min-height: 42px;
+  }
+
+  .family-kpis {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .family-kpi {
+    min-height: 42px;
+    border-radius: 11px;
+    background: #ffffff;
+    border: 1px solid rgba(12, 35, 60, 0.08);
+  }
+
+  .family-split {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 7px;
+  }
+
+  .family-panel {
+    min-height: 84px;
+    border-radius: 12px;
+    background: #ffffff;
+    border: 1px solid rgba(12, 35, 60, 0.08);
+  }
+
+  .family-table {
+    min-height: 92px;
+    border-radius: 12px;
+    background: #ffffff;
+    border: 1px solid rgba(12, 35, 60, 0.08);
+  }
+
+  .family-toolbar {
+    min-height: 40px;
+    border-radius: 12px;
+    background: #ffffff;
+    border: 1px solid rgba(12, 35, 60, 0.08);
+  }
+
+  .family-body-copy {
+    padding: 18px 18px 20px;
+  }
+
+  .family-body-copy h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #0c233c;
+  }
+
+  .family-body-copy p {
+    margin: 8px 0 0;
+    font-size: 13px;
+    line-height: 1.55;
+    color: #506074;
+  }
+
+  .family-tag {
+    display: inline-flex;
+    margin-top: 14px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: 1px solid transparent;
+  }
+
+  .tag-dashboard {
+    color: #7213ea;
+    background: rgba(114, 19, 234, 0.08);
+    border-color: rgba(114, 19, 234, 0.16);
+  }
+
+  .tag-library {
+    color: #1e49e2;
+    background: rgba(30, 73, 226, 0.08);
+    border-color: rgba(30, 73, 226, 0.16);
+  }
+
+  .tag-workflow {
+    color: #009a44;
+    background: rgba(0, 154, 68, 0.08);
+    border-color: rgba(0, 154, 68, 0.16);
+  }
+
+  .family-notes {
+    margin-top: 22px;
+    display: grid;
+    gap: 10px;
+    padding: 18px 20px;
+    border-radius: 18px;
+    border: 1px solid rgba(12, 35, 60, 0.08);
+    background: linear-gradient(180deg, #ffffff 0%, #f7fafd 100%);
+  }
+
+  .family-notes strong {
+    color: #0c233c;
+  }
+</style>
+
+<h2>Page treatment system</h2>
+<p class="subtitle">The same hero-forward language gets applied differently depending on the page type, so the app stays cohesive without making every page feel identical.</p>
+
+<div class="family-grid">
+  <div class="family-card">
+    <div class="family-preview">
+      <div class="family-shell">
+        <div class="family-top"></div>
+        <div class="family-body">
+          <div class="family-rail"></div>
+          <div class="family-content">
+            <div class="family-hero"></div>
+            <div class="family-kpis">
+              <div class="family-kpi"></div>
+              <div class="family-kpi"></div>
+              <div class="family-kpi"></div>
+            </div>
+            <div class="family-split">
+              <div class="family-panel"></div>
+              <div class="family-panel"></div>
+            </div>
+            <div class="family-table"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="family-body-copy">
+      <h3>Dashboard and reporting pages</h3>
+      <p>Use the strongest hero band. KPI cards get more height, charts get more room, and the page opens with one branded summary instead of many competing surfaces.</p>
+      <span class="family-tag tag-dashboard">Insight-led</span>
+    </div>
+  </div>
+
+  <div class="family-card">
+    <div class="family-preview">
+      <div class="family-shell">
+        <div class="family-top"></div>
+        <div class="family-body">
+          <div class="family-rail"></div>
+          <div class="family-content">
+            <div class="family-hero slim"></div>
+            <div class="family-toolbar"></div>
+            <div class="family-split">
+              <div class="family-panel"></div>
+              <div class="family-panel"></div>
+            </div>
+            <div class="family-table"></div>
+            <div class="family-table" style="min-height:72px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="family-body-copy">
+      <h3>Library and diagnostic workbenches</h3>
+      <p>Keep the hero shallower so the working surface starts sooner. Filters, lists, and detail panels stay familiar, but spacing, sizing, and typography reduce crowding.</p>
+      <span class="family-tag tag-library">Operational</span>
+    </div>
+  </div>
+
+  <div class="family-card">
+    <div class="family-preview">
+      <div class="family-shell">
+        <div class="family-top"></div>
+        <div class="family-body">
+          <div class="family-rail"></div>
+          <div class="family-content">
+            <div class="family-hero"></div>
+            <div class="family-toolbar"></div>
+            <div class="family-panel" style="min-height:118px;"></div>
+            <div class="family-split">
+              <div class="family-panel" style="min-height:88px;"></div>
+              <div class="family-panel" style="min-height:88px;"></div>
+            </div>
+            <div class="family-table" style="min-height:82px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="family-body-copy">
+      <h3>Execution and upload workflows</h3>
+      <p>Hero stays strong, but the CTA and status live inside it. Existing upload cards, action bars, and result modules keep their behavior and simply inherit the new shell and sizing rules.</p>
+      <span class="family-tag tag-workflow">Action-led</span>
+    </div>
+  </div>
+</div>
+
+<div class="family-notes">
+  <div><strong>Dashboard family:</strong> `/`, `/reports`, and high-level summary pages get the most dramatic hero.</div>
+  <div><strong>Library family:</strong> `/regulatory-library`, `/controls-library`, `/frameworks-library`, `/asset-registry` keep their current mechanics but move into a calmer, better-sized workbench layout.</div>
+  <div><strong>Workflow family:</strong> `/control-testing`, `/regulatory-testing`, `/risk-assessment`, `/evidence-assessment`, `/issue-management`, and `/controls-diagnostics` keep their current steps while adopting the stronger hero and cleaner panel sizing.</div>
+</div>

@@ -1,0 +1,51 @@
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list
+  - generic [ref=e267]:
+    - generic [ref=e269]:
+      - generic [ref=e270]:
+        - button "KPMG | TRACE" [ref=e271] [cursor=pointer]:
+          - generic [ref=e272]: KPMG
+          - generic [ref=e273]: "|"
+          - generic [ref=e274]: TRACE
+        - generic [ref=e275]:
+          - generic [ref=e276]: /
+          - generic [ref=e277]: Controls Diagnostics
+      - button "Sign Out" [ref=e279] [cursor=pointer]:
+        - img
+        - text: Sign Out
+    - main [ref=e280]:
+      - generic [ref=e281]:
+        - generic [ref=e282]:
+          - generic [ref=e283]:
+            - generic [ref=e284]:
+              - img [ref=e286]
+              - generic [ref=e289]:
+                - paragraph [ref=e290]: Risk Register
+                - paragraph [ref=e291]: CSV / XLSX
+            - paragraph [ref=e292]: Risk IDs, descriptions, risk ratings, process owners, and categories.
+            - generic [ref=e293]:
+              - button "Choose file" [ref=e294] [cursor=pointer]:
+                - img [ref=e295]
+                - text: Choose file
+              - button "Load sample data" [ref=e298] [cursor=pointer]
+          - generic [ref=e299]:
+            - generic [ref=e300]:
+              - img [ref=e302]
+              - generic [ref=e306]:
+                - paragraph [ref=e307]: Controls Inventory with Verbatim
+                - paragraph [ref=e308]: CSV / XLSX
+            - paragraph [ref=e309]: Control IDs, control text, owner, type, linked risk IDs, and process area.
+            - generic [ref=e310]:
+              - img [ref=e327]
+              - text: controls_inventory_verbatim_sample.csv loaded
+        - generic [ref=e317]:
+          - generic [ref=e318]:
+            - heading "Run All Diagnostics" [level=2] [ref=e319]
+            - paragraph [ref=e320]: Triggers coverage, quality, duplicates, and benchmarking together. Results are saved into each analysis page after the run completes.
+          - button "Run All Diagnostics" [ref=e321] [cursor=pointer]:
+            - img [ref=e322]
+            - text: Run All Diagnostics
+    - contentinfo [ref=e324]:
+      - generic [ref=e325]: © 2026 KPMG Assurance and Consulting Services LLP, an Indian Limited Liability Partnership and a member firm of the KPMG global organization of independent member firms affiliated with KPMG International Limited, a private English company limited by guarantee. All rights reserved.
+      - generic [ref=e326]: Confidential

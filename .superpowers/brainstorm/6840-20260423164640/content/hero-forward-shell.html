@@ -1,0 +1,297 @@
+<style>
+  .hero-board {
+    display: grid;
+    gap: 22px;
+    margin-top: 22px;
+  }
+
+  .hero-intro {
+    padding: 18px 20px;
+    border-radius: 18px;
+    border: 1px solid rgba(12, 35, 60, 0.08);
+    background: linear-gradient(180deg, #ffffff 0%, #f7fafd 100%);
+  }
+
+  .hero-intro strong {
+    color: #0c233c;
+  }
+
+  .trace-mockup {
+    border-radius: 22px;
+    overflow: hidden;
+    border: 1px solid rgba(12, 35, 60, 0.1);
+    background: #eef3f8;
+    box-shadow: 0 32px 80px -48px rgba(12, 35, 60, 0.48);
+  }
+
+  .trace-nav {
+    height: 70px;
+    background: #0c233c;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 26px;
+    color: white;
+    position: relative;
+  }
+
+  .trace-nav::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: linear-gradient(90deg, #00338d 0%, #1e49e2 58%, #00b8f5 100%);
+  }
+
+  .trace-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+
+  .trace-brand span:nth-child(2) {
+    color: #1e49e2;
+    font-weight: 300;
+  }
+
+  .trace-brand span:nth-child(3) {
+    color: #00b8f5;
+  }
+
+  .trace-signout {
+    width: 112px;
+    height: 38px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .trace-main {
+    display: grid;
+    grid-template-columns: 78px 1fr;
+    min-height: 720px;
+  }
+
+  .trace-sidebar {
+    background: linear-gradient(180deg, #102a46 0%, #081b31 100%);
+    border-right: 1px solid rgba(12, 35, 60, 0.08);
+    padding: 18px 14px;
+    display: grid;
+    align-content: start;
+    gap: 14px;
+  }
+
+  .trace-sidepill {
+    height: 34px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .trace-sidepill.active {
+    background: linear-gradient(90deg, rgba(0, 184, 245, 0.18), rgba(0, 184, 245, 0.06));
+    box-shadow: inset 3px 0 0 #00b8f5;
+  }
+
+  .trace-content {
+    padding: 26px;
+    display: grid;
+    gap: 22px;
+  }
+
+  .trace-hero {
+    min-height: 140px;
+    border-radius: 24px;
+    background:
+      radial-gradient(circle at 82% 26%, rgba(255,255,255,0.14) 0%, transparent 24%),
+      radial-gradient(circle at 18% 72%, rgba(0,184,245,0.18) 0%, transparent 28%),
+      linear-gradient(90deg, #4a0ea8 0%, #7213ea 34%, #1e49e2 100%);
+    padding: 24px;
+    display: grid;
+    align-content: space-between;
+    gap: 16px;
+  }
+
+  .trace-hero-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  .trace-hero-label {
+    width: 180px;
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.34);
+    margin-bottom: 12px;
+  }
+
+  .trace-hero-headline {
+    width: 340px;
+    max-width: 100%;
+    height: 20px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.92);
+    margin-bottom: 10px;
+  }
+
+  .trace-hero-copy {
+    width: 460px;
+    max-width: 100%;
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.34);
+  }
+
+  .trace-hero-action {
+    width: 170px;
+    height: 44px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .trace-hero-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .trace-hero-stat {
+    min-height: 58px;
+    border-radius: 16px;
+    background: rgba(12, 35, 60, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .trace-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .trace-kpi {
+    min-height: 132px;
+    border-radius: 18px;
+    background: white;
+    border: 1px solid rgba(12, 35, 60, 0.08);
+    position: relative;
+  }
+
+  .trace-kpi::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    border-radius: 18px 18px 0 0;
+    background: var(--top-accent, #7213ea);
+  }
+
+  .trace-work {
+    display: grid;
+    grid-template-columns: 1.45fr 1fr;
+    gap: 18px;
+  }
+
+  .trace-panel,
+  .trace-table {
+    border-radius: 20px;
+    background: white;
+    border: 1px solid rgba(12, 35, 60, 0.08);
+  }
+
+  .trace-panel {
+    min-height: 290px;
+  }
+
+  .trace-table {
+    min-height: 260px;
+  }
+
+  .trace-note {
+    display: grid;
+    gap: 8px;
+    padding: 18px 20px;
+    border-radius: 18px;
+    border: 1px solid rgba(12, 35, 60, 0.08);
+    background: linear-gradient(180deg, #ffffff 0%, #f7fafd 100%);
+  }
+
+  .trace-note strong {
+    color: #0c233c;
+  }
+</style>
+
+<h2>Hero-forward TRACE shell</h2>
+<p class="subtitle">This direction keeps the workflows intact, but gives each page a stronger branded summary band and more breathing room below it.</p>
+
+<div class="hero-board">
+  <div class="hero-intro">
+    <div><strong>What changes:</strong> every major TRACE page gets a consistent dark nav, a stronger purple-to-blue hero summary, larger KPI cards, and wider chart/table regions.</div>
+    <div><strong>What stays the same:</strong> routes, workflows, controls, uploads, page logic, and datasets.</div>
+    <div><strong>How crowding improves:</strong> fewer items per row, bigger panel heights, wider gutters, and tighter text hierarchy instead of new features.</div>
+  </div>
+
+  <div class="trace-mockup">
+    <div class="trace-nav">
+      <div class="trace-brand">
+        <span>KPMG</span>
+        <span>|</span>
+        <span>TRACE</span>
+      </div>
+      <div class="trace-signout"></div>
+    </div>
+
+    <div class="trace-main">
+      <div class="trace-sidebar">
+        <div class="trace-sidepill active"></div>
+        <div class="trace-sidepill"></div>
+        <div class="trace-sidepill"></div>
+        <div class="trace-sidepill"></div>
+        <div class="trace-sidepill"></div>
+        <div class="trace-sidepill"></div>
+      </div>
+
+      <div class="trace-content">
+        <div class="trace-hero">
+          <div class="trace-hero-top">
+            <div>
+              <div class="trace-hero-label"></div>
+              <div class="trace-hero-headline"></div>
+              <div class="trace-hero-copy"></div>
+            </div>
+            <div class="trace-hero-action"></div>
+          </div>
+          <div class="trace-hero-stats">
+            <div class="trace-hero-stat"></div>
+            <div class="trace-hero-stat"></div>
+            <div class="trace-hero-stat"></div>
+            <div class="trace-hero-stat"></div>
+          </div>
+        </div>
+
+        <div class="trace-kpi-grid">
+          <div class="trace-kpi" style="--top-accent:#7213EA"></div>
+          <div class="trace-kpi" style="--top-accent:#1E49E2"></div>
+          <div class="trace-kpi" style="--top-accent:#E5001B"></div>
+          <div class="trace-kpi" style="--top-accent:#009A44"></div>
+        </div>
+
+        <div class="trace-work">
+          <div class="trace-panel"></div>
+          <div class="trace-panel"></div>
+        </div>
+
+        <div class="trace-table"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="trace-note">
+    <div><strong>Shared shell:</strong> unchanged left rail structure, but cleaner active states and a stronger top bar so the app feels unified.</div>
+    <div><strong>Page rhythm:</strong> hero summary first, KPIs second, analytical work area third. This repeats across dashboard, libraries, testing, and reports.</div>
+    <div><strong>Resizing rule:</strong> dense pages shift from 4 tight cards to 2-4 cards depending on width, with taller charts and fewer compressed rows.</div>
+  </div>
+</div>

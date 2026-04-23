@@ -1,0 +1,67 @@
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list
+  - generic [ref=e116]:
+    - generic [ref=e118]:
+      - generic [ref=e119]:
+        - generic [ref=e120]: KPMG
+        - generic [ref=e121]: "|"
+        - generic [ref=e122]: TRACE
+        - generic [ref=e123]:
+          - generic [ref=e124]: /
+          - generic [ref=e125]: Agentic Controls Platform
+      - button "Sign Out" [ref=e127] [cursor=pointer]:
+        - img
+        - text: Sign Out
+    - banner [ref=e128]:
+      - generic [ref=e129]:
+        - generic [ref=e130]:
+          - generic [ref=e133]: Landing point to the agentic solutions
+          - heading "Automate. Detect. Act. Your agentic insight & command centre for control risk and regulatory exposure." [level=1] [ref=e134]
+          - paragraph [ref=e135]: TRACE deploys autonomous agents across your control environment — continuously surfacing imminent risks, closing regulatory gaps before they escalate, and generating audit-ready evidence at machine speed. Move into any workspace to orchestrate testing, assessment, and reporting through a single agentic operating shell.
+          - paragraph [ref=e136]: Select a workspace below to begin
+        - complementary [ref=e137]:
+          - paragraph [ref=e138]: Operating summary
+          - heading "Solutions Overview" [level=2] [ref=e139]
+          - generic [ref=e140]:
+            - generic [ref=e141]:
+              - paragraph [ref=e142]: Solution Modules
+              - paragraph [ref=e143]: "13"
+              - paragraph [ref=e144]: Centralized access to retained modules across oversight, assessment, and reporting.
+            - generic [ref=e145]:
+              - paragraph [ref=e146]: Navigation bands
+              - paragraph [ref=e147]: "3"
+              - paragraph [ref=e148]: Operating capabilities are grouped into structured enterprise bands for faster orientation.
+            - generic [ref=e149]:
+              - paragraph [ref=e150]: Library foundations
+              - paragraph [ref=e151]: "4"
+              - paragraph [ref=e152]: Regulatory obligations, controls, frameworks, and asset context anchor the downstream analysis stack.
+    - main [ref=e153]:
+      - generic [ref=e154]:
+        - button "Oversight and Libraries Reference data, library operations, and portfolio monitoring surfaces. 5 modules" [ref=e156] [cursor=pointer]:
+          - generic [ref=e157]:
+            - paragraph [ref=e158]: Oversight and Libraries
+            - heading "Reference data, library operations, and portfolio monitoring surfaces." [level=3] [ref=e159]
+          - generic [ref=e160]:
+            - generic [ref=e161]: 5 modules
+            - img [ref=e162]
+        - button "Assessment and Testing Execution workflows for regulatory comparison, control testing, and evidence-led analysis. 6 modules" [ref=e165] [cursor=pointer]:
+          - generic [ref=e166]:
+            - paragraph [ref=e167]: Assessment and Testing
+            - heading "Execution workflows for regulatory comparison, control testing, and evidence-led analysis." [level=3] [ref=e168]
+          - generic [ref=e169]:
+            - generic [ref=e170]: 6 modules
+            - img [ref=e171]
+        - button "Reporting and Operations Distribution, retrieval, and remediation workflows for generated outputs. 2 modules" [ref=e174] [cursor=pointer]:
+          - generic [ref=e175]:
+            - paragraph [ref=e176]: Reporting and Operations
+            - heading "Distribution, retrieval, and remediation workflows for generated outputs." [level=3] [ref=e177]
+          - generic [ref=e178]:
+            - generic [ref=e179]: 2 modules
+            - img [ref=e180]
+        - generic [ref=e182]:
+          - paragraph [ref=e183]: KPMG TRACE - Agentic Controls Platform
+          - paragraph [ref=e184]: 13 modules - centralized operating environment
+    - contentinfo [ref=e185]:
+      - generic [ref=e186]: © 2026 KPMG Assurance and Consulting Services LLP, an Indian Limited Liability Partnership and a member firm of the KPMG global organization of independent member firms affiliated with KPMG International Limited, a private English company limited by guarantee. All rights reserved.
+      - generic [ref=e187]: Confidential

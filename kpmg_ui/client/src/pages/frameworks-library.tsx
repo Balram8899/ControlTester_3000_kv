@@ -488,7 +488,7 @@ export default function FrameworksLibraryPage() {
   // ── Render ────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="h-full flex flex-col bg-background overflow-hidden">
+    <div className="trace-workbench-shell h-full flex flex-col bg-background overflow-hidden">
 
       {/* ── Page header ── */}
       <HeroSection
@@ -517,12 +517,12 @@ export default function FrameworksLibraryPage() {
       </div>
 
       {/* ── Body ── */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="trace-workbench-layout">
 
         {/* ── Left panel ── */}
         {leftPanelOpen && (
           <div
-            className="flex-shrink-0 flex flex-col border-r bg-card/20"
+            className="trace-workbench-rail flex-shrink-0 flex flex-col border-r bg-card/20"
             style={{ width: panelWidth }}
           >
             {/* Upload area */}
@@ -583,7 +583,7 @@ export default function FrameworksLibraryPage() {
             </div>
 
             {/* Document list */}
-            <ScrollArea className="flex-1">
+            <ScrollArea className="trace-workbench-scroll flex-1">
               <div className="p-2 space-y-1.5">
                 {docsLoading ? (
                   <p className="text-xs text-muted-foreground text-center py-6">Loading…</p>
@@ -681,7 +681,7 @@ export default function FrameworksLibraryPage() {
         )}
 
         {/* ── Right panel ── */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="trace-workbench-main flex-1 flex flex-col overflow-hidden">
 
           {/* Right panel header */}
           <div className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 border-b bg-card/20">
@@ -759,7 +759,7 @@ export default function FrameworksLibraryPage() {
           </div>
 
           {/* Right panel content */}
-          <ScrollArea className="flex-1">
+          <ScrollArea className="trace-workbench-scroll flex-1">
             <div className="p-4">
 
               {/* Overview */}

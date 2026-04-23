@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { CheckCircle2, Network, Eye, EyeOff } from "lucide-react";
-import { HIDEABLE_TABS } from "@/components/app-layout.helpers";
+import { HIDEABLE_TABS } from "@/components/AppLayout";
 
 const NAV_HIDDEN_KEY = "nav_hidden_pages";
 
@@ -10,6 +10,7 @@ function readHiddenPages(): string[] {
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import HeroSection from "@/components/HeroSection";
+import TracePageBody from "@/components/TracePageBody";
 import ContextFileUpload from "@/components/ContextFileUpload";
 import {
   Select,
@@ -22,7 +23,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { resolveSelectedModel } from "@/lib/modelSelection";
 
 interface ContextFile {
   id: string;
@@ -170,18 +170,14 @@ export default function SettingsPage() {
 
 
   useEffect(() => {
-    if (!models || models.length === 0) {
-      return;
+    if (selectedModel) {
+      localStorage.setItem("selectedModel", selectedModel);
     }
+  }, [selectedModel]);
 
-    const resolvedModel = resolveSelectedModel(selectedModel, models);
-    if (resolvedModel !== selectedModel) {
-      setSelectedModel(resolvedModel);
-      return;
-    }
-
-    if (resolvedModel) {
-      localStorage.setItem("selectedModel", resolvedModel);
+  useEffect(() => {
+    if (models && models.length > 0 && !selectedModel) {
+      setSelectedModel(models[0].value);
     }
   }, [models, selectedModel]);
 
@@ -331,9 +327,7 @@ export default function SettingsPage() {
   return (
     <div className="h-full flex flex-col">
       <HeroSection title="Settings" subtitle="Configure AI models and application preferences" icon={Network} />
-      <div className="flex-1 overflow-auto">
-      <div className="max-w-4xl mx-auto p-8">
-        <div className="space-y-8">
+      <TracePageBody width="narrow" contentClassName="space-y-8">
           <Card>
             <CardHeader>
               <CardTitle>LLM Model</CardTitle>
@@ -515,9 +509,7 @@ export default function SettingsPage() {
               </div>
             </CardContent>
           </Card>
-        </div>
-      </div>
-      </div>
+      </TracePageBody>
     </div>
   );
 }

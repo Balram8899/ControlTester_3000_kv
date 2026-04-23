@@ -7,6 +7,7 @@ import {
   CheckCircle2, FileBarChart, Loader2, Plus, ShieldAlert, Sparkles,
 } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
+import HowItWorks from "@/components/HowItWorks";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -267,22 +268,22 @@ export default function RiskAssessmentPage() {
     id;
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50">
+    <div className="trace-workbench-shell flex flex-col h-screen bg-slate-50">
       <HeroSection
         title="Risk Assessment"
         subtitle="Application risk assessments — questionnaire, inherent scoring, residual analysis"
         icon={ShieldAlert}
       />
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="trace-workbench-layout">
         {/* ── Left panel: assessment list ── */}
-        <div className="w-72 bg-white border-r border-slate-200 flex flex-col">
+        <div className="trace-workbench-rail w-72 bg-white border-r border-slate-200 flex flex-col">
           <div className="p-4 border-b border-slate-100">
             <Button className="w-full" size="sm" onClick={() => { setShowCreate(true); setRightTab("dashboard"); }}>
               <Plus className="w-4 h-4 mr-2" /> New Assessment
             </Button>
           </div>
-          <ScrollArea className="flex-1">
+          <ScrollArea className="trace-workbench-scroll flex-1">
             {error && (
               <div className="mx-3 mt-3 p-2 rounded bg-red-50 border border-red-200 text-xs text-red-600">{error}</div>
             )}
@@ -309,7 +310,7 @@ export default function RiskAssessmentPage() {
         </div>
 
         {/* ── Right panel ── */}
-        <div className="flex-1 overflow-auto p-6">
+        <div className="trace-workbench-main flex-1 overflow-auto p-6">
           {/* Create modal */}
           {showCreate && (
             <Card className="max-w-lg mx-auto mb-6">
@@ -401,6 +402,13 @@ export default function RiskAssessmentPage() {
           {/* Dashboard */}
           {!selectedAssessment && !showCreate && (
             <div>
+              <HowItWorks
+                steps={[
+                  { number: 1, title: "Define Assessment Scope", desc: "Create an assessment, name it, and select the applications or assets in scope. Ad-hoc entries can be added where an asset isn't in the register.", color: "#7213EA" },
+                  { number: 2, title: "Capture Risks & Scoring", desc: "Walk through the guided wizard to record inherent and residual risks, link controls, and apply structured scoring across impact and likelihood dimensions.", color: "#1E49E2" },
+                  { number: 3, title: "Finalise & Report", desc: "Review scored results, tag drafts vs. active assessments, and export the risk assessment output for reporting and downstream workflows.", color: "#098E7E" },
+                ]}
+              />
               <div className="grid grid-cols-3 gap-4 mb-6">
                 <Card><CardContent className="pt-6"><p className="text-2xl font-bold text-blue-600">{active}</p><p className="text-sm text-slate-500">Active Assessments</p></CardContent></Card>
                 <Card><CardContent className="pt-6"><p className="text-2xl font-bold text-orange-600">{highCrit}</p><p className="text-sm text-slate-500">High / Critical Risks</p></CardContent></Card>
