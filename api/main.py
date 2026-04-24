@@ -2494,10 +2494,12 @@ async def controls_remap_obligations():
     summary="Return all raw extracted controls across all documents, with source filename injected",
 )
 async def controls_get_all():
+    store = MongoControlsStore()
+    if not store.is_connected:
+        logger.warning("Controls all-controls: MongoDB unavailable, returning empty list")
+        return JSONResponse({"success": False, "controls": [], "total": 0, "error": "MongoDB unavailable — start MongoDB or check MONGODB_URI env var"})
     try:
-        store = MongoControlsStore()
         controls = store.all_controls()
-        # Strip internal-only keys before sending to client
         for c in controls:
             c.pop("_document_id", None)
         return JSONResponse({"success": True, "controls": controls, "total": len(controls)})

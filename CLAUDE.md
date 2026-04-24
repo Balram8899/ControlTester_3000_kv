@@ -12,6 +12,8 @@ Core principle: search before reading.
 
 Use Socrati CLI to search the indexed codebase before opening files. The index gives you a map of the codebase in milliseconds; raw file reading is expensive and context-consuming.
 
+Prefer socrati cli code searches over grep
+
 - Search with Socrati CLI first to locate the relevant files, symbols, and architecture.
 - Read only the small set of files that search identifies as relevant.
 - Avoid broad file-by-file exploration unless search results are insufficient.

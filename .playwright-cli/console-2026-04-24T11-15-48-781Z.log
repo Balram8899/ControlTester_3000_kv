@@ -1,0 +1,12 @@
+[   82105ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://127.0.0.1:5000/api/load-vectorstore:0
+[   82106ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://127.0.0.1:5000/api/load-vectorstore:0
+[  520071ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://127.0.0.1:5000/api/load-vectorstore:0
+[  520129ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://127.0.0.1:5000/api/load-vectorstore:0
+[  699795ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://127.0.0.1:5000/api/load-vectorstore:0
+[  699796ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://127.0.0.1:5000/api/load-vectorstore:0
+[ 1427980ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://127.0.0.1:5000/api/load-vectorstore:0
+[ 1428019ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://127.0.0.1:5000/api/load-vectorstore:0
+[ 2992812ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://127.0.0.1:5000/api/load-vectorstore:0
+[ 2992838ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://127.0.0.1:5000/api/load-vectorstore:0
+[ 3210341ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://127.0.0.1:5000/api/load-vectorstore:0
+[ 3210342ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://127.0.0.1:5000/api/load-vectorstore:0

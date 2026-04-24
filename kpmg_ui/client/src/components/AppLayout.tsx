@@ -70,29 +70,25 @@ export default function AppLayout({ children }: AppLayoutProps) {
   return (
     <div className="kpmg-shell flex h-screen bg-background">
       <aside
-        className="kpmg-shell-sidebar relative flex-shrink-0 flex flex-col border-r border-border bg-sidebar transition-[width] duration-300 ease-in-out overflow-hidden"
+        className="kpmg-shell-sidebar relative flex-shrink-0 flex flex-col border-r border-border bg-sidebar transition-[width] duration-300 ease-in-out overflow-x-hidden"
         style={{ width: collapsed ? 68 : 288 }}
       >
         <div
           className="relative z-10 flex h-24 items-center border-b border-white/8 px-3 flex-shrink-0"
           style={{ justifyContent: collapsed ? "center" : "flex-start" }}
         >
-          <div className={`flex items-center transition-all duration-300 ${collapsed ? "justify-center" : "gap-2 pr-10"}`}>
-            {collapsed ? (
-              <span className="text-[15px] font-bold tracking-tight text-white">K</span>
-            ) : (
-              <>
-                <span className="text-[16px] font-bold tracking-tight text-white">KPMG</span>
-                <span className="text-[#1E49E2] text-[18px] font-light select-none">|</span>
-                <span className="text-[16px] font-bold tracking-tight text-[#00B8F5]">TRACE</span>
-              </>
-            )}
-          </div>
+          {!collapsed && (
+            <div className="flex items-center gap-2 pr-10">
+              <span className="text-[16px] font-bold tracking-tight text-white">KPMG</span>
+              <span className="text-[#1E49E2] text-[18px] font-light select-none">|</span>
+              <span className="text-[16px] font-bold tracking-tight text-[#00B8F5]">TRACE</span>
+            </div>
+          )}
 
           <button
             onClick={() => setCollapsed(!collapsed)}
             title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-white/12 bg-white/8 text-[#C8D8F0] hover:text-white hover:bg-white/14 transition-colors flex-shrink-0"
+            className={`flex h-8 w-8 items-center justify-center rounded-full border border-white/12 bg-white/8 text-[#C8D8F0] hover:text-white hover:bg-white/14 transition-colors flex-shrink-0 ${collapsed ? "" : "absolute right-3 top-1/2 -translate-y-1/2"}`}
           >
             {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </button>
@@ -120,10 +116,10 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     collapsed ? "justify-center px-0 py-3" : "gap-3 px-3.5 py-2.5"
                   } ${
                     comingSoon
-                      ? "opacity-40 cursor-not-allowed border-l-[3px] border-transparent text-[#93A9C9]"
+                      ? `opacity-40 cursor-not-allowed text-[#93A9C9] ${collapsed ? "" : "border-l-[3px] border-transparent"}`
                       : isActive
-                        ? "text-white bg-[linear-gradient(90deg,rgba(0,184,245,0.16)_0%,rgba(0,184,245,0.07)_100%)] border-l-[3px] border-[#00B8F5]"
-                        : "text-[#C8D8F0] hover:bg-white/7 hover:text-white border-l-[3px] border-transparent"
+                        ? `text-white bg-[linear-gradient(90deg,rgba(0,184,245,0.18)_0%,rgba(0,184,245,0.08)_100%)] ${collapsed ? "ring-1 ring-[#00B8F5]/40" : "border-l-[3px] border-[#00B8F5]"}`
+                        : `text-[#C8D8F0] hover:bg-white/7 hover:text-white ${collapsed ? "" : "border-l-[3px] border-transparent"}`
                   }`}
                 >
                   <tab.icon className="h-4 w-4 flex-shrink-0" />
@@ -185,7 +181,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
       </aside>
 
       <div className="trace-shell-main flex-1 flex flex-col min-w-0">
-        <main className="trace-shell-canvas flex-1 overflow-hidden">{children}</main>
+        <main className="trace-shell-canvas flex-1 min-h-0 overflow-hidden flex flex-col">{children}</main>
         <Footer />
       </div>
     </div>

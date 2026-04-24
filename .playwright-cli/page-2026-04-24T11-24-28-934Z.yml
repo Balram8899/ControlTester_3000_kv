@@ -1,0 +1,108 @@
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list
+  - generic [ref=e3]:
+    - complementary [ref=e4]:
+      - button "Expand sidebar" [ref=e6] [cursor=pointer]:
+        - img [ref=e7]
+      - navigation [ref=e9]:
+        - generic [ref=e10]:
+          - button [ref=e11] [cursor=pointer]:
+            - img [ref=e12]
+          - button [ref=e17] [cursor=pointer]:
+            - img [ref=e18]
+          - button [ref=e20] [cursor=pointer]:
+            - img [ref=e21]
+          - button [ref=e24] [cursor=pointer]:
+            - img [ref=e25]
+          - button [ref=e27] [cursor=pointer]:
+            - img [ref=e28]
+          - button [ref=e32] [cursor=pointer]:
+            - img [ref=e33]
+          - button [ref=e36] [cursor=pointer]:
+            - img [ref=e37]
+          - button [ref=e42] [cursor=pointer]:
+            - img [ref=e43]
+          - button [ref=e48] [cursor=pointer]:
+            - img [ref=e49]
+          - button [ref=e51] [cursor=pointer]:
+            - img [ref=e52]
+          - button [ref=e54] [cursor=pointer]:
+            - img [ref=e55]
+          - button [ref=e57] [cursor=pointer]:
+            - img [ref=e58]
+      - generic [ref=e64]: A
+    - generic [ref=e65]:
+      - main [ref=e66]:
+        - generic [ref=e68]:
+          - generic [ref=e69]:
+            - generic [ref=e71]:
+              - generic [ref=e72]:
+                - button "KPMG | TRACE" [ref=e73] [cursor=pointer]:
+                  - generic [ref=e74]: KPMG
+                  - generic [ref=e75]: "|"
+                  - generic [ref=e76]: TRACE
+                - generic [ref=e77]:
+                  - generic [ref=e78]: /
+                  - generic [ref=e79]: Regulatory Library
+              - button "Sign Out" [ref=e81] [cursor=pointer]:
+                - img
+                - text: Sign Out
+            - generic [ref=e83]:
+              - img [ref=e85]
+              - generic [ref=e87]:
+                - heading "Regulatory Library" [level=1] [ref=e88]
+                - paragraph [ref=e89]: Curate source documents, review obligations, and compare frameworks in one workspace.
+          - generic [ref=e90]:
+            - generic [ref=e91]:
+              - generic [ref=e92]:
+                - generic [ref=e93]:
+                  - generic [ref=e94]:
+                    - paragraph [ref=e95]: Library intake
+                    - generic [ref=e96]:
+                      - generic [ref=e97]:
+                        - heading "Add regulatory source files" [level=2] [ref=e98]
+                        - paragraph [ref=e99]: Load regulatory documents, extract obligations, and keep the corpus ready for comparison.
+                      - img [ref=e101]
+                  - generic [ref=e103]:
+                    - generic [ref=e104]:
+                      - paragraph [ref=e105]: documents
+                      - paragraph [ref=e106]: "0"
+                    - generic [ref=e107]:
+                      - paragraph [ref=e108]: obligations
+                      - paragraph [ref=e109]: "0"
+                - generic [ref=e110] [cursor=pointer]:
+                  - img [ref=e112]
+                  - paragraph [ref=e115]: Select source documents
+                  - paragraph [ref=e116]: PDF, Word, text, spreadsheets, or image files
+                  - paragraph [ref=e117]: Browse files
+              - generic [ref=e118]:
+                - generic [ref=e120]:
+                  - paragraph [ref=e121]: Workspace
+                  - paragraph [ref=e122]: Documents and comparison modes
+                - generic [ref=e123]:
+                  - button "Dashboard" [ref=e124] [cursor=pointer]:
+                    - img [ref=e125]
+                    - generic [ref=e130]: Dashboard
+                  - button "Gap analysis" [ref=e131] [cursor=pointer]:
+                    - img [ref=e132]
+                    - generic [ref=e137]: Gap analysis
+                - generic [ref=e138]:
+                  - generic [ref=e139]:
+                    - paragraph [ref=e140]: Select a document to inspect obligations
+                    - paragraph [ref=e141]: Click a document below to move into obligation review.
+                  - generic [ref=e142]:
+                    - button [disabled]:
+                      - img
+            - generic "Drag to resize" [ref=e146]
+            - generic [ref=e147]:
+              - button "Collapse panel" [ref=e149] [cursor=pointer]:
+                - img
+              - generic [ref=e150]:
+                - img [ref=e152]
+                - generic [ref=e154]:
+                  - paragraph [ref=e155]: Library is empty
+                  - paragraph [ref=e156]: Upload regulatory documents on the left to begin
+      - contentinfo [ref=e157]:
+        - generic [ref=e158]: © 2026 KPMG Assurance and Consulting Services LLP, an Indian Limited Liability Partnership and a member firm of the KPMG global organization of independent member firms affiliated with KPMG International Limited, a private English company limited by guarantee. All rights reserved.
+        - generic [ref=e159]: Confidential

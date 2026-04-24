@@ -46,7 +46,9 @@
       "Read(//tmp/kpmg-branding-extracted/kpmg-branding/**)",
       "Read(//tmp/**)",
       "Read(//c/Users/kvarm/AppData/Local/Temp/**)",
-      "Bash(kill %1)"
+      "Bash(kill %1)",
+      "mcp__plugin_socraticode_socraticode__codebase_graph_build",
+      "mcp__plugin_socraticode_socraticode__codebase_graph_status"
     ]
   }
 }

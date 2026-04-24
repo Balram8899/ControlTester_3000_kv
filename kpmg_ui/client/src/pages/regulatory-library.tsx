@@ -59,6 +59,7 @@ function WorkbenchModeButton({
   );
 }
 
+
 function LibraryStatPill({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-[16px] border border-[#D8E3F2] bg-[#F8FBFF] px-3 py-2">
@@ -1031,7 +1032,7 @@ export default function RegulatoryLibraryPage() {
 
       {/* ── LEFT PANEL ─────────────────────────────────────────────────────── */}
       <div
-        className="trace-workbench-rail min-h-0 shrink-0 flex flex-col overflow-hidden border-r border-[#00338D]/8 bg-[linear-gradient(180deg,#FCFDFF_0%,#F5F9FE_100%)] transition-[width] duration-200"
+        className="trace-workbench-rail min-h-0 shrink-0 flex flex-col overflow-y-auto overflow-x-hidden border-r border-[#00338D]/8 bg-[linear-gradient(180deg,#FCFDFF_0%,#F5F9FE_100%)] transition-[width] duration-200"
         style={{ width: leftPanelOpen ? panelWidth : 0 }}
       >
 
@@ -1225,7 +1226,7 @@ export default function RegulatoryLibraryPage() {
           </div>
         )}
 
-        <ScrollArea className="trace-workbench-scroll flex-1">
+        <div style={{ overscrollBehavior: "contain" }}>
           {libraryLoading && (
             <div className="flex justify-center py-10">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
@@ -1297,7 +1298,7 @@ export default function RegulatoryLibraryPage() {
               })}
             </div>
           )}
-        </ScrollArea>
+        </div>
 
         {/* Gap analysis run button */}
         {rightPanelView === "gap-analysis" && (
@@ -2540,4 +2541,3 @@ export default function RegulatoryLibraryPage() {
     </div>
   );
 }
-

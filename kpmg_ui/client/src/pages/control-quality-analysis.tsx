@@ -21,7 +21,7 @@ import {
   TraceSectionHeading,
   TraceStatusRibbon,
 } from "@/components/TraceAnalysisPrimitives";
-import { APEX_CSV, type ApexControl } from "@/data/apex-controls-data";
+import { type ApexControl } from "@/data/apex-controls-data";
 
 type RagType = "green" | "amber" | "red";
 type FilterType = "all" | RagType;
@@ -148,38 +148,95 @@ const EXAMPLES: Record<
 
 export default function ControlQualityAnalysisPage() {
   const [, navigate] = useLocation();
-  const [isLocked, setIsLocked] = useState(false);
+  const [controls, setControls] = useState<ApexControl[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterType>("all");
   const [page, setPage] = useState(0);
   const [exampleTab, setExampleTab] = useState<ExampleTab>("green");
   const [examplesOpen, setExamplesOpen] = useState(true);
 
   useEffect(() => {
-    if (!localStorage.getItem("apex_diagnostics_run")) {
-      setIsLocked(true);
+    let cancelled = false;
+    async function load() {
+      try {
+        const allRes = await fetch("/api/controls-library/all-controls");
+        if (!allRes.ok) throw new Error(`Failed to fetch controls: ${allRes.status}`);
+        const allData = await allRes.json();
+        const rawControls = allData.controls ?? [];
+        if (rawControls.length === 0) {
+          if (!cancelled) setLoading(false);
+          return;
+        }
+        const payload = rawControls.map((c: any) => ({
+          control_id: c.control_id ?? String(c.id ?? ""),
+          name: c.control_name ?? c.name ?? "",
+          description: c.description ?? "",
+        }));
+        const qaRes = await fetch("/api/controls-library/quality-analysis", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ controls: payload }),
+        });
+        if (!qaRes.ok) throw new Error(`Quality analysis failed: ${qaRes.status}`);
+        const qaData = await qaRes.json();
+        const results = qaData.results ?? [];
+        const ctrlMap = new Map(rawControls.map((c: any) => [c.control_id ?? c.id, c]));
+        const mapped: ApexControl[] = results.map((r: any) => {
+          const ctrl = (ctrlMap.get(r.control_id) ?? {}) as any;
+          return {
+            id: r.control_id,
+            name: r.control_name ?? ctrl.control_name ?? r.control_id,
+            text: ctrl.description ?? "",
+            area: ctrl.domain ?? "",
+            type: ctrl.control_type ?? "",
+            owner: "Unassigned",
+            lastAssessed: "",
+            who: r.who ? 1 : 0,
+            what: r.what ? 1 : 0,
+            where: r.where ? 1 : 0,
+            how: r.how ? 1 : 0,
+            when: r.when ? 1 : 0,
+            why: r.why ? 1 : 0,
+            score: r.score ?? 0,
+          };
+        });
+        if (!cancelled) setControls(mapped);
+      } catch (err) {
+        console.warn("5W1H analysis load failed:", err);
+        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load analysis");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     }
+    load();
+    return () => { cancelled = true; };
   }, []);
 
-  const greenCount = useMemo(() => APEX_CSV.filter((control) => rag(control) === "green").length, []);
-  const amberCount = useMemo(() => APEX_CSV.filter((control) => rag(control) === "amber").length, []);
-  const redCount = useMemo(() => APEX_CSV.filter((control) => rag(control) === "red").length, []);
+  const greenCount = useMemo(() => controls.filter((control) => rag(control) === "green").length, [controls]);
+  const amberCount = useMemo(() => controls.filter((control) => rag(control) === "amber").length, [controls]);
+  const redCount = useMemo(() => controls.filter((control) => rag(control) === "red").length, [controls]);
   const avgScore = useMemo(() => {
-    const total = APEX_CSV.reduce((sum, control) => sum + score(control), 0);
-    return (total / APEX_CSV.length).toFixed(2);
-  }, []);
-  const improvePct = useMemo(() => (((amberCount + redCount) / APEX_CSV.length) * 100).toFixed(1), [amberCount, redCount]);
+    if (controls.length === 0) return "0.00";
+    const total = controls.reduce((sum, control) => sum + score(control), 0);
+    return (total / controls.length).toFixed(2);
+  }, [controls]);
+  const improvePct = useMemo(() => {
+    if (controls.length === 0) return "0.0";
+    return (((amberCount + redCount) / controls.length) * 100).toFixed(1);
+  }, [amberCount, redCount, controls]);
 
-  const areas = useMemo(() => Array.from(new Set(APEX_CSV.map((control) => control.area))).sort(), []);
+  const areas = useMemo(() => Array.from(new Set(controls.map((control) => control.area))).sort(), [controls]);
   const markerData = useMemo(
     () => [
-      { label: "WHAT", value: APEX_CSV.filter((control) => control.what).length, color: "#38CC92" },
-      { label: "WHO", value: APEX_CSV.filter((control) => control.who).length, color: "#5E9BE9" },
-      { label: "WHEN", value: APEX_CSV.filter((control) => control.when).length, color: "#E965B1" },
-      { label: "HOW", value: APEX_CSV.filter((control) => control.how).length, color: "#9D82EA" },
-      { label: "WHERE", value: APEX_CSV.filter((control) => control.where).length, color: "#FFC53A" },
-      { label: "WHY", value: APEX_CSV.filter((control) => control.why).length, color: "#FF9738" },
+      { label: "WHAT", value: controls.filter((control) => control.what).length, color: "#38CC92" },
+      { label: "WHO", value: controls.filter((control) => control.who).length, color: "#5E9BE9" },
+      { label: "WHEN", value: controls.filter((control) => control.when).length, color: "#E965B1" },
+      { label: "HOW", value: controls.filter((control) => control.how).length, color: "#9D82EA" },
+      { label: "WHERE", value: controls.filter((control) => control.where).length, color: "#FFC53A" },
+      { label: "WHY", value: controls.filter((control) => control.why).length, color: "#FF9738" },
     ],
-    [],
+    [controls],
   );
   const ragChartData = useMemo(
     () => [
@@ -193,16 +250,16 @@ export default function ControlQualityAnalysisPage() {
     () =>
       areas.map((area) => ({
         area: area.length > 16 ? area.slice(0, 15) + "…" : area,
-        Green: APEX_CSV.filter((control) => control.area === area && rag(control) === "green").length,
-        Amber: APEX_CSV.filter((control) => control.area === area && rag(control) === "amber").length,
-        Red: APEX_CSV.filter((control) => control.area === area && rag(control) === "red").length,
+        Green: controls.filter((control) => control.area === area && rag(control) === "green").length,
+        Amber: controls.filter((control) => control.area === area && rag(control) === "amber").length,
+        Red: controls.filter((control) => control.area === area && rag(control) === "red").length,
       })),
-    [areas],
+    [areas, controls],
   );
 
   const filtered = useMemo(
-    () => (filter === "all" ? APEX_CSV : APEX_CSV.filter((control) => rag(control) === filter)),
-    [filter],
+    () => (filter === "all" ? controls : controls.filter((control) => rag(control) === filter)),
+    [filter, controls],
   );
   const pageData = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const pages = Math.ceil(filtered.length / PAGE_SIZE);
@@ -218,16 +275,21 @@ export default function ControlQualityAnalysisPage() {
 
   return (
     <TraceStandalonePage breadcrumb="Control Quality Analysis" maxWidth="1380px">
-      {isLocked ? (
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00338D] mb-4" />
+          <p className="text-[15px] font-medium text-[#7388A8]">Running 5W1H analysis…</p>
+        </div>
+      ) : controls.length === 0 ? (
         <TraceLockedState
-          title="Diagnostics Not Yet Run"
-          description="Run Controls Diagnostics first so TRACE can score the control corpus, calculate 5W1H coverage, and populate the assessment tables."
+          title="No Controls Available"
+          description="Upload policy documents to the Controls Library so TRACE can extract controls and run the 5W1H quality assessment."
           action={
             <button
-              onClick={() => navigate("/controls-diagnostics")}
+              onClick={() => navigate("/controls-library")}
               className="rounded-[18px] bg-[#00338D] px-6 py-3 text-[15px] font-bold text-white"
             >
-              Go to Controls Diagnostics
+              Go to Controls Library
             </button>
           }
         />
@@ -236,14 +298,14 @@ export default function ControlQualityAnalysisPage() {
           <TraceStatusRibbon
             tone="purple"
             title="5W1H Analysis Complete"
-            detail={`${APEX_CSV.length.toLocaleString()} controls assessed across ${areas.length} process areas`}
+            detail={`${controls.length.toLocaleString()} controls assessed across ${areas.length} process areas`}
             action={<ActionButton>Export Full Report</ActionButton>}
           />
 
           <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
             <TraceMetricCard
               label="Total Controls Assessed"
-              value={APEX_CSV.length.toLocaleString()}
+              value={controls.length.toLocaleString()}
               sub={`across ${areas.length} process areas`}
               accentColor="#7213EA"
               badge="Full corpus"
@@ -280,7 +342,7 @@ export default function ControlQualityAnalysisPage() {
               value={greenCount.toLocaleString()}
               sub="controls with ≤1 dimension missing"
               accentColor="#009A44"
-              badge={`${((greenCount / APEX_CSV.length) * 100).toFixed(1)}% of corpus`}
+              badge={`${((greenCount / controls.length) * 100).toFixed(1)}% of corpus`}
               badgeClassName="bg-[#EDFBF5] text-[#009A44]"
             />
           </div>
@@ -288,7 +350,7 @@ export default function ControlQualityAnalysisPage() {
           <div className="grid gap-5 xl:grid-cols-3">
             <TracePanel
               title="RAG Distribution"
-              subtitle={`Quality rating across all ${APEX_CSV.length.toLocaleString()} controls`}
+              subtitle={`Quality rating across all ${controls.length.toLocaleString()} controls`}
             >
               <div className="relative">
                 <ResponsiveContainer width="100%" height={280}>
@@ -302,7 +364,7 @@ export default function ControlQualityAnalysisPage() {
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                  <div className="text-[28px] font-bold tracking-[-0.04em] text-[#0C233C]">{APEX_CSV.length.toLocaleString()}</div>
+                  <div className="text-[28px] font-bold tracking-[-0.04em] text-[#0C233C]">{controls.length.toLocaleString()}</div>
                   <div className="text-[12px] font-bold uppercase tracking-[0.14em] text-[#7E91AE]">Controls</div>
                 </div>
               </div>
@@ -322,11 +384,11 @@ export default function ControlQualityAnalysisPage() {
             <TracePanel title="5W1H Element Prevalence" subtitle="Controls with each element present">
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={markerData} layout="vertical" margin={{ left: 8, right: 18 }}>
-                  <XAxis type="number" domain={[0, APEX_CSV.length]} tick={{ fontSize: 12, fill: "#7388A8" }} />
+                  <XAxis type="number" domain={[0, controls.length]} tick={{ fontSize: 12, fill: "#7388A8" }} />
                   <YAxis type="category" dataKey="label" tick={{ fontSize: 14, fill: "#0C233C", fontWeight: 700 }} width={64} />
                   <Tooltip
                     contentStyle={tooltipStyle}
-                    formatter={(value: number) => [`${value.toLocaleString()} controls (${Math.round((value / APEX_CSV.length) * 100)}%)`]}
+                    formatter={(value: number) => [`${value.toLocaleString()} controls (${Math.round((value / controls.length) * 100)}%)`]}
                   />
                   <Bar dataKey="value" radius={[0, 7, 7, 0]} barSize={32}>
                     {markerData.map((entry) => (
@@ -430,7 +492,7 @@ export default function ControlQualityAnalysisPage() {
 
           <div className="flex flex-wrap items-center gap-3">
             {([
-              { key: "all", label: `All (${APEX_CSV.length.toLocaleString()})`, activeClass: "bg-[#00338D] text-white" },
+              { key: "all", label: `All (${controls.length.toLocaleString()})`, activeClass: "bg-[#00338D] text-white" },
               { key: "red", label: `Red (${redCount.toLocaleString()})`, activeClass: "bg-[#FFF0F0] text-[#E5001B]" },
               { key: "amber", label: `Amber (${amberCount.toLocaleString()})`, activeClass: "bg-[#FFF8E7] text-[#92600A]" },
               { key: "green", label: `Green (${greenCount.toLocaleString()})`, activeClass: "bg-[#EDFBF5] text-[#009A44]" },

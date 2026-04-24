@@ -6,7 +6,7 @@ import {
   Upload, X, Play, RotateCcw, Search, Trash2, ShieldCheck,
   LayoutDashboard, List, ChevronDown, ChevronRight, BookOpen,
   FileText, Link2, Layers, PanelLeftClose, PanelLeftOpen,
-  Activity, Download,
+  Activity, Download, Loader2,
 } from "lucide-react";
 import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
@@ -510,6 +510,7 @@ export default function ControlsLibraryPage() {
   const [selectedQualityControl, setSelectedQualityControl] = useState<CtrlW1H | null>(null);
   const [qualitySearch, setQualitySearch] = useState("");
   const [ctrlsW1H, setCtrlsW1H] = useState<CtrlW1H[]>([]);
+  const [qualityLoading, setQualityLoading] = useState(false);
 
   // Clear library state
   const [clearingLibrary, setClearingLibrary] = useState(false);
@@ -543,7 +544,7 @@ export default function ControlsLibraryPage() {
   useEffect(() => {
     if (dashboardTab === "quality" && dashboardControls.length > 0) {
       if (mergedCtrlStats === null && !mergedStatsLoading) fetchMergedStats();
-      if (ctrlsW1H.length === 0) {
+      if (ctrlsW1H.length === 0 && !qualityLoading) {
         fetchQualityAnalysis(
           dashboardControls.map(c => ({
             control_id: c.control_id ?? String((c as any).id ?? ""),
@@ -554,7 +555,7 @@ export default function ControlsLibraryPage() {
         );
       }
     }
-  }, [dashboardTab, dashboardControls.length]);
+  }, [dashboardTab, dashboardControls.length]); // qualityLoading intentionally excluded — adding it causes infinite retry on failure
 
   // Navigate to regulatory library focused on a specific obligation
   const handleObligationClick = (obligationId: string) => {
@@ -592,9 +593,17 @@ export default function ControlsLibraryPage() {
         setDashboardControls(data.controls);
         return data.controls as ExtractedControl[];
       }
+      if (data.error) {
+        toast({ title: "Controls unavailable", description: data.error, variant: "destructive" });
+      }
       return [];
     } catch (err) {
       console.warn("fetchAllControls failed:", err);
+      toast({
+        title: "Could not load controls",
+        description: "The API returned an error. If running locally, ensure MongoDB is reachable (default: mongodb://localhost:27017).",
+        variant: "destructive",
+      });
       return [];
     } finally {
       setDashboardLoading(false);
@@ -606,6 +615,7 @@ export default function ControlsLibraryPage() {
     allControls: ExtractedControl[] = [],
   ) => {
     if (controls.length === 0) return;
+    setQualityLoading(true);
     try {
       const res = await fetch("/api/controls-library/quality-analysis", {
         method: "POST",
@@ -635,8 +645,15 @@ export default function ControlsLibraryPage() {
       setCtrlsW1H(merged);
     } catch (err) {
       console.warn("Quality analysis failed:", err);
+      toast({
+        title: "Quality analysis failed",
+        description: err instanceof Error ? err.message : "Could not reach the analysis service. Check that the API is running.",
+        variant: "destructive",
+      });
+    } finally {
+      setQualityLoading(false);
     }
-  }, []);
+  }, [toast]);
 
   const handleIngest = async () => {
     if (uploadFiles.length === 0) return;
@@ -1378,11 +1395,39 @@ export default function ControlsLibraryPage() {
 
                   {/* ── QUALITY ANALYSIS TAB ─────────────────────────────── */}
                   {dashboardTab === "quality" && (
-                    ctrlsW1H.length === 0 ? (
+                    qualityLoading ? (
                       <div className="flex flex-col items-center justify-center py-20 text-center">
-                        <Activity className="h-12 w-12 text-muted-foreground/30 mb-3" />
-                        <p className="text-sm font-medium text-muted-foreground">No controls to analyze yet</p>
-                        <p className="text-xs text-muted-foreground mt-1">Extract controls from a policy document first</p>
+                        <Loader2 className="h-12 w-12 text-muted-foreground/30 mb-3 animate-spin" />
+                        <p className="text-sm font-medium text-muted-foreground">Running 5W1H analysis…</p>
+                        <p className="text-xs text-muted-foreground mt-1">This may take a minute for large control sets</p>
+                      </div>
+                    ) : ctrlsW1H.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
+                        <Activity className="h-12 w-12 text-muted-foreground/30" />
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground">No quality results yet</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {dashboardControls.length === 0
+                              ? "Extract controls from a policy document first"
+                              : "Click below to run the 5W1H analysis"}
+                          </p>
+                        </div>
+                        {dashboardControls.length > 0 && (
+                          <button
+                            className="flex items-center gap-1.5 text-xs border rounded-lg px-3 py-1.5 hover:bg-muted/50 transition-colors"
+                            onClick={() => fetchQualityAnalysis(
+                              dashboardControls.map(c => ({
+                                control_id: c.control_id ?? String((c as any).id ?? ""),
+                                name: (c as any).control_name ?? c.control_id ?? "",
+                                description: c.description ?? "",
+                              })),
+                              dashboardControls,
+                            )}
+                          >
+                            <Activity className="h-3 w-3" />
+                            Run Quality Analysis
+                          </button>
+                        )}
                       </div>
                     ) : (
                       <div className="space-y-5">
