@@ -864,7 +864,25 @@ body, p, span, li {
 }
 
 .trace-footer {
+  min-height: 40px;
+  background: rgba(233, 238, 245, 0.88);
+  border-top: 1px solid rgba(0, 51, 141, 0.07);
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.trace-footer__copy {
+  color: #5f6f86;
+  font-family: Arial, sans-serif;
+}
+
+.trace-footer__badge {
+  color: #607087;
+  border: 1px solid rgba(0, 51, 141, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.48);
+  padding: 1px 9px;
+  line-height: 1.45;
 }
 
 @media (max-width: 1024px) {

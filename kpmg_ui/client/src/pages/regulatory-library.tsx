@@ -1033,7 +1033,11 @@ export default function RegulatoryLibraryPage() {
       {/* ── LEFT PANEL ─────────────────────────────────────────────────────── */}
       <div
         className="trace-workbench-rail min-h-0 shrink-0 flex flex-col overflow-y-auto overflow-x-hidden border-r border-[#00338D]/8 bg-[linear-gradient(180deg,#FCFDFF_0%,#F5F9FE_100%)] transition-[width] duration-200"
-        style={{ width: leftPanelOpen ? panelWidth : 0 }}
+        style={{
+          width: leftPanelOpen ? panelWidth : 0,
+          overflowX: "hidden",
+          overflowY: "auto",
+        }}
       >
 
         {/* Upload section */}

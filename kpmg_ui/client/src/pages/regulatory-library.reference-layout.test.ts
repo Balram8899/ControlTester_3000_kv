@@ -18,3 +18,9 @@ assert.match(
   /TracePanel/,
   "Regulatory Library should use the shared panel primitive for the redesigned workbench",
 );
+
+assert.match(
+  source,
+  /overflowY:\s*"auto"/,
+  "Regulatory Library left rail should explicitly preserve vertical scrolling because shared rail CSS defaults to overflow hidden",
+);

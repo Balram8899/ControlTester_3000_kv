@@ -1,25 +1,15 @@
 export default function Footer() {
   return (
     <footer
-      className="trace-footer flex flex-wrap items-center justify-between gap-2 px-6 py-2.5 md:px-10"
-      style={{
-        background: "#E9EEF5",
-        borderTop: "1px solid rgba(0, 51, 141, 0.08)",
-      }}
+      className="trace-footer flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-5 py-1 md:px-8"
     >
       <div
-        className="text-[10.5px] leading-snug"
-        style={{ color: "#5A6478", fontFamily: "Arial, sans-serif" }}
+        className="trace-footer__copy text-[9.5px] leading-tight"
       >
         © 2026 KPMG Assurance and Consulting Services LLP, an Indian Limited Liability Partnership and a member firm of the KPMG global organization of independent member firms affiliated with KPMG International Limited, a private English company limited by guarantee. All rights reserved.
       </div>
       <span
-        className="text-[10px] font-semibold uppercase tracking-[0.5px] rounded-full px-2.5 py-0.5 flex-shrink-0"
-        style={{
-          color: "#4E6078",
-          background: "#F7FAFD",
-          border: "1px solid rgba(0, 51, 141, 0.1)",
-        }}
+        className="trace-footer__badge flex-shrink-0 text-[9px] font-semibold uppercase tracking-[0.35px]"
       >
         Confidential
       </span>
