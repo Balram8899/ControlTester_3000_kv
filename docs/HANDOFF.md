@@ -252,6 +252,15 @@ response = llm.invoke([HumanMessage(content=prompt)])
 
 ## 9. Known Issues / Remaining Work
 
+### SOP Uplift Foundation Added (2026-04-27)
+
+- **Backend:** `api/routers/sop_uplift.py` registered at `/sop-uplift`.
+- **Utilities:** `utils/sop_uplift/` now contains V1 modules for case storage, readiness, Markdown conversion, anchors, chunks, content sanitization, tagging, extraction routing, deterministic extractors, corpus mapping, retrieval, rule-based suggestions, prompt templates, JSON LLM orchestration, preview models, DOCX generation, Draw.io/SVG/PDF diagram export, change logs, schema validation, and task state.
+- **Frontend:** `kpmg_ui/client/src/pages/sop-uplift.tsx` is routed at `/sop-uplift`, visible in the landing page and sidebar, uses `@xyflow/react` for swimlane preview, and calls case/readiness/chat/analyze/output APIs.
+- **Persistence/Reports:** SOP Uplift raw files and generated outputs can be persisted through the SOP Uplift GridFS collection when MongoDB is available, with in-memory fallback for tests. `utils/rcm_report_store.py` supports `report_type="sop_uplift"` records and the Reports page recognizes/downloads SOP Uplift outputs.
+- **Amendments implemented:** prompt-injection screening via `content_sanitizer.py`, chunk length capping, structural `<document_content>` delimiters, batch `extract`/`analyze` endpoints, per-stage `processing_state`, CairoSVG-backed diagram PDF path with ReportLab fallback, and SOP Uplift env vars.
+- **Current limitation:** Prompt templates and JSON validation are in place, and extract/analyze can opt into the LLM runner, but extraction and suggestions still fall back to deterministic V1 scaffolds. The 21 prompt stages need deeper schema-specific parsing, retry policy, and UX surfacing before this should be treated as complete AI analysis.
+
 ### Confirmed Bugs (not yet fixed as of last session)
 None critical — all reported bugs have been fixed and deployed.
 

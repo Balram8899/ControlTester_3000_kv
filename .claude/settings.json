@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(git -C /home/subho/Projects/AI_Agents/Langchain/Trace log --oneline -10)",
-      "Bash(git -C /home/subho/Projects/AI_Agents/Langchain/Trace branch -a)"
+      "Bash(git -C /home/subho/Projects/AI_Agents/Langchain/Trace branch -a)",
+      "mcp__plugin_socraticode_socraticode__codebase_graph_visualize",
+      "Bash(start \"\" \"c:\\\\Subho syste,\\\\ControlTester_3000_kv\\\\dependency-graph.html\")"
     ]
   }
 }

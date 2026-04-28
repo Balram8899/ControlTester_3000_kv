@@ -1,0 +1,2 @@
+[  187869ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://127.0.0.1:5000/api/load-vectorstore:0
+[  187872ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://127.0.0.1:5000/api/load-vectorstore:0

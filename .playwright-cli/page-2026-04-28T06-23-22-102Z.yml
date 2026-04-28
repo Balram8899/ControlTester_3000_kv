@@ -1,0 +1,249 @@
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list
+  - generic [ref=e280]:
+    - complementary [ref=e281]:
+      - button "Expand sidebar" [ref=e283] [cursor=pointer]:
+        - img [ref=e284]
+      - navigation [ref=e286]:
+        - generic [ref=e287]:
+          - button [ref=e288] [cursor=pointer]:
+            - img [ref=e289]
+          - button [ref=e294] [cursor=pointer]:
+            - img [ref=e295]
+          - button [ref=e297] [cursor=pointer]:
+            - img [ref=e298]
+          - button [ref=e301] [cursor=pointer]:
+            - img [ref=e302]
+          - button [ref=e304] [cursor=pointer]:
+            - img [ref=e305]
+          - button [ref=e309] [cursor=pointer]:
+            - img [ref=e310]
+          - button [ref=e313] [cursor=pointer]:
+            - img [ref=e314]
+          - button [ref=e319] [cursor=pointer]:
+            - img [ref=e320]
+          - button [ref=e325] [cursor=pointer]:
+            - img [ref=e326]
+          - button [ref=e328] [cursor=pointer]:
+            - img [ref=e329]
+          - button [ref=e332] [cursor=pointer]:
+            - img [ref=e333]
+          - button [ref=e335] [cursor=pointer]:
+            - img [ref=e336]
+          - button [ref=e338] [cursor=pointer]:
+            - img [ref=e339]
+      - generic [ref=e345]: A
+    - generic [ref=e346]:
+      - main [ref=e347]:
+        - generic [ref=e351]:
+          - generic [ref=e352]:
+            - generic [ref=e353]:
+              - generic [ref=e354]:
+                - generic [ref=e355]:
+                  - generic [ref=e356]: SOP Uplift
+                  - generic [ref=e357]: /
+                  - generic [ref=e358]: Cases
+                  - generic [ref=e359]: /
+                  - generic [ref=e360]: Vendor Onboarding
+                - generic [ref=e361]:
+                  - heading "Vendor Onboarding - SOP Uplift" [level=1] [ref=e362]
+                  - generic [ref=e363]: "Case status: In progress"
+              - generic [ref=e364]:
+                - button "Run Extraction" [disabled]:
+                  - img
+                  - text: Run Extraction
+                - button "Case Actions" [ref=e365] [cursor=pointer]:
+                  - text: Case Actions
+                  - img
+                - button [ref=e366] [cursor=pointer]:
+                  - img
+            - generic [ref=e367]:
+              - button "1 Upload & Tag Documents" [ref=e368] [cursor=pointer]:
+                - generic [ref=e369]: "1"
+                - text: Upload & Tag Documents
+              - button "2 Extract & Analyze" [ref=e370] [cursor=pointer]:
+                - generic [ref=e371]: "2"
+                - text: Extract & Analyze
+              - button "3 Review Suggestions" [ref=e372] [cursor=pointer]:
+                - generic [ref=e373]: "3"
+                - text: Review Suggestions
+              - button "4 Generate Outputs" [active] [ref=e374] [cursor=pointer]:
+                - generic [ref=e375]: "4"
+                - text: Generate Outputs
+          - generic [ref=e842]:
+            - main [ref=e843]:
+              - generic [ref=e844]:
+                - generic [ref=e845]:
+                  - generic [ref=e846]:
+                    - heading "Outputs & Reports" [level=3] [ref=e847]
+                    - paragraph [ref=e848]: Generate and download uplifted deliverables.
+                  - generic [ref=e849]:
+                    - button "Generate Outputs" [disabled]:
+                      - text: Generate Outputs
+                      - img
+                    - button "Download All" [ref=e850] [cursor=pointer]:
+                      - img
+                      - text: Download All
+                - generic [ref=e851]:
+                  - generic [ref=e852]:
+                    - paragraph [ref=e853]: SOP Uplift
+                    - paragraph [ref=e854]: Completed
+                  - generic [ref=e855]:
+                    - paragraph [ref=e856]: "3"
+                    - paragraph [ref=e857]: Total suggestions
+                  - generic [ref=e858]:
+                    - paragraph [ref=e859]: "0"
+                    - paragraph [ref=e860]: Accepted
+                  - generic [ref=e861]:
+                    - paragraph [ref=e862]: "0"
+                    - paragraph [ref=e863]: Edited
+                  - generic [ref=e864]:
+                    - paragraph [ref=e865]: "0"
+                    - paragraph [ref=e866]: Rejected
+              - generic [ref=e867]:
+                - heading "Generated artifacts" [level=3] [ref=e868]
+                - generic [ref=e869]:
+                  - generic [ref=e870]:
+                    - generic [ref=e871]:
+                      - img [ref=e873]
+                      - generic [ref=e876]:
+                        - paragraph [ref=e877]: Uplifted SOP (DOCX)
+                        - paragraph [ref=e878]: Vendor_Onboarding_SOP_Uplifted.docx
+                    - generic [ref=e879]:
+                      - paragraph [ref=e880]: Generated on
+                      - paragraph [ref=e881]: 27 Apr 2026, 02:45 PM
+                      - paragraph [ref=e882]: "Status: pending"
+                    - button "Preview" [ref=e883] [cursor=pointer]
+                  - generic [ref=e884]:
+                    - generic [ref=e885]:
+                      - img [ref=e887]
+                      - generic [ref=e891]:
+                        - paragraph [ref=e892]: Process Diagram (VSDX)
+                        - paragraph [ref=e893]: Vendor_Onboarding_Swimlane.vsdx
+                    - generic [ref=e894]:
+                      - paragraph [ref=e895]: Generated on
+                      - paragraph [ref=e896]: 27 Apr 2026, 02:45 PM
+                      - paragraph [ref=e897]: "Status: pending"
+                    - button "Preview" [ref=e898] [cursor=pointer]
+                  - generic [ref=e899]:
+                    - generic [ref=e900]:
+                      - img [ref=e902]
+                      - generic [ref=e905]:
+                        - paragraph [ref=e906]: Change Log (Markdown)
+                        - paragraph [ref=e907]: Vendor_Onboarding_ChangeLog.md
+                    - generic [ref=e908]:
+                      - paragraph [ref=e909]: Generated on
+                      - paragraph [ref=e910]: 27 Apr 2026, 02:45 PM
+                      - paragraph [ref=e911]: "Status: pending"
+                    - button "View change log" [ref=e912] [cursor=pointer]
+                  - generic [ref=e913]:
+                    - generic [ref=e914]:
+                      - img [ref=e916]
+                      - generic [ref=e920]:
+                        - paragraph [ref=e921]: Audit Log (JSON)
+                        - paragraph [ref=e922]: Vendor_Onboarding_AuditLog.json
+                    - generic [ref=e923]:
+                      - paragraph [ref=e924]: Generated on
+                      - paragraph [ref=e925]: 27 Apr 2026, 02:45 PM
+                      - paragraph [ref=e926]: "Status: pending"
+                    - button "Preview" [ref=e927] [cursor=pointer]
+              - generic [ref=e928]:
+                - generic [ref=e929]:
+                  - heading "Swimlane preview" [level=3] [ref=e930]
+                  - button "Open full diagram in Visio" [ref=e931] [cursor=pointer]
+                - application [ref=e933]:
+                  - generic [ref=e935]:
+                    - generic:
+                      - generic:
+                        - img:
+                          - group "Edge from 0-0 to 0-1"
+                        - img:
+                          - group "Edge from 0-1 to 0-2"
+                        - img:
+                          - group "Edge from 0-2 to 1-0"
+                        - img:
+                          - group "Edge from 1-0 to 1-1"
+                        - img:
+                          - group "Edge from 1-1 to 1-2"
+                      - generic:
+                        - group: Business Owner
+                        - group: Operations Risk
+                        - group: Compliance
+                        - group: Control Testing
+                        - group: Submit onboarding request
+                        - group: Check completeness
+                        - group: High risk?
+                        - group: Perform due diligence
+                        - group: Exception approval
+                        - group: Compliance review
+                        - group: Retain evidence
+                        - group: Repository control
+                        - group: Select test sample
+                        - group: Record testing outcome
+                  - img
+                  - generic "Control Panel" [ref=e936]:
+                    - button "Zoom In" [ref=e937] [cursor=pointer]:
+                      - img [ref=e938]
+                    - button "Zoom Out" [ref=e940] [cursor=pointer]:
+                      - img [ref=e941]
+                    - button "Fit View" [ref=e943] [cursor=pointer]:
+                      - img [ref=e944]
+                  - link "React Flow attribution" [ref=e947] [cursor=pointer]:
+                    - /url: https://reactflow.dev
+                    - text: React Flow
+            - complementary [ref=e949]:
+              - generic [ref=e950]:
+                - heading "Document information" [level=3] [ref=e951]
+                - generic [ref=e952]:
+                  - generic [ref=e953]:
+                    - generic [ref=e954]: Document ID
+                    - generic [ref=e955]: SOP-VENDOR-ONBOARD-UPLIFT
+                  - generic [ref=e956]:
+                    - generic [ref=e957]: Process owner
+                    - generic [ref=e958]: Business Owner
+                  - generic [ref=e959]:
+                    - generic [ref=e960]: Effective date
+                    - generic [ref=e961]: 27 Apr 2026
+                  - generic [ref=e962]:
+                    - generic [ref=e963]: Review date
+                    - generic [ref=e964]: 27 Apr 2027
+              - generic [ref=e965]:
+                - heading "Control summary" [level=3] [ref=e966]
+                - paragraph [ref=e967]: C1 - Completeness check
+                - paragraph [ref=e968]: C2 - Weekly exception approval
+                - paragraph [ref=e969]: C3 - Evidence retention
+                - paragraph [ref=e970]: C4 - Test sample review
+              - generic [ref=e971]:
+                - heading "Risk summary" [level=3] [ref=e972]
+                - paragraph [ref=e973]: R1 - Incomplete onboarding may lead to vendor risk exposure
+                - paragraph [ref=e974]: R2 - Unapproved exception may result in compliance breach
+              - generic [ref=e975]:
+                - generic [ref=e976]:
+                  - generic [ref=e977]:
+                    - heading "Case chat" [level=3] [ref=e978]
+                    - paragraph [ref=e979]: Scoped to this case only
+                  - generic [ref=e980]: BETA
+                - generic [ref=e981]:
+                  - generic [ref=e982]:
+                    - generic [ref=e983]:
+                      - img [ref=e984]
+                      - text: Trace Agent
+                    - paragraph [ref=e987]: Confirm the process owner for exception approvals?
+                  - generic [ref=e988]:
+                    - generic [ref=e989]:
+                      - img [ref=e990]
+                      - text: You
+                    - paragraph [ref=e992]: Operations Risk reviews exceptions weekly.
+                  - generic [ref=e993]:
+                    - generic [ref=e994]:
+                      - img [ref=e995]
+                      - text: Trace Agent
+                    - paragraph [ref=e998]: Should Compliance be an approver for high-risk exceptions?
+                - generic [ref=e1000]:
+                  - textbox "Add case context for the agent..." [ref=e1001]
+                  - button [ref=e1002] [cursor=pointer]:
+                    - img
+      - contentinfo [ref=e662]:
+        - generic [ref=e663]: © 2026 KPMG Assurance and Consulting Services LLP, an Indian Limited Liability Partnership and a member firm of the KPMG global organization of independent member firms affiliated with KPMG International Limited, a private English company limited by guarantee. All rights reserved.
+        - generic [ref=e664]: Confidential

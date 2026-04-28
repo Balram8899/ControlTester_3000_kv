@@ -7,8 +7,13 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    libcairo2 \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
     poppler-utils \
     tesseract-ocr \
+    pandoc \
+    libmagic1 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY api/requirements.txt .

@@ -8,6 +8,7 @@ import {
   ChevronDown,
   Database,
   FileBarChart,
+  FilePenLine,
   FileSearch,
   LayoutDashboard,
   Library,
@@ -106,6 +107,15 @@ const FEATURE_CARDS: FeatureCard[] = [
     functionLabel: "Testing execution",
     accent: "#0C233C",
     icon: TestTube,
+    category: "Assessment and Testing",
+  },
+  {
+    title: "SOP Uplift",
+    path: "/sop-uplift",
+    description: "Upload SOPs, controls, risks, evidence, and diagrams; review uplift suggestions in-document; generate DOCX and editable diagram outputs.",
+    functionLabel: "Procedure uplift",
+    accent: "#00B8F5",
+    icon: FilePenLine,
     category: "Assessment and Testing",
   },
   {

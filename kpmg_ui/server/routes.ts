@@ -30,7 +30,12 @@ function getForwardBody(req: Request, contentType: string): Buffer | undefined {
 }
 
 function proxyToFastAPI(req: Request, res: Response) {
-  const targetPath = req.path.replace(/^\/api/, "") || "/";
+  const rawTargetPath = req.path.replace(/^\/api/, "") || "/";
+  const legacyPathAliases: Record<string, string> = {
+    "/load-vectorstore": "/load-graph",
+    "/save-vectorstore": "/save-graph",
+  };
+  const targetPath = legacyPathAliases[rawTargetPath] ?? rawTargetPath;
   const query = req.url.includes("?") ? req.url.slice(req.url.indexOf("?")) : "";
   const url = new URL(FASTAPI_BASE);
   const contentType = typeof req.headers["content-type"] === "string" ? req.headers["content-type"] : "";

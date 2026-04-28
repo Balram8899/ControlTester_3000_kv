@@ -9,3 +9,4 @@ audit_pipeline.log
 .vscode/
 .node_modules/
 node_modules
+claude.md

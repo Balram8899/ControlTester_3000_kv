@@ -14,6 +14,7 @@ import {
   FileBarChart,
   BookOpen,
   AlertTriangle,
+  FilePenLine,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -34,6 +35,7 @@ export const HIDEABLE_TABS = [
   { title: "Risk Assessment", fullTitle: "Risk Assessment", path: "/risk-assessment", icon: FileSearch },
   { title: "Final Report", fullTitle: "Final Report", path: "/evidence-assessment", icon: FileSearch },
   { title: "Control Testing", fullTitle: "Control Testing", path: "/control-testing", icon: TestTube },
+  { title: "SOP Uplift", fullTitle: "SOP Uplift", path: "/sop-uplift", icon: FilePenLine },
   { title: "Chat", fullTitle: "AI Chat", path: "/chat", icon: MessageSquare },
   { title: "Issue Management", fullTitle: "Issue Management", path: "/issue-management", icon: AlertTriangle },
 ];

@@ -1,0 +1,73 @@
+﻿<h2>Uploaded Document View: which direction feels best?</h2>
+<p class="subtitle">All options preserve upload, document list, dashboard, quality analysis, document controls, merged view, map obligations, refresh, and delete actions. The difference is how the uploaded document context is presented.</p>
+
+<div class="cards">
+  <div class="card" data-choice="rail-plus-workspace" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#eef3f9;padding:18px;border-radius:16px;height:280px;display:grid;grid-template-columns:260px 1fr;gap:16px;color:#0c233c;font-family:Inter,system-ui,sans-serif;">
+        <div style="background:white;border:1px solid #dce3ee;border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:12px;">
+          <div style="font-weight:800;font-size:13px;color:#00338d;letter-spacing:.08em;">DOCUMENTS</div>
+          <div style="border:1px dashed #b9c7d8;border-radius:14px;padding:18px;text-align:center;font-size:12px;">Upload policy document</div>
+          <div style="border:1px solid #dce3ee;border-left:4px solid #00338d;border-radius:14px;padding:12px;font-size:12px;line-height:1.5;">
+            <b>company_RCM.xlsx</b><br>
+            <span style="color:#60718d;">149 controls · 3 domains</span>
+            <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;"><span style="background:#eef3ff;border-radius:999px;padding:3px 7px;">Governance 131</span><span style="background:#eaf8f1;border-radius:999px;padding:3px 7px;">Access 16</span></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div style="height:76px;background:linear-gradient(100deg,#5b1cc8,#8e22ff);border-radius:22px;color:white;padding:18px;font-weight:800;">5W1H Analysis Complete</div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+            <div style="background:white;border:1px solid #dce3ee;border-radius:14px;height:72px;"></div><div style="background:white;border:1px solid #dce3ee;border-radius:14px;height:72px;"></div><div style="background:white;border:1px solid #dce3ee;border-radius:14px;height:72px;"></div><div style="background:white;border:1px solid #dce3ee;border-radius:14px;height:72px;"></div>
+          </div>
+          <div style="background:white;border:1px solid #dce3ee;border-radius:16px;flex:1;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A. Refined Left Rail + Main Workspace</h3>
+      <p>Most faithful to today: keep the resizable document rail, but make selected document cards richer and the right panel match the reference dashboard.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="document-header-context" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#eef3f9;padding:18px;border-radius:16px;height:280px;color:#0c233c;font-family:Inter,system-ui,sans-serif;display:flex;flex-direction:column;gap:14px;">
+        <div style="background:white;border:1px solid #dce3ee;border-radius:18px;padding:16px;display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;">
+          <div><div style="font-weight:800;font-size:12px;letter-spacing:.14em;color:#7e91ae;">ACTIVE DOCUMENT</div><div style="font-size:20px;font-weight:850;margin-top:4px;">company_RCM.xlsx</div><div style="font-size:12px;color:#60718d;margin-top:6px;">149 controls · Governance 131 · Access Control 16 · Cryptography 2</div></div>
+          <div style="display:flex;gap:8px;"><span style="border:1px solid #dce3ee;border-radius:999px;padding:8px 12px;">Document</span><span style="background:#00338d;color:white;border-radius:999px;padding:8px 12px;">Quality</span><span style="border:1px solid #dce3ee;border-radius:999px;padding:8px 12px;">Merged</span></div>
+        </div>
+        <div style="height:70px;background:linear-gradient(100deg,#5b1cc8,#8e22ff);border-radius:22px;color:white;padding:18px;font-weight:800;">5W1H Analysis Complete</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+          <div style="background:white;border:1px solid #dce3ee;border-radius:14px;height:78px;"></div><div style="background:white;border:1px solid #dce3ee;border-radius:14px;height:78px;"></div><div style="background:white;border:1px solid #dce3ee;border-radius:14px;height:78px;"></div><div style="background:white;border:1px solid #dce3ee;border-radius:14px;height:78px;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B. Document Context Header</h3>
+      <p>Collapse the document list out of the main view and show the selected upload as a strong header above dashboard tabs. More room for analysis.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="document-drawer" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#eef3f9;padding:18px;border-radius:16px;height:280px;color:#0c233c;font-family:Inter,system-ui,sans-serif;display:grid;grid-template-columns:1fr 310px;gap:16px;">
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div style="height:76px;background:linear-gradient(100deg,#5b1cc8,#8e22ff);border-radius:22px;color:white;padding:18px;font-weight:800;">5W1H Analysis Complete</div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;"><div style="background:white;border:1px solid #dce3ee;border-radius:14px;height:72px;"></div><div style="background:white;border:1px solid #dce3ee;border-radius:14px;height:72px;"></div><div style="background:white;border:1px solid #dce3ee;border-radius:14px;height:72px;"></div><div style="background:white;border:1px solid #dce3ee;border-radius:14px;height:72px;"></div></div>
+          <div style="background:white;border:1px solid #dce3ee;border-radius:16px;flex:1;"></div>
+        </div>
+        <div style="background:white;border:1px solid #dce3ee;border-radius:18px;padding:16px;box-shadow:0 18px 50px -38px rgba(12,35,60,.4);">
+          <div style="font-weight:850;font-size:14px;color:#00338d;letter-spacing:.12em;">DOCUMENT INSPECTOR</div>
+          <div style="margin-top:16px;font-size:18px;font-weight:850;">company_RCM.xlsx</div>
+          <div style="height:1px;background:#dce3ee;margin:14px 0;"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;"><span>Controls<br><b>149</b></span><span>Mapped<br><b>86</b></span><span>Duplicates<br><b>33</b></span><span>Quality<br><b>2.85/6</b></span></div>
+          <div style="margin-top:16px;border:1px solid #dce3ee;border-radius:12px;height:78px;background:#f8fafc;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C. Right-Side Document Inspector</h3>
+      <p>Use the analysis as the primary canvas and move document metadata/actions into an inspector. Strong for review, less like today’s upload workflow.</p>
+    </div>
+  </div>
+</div>

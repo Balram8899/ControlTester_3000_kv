@@ -1,0 +1,373 @@
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list
+  - generic [ref=e280]:
+    - complementary [ref=e281]:
+      - button "Expand sidebar" [ref=e283] [cursor=pointer]:
+        - img [ref=e284]
+      - navigation [ref=e286]:
+        - generic [ref=e287]:
+          - button [ref=e288] [cursor=pointer]:
+            - img [ref=e289]
+          - button [ref=e294] [cursor=pointer]:
+            - img [ref=e295]
+          - button [ref=e297] [cursor=pointer]:
+            - img [ref=e298]
+          - button [ref=e301] [cursor=pointer]:
+            - img [ref=e302]
+          - button [ref=e304] [cursor=pointer]:
+            - img [ref=e305]
+          - button [ref=e309] [cursor=pointer]:
+            - img [ref=e310]
+          - button [ref=e313] [cursor=pointer]:
+            - img [ref=e314]
+          - button [ref=e319] [cursor=pointer]:
+            - img [ref=e320]
+          - button [ref=e325] [cursor=pointer]:
+            - img [ref=e326]
+          - button [ref=e328] [cursor=pointer]:
+            - img [ref=e329]
+          - button [ref=e332] [cursor=pointer]:
+            - img [ref=e333]
+          - button [ref=e335] [cursor=pointer]:
+            - img [ref=e336]
+          - button [ref=e338] [cursor=pointer]:
+            - img [ref=e339]
+      - generic [ref=e345]: A
+    - generic [ref=e346]:
+      - main [ref=e347]:
+        - generic [ref=e351]:
+          - generic [ref=e352]:
+            - generic [ref=e353]:
+              - generic [ref=e354]:
+                - generic [ref=e355]:
+                  - generic [ref=e356]: SOP Uplift
+                  - generic [ref=e357]: /
+                  - generic [ref=e358]: Cases
+                  - generic [ref=e359]: /
+                  - generic [ref=e360]: Vendor Onboarding
+                - generic [ref=e361]:
+                  - heading "Vendor Onboarding - SOP Uplift" [level=1] [ref=e362]
+                  - generic [ref=e363]: "Case status: In progress"
+              - generic [ref=e364]:
+                - button "Run Extraction" [disabled]:
+                  - img
+                  - text: Run Extraction
+                - button "Case Actions" [ref=e365] [cursor=pointer]:
+                  - text: Case Actions
+                  - img
+                - button [ref=e366] [cursor=pointer]:
+                  - img
+            - generic [ref=e367]:
+              - button "1 Upload & Tag Documents" [ref=e368] [cursor=pointer]:
+                - generic [ref=e369]: "1"
+                - text: Upload & Tag Documents
+              - button "2 Extract & Analyze" [ref=e370] [cursor=pointer]:
+                - generic [ref=e371]: "2"
+                - text: Extract & Analyze
+              - button "3 Review Suggestions" [ref=e372] [cursor=pointer]:
+                - generic [ref=e373]: "3"
+                - text: Review Suggestions
+              - button "4 Generate Outputs" [ref=e374] [cursor=pointer]:
+                - generic [ref=e375]: "4"
+                - text: Generate Outputs
+          - generic [ref=e376]:
+            - complementary [ref=e377]:
+              - generic [ref=e378]:
+                - generic [ref=e379]:
+                  - heading "Case details" [level=3] [ref=e380]
+                  - generic [ref=e381]: In progress
+                - generic [ref=e382]:
+                  - generic [ref=e383]:
+                    - text: Case name
+                    - textbox "Case name" [ref=e384]: Vendor Onboarding - SOP Uplift
+                  - generic [ref=e385]:
+                    - text: Process
+                    - textbox "Process" [ref=e386]: Vendor Onboarding
+                  - generic [ref=e387]:
+                    - generic [ref=e388]:
+                      - paragraph [ref=e389]: Case ID
+                      - paragraph [ref=e390]: SOPU-2025-0007
+                    - generic [ref=e391]:
+                      - paragraph [ref=e392]: Owner
+                      - paragraph [ref=e393]: Admin Analyst
+                    - generic [ref=e394]:
+                      - paragraph [ref=e395]: Framework
+                      - paragraph [ref=e396]: Internal Control Framework
+                    - generic [ref=e397]:
+                      - paragraph [ref=e398]: Business unit
+                      - paragraph [ref=e399]: Third Party Risk
+                  - button "Create case" [ref=e400] [cursor=pointer]
+              - generic [ref=e401]:
+                - heading "Overall progress" [level=3] [ref=e402]
+                - generic [ref=e403]:
+                  - generic [ref=e404]:
+                    - generic [ref=e406]: Files uploaded
+                    - generic [ref=e407]: 0/18
+                  - generic [ref=e408]:
+                    - generic [ref=e410]: Converted to Markdown
+                    - generic [ref=e411]: 0/1
+                  - generic [ref=e412]:
+                    - generic [ref=e414]: Tagged
+                    - generic [ref=e415]: 0/1
+                  - generic [ref=e416]:
+                    - generic [ref=e418]: Extraction
+                    - generic [ref=e419]: queued
+                  - generic [ref=e420]:
+                    - img [ref=e421]
+                    - generic [ref=e424]: Analysis
+                    - generic [ref=e425]: ready
+                  - generic [ref=e426]:
+                    - generic [ref=e428]: Outputs
+                    - generic [ref=e429]: not started
+            - main [ref=e430]:
+              - generic [ref=e431]:
+                - generic [ref=e432]:
+                  - generic [ref=e433]:
+                    - heading "Upload documents" [level=3] [ref=e434]
+                    - paragraph [ref=e435]: Drag-and-drop equivalent buckets with explicit file tagging.
+                  - button "Upload files" [disabled]:
+                    - img
+                    - text: Upload files
+                - generic [ref=e436]:
+                  - generic [ref=e437] [cursor=pointer]:
+                    - generic [ref=e438]:
+                      - img [ref=e440]
+                      - generic [ref=e443]:
+                        - paragraph [ref=e444]: SOPs
+                        - paragraph [ref=e445]: 0 files
+                    - button "SOPs 0 files" [disabled] [ref=e446]
+                  - generic [ref=e447] [cursor=pointer]:
+                    - generic [ref=e448]:
+                      - img [ref=e450]
+                      - generic [ref=e453]:
+                        - paragraph [ref=e454]: Policies & Procedures
+                        - paragraph [ref=e455]: 0 files
+                    - button "Policies & Procedures 0 files" [disabled] [ref=e456]
+                  - generic [ref=e457] [cursor=pointer]:
+                    - generic [ref=e458]:
+                      - img [ref=e460]
+                      - generic [ref=e463]:
+                        - paragraph [ref=e464]: Risk / Control Matrices
+                        - paragraph [ref=e465]: 0 files
+                    - button "Risk / Control Matrices 0 files" [disabled] [ref=e466]
+                  - generic [ref=e467] [cursor=pointer]:
+                    - generic [ref=e468]:
+                      - img [ref=e470]
+                      - generic [ref=e472]:
+                        - paragraph [ref=e473]: Risk Registers
+                        - paragraph [ref=e474]: 0 files
+                    - button "Risk Registers 0 files" [disabled] [ref=e475]
+                  - generic [ref=e476] [cursor=pointer]:
+                    - generic [ref=e477]:
+                      - img [ref=e479]
+                      - generic [ref=e483]:
+                        - paragraph [ref=e484]: Control Inventories
+                        - paragraph [ref=e485]: 0 files
+                    - button "Control Inventories 0 files" [disabled] [ref=e486]
+                  - generic [ref=e487] [cursor=pointer]:
+                    - generic [ref=e488]:
+                      - img [ref=e490]
+                      - generic [ref=e494]:
+                        - paragraph [ref=e495]: Evidence
+                        - paragraph [ref=e496]: 0 files
+                    - button "Evidence 0 files" [disabled] [ref=e497]
+                  - generic [ref=e498] [cursor=pointer]:
+                    - generic [ref=e499]:
+                      - img [ref=e501]
+                      - generic [ref=e505]:
+                        - paragraph [ref=e506]: Diagrams
+                        - paragraph [ref=e507]: 0 files
+                    - button "Diagrams 0 files" [disabled] [ref=e508]
+                  - generic [ref=e509] [cursor=pointer]:
+                    - generic [ref=e510]:
+                      - img [ref=e512]
+                      - generic [ref=e515]:
+                        - paragraph [ref=e516]: Audit Reports / Issues
+                        - paragraph [ref=e517]: 0 files
+                    - button "Audit Reports / Issues 0 files" [disabled] [ref=e518]
+              - generic [ref=e519]:
+                - generic [ref=e520]:
+                  - generic [ref=e521]:
+                    - heading "Uploaded documents" [level=3] [ref=e522]
+                    - paragraph [ref=e523]: 5 documents ready for tagging
+                  - generic [ref=e524]:
+                    - generic [ref=e525]:
+                      - img
+                      - textbox "Search documents..." [ref=e526]
+                    - button "Filter" [disabled]
+                - table [ref=e528]:
+                  - rowgroup [ref=e529]:
+                    - row "File Bucket AI tag Confidence User override / notes Status Actions" [ref=e530]:
+                      - columnheader "File" [ref=e531]
+                      - columnheader "Bucket" [ref=e532]
+                      - columnheader "AI tag" [ref=e533]
+                      - columnheader "Confidence" [ref=e534]
+                      - columnheader "User override / notes" [ref=e535]
+                      - columnheader "Status" [ref=e536]
+                      - columnheader "Actions" [ref=e537]
+                  - rowgroup [ref=e538]:
+                    - row "Vendor_Onboarding_SOP_v2.3.docx sops sop high sop converted" [ref=e539]:
+                      - cell "Vendor_Onboarding_SOP_v2.3.docx" [ref=e540]:
+                        - generic [ref=e541]:
+                          - img [ref=e542]
+                          - generic [ref=e545]: Vendor_Onboarding_SOP_v2.3.docx
+                      - cell "sops" [ref=e546]
+                      - cell "sop" [ref=e547]:
+                        - generic [ref=e548]: sop
+                      - cell "high" [ref=e549]
+                      - cell "sop" [ref=e550]:
+                        - combobox [disabled] [ref=e551]:
+                          - option "sop" [selected]
+                          - option "policy"
+                          - option "risk control matrix"
+                          - option "risk register"
+                          - option "control inventory"
+                          - option "evidence"
+                          - option "process diagram"
+                          - option "audit report"
+                          - option "supporting material"
+                      - cell "converted" [ref=e552]:
+                        - generic [ref=e553]:
+                          - img [ref=e554]
+                          - text: converted
+                      - cell [ref=e557]:
+                        - button [disabled]:
+                          - img
+                    - row "Risk_Control_Matrix.xlsx risk control matrices policy high policy converted" [ref=e558]:
+                      - cell "Risk_Control_Matrix.xlsx" [ref=e559]:
+                        - generic [ref=e560]:
+                          - img [ref=e561]
+                          - generic [ref=e564]: Risk_Control_Matrix.xlsx
+                      - cell "risk control matrices" [ref=e565]
+                      - cell "policy" [ref=e566]:
+                        - generic [ref=e567]: policy
+                      - cell "high" [ref=e568]
+                      - cell "policy" [ref=e569]:
+                        - combobox [disabled] [ref=e570]:
+                          - option "sop"
+                          - option "policy" [selected]
+                          - option "risk control matrix"
+                          - option "risk register"
+                          - option "control inventory"
+                          - option "evidence"
+                          - option "process diagram"
+                          - option "audit report"
+                          - option "supporting material"
+                      - cell "converted" [ref=e571]:
+                        - generic [ref=e572]:
+                          - img [ref=e573]
+                          - text: converted
+                      - cell [ref=e576]:
+                        - button [disabled]:
+                          - img
+                    - row "Faird_KYC_Events.csv risk registers risk control matrix high risk control matrix converted" [ref=e577]:
+                      - cell "Faird_KYC_Events.csv" [ref=e578]:
+                        - generic [ref=e579]:
+                          - img [ref=e580]
+                          - generic [ref=e583]: Faird_KYC_Events.csv
+                      - cell "risk registers" [ref=e584]
+                      - cell "risk control matrix" [ref=e585]:
+                        - generic [ref=e586]: risk control matrix
+                      - cell "high" [ref=e587]
+                      - cell "risk control matrix" [ref=e588]:
+                        - combobox [disabled] [ref=e589]:
+                          - option "sop"
+                          - option "policy"
+                          - option "risk control matrix" [selected]
+                          - option "risk register"
+                          - option "control inventory"
+                          - option "evidence"
+                          - option "process diagram"
+                          - option "audit report"
+                          - option "supporting material"
+                      - cell "converted" [ref=e590]:
+                        - generic [ref=e591]:
+                          - img [ref=e592]
+                          - text: converted
+                      - cell [ref=e595]:
+                        - button [disabled]:
+                          - img
+                    - row "Control_Test_Evidence_Q1.pdf evidence risk register medium risk register queued" [ref=e596]:
+                      - cell "Control_Test_Evidence_Q1.pdf" [ref=e597]:
+                        - generic [ref=e598]:
+                          - img [ref=e599]
+                          - generic [ref=e602]: Control_Test_Evidence_Q1.pdf
+                      - cell "evidence" [ref=e603]
+                      - cell "risk register" [ref=e604]:
+                        - generic [ref=e605]: risk register
+                      - cell "medium" [ref=e606]
+                      - cell "risk register" [ref=e607]:
+                        - combobox [disabled] [ref=e608]:
+                          - option "sop"
+                          - option "policy"
+                          - option "risk control matrix"
+                          - option "risk register" [selected]
+                          - option "control inventory"
+                          - option "evidence"
+                          - option "process diagram"
+                          - option "audit report"
+                          - option "supporting material"
+                      - cell "queued" [ref=e609]:
+                        - generic [ref=e610]:
+                          - img [ref=e611]
+                          - text: queued
+                      - cell [ref=e614]:
+                        - button [disabled]:
+                          - img
+                    - row "Vendor_Onboarding_Flow.pdf diagrams control inventory medium control inventory converted" [ref=e615]:
+                      - cell "Vendor_Onboarding_Flow.pdf" [ref=e616]:
+                        - generic [ref=e617]:
+                          - img [ref=e618]
+                          - generic [ref=e621]: Vendor_Onboarding_Flow.pdf
+                      - cell "diagrams" [ref=e622]
+                      - cell "control inventory" [ref=e623]:
+                        - generic [ref=e624]: control inventory
+                      - cell "medium" [ref=e625]
+                      - cell "control inventory" [ref=e626]:
+                        - combobox [disabled] [ref=e627]:
+                          - option "sop"
+                          - option "policy"
+                          - option "risk control matrix"
+                          - option "risk register"
+                          - option "control inventory" [selected]
+                          - option "evidence"
+                          - option "process diagram"
+                          - option "audit report"
+                          - option "supporting material"
+                      - cell "converted" [ref=e628]:
+                        - generic [ref=e629]:
+                          - img [ref=e630]
+                          - text: converted
+                      - cell [ref=e633]:
+                        - button [disabled]:
+                          - img
+            - generic [ref=e634]:
+              - generic [ref=e635]:
+                - generic [ref=e636]:
+                  - heading "Case chat" [level=3] [ref=e637]
+                  - paragraph [ref=e638]: Scoped to this case only
+                - generic [ref=e639]: BETA
+              - generic [ref=e640]:
+                - generic [ref=e641]:
+                  - generic [ref=e642]:
+                    - img [ref=e643]
+                    - text: Trace Agent
+                  - paragraph [ref=e646]: Confirm the process owner for exception approvals?
+                - generic [ref=e647]:
+                  - generic [ref=e648]:
+                    - img [ref=e649]
+                    - text: You
+                  - paragraph [ref=e651]: Operations Risk reviews exceptions weekly.
+                - generic [ref=e652]:
+                  - generic [ref=e653]:
+                    - img [ref=e654]
+                    - text: Trace Agent
+                  - paragraph [ref=e657]: Should Compliance be an approver for high-risk exceptions?
+              - generic [ref=e659]:
+                - textbox "Add case context for the agent..." [ref=e660]
+                - button [ref=e661] [cursor=pointer]:
+                  - img
+      - contentinfo [ref=e662]:
+        - generic [ref=e663]: © 2026 KPMG Assurance and Consulting Services LLP, an Indian Limited Liability Partnership and a member firm of the KPMG global organization of independent member firms affiliated with KPMG International Limited, a private English company limited by guarantee. All rights reserved.
+        - generic [ref=e664]: Confidential

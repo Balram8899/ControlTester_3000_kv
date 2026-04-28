@@ -221,6 +221,43 @@ class RCMReportStore:
         logger.info(f"Saved gap analysis report {report_id} ({len(report_data.get('document_names', []))} docs)")
         return report_id
 
+    def save_sop_uplift_report(self, report_data: Dict[str, Any]) -> str:
+        """Save an SOP Uplift report record. Returns report_id."""
+        self._require_connection()
+        report_id = uuid.uuid4().hex
+        doc = {
+            "report_id": report_id,
+            "report_type": "sop_uplift",
+            "created_at": datetime.utcnow().isoformat(),
+            "model_used": report_data.get("model_used", ""),
+            "status": report_data.get("status", "success"),
+            "error_message": report_data.get("error_message"),
+            "case_id": report_data.get("case_id", ""),
+            "case_title": report_data.get("case_title", ""),
+            "process_name": report_data.get("process_name", ""),
+            "suggestion_counts": report_data.get("suggestion_counts", {}),
+            "case_chat_inputs_captured": report_data.get("case_chat_inputs_captured", 0),
+            "output_files": report_data.get("output_files", []),
+            "executive_summary": report_data.get("executive_summary", ""),
+            "analysis": report_data.get("analysis", {}),
+            "final_report": report_data.get("change_log_markdown", ""),
+            "regulation_document_ids": [],
+            "regulation_names": [],
+            "document_names": [],
+            "document_count": 0,
+            "rcm_filename": "",
+            "workpaper_filename": "",
+            "compliance_stats": {},
+            "domain_reports": {},
+            "suggestions_summary_counts": {},
+            "gap_summary": None,
+            "graph_context_used": False,
+            "graph_stats": None,
+        }
+        self._col.insert_one(doc)
+        logger.info(f"Saved SOP Uplift report {report_id} ({doc['case_title']})")
+        return report_id
+
     def list_reports(self) -> List[Dict]:
         """Return all reports (summary only — no full analysis/domain_reports text)."""
         self._require_connection()
@@ -251,6 +288,12 @@ class RCMReportStore:
                 "evidence_file_count": 1,
                 "assessment_count": 1,
                 "controls_graph_nodes": 1,
+                "case_id": 1,
+                "case_title": 1,
+                "process_name": 1,
+                "suggestion_counts": 1,
+                "case_chat_inputs_captured": 1,
+                "output_files": 1,
             },
         ).sort("created_at", -1)
         return list(cursor)

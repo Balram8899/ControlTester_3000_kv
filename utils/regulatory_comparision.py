@@ -197,7 +197,7 @@ Use the above context to better identify and classify controls in the text below
 For EACH control, return a JSON object with:
 - control_id: sequential number
 - control_statement: exact requirement (keep original wording)
-- control_domain: one of [governance, access_control, cryptography, network_security, data_security, business_continuity, incident_response, third_party, change_management, audit, online_services, emerging_tech, va_pt, system_security, cyber_operations, technology_refresh]
+- control_domain: one of [governance, access_control, cryptography, network_security, data_security, business_continuity, incident_response, third_party, change_management, audit, online_services, emerging_tech, Vulnerability Mangement, system_security, cyber_operations, technology_refresh]
 - risk_addressed: what risk this mitigates
 - enforcement_level: "mandatory", "recommended", or "optional"
 - mandatory_keywords: list of words like ["shall", "must", "should", "may"]

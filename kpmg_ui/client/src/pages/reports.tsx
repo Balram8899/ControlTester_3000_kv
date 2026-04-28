@@ -4,6 +4,7 @@ import remarkGfm from "remark-gfm";
 import {
   FileBarChart, RefreshCw, Download, Trash2, ChevronRight, AlertCircle,
   CheckCircle2, FileText, GitCompare, Network, ShieldCheck, ScanSearch,
+  FilePenLine,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import HeroSection from "@/components/HeroSection";
@@ -62,6 +63,11 @@ interface ReportSummary {
   controls_tested?: number;
   summary?: ControlTestSummary;
   session_id?: string;
+  case_id?: string;
+  process_name?: string;
+  case_title?: string;
+  suggestion_counts?: { total?: number; accepted?: number; edited?: number; rejected?: number };
+  output_files?: { type: string; filename: string; output_id?: string }[];
   // Evidence assessment specific
   evidence_files?: string[];
   evidence_file_count?: number;
@@ -137,6 +143,26 @@ export default function ReportsPage() {
       toast({ title: "Downloaded", description: filename });
     } catch {
       toast({ title: "Error", description: "Failed to download RCM file", variant: "destructive" });
+    }
+  };
+
+  const handleDownloadSopOutput = async (report: ReportSummary, output: { type: string; filename: string; output_id?: string }) => {
+    if (!report.case_id || !output.output_id) return;
+    try {
+      const res = await fetch(`/api/sop-uplift/cases/${report.case_id}/outputs/${output.output_id}`);
+      if (!res.ok) throw new Error("Download failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = output.filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast({ title: "Downloaded", description: output.filename });
+    } catch {
+      toast({ title: "Error", description: "Failed to download SOP Uplift output", variant: "destructive" });
     }
   };
 
@@ -231,6 +257,25 @@ export default function ReportsPage() {
   const isGapReport = (r: ReportSummary) => r.report_type === "regulatory_gap_analysis";
   const isControlTest = (r: ReportSummary) => r.report_type === "control_testing";
   const isEvidenceAssessment = (r: ReportSummary) => r.report_type === "evidence_assessment";
+  const isSopUplift = (r: ReportSummary) => r.report_type === "sop_uplift";
+  const sopOutputLabel = (type: string) => {
+    const labels: Record<string, string> = {
+      docx: "Uplifted SOP (DOCX)",
+      vsdx: "Process Diagram (VSDX)",
+      drawio: "Process Diagram (DRAWIO)",
+      diagram_pdf: "Swimlane Diagram (PDF)",
+      diagram_svg: "Swimlane Diagram (SVG)",
+      changelog_markdown: "Change Log (Markdown)",
+      changelog_json: "Audit Log (JSON)",
+    };
+    return labels[type] ?? type.replace(/_/g, " ");
+  };
+  const sopFallbackOutputs: { type: string; filename: string; output_id?: string }[] = [
+    { type: "docx", filename: "Vendor_Onboarding_SOP_Uplifted.docx" },
+    { type: "vsdx", filename: "Vendor_Onboarding_Process_Swimlane.vsdx" },
+    { type: "changelog_markdown", filename: "Vendor_Onboarding_ChangeLog.md" },
+    { type: "changelog_json", filename: "Vendor_Onboarding_AuditLog.json" },
+  ];
 
   return (
     <div className="h-full flex flex-col">
@@ -276,6 +321,7 @@ export default function ReportsPage() {
               const gap = isGapReport(report);
               const ctTest = isControlTest(report);
               const evAssess = isEvidenceAssessment(report);
+              const sopUplift = isSopUplift(report);
               const isExpanded = expandedReport === report.report_id;
               const full = fullReports[report.report_id];
               const stats = report.compliance_stats;
@@ -313,6 +359,11 @@ export default function ReportsPage() {
                                   <ScanSearch className="h-3 w-3" />
                                   Evidence Assessment
                                 </Badge>
+                              ) : sopUplift ? (
+                                <Badge variant="outline" className="text-[10px] gap-1 border-cyan-400 text-cyan-600 dark:text-cyan-400">
+                                  <FilePenLine className="h-3 w-3" />
+                                  SOP Uplift
+                                </Badge>
                               ) : (
                                 <Badge variant="outline" className="text-[10px] gap-1 border-blue-400 text-blue-500 dark:text-blue-400">
                                   <FileBarChart className="h-3 w-3" />
@@ -327,6 +378,8 @@ export default function ReportsPage() {
                                   ? report.workpaper_filename ?? report.rcm_filename
                                   : evAssess
                                   ? `${report.evidence_file_count ?? 0} evidence file${(report.evidence_file_count ?? 0) !== 1 ? "s" : ""} assessed`
+                                  : sopUplift
+                                  ? report.case_title ?? report.process_name ?? "SOP Uplift case"
                                   : report.rcm_filename}
                               </CardTitle>
 
@@ -366,7 +419,7 @@ export default function ReportsPage() {
                             </div>
 
                             {/* Framework / regulation name pills (not shown for control testing or evidence assessment) */}
-                            {!ctTest && !evAssess && (
+                            {!ctTest && !evAssess && !sopUplift && (
                               <div className="flex flex-wrap gap-1.5">
                                 {names.map((name, i) => (
                                   <Badge key={i} variant="secondary" className="text-[10px]">
@@ -380,6 +433,15 @@ export default function ReportsPage() {
                                 {report.evidence_files.map((f, i) => (
                                   <Badge key={i} variant="secondary" className="text-[10px]">
                                     {f}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                            {sopUplift && report.output_files && report.output_files.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5">
+                                {report.output_files.map((f, i) => (
+                                  <Badge key={`${f.type}-${i}`} variant="secondary" className="text-[10px]">
+                                    {f.type.replace(/_/g, " ")}
                                   </Badge>
                                 ))}
                               </div>
@@ -402,6 +464,15 @@ export default function ReportsPage() {
                                   {report.controls_graph_nodes ? <span>{report.controls_graph_nodes} graph nodes</span> : null}
                                 </>
                               )}
+                              {sopUplift && (
+                                <>
+                                  <span>{report.process_name ?? "Process not set"}</span>
+                                  <span>{report.suggestion_counts?.total ?? 0} suggestions</span>
+                                  <span>{report.suggestion_counts?.accepted ?? 0} accepted</span>
+                                  <span>{report.suggestion_counts?.edited ?? 0} edited</span>
+                                  <span>{report.suggestion_counts?.rejected ?? 0} rejected</span>
+                                </>
+                              )}
                               {gap && gapSum && (
                                 <>
                                   <span>{gapSum.total_domains} domains</span>
@@ -419,6 +490,109 @@ export default function ReportsPage() {
 
                     <CollapsibleContent>
                       <CardContent className="pt-0 space-y-4">
+                        {sopUplift && (
+                          <div className="space-y-4">
+                            <div className="rounded-md border border-[#D8E0ED] bg-white p-5">
+                              <div className="flex items-start justify-between gap-4">
+                                <div>
+                                  <h3 className="text-lg font-semibold text-[#0C233C]">Outputs & Reports</h3>
+                                  <p className="mt-1 text-xs text-muted-foreground">Generated and downloadable uplifted deliverables.</p>
+                                </div>
+                                <Button size="sm" className="gap-1.5 bg-[#1E49E2] text-xs hover:bg-[#00338D]">
+                                  <Download className="h-3 w-3" /> Download All
+                                </Button>
+                              </div>
+                              <div className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-5">
+                                {[
+                                  { label: "Total suggestions", value: report.suggestion_counts?.total ?? 0 },
+                                  { label: "Accepted", value: report.suggestion_counts?.accepted ?? 0 },
+                                  { label: "Edited", value: report.suggestion_counts?.edited ?? 0 },
+                                  { label: "Rejected", value: report.suggestion_counts?.rejected ?? 0 },
+                                  { label: "Artifacts", value: report.output_files?.length ?? sopFallbackOutputs.length },
+                                ].map((metric) => (
+                                  <div key={metric.label} className="rounded-md border border-[#E6ECF5] bg-[#FAFCFF] p-3">
+                                    <p className="text-xl font-semibold text-[#00338D]">{metric.value}</p>
+                                    <p className="mt-1 text-[11px] text-muted-foreground">{metric.label}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="rounded-md border border-[#D8E0ED] bg-white p-5">
+                              <h4 className="mb-4 text-sm font-semibold text-[#0C233C]">Generated artifacts</h4>
+                              <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+                                {(report.output_files?.length ? report.output_files : sopFallbackOutputs).map((output) => (
+                                  <div key={`${report.report_id}-${output.type}`} className="rounded-md border border-[#D8E0ED] bg-white p-4">
+                                    <div className="mb-3 flex items-center gap-3">
+                                      <span className="grid h-10 w-10 place-items-center rounded bg-[#E8F8FD] text-[#1E49E2]">
+                                        {output.type.includes("diagram") || output.type === "vsdx" || output.type === "drawio"
+                                          ? <Network className="h-5 w-5" />
+                                          : <FileText className="h-5 w-5" />}
+                                      </span>
+                                      <div className="min-w-0">
+                                        <p className="truncate text-sm font-semibold text-[#0C233C]">{sopOutputLabel(output.type)}</p>
+                                        <p className="truncate text-[11px] text-muted-foreground">{output.filename}</p>
+                                      </div>
+                                    </div>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-8 w-full text-xs"
+                                      onClick={(e) => { e.stopPropagation(); handleDownloadSopOutput(report, output); }}
+                                      disabled={!report.case_id || !output.output_id}
+                                    >
+                                      <Download className="mr-1.5 h-3 w-3" /> Download
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+                              <div className="rounded-md border border-[#D8E0ED] bg-white p-5">
+                                <h4 className="mb-4 text-sm font-semibold text-[#0C233C]">Swimlane preview</h4>
+                                <div className="overflow-x-auto rounded-md border border-[#D8E0ED] bg-[#FAFCFF]">
+                                  <div className="min-w-[820px] text-[11px] text-[#0C233C]">
+                                    {[
+                                      ["Business Owner", "Submit onboarding request", "Check completeness", "High risk?", "Retain evidence"],
+                                      ["Operations Risk", "", "Perform due diligence", "Exception approval", "Compliance review"],
+                                      ["Compliance", "", "Incomplete onboarding", "Unapproved exception", "Evidence repository"],
+                                      ["Control Testing", "", "", "Select test sample", "Record testing outcome"],
+                                    ].map((lane) => (
+                                      <div key={lane[0]} className="grid grid-cols-[145px_repeat(4,1fr)] border-b border-[#D8E0ED] last:border-b-0">
+                                        <div className="bg-[#00338D] p-3 font-semibold text-white">{lane[0]}</div>
+                                        {lane.slice(1).map((step, index) => (
+                                          <div key={`${lane[0]}-${index}`} className="min-h-16 border-l border-[#D8E0ED] p-3">
+                                            {step && (
+                                              <span className={step.includes("?") ? "inline-block border border-[#0086A8] bg-white px-3 py-2 text-center" : "inline-block border border-[#00338D] bg-white px-3 py-2 text-center"}>
+                                                {step}
+                                              </span>
+                                            )}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="space-y-4">
+                                <div className="rounded-md border border-[#D8E0ED] bg-white p-4">
+                                  <h4 className="mb-3 text-sm font-semibold text-[#0C233C]">Control summary</h4>
+                                  {["C1 - Completeness check", "C2 - Weekly exception approval", "C3 - Evidence retention", "C4 - Test sample review"].map((control) => (
+                                    <p key={control} className="mb-2 text-xs text-[#0C233C]">{control}</p>
+                                  ))}
+                                </div>
+                                <div className="rounded-md border border-[#D8E0ED] bg-white p-4">
+                                  <h4 className="mb-3 text-sm font-semibold text-[#E5001B]">Risk summary</h4>
+                                  {["R1 - Incomplete onboarding may lead to vendor risk exposure", "R2 - Unapproved exception may result in compliance breach"].map((risk) => (
+                                    <p key={risk} className="mb-2 text-xs text-[#0C233C]">{risk}</p>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                         {/* ── Control Testing KPI cards ── */}
                         {ctTest && ctSum && (
                           <div className="space-y-3">
@@ -520,6 +694,19 @@ export default function ReportsPage() {
 
                         {/* ── Action buttons ── */}
                         <div className="flex flex-wrap gap-2">
+                          {/* Evidence Assessment: download PDF workbook */}
+                          {sopUplift && report.output_files?.map((output) => (
+                            <Button
+                              key={`${report.report_id}-${output.type}`}
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => { e.stopPropagation(); handleDownloadSopOutput(report, output); }}
+                              className="gap-1.5 text-xs"
+                            >
+                              <Download className="h-3 w-3" /> {output.type.replace(/_/g, " ")}
+                            </Button>
+                          ))}
+
                           {/* Evidence Assessment: download PDF workbook */}
                           {evAssess && report.rcm_filename && (
                             <Button

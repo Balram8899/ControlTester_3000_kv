@@ -70,6 +70,7 @@ from api.routers.controls_quality import router as controls_quality_router
 from api.routers.issues import router as issues_router
 from api.routers.validation_queue import router as validation_queue_router
 from api.routers.control_testing import router as control_testing_router
+from api.routers.sop_uplift import router as sop_uplift_router
 
 # ----------------------------------------------------------------------------
 # Logging
@@ -207,6 +208,7 @@ app.include_router(controls_quality_router)
 app.include_router(issues_router)
 app.include_router(control_testing_router)
 app.include_router(validation_queue_router)
+app.include_router(sop_uplift_router)
 
 
 # ----------------------------------------------------------------------------
@@ -1093,7 +1095,13 @@ async def load_graph_api(
 ):
     try:
         if not KnowledgeGraph.exists(dir_path):
-            raise HTTPException(status.HTTP_404_NOT_FOUND, f"No graph file found at {dir_path}")
+            return {
+                "success": False,
+                "exists": False,
+                "path": dir_path,
+                "kb_type": kb_type,
+                "message": f"No graph file found at {dir_path}",
+            }
         GRAPH_CACHE[kb_type] = KnowledgeGraph.load(dir_path)
         graph_stats = GRAPH_CACHE[kb_type].get_graph_stats()
         return {

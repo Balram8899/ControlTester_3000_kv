@@ -1593,7 +1593,7 @@ export default function RegulatoryLibraryPage() {
                     <p className="text-3xl font-bold mt-1 leading-none flex items-center gap-1 text-[var(--ink-strong)]">
                       {mergedObligationsLoading
                         ? <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary inline-block" />
-                        : mergedObligations !== null ? mergedObligations.length : "-"
+                        : mergedObligations?.length ?? "-"
                       }
                     </p>
                     <p className="text-[11px] text-[var(--ink-muted)] mt-1.5">

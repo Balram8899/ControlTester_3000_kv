@@ -1,0 +1,606 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TRACE Quality Analysis Mockup</title>
+  <style>
+    :root {
+      --ink: #071f3a;
+      --muted: #627596;
+      --line: #d7e1ee;
+      --bg: #edf3f9;
+      --blue: #00338d;
+      --purple: #7213ea;
+      --green: #009a44;
+      --amber: #eaaa00;
+      --red: #e5001b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #dfe8f3;
+      color: var(--ink);
+      font-family: Inter, Arial, sans-serif;
+    }
+    .topbar {
+      height: 28px;
+      background: linear-gradient(90deg, #0b2b49, #1e49e2);
+    }
+    .page {
+      padding: 28px 34px 48px;
+      min-height: 100vh;
+      background: radial-gradient(circle at 10% 0%, #f8fbff 0, var(--bg) 42%, #e8eff7 100%);
+    }
+    .workbench {
+      display: grid;
+      grid-template-columns: 340px minmax(0, 1fr);
+      gap: 26px;
+      max-width: 1760px;
+      margin: 0 auto;
+    }
+    .rail, .canvas, .card, .panel, .example, .table-wrap {
+      background: #fff;
+      border: 1px solid var(--line);
+      box-shadow: 0 24px 58px -48px rgba(7,31,58,.55);
+    }
+    .rail {
+      border-radius: 24px;
+      overflow: hidden;
+      min-height: 680px;
+    }
+    .rail-section {
+      padding: 22px;
+      border-bottom: 1px solid var(--line);
+    }
+    .rail h2 {
+      margin: 0 0 16px;
+      font-size: 20px;
+      letter-spacing: -.01em;
+    }
+    .drop {
+      border: 2px dashed #c5d1df;
+      border-radius: 16px;
+      padding: 26px 16px;
+      text-align: center;
+      color: var(--muted);
+      background: #fbfdff;
+    }
+    .drop b { display: block; color: var(--ink); margin: 8px 0 4px; }
+    .rail-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 22px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: .16em;
+    }
+    .doc-card {
+      margin: 22px;
+      border: 1px solid #cfdbea;
+      border-left: 5px solid var(--blue);
+      border-radius: 18px;
+      padding: 16px;
+      background: #fbfdff;
+    }
+    .doc-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-weight: 850;
+    }
+    .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 13px; }
+    .chip {
+      border-radius: 999px;
+      border: 1px solid #cfdbea;
+      padding: 6px 10px;
+      color: var(--blue);
+      background: #eef4ff;
+      font-size: 12px;
+      font-weight: 750;
+    }
+    .chip.green { color: #007a3d; background: #eaf8f1; border-color: #8dd7b4; }
+    .chip.amber { color: #986400; background: #fff7df; border-color: #e8bd3d; }
+    .doc-stats {
+      margin-top: 16px;
+      padding-top: 15px;
+      border-top: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .doc-stats b { display: block; color: var(--ink); font-size: 20px; margin-top: 3px; }
+    .canvas {
+      border-radius: 28px;
+      overflow: hidden;
+    }
+    .canvas-bar {
+      height: 62px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+    }
+    .ghost, .primary {
+      border-radius: 16px;
+      padding: 11px 16px;
+      font-size: 14px;
+      font-weight: 800;
+    }
+    .ghost { border: 1px solid var(--line); background: #fff; color: var(--ink); }
+    .primary { border: 0; background: var(--blue); color: #fff; }
+    .content { padding: 26px; }
+    .doc-context {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+    .eyebrow {
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 6px 0 0;
+      font-size: 30px;
+      letter-spacing: -.04em;
+    }
+    .tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+    .tab {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 10px 15px;
+      background: #fff;
+      color: var(--muted);
+      font-weight: 800;
+      font-size: 14px;
+    }
+    .tab.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .ribbon {
+      min-height: 92px;
+      border-radius: 28px;
+      padding: 22px 28px;
+      margin-bottom: 24px;
+      color: #fff;
+      background: linear-gradient(100deg, #591bbf 0%, #8c22ff 100%);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+    .ribbon h2 { margin: 0; font-size: 23px; }
+    .ribbon p { margin: 7px 0 0; opacity: .92; font-size: 16px; }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+    .card {
+      min-height: 154px;
+      border-radius: 22px;
+      padding: 23px;
+      border-top: 4px solid var(--blue);
+    }
+    .card.purple { border-top-color: var(--purple); }
+    .card.red { border-top-color: var(--red); }
+    .card.green { border-top-color: var(--green); }
+    .label {
+      color: #7b8eac;
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+    .value {
+      margin-top: 18px;
+      font-size: 50px;
+      line-height: .9;
+      font-weight: 950;
+      letter-spacing: -.06em;
+    }
+    .value span { font-size: 24px; color: #94a1b8; }
+    .sub { margin-top: 12px; color: var(--muted); font-size: 15px; }
+    .bar { height: 8px; margin-top: 14px; border-radius: 999px; background: #e3e9f1; overflow: hidden; }
+    .bar div { height: 100%; border-radius: 999px; }
+    .coverage {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+    .coverage .card {
+      min-height: 132px;
+      border-top: 1px solid var(--line);
+      border-left: 4px solid var(--green);
+    }
+    .coverage .card.purple { border-left-color: var(--purple); }
+    .coverage .card.amber { border-left-color: var(--amber); }
+    .coverage .value { font-size: 36px; margin-top: 14px; }
+    .charts {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      margin-bottom: 30px;
+    }
+    .panel {
+      border-radius: 22px;
+      padding: 22px;
+      min-height: 280px;
+    }
+    .panel h3 { margin: 0 0 8px; font-size: 21px; letter-spacing: -.03em; }
+    .panel p { margin: 0 0 18px; color: var(--muted); }
+    .donut {
+      width: 156px;
+      height: 156px;
+      border-radius: 50%;
+      margin: 12px auto 18px;
+      background: conic-gradient(var(--green) 0 29%, var(--amber) 29% 67%, var(--red) 67% 100%);
+      display: grid;
+      place-items: center;
+    }
+    .donut div {
+      width: 86px;
+      height: 86px;
+      border-radius: 50%;
+      background: #fff;
+      display: grid;
+      place-items: center;
+      font-weight: 950;
+      font-size: 26px;
+    }
+    .legend-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 9px;
+      color: var(--muted);
+    }
+    .dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+    .hbar { display: grid; grid-template-columns: 62px 1fr; align-items: center; gap: 10px; margin: 12px 0; font-weight: 850; font-size: 13px; }
+    .hbar span:last-child { height: 25px; border-radius: 7px; }
+    .stack { display: grid; grid-template-columns: 106px 1fr; align-items: center; gap: 12px; margin: 20px 0; font-size: 13px; }
+    .stack-bar { height: 28px; border-radius: 7px; background: linear-gradient(90deg, var(--green) 0 32%, var(--amber) 32% 72%, var(--red) 72%); }
+    .examples-head {
+      border-top: 1px solid var(--line);
+      padding-top: 22px;
+      margin-bottom: 22px;
+    }
+    .examples-head h2 { margin: 0; font-size: 28px; }
+    .example-tabs { display: flex; gap: 14px; margin-top: 22px; }
+    .example-tabs .tab { padding: 13px 22px; }
+    .example-tabs .tab.active { background: #fff; color: var(--ink); border-color: transparent; box-shadow: 0 20px 40px -34px rgba(7,31,58,.4); }
+    .example {
+      border-radius: 24px;
+      padding: 28px;
+      display: grid;
+      grid-template-columns: 1.05fr 1fr;
+      gap: 34px;
+      margin-bottom: 34px;
+    }
+    .quote {
+      font-size: 21px;
+      line-height: 2.05;
+    }
+    mark {
+      border-radius: 5px;
+      padding: 2px 6px;
+      font-weight: 850;
+      background: #dbeafe;
+      color: #1e40af;
+    }
+    mark.what { background: #d9f6e8; color: #006f45; }
+    mark.where { background: #fff0d2; color: #9a5e00; }
+    mark.how { background: #efe7ff; color: #6b20d9; }
+    mark.when { background: #ffe3f2; color: #b30e66; }
+    mark.why { background: #ffead6; color: #a34e00; }
+    .assessment { display: grid; gap: 12px; }
+    .assessment-row {
+      display: grid;
+      grid-template-columns: 76px 1fr 76px;
+      gap: 12px;
+      align-items: center;
+      padding: 16px;
+      border-radius: 17px;
+      background: #eaf8f1;
+      color: #29415f;
+    }
+    .assessment-row.missing { background: #fff4f5; }
+    .assessment-row b:last-child { color: var(--green); }
+    .assessment-row.missing b:last-child { color: var(--red); }
+    .table-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+    .table-head h2 { margin: 6px 0 0; font-size: 28px; }
+    .filters { display: flex; gap: 10px; align-items: center; margin-bottom: 18px; }
+    .filter {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-weight: 850;
+    }
+    .filter.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+    .search { margin-left: auto; border: 1px solid var(--line); background: #fff; color: #8a99ae; border-radius: 14px; padding: 12px 120px 12px 16px; }
+    .table-wrap {
+      border-radius: 24px;
+      overflow: hidden;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    th {
+      padding: 16px;
+      text-align: left;
+      color: #7b8eac;
+      background: #f6f9fc;
+      font-size: 11px;
+      letter-spacing: .16em;
+    }
+    td { padding: 18px 16px; border-top: 1px solid #e6edf5; color: #26405f; }
+    td.center, th.center { text-align: center; }
+    .pill {
+      display: inline-flex;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-weight: 850;
+      background: #fff0f0;
+      color: var(--red);
+    }
+    .id { color: var(--blue); font-weight: 900; }
+    .footer {
+      max-width: 1760px;
+      margin: 26px auto 0;
+      color: var(--muted);
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+    }
+    @media (max-width: 1180px) {
+      .workbench { grid-template-columns: 1fr; }
+      .metrics, .coverage, .charts { grid-template-columns: 1fr 1fr; }
+      .example { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 760px) {
+      .page { padding: 18px; }
+      .metrics, .coverage, .charts { grid-template-columns: 1fr; }
+      .doc-context, .ribbon, .table-head, .filters { align-items: stretch; flex-direction: column; }
+      .search { margin-left: 0; padding-right: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar"></div>
+  <main class="page">
+    <div class="workbench">
+      <aside class="rail">
+        <div class="rail-section">
+          <h2>Add Policy Documents</h2>
+          <div class="drop">
+            <div style="font-size:28px;">Upload</div>
+            <b>Click to browse</b>
+            PDF, Word, TXT, MD, Excel, CSV or image
+          </div>
+        </div>
+        <div class="rail-head">
+          <span>Documents <span class="chip">1</span></span>
+          <span>Grid · Merged · Refresh · Delete</span>
+        </div>
+        <div class="doc-card">
+          <div class="doc-title">
+            <span>company_RCM.xlsx</span>
+            <span style="color:var(--red)">Delete</span>
+          </div>
+          <div class="chips">
+            <span class="chip">149 controls</span>
+            <span class="chip">Governance · 131</span>
+            <span class="chip green">Access Control · 16</span>
+            <span class="chip amber">Cryptography · 2</span>
+          </div>
+          <div class="doc-stats">
+            <span>Quality Score<b>2.85/6</b></span>
+            <span>Mapped<b style="color:var(--green)">57.7%</b></span>
+            <span>Duplicates<b style="color:#a36a00">33</b></span>
+            <span>Obligation Links<b>131</b></span>
+          </div>
+        </div>
+      </aside>
+
+      <section class="canvas">
+        <div class="canvas-bar">
+          <span>Collapse document panel</span>
+          <button class="ghost">Map Obligations</button>
+        </div>
+        <div class="content">
+          <div class="doc-context">
+            <div>
+              <div class="eyebrow">Active Document</div>
+              <h1>company_RCM.xlsx</h1>
+            </div>
+            <div class="tabs">
+              <span class="tab">Overview</span>
+              <span class="tab active">Quality Analysis</span>
+              <span class="tab">Document</span>
+              <span class="tab">Merged</span>
+            </div>
+          </div>
+
+          <section class="ribbon">
+            <div>
+              <h2>5W1H Analysis Complete</h2>
+              <p>149 controls assessed across 3 process areas · 86 controls mapped to obligations</p>
+            </div>
+            <button class="primary">Export Full Report</button>
+          </section>
+
+          <section class="metrics">
+            <div class="card purple">
+              <div class="label">Total Controls Assessed</div>
+              <div class="value">149</div>
+              <div class="sub">across 3 process areas</div>
+            </div>
+            <div class="card">
+              <div class="label">Avg Quality Score</div>
+              <div class="value">2.85<span>/6</span></div>
+              <div class="bar"><div style="width:47%;background:linear-gradient(90deg,var(--red),var(--amber),var(--green));"></div></div>
+              <div class="sub">mean 5W1H elements present</div>
+            </div>
+            <div class="card red">
+              <div class="label">Requires Improvement</div>
+              <div class="value">71.1%</div>
+              <div class="sub">106 controls (amber + red)</div>
+            </div>
+            <div class="card green">
+              <div class="label">Green - No Action</div>
+              <div class="value">43</div>
+              <div class="sub">28.9% of corpus</div>
+            </div>
+          </section>
+
+          <section class="coverage">
+            <div class="card">
+              <div class="label">Controls-Obligations Coverage</div>
+              <div class="value" style="color:var(--green)">57.7%</div>
+              <div class="bar"><div style="width:58%;background:var(--green);"></div></div>
+              <div class="sub">86 of 149 controls mapped</div>
+            </div>
+            <div class="card purple">
+              <div class="label">Avg Obligation Match Score</div>
+              <div class="value" style="color:var(--purple)">0.215/1.0</div>
+              <div class="bar"><div style="width:22%;background:var(--purple);"></div></div>
+              <div class="sub">across 131 obligation links</div>
+            </div>
+            <div class="card amber">
+              <div class="label">Potential Duplicates</div>
+              <div class="value" style="color:#a36a00">33</div>
+              <div class="sub">149 raw to 116 merged</div>
+            </div>
+          </section>
+
+          <section class="charts">
+            <div class="panel">
+              <h3>RAG Distribution</h3>
+              <p>Quality rating across all 149 controls</p>
+              <div class="donut"><div>149</div></div>
+              <div class="legend-row"><span><i class="dot" style="background:var(--green)"></i>Green (0-1 missing)</span><b>43</b></div>
+              <div class="legend-row"><span><i class="dot" style="background:var(--amber)"></i>Amber (2 missing)</span><b>56</b></div>
+              <div class="legend-row"><span><i class="dot" style="background:var(--red)"></i>Red (3+ missing)</span><b>50</b></div>
+            </div>
+            <div class="panel">
+              <h3>5W1H Element Prevalence</h3>
+              <p>Controls with each element present</p>
+              <div class="hbar">WHAT <span style="width:78%;background:#38cc92"></span></div>
+              <div class="hbar">WHERE <span style="width:77%;background:#8b5cf6"></span></div>
+              <div class="hbar">HOW <span style="width:64%;background:#ec4899"></span></div>
+              <div class="hbar">WHEN <span style="width:48%;background:#10b981"></span></div>
+              <div class="hbar">WHY <span style="width:46%;background:#0ea5e9"></span></div>
+              <div class="hbar">WHO <span style="width:29%;background:#1e49e2"></span></div>
+            </div>
+            <div class="panel">
+              <h3>Quality RAG by Process Area</h3>
+              <p>Green / Amber / Red breakdown per area</p>
+              <div class="stack">governance <span class="stack-bar"></span></div>
+              <div class="stack">access_control <span style="height:28px;width:50px;border-radius:7px;background:var(--red);"></span></div>
+              <div class="stack">cryptography <span style="height:28px;width:10px;border-radius:7px;background:var(--red);"></span></div>
+            </div>
+          </section>
+
+          <section class="examples-head">
+            <h2>Example Control Assessments</h2>
+            <div class="example-tabs">
+              <span class="tab active"><i class="dot" style="background:var(--green)"></i>Green - 6/6</span>
+              <span class="tab"><i class="dot" style="background:var(--amber)"></i>Amber - 4/6</span>
+              <span class="tab"><i class="dot" style="background:var(--red)"></i>Red - 2/6</span>
+            </div>
+          </section>
+
+          <section class="example">
+            <div>
+              <div class="label">Control Text (CTRL-0189)</div>
+              <p class="quote">"<mark>The IRM Governance team</mark> will <mark class="what">review all policy and configuration changes</mark> <mark class="where">through the SIEM platform, via Splunk audit logs</mark> <mark class="how">triggered automatically</mark> <mark class="when">on a daily basis</mark> <mark class="why">to identify unauthorised changes before they impact system integrity</mark>."</p>
+              <p style="font-weight:900;color:var(--green)">Score: 6 / 6 · GREEN - No action required</p>
+            </div>
+            <div>
+              <div class="label" style="margin-bottom:16px;">5W1H Assessment</div>
+              <div class="assessment">
+                <div class="assessment-row"><b style="color:#1e40af">WHO</b><span>IRM Governance team</span><b>Present</b></div>
+                <div class="assessment-row"><b style="color:#006f45">WHAT</b><span>Review all policy and configuration changes</span><b>Present</b></div>
+                <div class="assessment-row"><b style="color:#9a5e00">WHERE</b><span>SIEM platform / Splunk audit logs</span><b>Present</b></div>
+                <div class="assessment-row"><b style="color:#6b20d9">HOW</b><span>Triggered automatically to monitored inbox</span><b>Present</b></div>
+                <div class="assessment-row missing"><b style="color:#b30e66">WHEN</b><span>Missing in selected amber example</span><b>Missing</b></div>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <div class="table-head">
+              <div>
+                <div class="eyebrow">Control Detail</div>
+                <h2>5W1H Scores by Control</h2>
+              </div>
+              <button class="primary">Export CSV</button>
+            </div>
+            <div class="filters">
+              <span class="filter active">All (149)</span>
+              <span class="filter">Red (50)</span>
+              <span class="filter">Amber (56)</span>
+              <span class="filter">Green (43)</span>
+              <span class="search">Search...</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Control ID</th><th>Control Text</th><th>Process Area</th>
+                    <th class="center">WHO</th><th class="center">WHAT</th><th class="center">WHERE</th><th class="center">HOW</th><th class="center">WHEN</th><th class="center">WHY</th>
+                    <th class="center">Score</th><th class="center">RAG</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="id">A.5.1.1</td><td>A set of policies for information security shall be defined, approved by management...</td><td>governance</td>
+                    <td class="center">X</td><td class="center">X</td><td class="center">X</td><td class="center">X</td><td class="center">X</td><td class="center">X</td>
+                    <td class="center"><span class="pill">0/6</span></td><td class="center"><span class="pill">Red</span></td>
+                  </tr>
+                  <tr>
+                    <td class="id">A.5.1.2</td><td>The policies for information security shall be reviewed at planned intervals...</td><td>governance</td>
+                    <td class="center">X</td><td class="center">X</td><td class="center">X</td><td class="center">X</td><td class="center">X</td><td class="center">X</td>
+                    <td class="center"><span class="pill">0/6</span></td><td class="center"><span class="pill">Red</span></td>
+                  </tr>
+                  <tr>
+                    <td class="id">A.6.1.1</td><td>All information security responsibilities shall be defined and allocated.</td><td>governance</td>
+                    <td class="center">X</td><td class="center">X</td><td class="center">X</td><td class="center">X</td><td class="center">X</td><td class="center">X</td>
+                    <td class="center"><span class="pill">0/6</span></td><td class="center"><span class="pill">Red</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </section>
+    </div>
+    <div class="footer">
+      <span>© 2026 KPMG Assurance and Consulting Services LLP. All rights reserved.</span>
+      <span class="chip">CONFIDENTIAL</span>
+    </div>
+  </main>
+</body>
+</html>

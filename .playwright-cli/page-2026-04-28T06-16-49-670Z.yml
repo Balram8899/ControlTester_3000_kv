@@ -1,0 +1,77 @@
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e6]: KPMG
+        - generic [ref=e7]: "|"
+        - generic [ref=e8]: TRACE
+        - generic [ref=e9]:
+          - generic [ref=e10]: /
+          - generic [ref=e11]: Agentic Controls Platform
+      - generic [ref=e12]:
+        - generic [ref=e13]: Secure
+        - generic [ref=e15]:
+          - img [ref=e16]
+          - text: Restricted access
+    - generic [ref=e19]:
+      - generic [ref=e20]:
+        - img [ref=e22]
+        - generic:
+          - generic [ref=e51]:
+            - img [ref=e53]
+            - generic [ref=e56]:
+              - paragraph [ref=e57]: 1,259
+              - paragraph [ref=e58]: Controls mapped
+          - generic [ref=e59]:
+            - img [ref=e61]
+            - generic [ref=e65]:
+              - paragraph [ref=e66]: "97"
+              - paragraph [ref=e67]: Obligations active
+          - generic [ref=e68]:
+            - img [ref=e70]
+            - generic [ref=e72]:
+              - paragraph [ref=e73]: "380"
+              - paragraph [ref=e74]: Risks identified
+          - generic [ref=e75]:
+            - img [ref=e77]
+            - generic [ref=e79]:
+              - paragraph [ref=e80]: 84%
+              - paragraph [ref=e81]: Coverage score
+        - img [ref=e83]
+        - generic [ref=e86]:
+          - paragraph [ref=e87]: Agentic Controls Platform
+          - heading "Automate. Detect. Act." [level=2] [ref=e88]:
+            - text: Automate.
+            - text: Detect.
+            - text: Act.
+          - paragraph [ref=e89]: Continuous control monitoring, regulatory gap analysis, and audit-ready evidence — at machine speed.
+      - generic [ref=e91]:
+        - generic [ref=e92]:
+          - generic [ref=e94]:
+            - generic [ref=e95]:
+              - img [ref=e96]
+              - generic [ref=e99]: TRACE workspace
+            - heading "Sign In" [level=1] [ref=e100]
+            - paragraph [ref=e101]: Access your agentic controls environment. Authorised users only.
+          - generic [ref=e102]:
+            - generic [ref=e103]:
+              - generic [ref=e104]: Username
+              - textbox "Username" [ref=e105]:
+                - /placeholder: admin@bank.com
+                - text: admin@bank.com
+            - generic [ref=e106]:
+              - generic [ref=e107]: Password
+              - textbox "Password" [ref=e108]:
+                - /placeholder: Enter password
+            - button "Sign In" [ref=e109] [cursor=pointer]:
+              - text: Sign In
+              - img
+          - paragraph [ref=e110]:
+            - text: New user?
+            - button "Create an account" [ref=e111] [cursor=pointer]
+        - paragraph [ref=e112]: © 2026 KPMG India — TRACE confidential · Unauthorised access is prohibited
+    - contentinfo [ref=e113]:
+      - generic [ref=e114]: © 2026 KPMG Assurance and Consulting Services LLP, an Indian Limited Liability Partnership and a member firm of the KPMG global organization of independent member firms affiliated with KPMG International Limited, a private English company limited by guarantee. All rights reserved.
+      - generic [ref=e115]: Confidential

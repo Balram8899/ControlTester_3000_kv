@@ -1,0 +1,231 @@
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list
+  - generic [ref=e280]:
+    - complementary [ref=e281]:
+      - button "Expand sidebar" [ref=e283] [cursor=pointer]:
+        - img [ref=e284]
+      - navigation [ref=e286]:
+        - generic [ref=e287]:
+          - button [ref=e288] [cursor=pointer]:
+            - img [ref=e289]
+          - button [ref=e294] [cursor=pointer]:
+            - img [ref=e295]
+          - button [ref=e297] [cursor=pointer]:
+            - img [ref=e298]
+          - button [ref=e301] [cursor=pointer]:
+            - img [ref=e302]
+          - button [ref=e304] [cursor=pointer]:
+            - img [ref=e305]
+          - button [ref=e309] [cursor=pointer]:
+            - img [ref=e310]
+          - button [ref=e313] [cursor=pointer]:
+            - img [ref=e314]
+          - button [ref=e319] [cursor=pointer]:
+            - img [ref=e320]
+          - button [ref=e325] [cursor=pointer]:
+            - img [ref=e326]
+          - button [ref=e328] [cursor=pointer]:
+            - img [ref=e329]
+          - button [ref=e332] [cursor=pointer]:
+            - img [ref=e333]
+          - button [ref=e335] [cursor=pointer]:
+            - img [ref=e336]
+          - button [ref=e338] [cursor=pointer]:
+            - img [ref=e339]
+      - generic [ref=e345]: A
+    - generic [ref=e346]:
+      - main [ref=e347]:
+        - generic [ref=e351]:
+          - generic [ref=e352]:
+            - generic [ref=e353]:
+              - generic [ref=e354]:
+                - generic [ref=e355]:
+                  - generic [ref=e356]: SOP Uplift
+                  - generic [ref=e357]: /
+                  - generic [ref=e358]: Cases
+                  - generic [ref=e359]: /
+                  - generic [ref=e360]: Vendor Onboarding
+                - generic [ref=e361]:
+                  - heading "Vendor Onboarding - SOP Uplift" [level=1] [ref=e362]
+                  - generic [ref=e363]: "Case status: In progress"
+              - generic [ref=e364]:
+                - button "Run Extraction" [disabled]:
+                  - img
+                  - text: Run Extraction
+                - button "Case Actions" [ref=e365] [cursor=pointer]:
+                  - text: Case Actions
+                  - img
+                - button [ref=e366] [cursor=pointer]:
+                  - img
+            - generic [ref=e367]:
+              - button "1 Upload & Tag Documents" [ref=e368] [cursor=pointer]:
+                - generic [ref=e369]: "1"
+                - text: Upload & Tag Documents
+              - button "2 Extract & Analyze" [ref=e370] [cursor=pointer]:
+                - generic [ref=e371]: "2"
+                - text: Extract & Analyze
+              - button "3 Review Suggestions" [active] [ref=e372] [cursor=pointer]:
+                - generic [ref=e373]: "3"
+                - text: Review Suggestions
+              - button "4 Generate Outputs" [ref=e374] [cursor=pointer]:
+                - generic [ref=e375]: "4"
+                - text: Generate Outputs
+          - generic [ref=e665]:
+            - complementary [ref=e666]:
+              - generic [ref=e667]:
+                - heading "Case explorer" [level=3] [ref=e668]
+                - textbox "Search files..." [ref=e669]
+              - generic [ref=e670]:
+                - generic [ref=e672]:
+                  - generic [ref=e673]: SOPs
+                  - generic [ref=e674]: "1"
+                - generic [ref=e677]:
+                  - generic [ref=e678]: Policies & Procedures
+                  - generic [ref=e679]: "2"
+                - generic [ref=e682]:
+                  - generic [ref=e683]: Risk / Control Matrices
+                  - generic [ref=e684]: "2"
+                - generic [ref=e687]:
+                  - generic [ref=e688]: Risk Registers
+                  - generic [ref=e689]: "1"
+                - generic [ref=e692]:
+                  - generic [ref=e693]: Evidence
+                  - generic [ref=e694]: "5"
+                - generic [ref=e697]:
+                  - generic [ref=e698]: Diagrams
+                  - generic [ref=e699]: "2"
+                - generic [ref=e702]:
+                  - generic [ref=e703]: Audit Reports
+                  - generic [ref=e704]: "1"
+                - generic [ref=e706]:
+                  - paragraph [ref=e707]: Filters
+                  - generic [ref=e708]:
+                    - text: Show only mapped
+                    - checkbox "Show only mapped" [checked] [ref=e709]
+                  - generic [ref=e710]:
+                    - generic [ref=e712]: Clarity / Improvement
+                    - generic [ref=e713]: "6"
+                  - generic [ref=e714]:
+                    - generic [ref=e716]: Ownership / Evidence Gap
+                    - generic [ref=e717]: "5"
+                  - generic [ref=e718]:
+                    - generic [ref=e720]: Missing Control / Risk Gap
+                    - generic [ref=e721]: "4"
+                  - generic [ref=e722]:
+                    - generic [ref=e724]: Accepted
+                    - generic [ref=e725]: "0"
+            - main [ref=e726]:
+              - generic [ref=e727]:
+                - generic [ref=e728]:
+                  - paragraph [ref=e729]: SOP Review
+                  - heading "Vendor Onboarding - SOP Uplift" [level=3] [ref=e730]
+                - generic [ref=e731]:
+                  - button "Continue Analysis" [disabled]
+                  - generic [ref=e732]: 100%
+                  - img [ref=e733]
+              - article [ref=e737]:
+                - heading "3.0 Vendor Due Diligence" [level=2] [ref=e738]
+                - paragraph [ref=e739]: The purpose of vendor due diligence is to ensure that third-party vendors meet our risk, compliance, and operational requirements.
+                - generic [ref=e740]:
+                  - heading "3.1 Initial screening" [level=3] [ref=e741]
+                  - generic [ref=e742]:
+                    - paragraph [ref=e743]: The Business Owner submits a vendor onboarding request and provides core vendor information.
+                    - button "Analyze this section" [disabled]
+                - generic [ref=e744]:
+                  - heading "3.2 Risk assessment" [level=3] [ref=e745]
+                  - generic [ref=e746]:
+                    - paragraph [ref=e747]: Due diligence includes financial stability analysis, compliance checks, sanctions screening, and reference verification.
+                    - button "Analyze this section" [disabled]
+                  - paragraph [ref=e749]: "Clarify exception approval owner: Name the accountable owner for exception approvals and define review cadence."
+                - generic [ref=e750]:
+                  - heading "3.3 Contracting & approval" [level=3] [ref=e751]
+                  - generic [ref=e752]:
+                    - paragraph [ref=e753]: High-risk vendors require approval from the third-party risk committee prior to onboarding.
+                    - button "Analyze this section" [disabled]
+                  - paragraph [ref=e755]: "Add evidence retention instruction: Specify the evidence record retained after quarterly control performance."
+                - generic [ref=e756]:
+                  - heading "3.4 Ongoing monitoring" [level=3] [ref=e757]
+                  - generic [ref=e758]:
+                    - paragraph [ref=e759]: Contracts must include confidentiality, data protection, and right-to-audit clauses as per the standard template.
+                    - button "Analyze this section" [disabled]
+                - generic [ref=e760]:
+                  - heading "3.5 Offboarding" [level=3] [ref=e761]
+                  - generic [ref=e762]:
+                    - paragraph [ref=e763]: Monitor vendor performance at least annually, including financial health, service quality, and compliance status.
+                    - button "Analyze this section" [disabled]
+                  - paragraph [ref=e765]: "Make the reconciliation step testable: Replace broad activity language with an observable performer, frequency, and artifact."
+            - complementary [ref=e766]:
+              - generic [ref=e767]:
+                - generic [ref=e768]:
+                  - heading "Suggestion Queue (3)" [level=3] [ref=e769]
+                  - generic [ref=e770]: 3 open
+                - generic [ref=e771]:
+                  - generic [ref=e772]:
+                    - generic [ref=e773]:
+                      - generic [ref=e774]:
+                        - generic [ref=e775]: medium
+                        - heading "Clarify exception approval owner" [level=4] [ref=e776]
+                      - generic [ref=e777]: open
+                    - paragraph [ref=e778]: Name the accountable owner for exception approvals and define review cadence.
+                    - generic [ref=e780]: Case chat and SOP section context
+                    - textbox "User override / edited recommendation" [ref=e781]
+                    - generic [ref=e782]:
+                      - button "Accept" [ref=e783] [cursor=pointer]
+                      - button "Edit" [ref=e784] [cursor=pointer]
+                      - button "Reject" [ref=e785] [cursor=pointer]
+                  - generic [ref=e786]:
+                    - generic [ref=e787]:
+                      - generic [ref=e788]:
+                        - generic [ref=e789]: high
+                        - heading "Add evidence retention instruction" [level=4] [ref=e790]
+                      - generic [ref=e791]: open
+                    - paragraph [ref=e792]: Specify the evidence record retained after quarterly control performance.
+                    - generic [ref=e794]: Evidence bucket pending
+                    - textbox "User override / edited recommendation" [ref=e795]
+                    - generic [ref=e796]:
+                      - button "Accept" [ref=e797] [cursor=pointer]
+                      - button "Edit" [ref=e798] [cursor=pointer]
+                      - button "Reject" [ref=e799] [cursor=pointer]
+                  - generic [ref=e800]:
+                    - generic [ref=e801]:
+                      - generic [ref=e802]:
+                        - generic [ref=e803]: medium
+                        - heading "Make the reconciliation step testable" [level=4] [ref=e804]
+                      - generic [ref=e805]: open
+                    - paragraph [ref=e806]: Replace broad activity language with an observable performer, frequency, and artifact.
+                    - generic [ref=e808]: SOP clarity analysis
+                    - textbox "User override / edited recommendation" [ref=e809]
+                    - generic [ref=e810]:
+                      - button "Accept" [ref=e811] [cursor=pointer]
+                      - button "Edit" [ref=e812] [cursor=pointer]
+                      - button "Reject" [ref=e813] [cursor=pointer]
+              - generic [ref=e814]:
+                - generic [ref=e815]:
+                  - generic [ref=e816]:
+                    - heading "Case chat" [level=3] [ref=e817]
+                    - paragraph [ref=e818]: Scoped to this case only
+                  - generic [ref=e819]: BETA
+                - generic [ref=e820]:
+                  - generic [ref=e821]:
+                    - generic [ref=e822]:
+                      - img [ref=e823]
+                      - text: Trace Agent
+                    - paragraph [ref=e826]: Confirm the process owner for exception approvals?
+                  - generic [ref=e827]:
+                    - generic [ref=e828]:
+                      - img [ref=e829]
+                      - text: You
+                    - paragraph [ref=e831]: Operations Risk reviews exceptions weekly.
+                  - generic [ref=e832]:
+                    - generic [ref=e833]:
+                      - img [ref=e834]
+                      - text: Trace Agent
+                    - paragraph [ref=e837]: Should Compliance be an approver for high-risk exceptions?
+                - generic [ref=e839]:
+                  - textbox "Add case context for the agent..." [ref=e840]
+                  - button [ref=e841] [cursor=pointer]:
+                    - img
+      - contentinfo [ref=e662]:
+        - generic [ref=e663]: © 2026 KPMG Assurance and Consulting Services LLP, an Indian Limited Liability Partnership and a member firm of the KPMG global organization of independent member firms affiliated with KPMG International Limited, a private English company limited by guarantee. All rights reserved.
+        - generic [ref=e664]: Confidential

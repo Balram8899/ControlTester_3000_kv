@@ -1,7 +1,7 @@
 services:
   mongodb:
     image: mongo:7
-    container_name: mongodb
+    container_name: mongodb_Trace_KV
     restart: unless-stopped
     ports:
       - "27017:27017"
@@ -26,6 +26,9 @@ services:
       - OLLAMA_LLM_MODEL=${OLLAMA_LLM_MODEL:-llama3:latest}
       - OLLAMA_EMBEDDING_MODEL=${OLLAMA_EMBEDDING_MODEL:-nomic-embed-text:latest}
       - MONGO_URI=mongodb://mongodb:27017
+      - SOP_UPLIFT_DEFAULT_BATCH_SIZE=${SOP_UPLIFT_DEFAULT_BATCH_SIZE:-5}
+      - SOP_UPLIFT_MAX_CHUNK_CHARS=${SOP_UPLIFT_MAX_CHUNK_CHARS:-4000}
+      - SOP_UPLIFT_MAX_CHUNKS_PER_CASE=${SOP_UPLIFT_MAX_CHUNKS_PER_CASE:-200}
     depends_on:
       mongodb:
         condition: service_started
@@ -44,7 +47,7 @@ services:
     build:
       context: ./kpmg_ui
       dockerfile: Dockerfile
-    container_name: agent_assess_web
+    container_name: agent_assess_web_Trace_KV
     restart: unless-stopped
     ports:
       - "5000:5000"
