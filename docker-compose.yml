@@ -25,6 +25,10 @@ services:
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
       - OLLAMA_LLM_MODEL=${OLLAMA_LLM_MODEL:-llama3:latest}
       - OLLAMA_EMBEDDING_MODEL=${OLLAMA_EMBEDDING_MODEL:-nomic-embed-text:latest}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_LLM_MODEL=${OPENAI_LLM_MODEL:-gpt-5.5}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - ANTHROPIC_LLM_MODEL=${ANTHROPIC_LLM_MODEL:-claude-opus-4-7}
       - MONGO_URI=mongodb://mongodb:27017
       - SOP_UPLIFT_DEFAULT_BATCH_SIZE=${SOP_UPLIFT_DEFAULT_BATCH_SIZE:-5}
       - SOP_UPLIFT_MAX_CHUNK_CHARS=${SOP_UPLIFT_MAX_CHUNK_CHARS:-4000}
@@ -38,10 +42,10 @@ services:
       - appnet
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\" || exit 1"]
-      interval: 30s
-      timeout: 10s
+      interval: 5s
+      timeout: 5s
       retries: 5
-      start_period: 30s
+      start_period: 10s
 
   web_ui_agent:
     build:
@@ -61,10 +65,10 @@ services:
       - appnet
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:5000/login > /dev/null || exit 1"]
-      interval: 30s
+      interval: 5s
       timeout: 5s
       retries: 5
-      start_period: 30s
+      start_period: 10s
     deploy:
       resources:
         limits:
