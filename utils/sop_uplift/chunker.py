@@ -8,6 +8,7 @@ def build_chunks(
     markdown: str,
     anchors: list[dict[str, Any]],
     document_id: str,
+    file_id: str = "",
     max_chars: int = 2400,
 ) -> list[dict[str, Any]]:
     chunks: list[dict[str, Any]] = []
@@ -25,6 +26,7 @@ def build_chunks(
             {
                 "chunk_id": f"{document_id}_chunk_{chunk_index + 1}",
                 "document_id": document_id,
+                "file_id": file_id,
                 "content": content,
                 "anchor_ids": [block["anchor_id"] for block in current_blocks],
                 "section_paths": [block.get("section_path", []) for block in current_blocks],

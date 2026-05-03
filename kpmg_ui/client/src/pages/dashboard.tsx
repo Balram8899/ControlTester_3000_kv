@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useCrossNav } from "@/contexts/CrossNavContext";
 import { useLibraryMetrics } from "@/contexts/LibraryMetricsContext";
@@ -104,6 +105,22 @@ function AnalysisSkeleton() {
   );
 }
 
+type SystemStatusSnapshot = {
+  active_provider?: string;
+  active_model?: string;
+  regulatory_library?: {
+    documents?: number;
+    status?: string;
+  };
+  controls_library?: {
+    documents?: number;
+    status?: string;
+  };
+  platform?: {
+    status?: string;
+  };
+};
+
 export default function DashboardPage() {
   const [, setLocation] = useLocation();
   const { setPendingQualityAnalysis } = useCrossNav();
@@ -136,13 +153,56 @@ export default function DashboardPage() {
     refreshMetrics,
   } = useLibraryMetrics();
 
-  const selectedModel = typeof window !== "undefined" ? localStorage.getItem("selectedModel") : null;
+  const [systemStatus, setSystemStatus] = useState<SystemStatusSnapshot | null>(null);
+  const [systemStatusLoading, setSystemStatusLoading] = useState(false);
   const hasAnalysisData = !analysisLoading && allControls.length > 0 && totalObligations > 0;
   const librariesLoaded = !loading && (regDocs.length > 0 || ctrlDocs.length > 0);
   const obligationCoverageColor =
     oblCoveragePct >= 75 ? "#009A44" : oblCoveragePct >= 50 ? "#EAAA00" : "#E5001B";
   const gapSeverityRatio = totalObligations > 0 ? gapObligations / totalObligations : 0;
   const gapColor = gapObligations === 0 ? "#009A44" : gapSeverityRatio > 0.2 ? "#E5001B" : "#EAAA00";
+  const activeModel = systemStatus?.active_model || "Not configured";
+  const activeProvider = systemStatus?.active_provider;
+  const regulatoryCount = systemStatus?.regulatory_library?.documents ?? regDocs.length;
+  const regulatoryState = systemStatus?.regulatory_library?.status || (regulatoryCount > 0 ? "loaded" : "empty");
+  const controlsCount = systemStatus?.controls_library?.documents ?? ctrlDocs.length;
+  const controlsState = systemStatus?.controls_library?.status || (controlsCount > 0 ? "loaded" : "empty");
+  const platformState = systemStatus?.platform?.status || "online";
+  const platformOnline = platformState.toLowerCase() === "online";
+
+  const refreshSystemStatus = async () => {
+    setSystemStatusLoading(true);
+    try {
+      const response = await fetch("/api/settings/system-status");
+      if (!response.ok) throw new Error(`Status ${response.status}`);
+      setSystemStatus(await response.json());
+    } catch {
+      setSystemStatus(previous => previous ?? {
+        active_model: "Unavailable",
+        regulatory_library: { documents: regDocs.length, status: regDocs.length > 0 ? "loaded" : "empty" },
+        controls_library: { documents: ctrlDocs.length, status: ctrlDocs.length > 0 ? "loaded" : "empty" },
+        platform: { status: "degraded" },
+      });
+    } finally {
+      setSystemStatusLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    refreshSystemStatus();
+    const interval = window.setInterval(refreshSystemStatus, 30000);
+    return () => window.clearInterval(interval);
+  }, []);
+
+  const refreshDashboard = () => {
+    refreshMetrics();
+    refreshSystemStatus();
+  };
+
+  const libraryStatusText = (count: number, state: string) => {
+    if (state === "unavailable") return "unavailable";
+    return count > 0 ? `${count} loaded` : "empty";
+  };
 
   return (
     <div className="flex h-full flex-col">
@@ -160,12 +220,12 @@ export default function DashboardPage() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={refreshMetrics}
-              disabled={loading}
+              onClick={refreshDashboard}
+              disabled={loading || systemStatusLoading}
               className="h-8 w-8 text-white/70 hover:bg-white/10 hover:text-white"
               title="Refresh"
             >
-              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+              <RefreshCw className={`h-3.5 w-3.5 ${loading || systemStatusLoading ? "animate-spin" : ""}`} />
             </Button>
           </div>
         }
@@ -465,15 +525,17 @@ export default function DashboardPage() {
                     <Database className="h-3.5 w-3.5 text-muted-foreground" />
                     <span className="text-xs text-muted-foreground">Active model</span>
                   </div>
-                  <span className="text-xs font-semibold text-[#0C233C]">{selectedModel || "None"}</span>
+                  <span className="max-w-[190px] truncate text-xs font-semibold text-[#0C233C]" title={activeProvider ? `${activeProvider} / ${activeModel}` : activeModel}>
+                    {activeModel}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Database className="h-3.5 w-3.5 text-muted-foreground" />
                     <span className="text-xs text-muted-foreground">Regulatory Library</span>
                   </div>
-                  <span className={`text-xs font-semibold ${regDocs.length > 0 ? "text-[var(--green)]" : "text-muted-foreground"}`}>
-                    {regDocs.length > 0 ? `${regDocs.length} loaded` : "empty"}
+                  <span className={`text-xs font-semibold ${regulatoryState === "loaded" ? "text-[var(--green)]" : "text-muted-foreground"}`}>
+                    {libraryStatusText(regulatoryCount, regulatoryState)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -481,16 +543,18 @@ export default function DashboardPage() {
                     <Database className="h-3.5 w-3.5 text-muted-foreground" />
                     <span className="text-xs text-muted-foreground">Controls Library</span>
                   </div>
-                  <span className={`text-xs font-semibold ${ctrlDocs.length > 0 ? "text-[var(--green)]" : "text-muted-foreground"}`}>
-                    {ctrlDocs.length > 0 ? `${ctrlDocs.length} loaded` : "empty"}
+                  <span className={`text-xs font-semibold ${controlsState === "loaded" ? "text-[var(--green)]" : "text-muted-foreground"}`}>
+                    {libraryStatusText(controlsCount, controlsState)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--green)] data-pulse" />
+                    <span className={`h-1.5 w-1.5 rounded-full ${platformOnline ? "bg-[var(--green)] data-pulse" : "bg-[var(--amber)]"}`} />
                     <span className="text-xs text-muted-foreground">Platform</span>
                   </div>
-                  <span className="text-xs font-semibold text-[var(--green)]">Online</span>
+                  <span className={`text-xs font-semibold ${platformOnline ? "text-[var(--green)]" : "text-[var(--amber)]"}`}>
+                    {platformOnline ? "Online" : "Degraded"}
+                  </span>
                 </div>
               </div>
             </div>

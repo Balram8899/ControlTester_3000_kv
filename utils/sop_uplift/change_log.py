@@ -15,6 +15,10 @@ def _counts(suggestions: list[dict[str, Any]]) -> dict[str, int]:
     }
 
 
+def _case_chat_inputs_captured(case: dict[str, Any]) -> int:
+    return sum(1 for message in case.get("case_chat", []) if message.get("role") == "user")
+
+
 def build_markdown_change_log(
     case: dict[str, Any],
     suggestions: list[dict[str, Any]],
@@ -56,6 +60,7 @@ def build_json_audit_log(
         "case_title": case.get("title", ""),
         "process_name": case.get("process_name", ""),
         "generated_at": datetime.utcnow().isoformat() + "Z",
+        "case_chat_inputs_captured": _case_chat_inputs_captured(case),
         "suggestion_counts": _counts(suggestions),
         "suggestions": suggestions,
         "outputs": outputs,

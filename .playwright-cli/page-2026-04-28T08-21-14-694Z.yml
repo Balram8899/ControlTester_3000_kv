@@ -1,0 +1,157 @@
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list
+  - generic [ref=e280]:
+    - complementary [ref=e281]:
+      - button "Expand sidebar" [ref=e283] [cursor=pointer]:
+        - img [ref=e284]
+      - navigation [ref=e286]:
+        - generic [ref=e287]:
+          - button [ref=e288] [cursor=pointer]:
+            - img [ref=e289]
+          - button [ref=e294] [cursor=pointer]:
+            - img [ref=e295]
+          - button [ref=e297] [cursor=pointer]:
+            - img [ref=e298]
+          - button [ref=e301] [cursor=pointer]:
+            - img [ref=e302]
+          - button [ref=e304] [cursor=pointer]:
+            - img [ref=e305]
+          - button [ref=e309] [cursor=pointer]:
+            - img [ref=e310]
+          - button [ref=e313] [cursor=pointer]:
+            - img [ref=e314]
+          - button [ref=e319] [cursor=pointer]:
+            - img [ref=e320]
+          - button [ref=e325] [cursor=pointer]:
+            - img [ref=e326]
+          - button [ref=e328] [cursor=pointer]:
+            - img [ref=e329]
+          - button [ref=e332] [cursor=pointer]:
+            - img [ref=e333]
+          - button [ref=e335] [cursor=pointer]:
+            - img [ref=e336]
+          - button [ref=e338] [cursor=pointer]:
+            - img [ref=e339]
+      - generic [ref=e345]: A
+    - generic [ref=e346]:
+      - main [ref=e347]:
+        - generic [ref=e351]:
+          - generic [ref=e352]:
+            - generic [ref=e353]:
+              - generic [ref=e354]:
+                - generic [ref=e355]:
+                  - generic [ref=e356]: SOP Uplift
+                  - generic [ref=e357]: /
+                  - generic [ref=e358]: Cases
+                  - generic [ref=e359]: /
+                  - generic [ref=e360]: Vendor Onboarding
+                - generic [ref=e361]:
+                  - heading "Vendor Onboarding - SOP Uplift" [level=1] [ref=e362]
+                  - generic [ref=e363]: "Case status: In progress"
+              - generic [ref=e364]:
+                - button "Run Extraction" [ref=e558] [cursor=pointer]:
+                  - img
+                  - text: Run Extraction
+                - button "Case Actions" [ref=e365] [cursor=pointer]:
+                  - text: Case Actions
+                  - img
+                - button [ref=e366] [cursor=pointer]:
+                  - img
+            - generic [ref=e367]:
+              - button "1 Upload & Tag Documents" [ref=e368] [cursor=pointer]:
+                - generic [ref=e369]: "1"
+                - text: Upload & Tag Documents
+              - button "2 Extract & Analyze" [active] [ref=e370] [cursor=pointer]:
+                - generic [ref=e371]: "2"
+                - text: Extract & Analyze
+              - button "3 Review Suggestions" [ref=e372] [cursor=pointer]:
+                - generic [ref=e373]: "3"
+                - text: Review Suggestions
+              - button "4 Generate Outputs" [ref=e374] [cursor=pointer]:
+                - generic [ref=e375]: "4"
+                - text: Generate Outputs
+          - generic [ref=e562]:
+            - complementary [ref=e563]:
+              - generic [ref=e564]:
+                - heading "Overall progress" [level=3] [ref=e565]
+                - generic [ref=e566]:
+                  - generic [ref=e567]:
+                    - generic [ref=e569]: Files uploaded
+                    - generic [ref=e570]: 0/18
+                  - generic [ref=e571]:
+                    - generic [ref=e573]: Converted to Markdown
+                    - generic [ref=e574]: 0/1
+                  - generic [ref=e575]:
+                    - generic [ref=e577]: Tagged
+                    - generic [ref=e578]: 0/1
+                  - generic [ref=e579]:
+                    - generic [ref=e581]: Extraction
+                    - generic [ref=e582]: queued
+                  - generic [ref=e583]:
+                    - generic [ref=e585]: Analysis
+                    - generic [ref=e586]: ready
+                  - generic [ref=e587]:
+                    - generic [ref=e589]: Outputs
+                    - generic [ref=e590]: not started
+              - generic [ref=e591]:
+                - heading "Pipeline settings" [level=3] [ref=e592]
+                - generic [ref=e593]:
+                  - text: LLM-assisted extraction
+                  - checkbox "LLM-assisted extraction" [ref=e594]
+                - button "Build case-local index" [ref=e595] [cursor=pointer]
+                - button "Run Extraction" [ref=e596] [cursor=pointer]:
+                  - img
+                  - text: Run Extraction
+              - generic [ref=e597]:
+                - heading "Case-local index" [level=3] [ref=e598]
+                - paragraph [ref=e599]: Searches uploaded case documents and case chat only.
+                - generic [ref=e600]:
+                  - generic [ref=e601]:
+                    - paragraph [ref=e602]: Entries
+                    - paragraph [ref=e603]: "0"
+                  - generic [ref=e604]:
+                    - paragraph [ref=e605]: Chunks
+                    - paragraph [ref=e606]: "0"
+                - generic [ref=e607]:
+                  - textbox "Search this case..." [ref=e608]
+                  - button "Search" [ref=e609] [cursor=pointer]
+            - main [ref=e610]:
+              - generic [ref=e611]:
+                - paragraph [ref=e612]: Document conversion
+                - paragraph [ref=e613]: "0"
+                - paragraph [ref=e614]: Converted source files to Markdown and anchor map.
+              - generic [ref=e615]:
+                - paragraph [ref=e616]: Case-local index
+                - paragraph [ref=e617]: "0"
+                - paragraph [ref=e618]: Indexed uploaded chunks, anchors, chat context, and suggestions.
+              - generic [ref=e619]:
+                - paragraph [ref=e620]: Suggestion generation
+                - paragraph [ref=e621]: "0"
+                - paragraph [ref=e622]: Created anchored recommendations ready for review.
+              - generic [ref=e623]:
+                - generic [ref=e624]:
+                  - generic [ref=e625]:
+                    - heading "Extraction workflow" [level=3] [ref=e626]
+                    - paragraph [ref=e627]: Case documents move from tagging into analysis, preview, and output generation.
+                  - button "Continue Analysis" [ref=e628] [cursor=pointer]
+                - generic [ref=e629]:
+                  - generic [ref=e630]:
+                    - generic [ref=e631]: "1"
+                    - heading "Upload & Tag Documents" [level=4] [ref=e632]
+                    - paragraph [ref=e633]: Files bucketed and tags confirmed.
+                  - generic [ref=e634]:
+                    - generic [ref=e635]: "2"
+                    - heading "Extract & Analyze" [level=4] [ref=e636]
+                    - paragraph [ref=e637]: Markdown, anchors, corpus map, and suggestions produced.
+                  - generic [ref=e638]:
+                    - generic [ref=e639]: "3"
+                    - heading "Review Suggestions" [level=4] [ref=e640]
+                    - paragraph [ref=e641]: Analyst accepts, edits, or rejects anchored recommendations.
+                  - generic [ref=e642]:
+                    - generic [ref=e643]: "4"
+                    - heading "Generate Outputs" [level=4] [ref=e644]
+                    - paragraph [ref=e645]: DOCX, diagram, change log, and audit log generated.
+      - contentinfo [ref=e555]:
+        - generic [ref=e556]: © 2026 KPMG Assurance and Consulting Services LLP, an Indian Limited Liability Partnership and a member firm of the KPMG global organization of independent member firms affiliated with KPMG International Limited, a private English company limited by guarantee. All rights reserved.
+        - generic [ref=e557]: Confidential

@@ -31,7 +31,7 @@ def _converted_files(uploaded_files: list[dict[str, Any]]) -> list[dict[str, Any
     for file in uploaded_files:
         conversion = file.get("conversion") or {}
         status = conversion.get("status") or file.get("conversion_status")
-        if status in (None, "converted", "success"):
+        if status in (None, "pending", "queued", "converted", "success"):
             converted.append(file)
     return converted
 
@@ -138,4 +138,3 @@ def compute_readiness(
         "warnings": warnings,
         "message": message,
     }
-

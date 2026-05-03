@@ -142,6 +142,19 @@ cd api
 python -m pytest tests/ -v
 ```
 
+### LLM model source of truth
+
+All backend features must pick up the active LLM provider and model from **Settings** through the shared helpers:
+
+- Use `utils.llm_provider.get_llm()` when you need a chat-model object.
+- Use `utils.llm_factory.make_llm()` when you need the string-output LangChain pipeline.
+- Use `utils.llm_factory.make_embeddings()` for embeddings.
+- Use `utils.llm_factory.resolve_llm_model_name()` only for legacy fields or logging; it returns the Settings-selected model.
+
+Do not read `GOOGLE_LLM_MODEL`, `OPENAI_LLM_MODEL`, `ANTHROPIC_LLM_MODEL`, `OLLAMA_LLM_MODEL`, or `LLM_PROVIDER` directly inside feature code. Those environment variables are only fallbacks used by `utils.llm_config_store` when no Settings document exists. New feature endpoints may keep old `selected_model` request fields for compatibility, but they must not let those fields override Settings.
+
+If the active provider is not configured or its API key is missing, feature code should fail clearly with `Check LLM settings` instead of silently switching models or falling back to local rules.
+
 ---
 
 ## Repository Layout

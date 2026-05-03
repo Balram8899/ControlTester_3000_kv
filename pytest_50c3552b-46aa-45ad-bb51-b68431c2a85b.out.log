@@ -1,0 +1,79 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+______ test_analyze_endpoint_can_generate_llm_suggestions_incrementally _______
+
+mock_get_store = <MagicMock name='get_store' id='1580234153424'>
+mock_run_json_prompt = <MagicMock name='run_json_prompt' id='1580240684112'>
+
+    @patch("api.routers.sop_uplift.run_json_prompt")
+    @patch("api.routers.sop_uplift.get_store")
+    def test_analyze_endpoint_can_generate_llm_suggestions_incrementally(mock_get_store, mock_run_json_prompt):
+        from api.main import app
+    
+        mock_run_json_prompt.return_value = PromptRunResult(
+            parsed=SopSuggestionResponse(
+                suggestions=[
+                    {
+                        "suggestion_id": "sug-llm",
+                        "type": "evidence_gap",
+                        "severity": "high",
+                        "anchor_id": "a1",
+                        "title": "Add evidence",
+                        "summary": "Name the retained evidence.",
+                        "suggested_text": "Retain the access review export.",
+                        "source_references": [{"anchor_id": "a1"}],
+                        "anchor_confidence": "high",
+                    }
+                ]
+            ),
+            raw="{}",
+            record={"stage": "sop_uplift_suggestions", "validation_status": "valid"},
+        )
+        stored = {
+            "case_id": "case-1",
+            "anchors": [
+                {"anchor_id": "a1", "block_type": "paragraph", "text": "Owner reviews users.", "section_path": ["Access Reviews"]},
+                {"anchor_id": "a2", "block_type": "paragraph", "text": "Evidence is retained.", "section_path": ["Access Reviews"]},
+            ],
+            "corpus_map": {"primary_process": "Access reviews"},
+            "chunks": [
+                {
+                    "chunk_id": "ctx-1",
+                    "document_id": "doc-rcm",
+                    "file_id": "rcm-file",
+                    "content": "Control C-12 requires Compliance approval evidence for access review exceptions.",
+                    "anchor_ids": ["rcm-anchor-1"],
+                }
+            ],
+            "suggestions": [],
+            "processing_state": {},
+            "prompt_runs": [],
+        }
+    
+        def update_case(_case_id, updates):
+            stored.update(updates)
+            return stored
+    
+        mock = MagicMock()
+        mock.get_case.side_effect = lambda _case_id: stored
+        mock.update_case.side_effect = update_case
+        mock_get_store.return_value = mock
+    
+        response = TestClient(app).post(
+            "/sop-uplift/cases/case-1/analyze",
+            json={"batch_size": 1, "section_ids": ["a1"], "use_llm": True},
+        )
+    
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["suggestions"][0]["suggestion_id"] == "sug-llm"
+>       assert payload["suggestions"][0]["created_from"] == "analysis"
+E       AssertionError: assert 'llm' == 'analysis'
+E         
+E         - analysis
+E         + llm
+
+tests\test_sop_uplift_api.py:409: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_sop_uplift_api.py::test_analyze_endpoint_can_generate_llm_suggestions_incrementally
+1 failed in 5.03s

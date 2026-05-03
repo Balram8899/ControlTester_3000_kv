@@ -8,29 +8,62 @@ from typing import Any
 
 import pymongo
 import gridfs
+from pymongo.errors import OperationFailure
 
 
 def utc_now() -> str:
     return datetime.utcnow().isoformat()
 
 
+def bucket_for_tag(tag: str | None) -> str | None:
+    return {
+        "sop": "sops",
+        "policy": "procedures",
+        "risk_control_matrix": "risk_control_matrices",
+        "risk_register": "risk_registers",
+        "control_inventory": "control_inventories",
+        "evidence": "evidence",
+        "process_diagram": "diagrams",
+        "audit_report": "audit_reports",
+        "supporting_material": "supporting_material",
+    }.get(tag or "")
+
+
 class SopUpliftCaseStore:
     def __init__(self, mongo_uri: str | None = None):
         uri = mongo_uri or os.environ.get("MONGO_URI", "mongodb://localhost:27017")
         self.client = pymongo.MongoClient(uri, serverSelectionTimeoutMS=1500)
-        self.db = self.client["trace_db"]
+        db_name = os.environ.get("SOP_UPLIFT_MONGO_DB", "trace_db")
+        self.db = self.client[db_name]
         self.col = self.db["sop_uplift_cases"]
         self.fs = gridfs.GridFS(self.db, collection="sop_uplift_files")
         self.is_connected = True
         try:
             self.client.admin.command("ping")
-            self.col.create_index("case_id", unique=True)
-            self.col.create_index("created_at")
+            self._ensure_indexes()
+        except OperationFailure as exc:
+            if "DatabaseDifferCase" not in str(exc) or db_name == "Trace_db":
+                self._use_memory_fallback()
+                return
+            self.db = self.client["Trace_db"]
+            self.col = self.db["sop_uplift_cases"]
+            self.fs = gridfs.GridFS(self.db, collection="sop_uplift_files")
+            try:
+                self._ensure_indexes()
+            except Exception:
+                self._use_memory_fallback()
         except Exception:
-            self.is_connected = False
-            self._memory: dict[str, dict[str, Any]] = {}
-            self._memory_files: dict[str, bytes] = {}
-            self._memory_outputs: dict[str, bytes] = {}
+            self._use_memory_fallback()
+
+    def _ensure_indexes(self) -> None:
+        self.col.create_index("case_id", unique=True)
+        self.col.create_index("created_at")
+
+    def _use_memory_fallback(self) -> None:
+        self.is_connected = False
+        self._memory: dict[str, dict[str, Any]] = {}
+        self._memory_files: dict[str, bytes] = {}
+        self._memory_outputs: dict[str, bytes] = {}
 
     def _case_template(self, data: dict[str, Any]) -> dict[str, Any]:
         now = utc_now()
@@ -98,6 +131,19 @@ class SopUpliftCaseStore:
 
     def delete_case(self, case_id: str) -> bool:
         if self.is_connected:
+            case = self.get_case(case_id)
+            if not case:
+                return False
+            from bson import ObjectId
+
+            for item in [*case.get("uploaded_files", []), *case.get("outputs", [])]:
+                gridfs_file_id = item.get("gridfs_file_id")
+                if not gridfs_file_id:
+                    continue
+                try:
+                    self.fs.delete(ObjectId(gridfs_file_id))
+                except Exception:
+                    pass
             return self.col.delete_one({"case_id": case_id}).deleted_count == 1
         return self._memory.pop(case_id, None) is not None
 
@@ -155,17 +201,26 @@ class SopUpliftCaseStore:
         file_meta = next((item for item in case.get("uploaded_files", []) if item.get("file_id") == file_id), None)
         if not file_meta:
             return None
+
+        def raw_b64_fallback() -> bytes | None:
+            if file_meta.get("raw_content_b64"):
+                import base64
+
+                return base64.b64decode(file_meta["raw_content_b64"])
+            return None
+
         if self.is_connected and file_meta.get("gridfs_file_id"):
-            from bson import ObjectId
-            return self.fs.get(ObjectId(file_meta["gridfs_file_id"])).read()
+            try:
+                from bson import ObjectId
+
+                return self.fs.get(ObjectId(file_meta["gridfs_file_id"])).read()
+            except Exception:
+                return raw_b64_fallback()
         if not self.is_connected:
             if not hasattr(self, "_memory_files"):
                 self._memory_files = {}
             return self._memory_files.get(f"{case_id}:{file_id}")
-        if file_meta.get("raw_content_b64"):
-            import base64
-            return base64.b64decode(file_meta["raw_content_b64"])
-        return None
+        return raw_b64_fallback()
 
     def delete_file(self, case_id: str, file_id: str) -> bool:
         case = self.get_case(case_id)
@@ -280,14 +335,26 @@ class SopUpliftCaseStore:
             return None
         tags = [item for item in case.get("document_tags", []) if item.get("file_id") != file_id]
         tags.append(tag)
-        self.update_case(case_id, {"document_tags": tags})
+        updates: dict[str, Any] = {"document_tags": tags}
+        corrected_bucket = bucket_for_tag(tag.get("confirmed_tag"))
+        if corrected_bucket:
+            files = []
+            for file_meta in case.get("uploaded_files", []):
+                if file_meta.get("file_id") == file_id:
+                    file_meta = dict(file_meta)
+                    file_meta.setdefault("original_bucket", file_meta.get("bucket", ""))
+                    file_meta["bucket"] = corrected_bucket
+                files.append(file_meta)
+            updates["uploaded_files"] = files
+        self.update_case(case_id, updates)
         return tag
 
-    def add_chat_message(self, case_id: str, role: str, content: str) -> dict[str, Any] | None:
+    def add_chat_message(self, case_id: str, role: str, content: str, context_snapshot: dict[str, Any] | None = None) -> dict[str, Any] | None:
         message = {
             "message_id": str(uuid.uuid4()),
             "role": role,
             "content": content,
+            "context_snapshot": context_snapshot or {},
             "created_at": utc_now(),
             "linked_suggestion_ids": [],
             "captured_context": {

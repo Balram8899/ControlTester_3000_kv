@@ -1,0 +1,501 @@
+
+> rest-express@1.0.0 dev
+> tsx scripts/dev-server.mjs
+
+Re-optimizing dependencies because lockfile has changed
+2:39:01 PM [express] serving on port 5000
+2:39:58 PM [express] GET /api/regulatory-library/documents 200 in 35ms
+2:39:58 PM [express] GET /api/controls-library/documents 200 in 36ms
+2:39:58 PM [express] GET /api/controls-library/all-controls 200 in 44ms
+2:39:58 PM [express] GET /api/controls-library/merged 200 in 53ms
+2:40:02 PM [express] GET /api/regulatory-library/documents 200 in 7ms
+2:40:02 PM [express] GET /api/rcm-reports 200 in 17ms
+2:40:02 PM [express] GET /api/controls-library/documents 200 in 17ms
+2:40:03 PM [express] GET /api/frameworks-library/documents 200 in 29ms
+2:40:03 PM [express] GET /api/risk-assessment 200 in 48ms
+2:40:03 PM [express] GET /api/risk-assessment/sections 200 in 49ms
+2:40:03 PM [express] GET /api/assets 200 in 50ms
+2:40:03 PM [express] GET /api/sop-uplift/cases 200 in 467ms
+2:40:03 PM [express] POST /api/load-vectorstore 200 in 424ms
+2:40:03 PM [express] POST /api/load-vectorstore 200 in 413ms
+2:40:03 PM [express] GET /api/models 304 in 429ms :: [{"value":"gemini-3-flash-preview","label":"gem…
+2:40:03 PM [express] GET /api/issues 200 in 423ms
+2:40:03 PM [express] GET /api/validation-queue 200 in 424ms
+2:40:03 PM [express] GET /api/regulatory-library/documents 200 in 10ms
+2:40:03 PM [express] GET /api/frameworks-library/all-elements 200 in 22ms
+2:40:03 PM [express] GET /api/controls-library/all-controls 200 in 23ms
+2:40:03 PM [express] GET /api/assets 200 in 17ms
+2:40:03 PM [express] GET /api/regulatory-library/all-obligations 200 in 9ms
+2:40:05 PM [express] GET /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00 200 in 40ms
+2:40:05 PM [express] GET /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/readiness 200 in…
+2:40:05 PM [express] GET /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/preview 200 in 2…
+2:40:05 PM [express] GET /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/index 200 in 16ms
+2:40:06 PM [express] GET /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/files/74a4e030-a…
+2:41:39 PM [express] GET /api/regulatory-library/documents 200 in 17ms
+2:41:39 PM [express] GET /api/rcm-reports 200 in 28ms
+2:41:39 PM [express] POST /api/load-vectorstore 200 in 18ms
+2:41:39 PM [express] GET /api/controls-library/documents 200 in 19ms
+2:41:39 PM [express] POST /api/load-vectorstore 200 in 13ms
+2:41:39 PM [express] GET /api/frameworks-library/documents 200 in 19ms
+2:41:39 PM [express] GET /api/models 304 in 20ms :: [{"value":"gemini-3-flash-preview","label":"gemi…
+2:41:39 PM [express] GET /api/risk-assessment/sections 200 in 72ms
+2:41:39 PM [express] GET /api/risk-assessment 200 in 75ms
+2:41:39 PM [express] GET /api/assets 200 in 75ms
+2:41:39 PM [express] GET /api/controls-library/all-controls 200 in 16ms
+2:41:39 PM [express] GET /api/regulatory-library/documents 200 in 40ms
+2:41:39 PM [express] GET /api/controls-library/merged 200 in 41ms
+2:41:39 PM [express] GET /api/controls-library/documents 200 in 32ms
+2:41:39 PM [express] GET /api/sop-uplift/cases 200 in 166ms
+2:41:39 PM [express] GET /api/frameworks-library/all-elements 200 in 53ms
+2:41:39 PM [express] GET /api/controls-library/all-controls 200 in 52ms
+2:41:39 PM [express] GET /api/regulatory-library/documents 200 in 18ms
+2:41:39 PM [express] GET /api/issues 200 in 125ms
+2:41:39 PM [express] GET /api/regulatory-library/all-obligations 200 in 16ms
+2:41:39 PM [express] GET /api/validation-queue 200 in 123ms
+2:41:39 PM [express] GET /api/assets 200 in 76ms
+2:41:45 PM [express] GET /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00 200 in 46ms
+2:41:45 PM [express] GET /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/readiness 200 in…
+2:41:45 PM [express] GET /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/preview 200 in 2…
+2:41:45 PM [express] GET /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/index 200 in 13ms
+2:41:47 PM [express] GET /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/files/74a4e030-a…
+2:41:58 PM [express] GET /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/files/74a4e030-a…
+2:42:03 PM [express] GET /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/files/4b6a853a-a…
+2:42:03 PM [express] GET /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/files/4b6a853a-a…
+2:42:08 PM [express] POST /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/run-pipeline 20…
+2:42:10 PM [express] GET /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/files/4b6a853a-a…
+2:42:16 PM [express] POST /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/run-pipeline 20…
+2:42:18 PM [express] GET /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/files/4b6a853a-a…
+2:42:30 PM [express] GET /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/files/4b6a853a-a…
+2:42:51 PM [express] POST /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/convert 200 in …
+2:42:51 PM [express] POST /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/tag-documents 2…
+2:42:51 PM [express] POST /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/build-index 200…
+2:42:51 PM [express] GET /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/files 200 in 9ms
+2:42:51 PM [express] GET /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/documents/tags 2…
+2:42:51 PM [express] GET /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/readiness 200 in…
+2:42:51 PM [express] GET /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/preview 200 in 3…
+2:42:51 PM [express] POST /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/convert 200 in …
+2:42:51 PM [express] POST /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/tag-documents 2…
+2:42:51 PM [express] POST /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/build-index 200…
+2:42:51 PM [express] GET /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/files 200 in 27ms
+2:42:51 PM [express] POST /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/convert 200 in …
+2:42:51 PM [express] GET /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/documents/tags 2…
+2:42:51 PM [express] GET /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/readiness 200 in…
+2:42:51 PM [express] GET /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/preview 200 in 3…
+2:42:52 PM [express] POST /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/tag-documents 2…
+2:42:52 PM [express] POST /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/build-index 200…
+2:42:52 PM [express] GET /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/files 200 in 9ms
+2:42:52 PM [express] GET /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/documents/tags 2…
+2:42:52 PM [express] GET /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/readiness 200 in…
+2:42:52 PM [express] GET /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00/preview 200 in 2…
+2:42:59 PM [express] DELETE /api/sop-uplift/cases/d6bf6188-3338-49f4-ad99-6f10276fdf00 204 in 17ms
+2:42:59 PM [express] GET /api/sop-uplift/cases 200 in 3ms
+2:43:11 PM [express] POST /api/sop-uplift/cases 201 in 7ms
+2:43:11 PM [express] GET /api/sop-uplift/cases 200 in 2ms
+2:43:17 PM [express] POST /api/sop-uplift/cases/f8ac654e-67c3-4791-8ea6-dfe27ca012f5/upload 201 in 1…
+2:43:17 PM [express] POST /api/sop-uplift/cases/f8ac654e-67c3-4791-8ea6-dfe27ca012f5/upload 201 in 7…
+2:43:17 PM [express] POST /api/sop-uplift/cases/f8ac654e-67c3-4791-8ea6-dfe27ca012f5/upload 201 in 4…
+2:43:17 PM [express] POST /api/sop-uplift/cases/f8ac654e-67c3-4791-8ea6-dfe27ca012f5/upload 201 in 6…
+2:43:17 PM [express] POST /api/sop-uplift/cases/f8ac654e-67c3-4791-8ea6-dfe27ca012f5/convert 200 in …
+2:43:18 PM [express] POST /api/sop-uplift/cases/f8ac654e-67c3-4791-8ea6-dfe27ca012f5/tag-documents 2…
+2:43:18 PM [express] POST /api/sop-uplift/cases/f8ac654e-67c3-4791-8ea6-dfe27ca012f5/build-index 200…
+2:43:18 PM [express] GET /api/sop-uplift/cases/f8ac654e-67c3-4791-8ea6-dfe27ca012f5/files 200 in 7ms
+2:43:18 PM [express] GET /api/sop-uplift/cases/f8ac654e-67c3-4791-8ea6-dfe27ca012f5/documents/tags 2…
+2:43:18 PM [express] GET /api/sop-uplift/cases/f8ac654e-67c3-4791-8ea6-dfe27ca012f5/readiness 200 in…
+2:43:18 PM [express] GET /api/sop-uplift/cases/f8ac654e-67c3-4791-8ea6-dfe27ca012f5/preview 200 in 2…
+2:43:18 PM [express] GET /api/sop-uplift/cases 200 in 43ms
+2:43:23 PM [express] POST /api/sop-uplift/cases/f8ac654e-67c3-4791-8ea6-dfe27ca012f5/run-pipeline 20…
+2:43:25 PM [express] GET /api/sop-uplift/cases/f8ac654e-67c3-4791-8ea6-dfe27ca012f5/files/7c8a780f-3…
+2:43:51 PM [express] GET /api/sop-uplift/cases/f8ac654e-67c3-4791-8ea6-dfe27ca012f5/files/7c8a780f-3…
+[2m2:45:17 pm[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/sop-uplift.integration.test.ts[22m
+2:45:18 PM [express] GET /api/regulatory-library/documents 200 in 12ms
+2:45:18 PM [express] GET /api/rcm-reports 200 in 16ms
+2:45:18 PM [express] GET /api/controls-library/documents 200 in 11ms
+2:45:18 PM [express] GET /api/frameworks-library/documents 200 in 14ms
+2:45:18 PM [express] POST /api/load-vectorstore 200 in 7ms
+2:45:18 PM [express] POST /api/load-vectorstore 200 in 2ms
+2:45:18 PM [express] GET /api/risk-assessment/sections 200 in 37ms
+2:45:18 PM [express] GET /api/assets 200 in 38ms
+2:45:18 PM [express] GET /api/risk-assessment 200 in 39ms
+2:45:18 PM [express] GET /api/models 304 in 8ms :: [{"value":"gemini-3-flash-preview","label":"gemin…
+2:45:18 PM [express] GET /api/issues 200 in 7ms
+2:45:18 PM [express] GET /api/controls-library/all-controls 200 in 17ms
+2:45:18 PM [express] GET /api/controls-library/documents 200 in 40ms
+2:45:18 PM [express] GET /api/regulatory-library/documents 200 in 43ms
+2:45:18 PM [express] GET /api/controls-library/merged 200 in 45ms
+2:45:18 PM [express] GET /api/sop-uplift/cases 200 in 131ms
+2:45:18 PM [express] GET /api/regulatory-library/documents 200 in 47ms
+2:45:18 PM [express] GET /api/validation-queue 200 in 97ms
+2:45:18 PM [express] GET /api/assets 200 in 75ms
+2:45:18 PM [express] GET /api/controls-library/all-controls 200 in 8ms
+2:45:18 PM [express] GET /api/frameworks-library/all-elements 200 in 20ms
+2:45:18 PM [express] GET /api/regulatory-library/all-obligations 200 in 20ms
+[2m2:46:09 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+2:46:10 PM [express] GET /api/sop-uplift/cases 200 in 47ms
+[2m2:46:41 pm[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/sop-uplift.integration.test.ts[22m
+2:46:42 PM [express] GET /api/regulatory-library/documents 200 in 12ms
+2:46:42 PM [express] GET /api/rcm-reports 200 in 17ms
+2:46:42 PM [express] POST /api/load-vectorstore 200 in 6ms
+2:46:42 PM [express] POST /api/load-vectorstore 200 in 8ms
+2:46:42 PM [express] GET /api/controls-library/documents 200 in 11ms
+2:46:42 PM [express] GET /api/risk-assessment/sections 200 in 30ms
+2:46:42 PM [express] GET /api/assets 200 in 31ms
+2:46:42 PM [express] GET /api/risk-assessment 200 in 32ms
+2:46:42 PM [express] GET /api/frameworks-library/documents 200 in 12ms
+2:46:42 PM [express] GET /api/controls-library/all-controls 200 in 16ms
+2:46:42 PM [express] GET /api/models 304 in 192ms :: [{"value":"gemini-3-flash-preview","label":"gem…
+2:46:42 PM [express] GET /api/controls-library/merged 200 in 182ms
+2:46:42 PM [express] GET /api/regulatory-library/documents 200 in 182ms
+2:46:42 PM [express] GET /api/sop-uplift/cases 200 in 236ms
+2:46:42 PM [express] GET /api/controls-library/documents 200 in 15ms
+2:46:42 PM [express] GET /api/frameworks-library/all-elements 200 in 19ms
+2:46:42 PM [express] GET /api/controls-library/all-controls 200 in 21ms
+2:46:42 PM [express] GET /api/regulatory-library/documents 200 in 22ms
+2:46:42 PM [express] GET /api/regulatory-library/all-obligations 200 in 17ms
+2:46:42 PM [express] GET /api/validation-queue 200 in 242ms
+2:46:42 PM [express] GET /api/issues 200 in 243ms
+2:46:42 PM [express] GET /api/assets 200 in 48ms
+[2m2:47:02 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+2:47:03 PM [express] GET /api/sop-uplift/cases 200 in 49ms
+[2m2:48:01 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+2:48:02 PM [express] GET /api/sop-uplift/cases 200 in 45ms
+[2m2:48:09 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+2:48:10 PM [express] GET /api/sop-uplift/cases 200 in 66ms
+[2m2:48:16 pm[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/sop-uplift.integration.test.ts[22m
+2:48:17 PM [express] GET /api/regulatory-library/documents 200 in 9ms
+2:48:17 PM [express] GET /api/rcm-reports 200 in 16ms
+2:48:17 PM [express] GET /api/controls-library/documents 200 in 14ms
+2:48:17 PM [express] GET /api/regulatory-library/documents 200 in 16ms
+2:48:17 PM [express] GET /api/risk-assessment/sections 200 in 33ms
+2:48:17 PM [express] GET /api/assets 200 in 34ms
+2:48:17 PM [express] GET /api/risk-assessment 200 in 36ms
+2:48:17 PM [express] GET /api/frameworks-library/documents 200 in 12ms
+2:48:17 PM [express] POST /api/load-vectorstore 200 in 9ms
+2:48:17 PM [express] POST /api/load-vectorstore 200 in 12ms
+2:48:17 PM [express] GET /api/models 304 in 55ms :: [{"value":"gemini-3-flash-preview","label":"gemi…
+2:48:17 PM [express] GET /api/sop-uplift/cases 200 in 93ms
+2:48:17 PM [express] GET /api/controls-library/all-controls 200 in 58ms
+2:48:17 PM [express] GET /api/controls-library/merged 200 in 59ms
+2:48:17 PM [express] GET /api/regulatory-library/documents 200 in 22ms
+2:48:17 PM [express] GET /api/controls-library/documents 200 in 24ms
+2:48:17 PM [express] GET /api/regulatory-library/all-obligations 200 in 15ms
+2:48:17 PM [express] GET /api/frameworks-library/all-elements 200 in 18ms
+2:48:17 PM [express] GET /api/controls-library/all-controls 200 in 18ms
+2:48:17 PM [express] GET /api/issues 200 in 99ms
+2:48:17 PM [express] GET /api/validation-queue 200 in 92ms
+2:48:17 PM [express] GET /api/assets 200 in 31ms
+2:56:34 PM [express] GET /api/regulatory-library/documents 200 in 19ms
+2:56:34 PM [express] GET /api/rcm-reports 200 in 29ms
+2:56:34 PM [express] GET /api/controls-library/documents 200 in 31ms
+2:56:34 PM [express] GET /api/frameworks-library/documents 200 in 31ms
+2:56:34 PM [express] POST /api/load-vectorstore 200 in 13ms
+2:56:34 PM [express] POST /api/load-vectorstore 200 in 5ms
+2:56:34 PM [express] GET /api/risk-assessment/sections 200 in 72ms
+2:56:34 PM [express] GET /api/models 304 in 16ms :: [{"value":"gemini-3-flash-preview","label":"gemi…
+2:56:34 PM [express] GET /api/controls-library/all-controls 200 in 31ms
+2:56:34 PM [express] GET /api/assets 200 in 111ms
+2:56:34 PM [express] GET /api/risk-assessment 200 in 112ms
+2:56:34 PM [express] GET /api/issues 200 in 41ms
+2:56:34 PM [express] GET /api/validation-queue 200 in 39ms
+2:56:34 PM [express] GET /api/controls-library/merged 200 in 17ms
+2:56:34 PM [express] GET /api/frameworks-library/all-elements 200 in 40ms
+2:56:34 PM [express] GET /api/controls-library/documents 200 in 41ms
+2:56:34 PM [express] GET /api/regulatory-library/documents 200 in 44ms
+2:56:34 PM [express] GET /api/controls-library/all-controls 200 in 41ms
+2:56:34 PM [express] GET /api/sop-uplift/cases 200 in 205ms
+2:56:34 PM [express] GET /api/regulatory-library/documents 200 in 57ms
+2:56:34 PM [express] GET /api/regulatory-library/all-obligations 200 in 56ms
+2:56:34 PM [express] GET /api/assets 200 in 86ms
+2:56:35 PM [express] GET /api/sop-uplift/cases/f8ac654e-67c3-4791-8ea6-dfe27ca012f5 200 in 49ms
+2:56:35 PM [express] GET /api/sop-uplift/cases/f8ac654e-67c3-4791-8ea6-dfe27ca012f5/readiness 200 in…
+2:56:35 PM [express] GET /api/sop-uplift/cases/f8ac654e-67c3-4791-8ea6-dfe27ca012f5/preview 200 in 3…
+2:56:35 PM [express] GET /api/sop-uplift/cases/f8ac654e-67c3-4791-8ea6-dfe27ca012f5/index 200 in 15ms
+2:56:36 PM [express] GET /api/sop-uplift/cases/f8ac654e-67c3-4791-8ea6-dfe27ca012f5/files/7c8a780f-3…
+2:56:39 PM [express] GET /api/sop-uplift/cases/f8ac654e-67c3-4791-8ea6-dfe27ca012f5/files/7c8a780f-3…
+2:56:49 PM [express] GET /api/sop-uplift/cases/f8ac654e-67c3-4791-8ea6-dfe27ca012f5/files/95ab05fa-c…
+2:56:49 PM [express] GET /api/sop-uplift/cases/f8ac654e-67c3-4791-8ea6-dfe27ca012f5/files/95ab05fa-c…
+2:56:55 PM [express] GET /api/sop-uplift/cases/f8ac654e-67c3-4791-8ea6-dfe27ca012f5/files/ee05e8d1-6…
+2:56:55 PM [express] GET /api/sop-uplift/cases/f8ac654e-67c3-4791-8ea6-dfe27ca012f5/files/ee05e8d1-6…
+2:56:58 PM [express] GET /api/sop-uplift/cases/f8ac654e-67c3-4791-8ea6-dfe27ca012f5/files/4a1373a3-2…
+2:56:58 PM [express] GET /api/sop-uplift/cases/f8ac654e-67c3-4791-8ea6-dfe27ca012f5/files/4a1373a3-2…
+2:57:04 PM [express] GET /api/sop-uplift/cases/f8ac654e-67c3-4791-8ea6-dfe27ca012f5/files/7c8a780f-3…
+2:57:21 PM [express] GET /api/sop-uplift/cases/f8ac654e-67c3-4791-8ea6-dfe27ca012f5/files/7c8a780f-3…
+3:00:22 PM [express] GET /api/sop-uplift/cases/f8ac654e-67c3-4791-8ea6-dfe27ca012f5/files/7c8a780f-3…
+3:00:26 PM [express] GET /api/sop-uplift/cases/f8ac654e-67c3-4791-8ea6-dfe27ca012f5/files/95ab05fa-c…
+3:00:29 PM [express] GET /api/sop-uplift/cases/f8ac654e-67c3-4791-8ea6-dfe27ca012f5/files/95ab05fa-c…
+[2m3:02:27 pm[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/sop-uplift.integration.test.ts[22m
+3:02:28 PM [express] GET /api/rcm-reports 200 in 13ms
+3:02:28 PM [express] GET /api/regulatory-library/documents 200 in 19ms
+3:02:28 PM [express] GET /api/frameworks-library/documents 200 in 14ms
+3:02:28 PM [express] GET /api/controls-library/documents 200 in 13ms
+3:02:28 PM [express] GET /api/risk-assessment/sections 200 in 35ms
+3:02:28 PM [express] GET /api/models 304 in 9ms :: [{"value":"gemini-3-flash-preview","label":"gemin…
+3:02:28 PM [express] GET /api/assets 200 in 40ms
+3:02:28 PM [express] GET /api/risk-assessment 200 in 40ms
+3:02:28 PM [express] POST /api/load-vectorstore 200 in 3ms
+3:02:28 PM [express] POST /api/load-vectorstore 200 in 5ms
+3:02:28 PM [express] GET /api/controls-library/all-controls 200 in 19ms
+3:02:28 PM [express] GET /api/regulatory-library/documents 200 in 32ms
+3:02:28 PM [express] GET /api/controls-library/merged 200 in 36ms
+3:02:28 PM [express] GET /api/controls-library/documents 200 in 57ms
+3:02:28 PM [express] GET /api/regulatory-library/documents 200 in 46ms
+3:02:28 PM [express] GET /api/sop-uplift/cases 200 in 126ms
+3:02:28 PM [express] GET /api/issues 200 in 87ms
+3:02:28 PM [express] GET /api/validation-queue 200 in 88ms
+3:02:28 PM [express] GET /api/assets 200 in 50ms
+3:02:28 PM [express] GET /api/controls-library/all-controls 200 in 8ms
+3:02:28 PM [express] GET /api/frameworks-library/all-elements 200 in 20ms
+3:02:28 PM [express] GET /api/regulatory-library/all-obligations 200 in 19ms
+[2m3:02:42 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+3:02:43 PM [express] GET /api/sop-uplift/cases 200 in 50ms
+[2m3:02:49 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+3:02:50 PM [express] GET /api/sop-uplift/cases 200 in 47ms
+[2m3:02:56 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+3:02:58 PM [express] GET /api/sop-uplift/cases 200 in 48ms
+[2m3:03:03 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+3:03:04 PM [express] GET /api/sop-uplift/cases 200 in 56ms
+[2m3:03:16 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+3:03:17 PM [express] GET /api/sop-uplift/cases 200 in 51ms
+[2m3:03:29 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+3:03:30 PM [express] GET /api/sop-uplift/cases 200 in 49ms
+[2m3:03:41 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+3:03:42 PM [express] GET /api/sop-uplift/cases 200 in 47ms
+[2m3:03:50 pm[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/sop-uplift.integration.test.ts[22m
+3:03:51 PM [express] GET /api/regulatory-library/documents 200 in 11ms
+3:03:51 PM [express] GET /api/rcm-reports 200 in 17ms
+3:03:51 PM [express] GET /api/controls-library/documents 200 in 11ms
+3:03:51 PM [express] GET /api/frameworks-library/documents 200 in 12ms
+3:03:51 PM [express] POST /api/load-vectorstore 200 in 5ms
+3:03:51 PM [express] GET /api/risk-assessment/sections 200 in 37ms
+3:03:51 PM [express] GET /api/risk-assessment 200 in 38ms
+3:03:51 PM [express] GET /api/assets 200 in 38ms
+3:03:51 PM [express] POST /api/load-vectorstore 200 in 6ms
+3:03:51 PM [express] GET /api/controls-library/all-controls 200 in 42ms
+3:03:51 PM [express] GET /api/sop-uplift/cases 200 in 87ms
+3:03:51 PM [express] GET /api/models 304 in 64ms :: [{"value":"gemini-3-flash-preview","label":"gemi…
+3:03:51 PM [express] GET /api/controls-library/merged 200 in 55ms
+3:03:51 PM [express] GET /api/regulatory-library/documents 200 in 16ms
+3:03:51 PM [express] GET /api/controls-library/documents 200 in 17ms
+3:03:51 PM [express] GET /api/frameworks-library/all-elements 200 in 11ms
+3:03:51 PM [express] GET /api/regulatory-library/documents 200 in 18ms
+3:03:51 PM [express] GET /api/controls-library/all-controls 200 in 19ms
+3:03:51 PM [express] GET /api/regulatory-library/all-obligations 200 in 10ms
+3:03:51 PM [express] GET /api/validation-queue 200 in 93ms
+3:03:51 PM [express] GET /api/assets 200 in 34ms
+3:03:51 PM [express] GET /api/issues 200 in 95ms
+[2m3:06:58 pm[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/sop-uplift.integration.test.ts[22m
+3:06:59 PM [express] GET /api/regulatory-library/documents 200 in 12ms
+3:06:59 PM [express] GET /api/rcm-reports 200 in 18ms
+3:06:59 PM [express] GET /api/frameworks-library/documents 200 in 12ms
+3:06:59 PM [express] GET /api/controls-library/documents 200 in 13ms
+3:06:59 PM [express] GET /api/models 304 in 14ms :: [{"value":"gemini-3-flash-preview","label":"gemi…
+3:06:59 PM [express] POST /api/load-vectorstore 200 in 7ms
+3:06:59 PM [express] POST /api/load-vectorstore 200 in 3ms
+3:06:59 PM [express] GET /api/risk-assessment/sections 200 in 44ms
+3:06:59 PM [express] GET /api/controls-library/all-controls 200 in 62ms
+3:06:59 PM [express] GET /api/issues 200 in 69ms
+3:06:59 PM [express] GET /api/risk-assessment 200 in 112ms
+3:06:59 PM [express] GET /api/assets 200 in 112ms
+3:06:59 PM [express] GET /api/sop-uplift/cases 200 in 113ms
+3:06:59 PM [express] GET /api/controls-library/merged 200 in 11ms
+3:06:59 PM [express] GET /api/regulatory-library/documents 200 in 30ms
+3:06:59 PM [express] GET /api/controls-library/all-controls 200 in 30ms
+3:06:59 PM [express] GET /api/frameworks-library/all-elements 200 in 31ms
+3:06:59 PM [express] GET /api/controls-library/documents 200 in 33ms
+3:06:59 PM [express] GET /api/validation-queue 200 in 103ms
+3:06:59 PM [express] GET /api/assets 200 in 27ms
+3:06:59 PM [express] GET /api/regulatory-library/documents 200 in 8ms
+3:06:59 PM [express] GET /api/regulatory-library/all-obligations 200 in 14ms
+[2m3:07:21 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+3:07:22 PM [express] GET /api/sop-uplift/cases 200 in 74ms
+[2m3:07:27 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+3:07:29 PM [express] GET /api/sop-uplift/cases 200 in 65ms
+[2m3:07:41 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+3:07:42 PM [express] GET /api/sop-uplift/cases 200 in 45ms
+[2m3:07:49 pm[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/sop-uplift.integration.test.ts[22m
+3:07:50 PM [express] GET /api/rcm-reports 200 in 11ms
+3:07:50 PM [express] GET /api/regulatory-library/documents 200 in 17ms
+3:07:50 PM [express] GET /api/controls-library/documents 200 in 12ms
+3:07:50 PM [express] POST /api/load-vectorstore 200 in 6ms
+3:07:50 PM [express] GET /api/frameworks-library/documents 200 in 15ms
+3:07:50 PM [express] GET /api/risk-assessment/sections 200 in 72ms
+3:07:50 PM [express] GET /api/models 304 in 49ms :: [{"value":"gemini-3-flash-preview","label":"gemi…
+3:07:50 PM [express] GET /api/sop-uplift/cases 200 in 76ms
+3:07:50 PM [express] POST /api/load-vectorstore 200 in 37ms
+3:07:50 PM [express] GET /api/assets 200 in 79ms
+3:07:50 PM [express] GET /api/risk-assessment 200 in 80ms
+3:07:50 PM [express] GET /api/controls-library/all-controls 200 in 13ms
+3:07:50 PM [express] GET /api/controls-library/merged 200 in 13ms
+3:07:50 PM [express] GET /api/regulatory-library/documents 200 in 25ms
+3:07:50 PM [express] GET /api/controls-library/documents 200 in 26ms
+3:07:50 PM [express] GET /api/frameworks-library/all-elements 200 in 15ms
+3:07:50 PM [express] GET /api/regulatory-library/documents 200 in 16ms
+3:07:50 PM [express] GET /api/controls-library/all-controls 200 in 19ms
+3:07:50 PM [express] GET /api/issues 200 in 48ms
+3:07:50 PM [express] GET /api/validation-queue 200 in 47ms
+3:07:50 PM [express] GET /api/assets 200 in 31ms
+3:07:50 PM [express] GET /api/regulatory-library/all-obligations 200 in 8ms
+[2m3:23:25 pm[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/sop-uplift.integration.test.ts[22m
+3:23:26 PM [express] GET /api/rcm-reports 200 in 13ms
+3:23:26 PM [express] GET /api/regulatory-library/documents 200 in 18ms
+3:23:26 PM [express] GET /api/controls-library/documents 200 in 16ms
+3:23:26 PM [express] GET /api/regulatory-library/documents 200 in 18ms
+3:23:26 PM [express] GET /api/risk-assessment 200 in 41ms
+3:23:26 PM [express] GET /api/assets 200 in 42ms
+3:23:26 PM [express] GET /api/risk-assessment/sections 200 in 41ms
+3:23:26 PM [express] GET /api/frameworks-library/documents 200 in 18ms
+3:23:26 PM [express] POST /api/load-vectorstore 200 in 14ms
+3:23:26 PM [express] POST /api/load-vectorstore 200 in 14ms
+3:23:26 PM [express] GET /api/models 304 in 103ms :: [{"value":"gemini-3-flash-preview","label":"gem…
+3:23:26 PM [express] GET /api/controls-library/merged 200 in 97ms
+3:23:26 PM [express] GET /api/controls-library/all-controls 200 in 100ms
+3:23:26 PM [express] GET /api/sop-uplift/cases 200 in 163ms
+3:23:26 PM [express] GET /api/controls-library/documents 200 in 24ms
+3:23:26 PM [express] GET /api/regulatory-library/documents 200 in 14ms
+3:23:26 PM [express] GET /api/frameworks-library/all-elements 200 in 21ms
+3:23:26 PM [express] GET /api/regulatory-library/all-obligations 200 in 22ms
+3:23:26 PM [express] GET /api/controls-library/all-controls 200 in 22ms
+3:23:26 PM [express] GET /api/validation-queue 200 in 153ms
+3:23:26 PM [express] GET /api/assets 200 in 38ms
+3:23:26 PM [express] GET /api/issues 200 in 143ms
+[2m3:23:55 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+3:23:56 PM [express] GET /api/sop-uplift/cases 200 in 305ms
+[2m3:24:04 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+3:24:05 PM [express] GET /api/sop-uplift/cases 200 in 103ms
+[2m3:24:11 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+3:24:12 PM [express] GET /api/sop-uplift/cases 200 in 110ms
+[2m3:24:20 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+3:24:21 PM [express] GET /api/sop-uplift/cases 200 in 100ms
+[2m3:24:33 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+3:24:34 PM [express] GET /api/sop-uplift/cases 200 in 91ms
+[2m3:24:49 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+3:24:50 PM [express] GET /api/sop-uplift/cases 200 in 121ms
+[2m3:25:07 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+3:25:08 PM [express] GET /api/sop-uplift/cases 200 in 200ms
+[2m3:25:20 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+3:25:21 PM [express] GET /api/sop-uplift/cases 200 in 107ms
+[2m3:25:27 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+3:25:28 PM [express] GET /api/sop-uplift/cases 200 in 94ms
+[2m3:26:15 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+3:26:16 PM [express] GET /api/sop-uplift/cases 200 in 111ms
+[2m3:33:29 pm[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/sop-uplift.integration.test.ts[22m
+[2m3:33:40 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+[2m3:33:50 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+[2m3:34:00 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+[2m3:38:10 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+[2m3:38:24 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+[2m3:38:39 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+[2m3:38:50 pm[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/sop-uplift.integration.test.ts[22m
+[2m3:45:09 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+[2m3:45:22 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+[2m3:45:49 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+[2m3:46:05 pm[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/sop-uplift.integration.test.ts[22m
+3:47:27 PM [express] GET /api/regulatory-library/documents 200 in 17ms
+3:47:27 PM [express] GET /api/rcm-reports 200 in 24ms
+3:47:27 PM [express] GET /api/frameworks-library/documents 200 in 11ms
+3:47:27 PM [express] GET /api/controls-library/documents 200 in 17ms
+3:47:27 PM [express] POST /api/load-vectorstore 200 in 15ms
+3:47:27 PM [express] GET /api/risk-assessment 200 in 54ms
+3:47:27 PM [express] GET /api/risk-assessment/sections 200 in 52ms
+3:47:27 PM [express] GET /api/assets 200 in 54ms
+3:47:27 PM [express] POST /api/load-vectorstore 200 in 4ms
+3:47:27 PM [express] GET /api/controls-library/all-controls 200 in 15ms
+3:47:27 PM [express] GET /api/models 304 in 55ms :: [{"value":"gemini-3-flash-preview","label":"gemi…
+3:47:27 PM [express] GET /api/controls-library/merged 200 in 41ms
+3:47:27 PM [express] GET /api/regulatory-library/documents 200 in 30ms
+3:47:27 PM [express] GET /api/controls-library/documents 200 in 107ms
+3:47:27 PM [express] GET /api/frameworks-library/all-elements 200 in 108ms
+3:47:27 PM [express] GET /api/sop-uplift/cases 200 in 222ms
+3:47:27 PM [express] GET /api/controls-library/all-controls 200 in 13ms
+3:47:27 PM [express] GET /api/regulatory-library/documents 200 in 19ms
+3:47:27 PM [express] GET /api/regulatory-library/all-obligations 200 in 19ms
+3:47:27 PM [express] GET /api/issues 200 in 188ms
+3:47:27 PM [express] GET /api/validation-queue 200 in 190ms
+3:47:27 PM [express] GET /api/assets 200 in 142ms
+[2m3:52:48 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+3:52:49 PM [express] GET /api/sop-uplift/cases 200 in 116ms
+[2m3:53:01 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+3:53:02 PM [express] GET /api/sop-uplift/cases 200 in 119ms
+[2m3:53:12 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+[2m3:53:51 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+3:53:52 PM [express] GET /api/sop-uplift/cases 200 in 343ms
+[2m3:57:28 pm[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/sop-uplift.integration.test.ts[22m
+3:57:28 PM [express] GET /api/regulatory-library/documents 200 in 14ms
+3:57:28 PM [express] GET /api/rcm-reports 200 in 22ms
+3:57:28 PM [express] GET /api/frameworks-library/documents 200 in 14ms
+3:57:28 PM [express] GET /api/controls-library/documents 200 in 15ms
+3:57:28 PM [express] GET /api/models 304 in 17ms :: [{"value":"gemini-3-flash-preview","label":"gemi…
+3:57:28 PM [express] POST /api/load-vectorstore 200 in 10ms
+3:57:28 PM [express] GET /api/risk-assessment/sections 200 in 51ms
+3:57:28 PM [express] GET /api/assets 200 in 52ms
+3:57:28 PM [express] GET /api/risk-assessment 200 in 53ms
+3:57:28 PM [express] POST /api/load-vectorstore 200 in 12ms
+3:57:29 PM [express] GET /api/regulatory-library/documents 200 in 115ms
+3:57:29 PM [express] GET /api/controls-library/all-controls 200 in 116ms
+3:57:29 PM [express] GET /api/controls-library/merged 200 in 114ms
+3:57:29 PM [express] GET /api/sop-uplift/cases 200 in 193ms
+3:57:29 PM [express] GET /api/controls-library/documents 200 in 21ms
+3:57:29 PM [express] GET /api/frameworks-library/all-elements 200 in 16ms
+3:57:29 PM [express] GET /api/controls-library/all-controls 200 in 17ms
+3:57:29 PM [express] GET /api/regulatory-library/documents 200 in 18ms
+3:57:29 PM [express] GET /api/regulatory-library/all-obligations 200 in 22ms
+3:57:29 PM [express] GET /api/assets 200 in 46ms
+3:57:29 PM [express] GET /api/validation-queue 200 in 170ms
+3:57:29 PM [express] GET /api/issues 200 in 173ms
+[2m4:14:59 pm[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/sop-uplift.integration.test.ts[22m
+[2m4:22:42 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+[2m4:22:53 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+[2m4:23:12 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+[2m4:23:32 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+4:59:28 PM [express] GET /api/regulatory-library/documents 200 in 132ms
+4:59:28 PM [express] GET /api/controls-library/documents 200 in 34ms
+4:59:28 PM [express] GET /api/rcm-reports 200 in 172ms
+4:59:28 PM [express] GET /api/frameworks-library/documents 200 in 18ms
+4:59:28 PM [express] GET /api/models 304 in 26ms :: [{"value":"gemini-3-flash-preview","label":"gemi…
+4:59:28 PM [express] POST /api/load-vectorstore 200 in 24ms
+4:59:28 PM [express] POST /api/load-vectorstore 200 in 22ms
+4:59:28 PM [express] GET /api/risk-assessment/sections 200 in 221ms
+4:59:28 PM [express] GET /api/controls-library/merged 200 in 24ms
+4:59:28 PM [express] GET /api/risk-assessment 200 in 251ms
+4:59:28 PM [express] GET /api/controls-library/all-controls 200 in 66ms
+4:59:28 PM [express] GET /api/regulatory-library/documents 200 in 74ms
+4:59:28 PM [express] GET /api/sop-uplift/cases 200 in 327ms
+4:59:28 PM [express] GET /api/controls-library/documents 200 in 20ms
+4:59:28 PM [express] GET /api/frameworks-library/all-elements 200 in 24ms
+4:59:28 PM [express] GET /api/controls-library/all-controls 200 in 25ms
+4:59:28 PM [express] GET /api/assets 200 in 363ms
+4:59:28 PM [express] GET /api/regulatory-library/documents 200 in 27ms
+4:59:28 PM [express] GET /api/regulatory-library/all-obligations 200 in 24ms
+4:59:28 PM [express] GET /api/issues 200 in 163ms
+4:59:28 PM [express] GET /api/validation-queue 200 in 158ms
+4:59:28 PM [express] GET /api/assets 200 in 17ms
+4:59:29 PM [express] GET /api/sop-uplift/cases/89764161-3297-4131-8a32-6bac4629740b 200 in 48ms
+4:59:29 PM [express] GET /api/sop-uplift/cases/89764161-3297-4131-8a32-6bac4629740b/readiness 200 in…
+4:59:30 PM [express] GET /api/sop-uplift/cases/89764161-3297-4131-8a32-6bac4629740b/preview 200 in 2…
+4:59:30 PM [express] GET /api/sop-uplift/cases/89764161-3297-4131-8a32-6bac4629740b/index 200 in 18ms
+4:59:32 PM [express] GET /api/sop-uplift/cases/89764161-3297-4131-8a32-6bac4629740b/files/2dae7584-3…
+4:59:43 PM [express] GET /api/sop-uplift/cases/89764161-3297-4131-8a32-6bac4629740b/files/2dae7584-3…
+4:59:49 PM [express] GET /api/sop-uplift/cases/89764161-3297-4131-8a32-6bac4629740b/files/b043789f-5…
+4:59:49 PM [express] GET /api/sop-uplift/cases/89764161-3297-4131-8a32-6bac4629740b/files/b043789f-5…
+4:59:51 PM [express] GET /api/sop-uplift/cases/89764161-3297-4131-8a32-6bac4629740b/files/394f9e73-e…
+4:59:51 PM [express] GET /api/sop-uplift/cases/89764161-3297-4131-8a32-6bac4629740b/files/394f9e73-e…
+4:59:55 PM [express] GET /api/sop-uplift/cases/89764161-3297-4131-8a32-6bac4629740b/files/a3156881-9…
+4:59:55 PM [express] GET /api/sop-uplift/cases/89764161-3297-4131-8a32-6bac4629740b/files/a3156881-9…
+5:18:51 PM [express] POST /api/controls-library/quality-analysis 200 in 20ms
+5:18:51 PM [express] GET /api/controls-library/merged 200 in 43ms
+5:19:07 PM [express] GET /api/controls-library/documents/nist_csf_seed 200 in 11ms
+5:19:30 PM [express] POST /api/controls-library/ingest 202 in 11ms
+5:19:33 PM [express] GET /api/ingest-task/req_1777463370_4 200 in 2ms
+5:19:33 PM [express] GET /api/controls-library/documents 200 in 10ms
+5:19:33 PM [express] GET /api/controls-library/all-controls 200 in 15ms
+5:19:33 PM [express] GET /api/controls-library/all-controls 200 in 15ms
+5:19:33 PM [express] GET /api/controls-library/documents 200 in 16ms
+5:19:33 PM [express] GET /api/controls-library/merged 200 in 54ms
+5:19:33 PM [express] GET /api/controls-library/all-controls 200 in 64ms
+5:19:33 PM [express] GET /api/regulatory-library/documents 200 in 70ms
+5:19:39 PM [express] GET /api/controls-library/documents/114f64e3028c63e3 200 in 16ms
+[2m7:07:55 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+[2m7:08:06 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+[2m7:08:32 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+[2m7:09:00 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+[2m7:09:25 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/sop-uplift.tsx, /src/index.css?v=UIc0o3mmNdjZxe3iwS_3o[22m
+[2m7:10:49 pm[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/sop-uplift.integration.test.ts[22m

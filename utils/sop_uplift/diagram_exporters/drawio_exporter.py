@@ -17,7 +17,6 @@ def export_drawio(model: DiagramModel) -> str:
     lanes = sorted(model.lanes, key=lambda lane: lane.order)
     lane_lookup = {lane.lane_id: idx for idx, lane in enumerate(lanes)}
     node_positions: dict[str, tuple[int, int]] = {}
-    lane_node_counts: dict[str, int] = {}
 
     for idx, lane in enumerate(lanes):
         y = 80 + idx * 120
@@ -36,19 +35,23 @@ def export_drawio(model: DiagramModel) -> str:
 
     for node in model.nodes:
         lane_idx = lane_lookup.get(node.lane_id, 0)
-        count = lane_node_counts.get(node.lane_id, 0)
-        lane_node_counts[node.lane_id] = count + 1
-        x = 200 + count * 180
+        x = 200 + node.column * 180
         y = 110 + lane_idx * 120
         node_positions[node.node_id] = (x, y)
         fill = {"control": "#1E49E2", "risk": "#C00000", "evidence": "#EAAA00"}.get(node.type, "#FFFFFF")
+        shape_style = {
+            "decision": "shape=rhombus;whiteSpace=wrap;html=1;",
+            "start_end": "ellipse;whiteSpace=wrap;html=1;",
+            "data_store": "shape=mxgraph.flowchart.stored_data;whiteSpace=wrap;html=1;",
+        }.get(node.shape, "rounded=1;whiteSpace=wrap;html=1;")
+        label = f"[{node.badge}] {node.label}" if node.badge else node.label
         cell = ET.SubElement(
             root,
             "mxCell",
             {
                 "id": node.node_id,
-                "value": html.escape(node.label),
-                "style": f"rounded=1;whiteSpace=wrap;html=1;fillColor={fill};strokeColor=#64748B;",
+                "value": html.escape(label),
+                "style": f"{shape_style}fillColor={fill};strokeColor=#64748B;",
                 "vertex": "1",
                 "parent": "1",
             },

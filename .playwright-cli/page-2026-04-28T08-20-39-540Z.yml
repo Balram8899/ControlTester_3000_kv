@@ -1,0 +1,227 @@
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list
+  - generic [ref=e280]:
+    - complementary [ref=e281]:
+      - button "Expand sidebar" [ref=e283] [cursor=pointer]:
+        - img [ref=e284]
+      - navigation [ref=e286]:
+        - generic [ref=e287]:
+          - button [ref=e288] [cursor=pointer]:
+            - img [ref=e289]
+          - button [ref=e294] [cursor=pointer]:
+            - img [ref=e295]
+          - button [ref=e297] [cursor=pointer]:
+            - img [ref=e298]
+          - button [ref=e301] [cursor=pointer]:
+            - img [ref=e302]
+          - button [ref=e304] [cursor=pointer]:
+            - img [ref=e305]
+          - button [ref=e309] [cursor=pointer]:
+            - img [ref=e310]
+          - button [ref=e313] [cursor=pointer]:
+            - img [ref=e314]
+          - button [ref=e319] [cursor=pointer]:
+            - img [ref=e320]
+          - button [ref=e325] [cursor=pointer]:
+            - img [ref=e326]
+          - button [ref=e328] [cursor=pointer]:
+            - img [ref=e329]
+          - button [ref=e332] [cursor=pointer]:
+            - img [ref=e333]
+          - button [ref=e335] [cursor=pointer]:
+            - img [ref=e336]
+          - button [ref=e338] [cursor=pointer]:
+            - img [ref=e339]
+      - generic [ref=e345]: A
+    - generic [ref=e346]:
+      - main [ref=e347]:
+        - generic [ref=e351]:
+          - generic [ref=e352]:
+            - generic [ref=e353]:
+              - generic [ref=e354]:
+                - generic [ref=e355]:
+                  - generic [ref=e356]: SOP Uplift
+                  - generic [ref=e357]: /
+                  - generic [ref=e358]: Cases
+                  - generic [ref=e359]: /
+                  - generic [ref=e360]: Vendor Onboarding
+                - generic [ref=e361]:
+                  - heading "Vendor Onboarding - SOP Uplift" [level=1] [ref=e362]
+                  - generic [ref=e363]: "Case status: In progress"
+              - generic [ref=e364]:
+                - button "Run Extraction" [ref=e558] [cursor=pointer]:
+                  - img
+                  - text: Run Extraction
+                - button "Case Actions" [ref=e365] [cursor=pointer]:
+                  - text: Case Actions
+                  - img
+                - button [ref=e366] [cursor=pointer]:
+                  - img
+            - generic [ref=e367]:
+              - button "1 Upload & Tag Documents" [ref=e368] [cursor=pointer]:
+                - generic [ref=e369]: "1"
+                - text: Upload & Tag Documents
+              - button "2 Extract & Analyze" [ref=e370] [cursor=pointer]:
+                - generic [ref=e371]: "2"
+                - text: Extract & Analyze
+              - button "3 Review Suggestions" [ref=e372] [cursor=pointer]:
+                - generic [ref=e373]: "3"
+                - text: Review Suggestions
+              - button "4 Generate Outputs" [ref=e374] [cursor=pointer]:
+                - generic [ref=e375]: "4"
+                - text: Generate Outputs
+          - generic [ref=e376]:
+            - complementary [ref=e377]:
+              - generic [ref=e378]:
+                - generic [ref=e379]:
+                  - heading "Case details" [level=3] [ref=e380]
+                  - generic [ref=e381]: In progress
+                - generic [ref=e382]:
+                  - generic [ref=e383]:
+                    - text: Case name
+                    - textbox "Case name" [ref=e384]: Vendor Onboarding - SOP Uplift
+                  - generic [ref=e385]:
+                    - text: Process
+                    - textbox "Process" [ref=e386]: Vendor Onboarding
+                  - generic [ref=e387]:
+                    - generic [ref=e388]:
+                      - paragraph [ref=e389]: Case ID
+                      - paragraph [ref=e390]: 694eb825-a42d-48c9-8b1d-d24869b577ae
+                    - generic [ref=e391]:
+                      - paragraph [ref=e392]: Owner
+                      - paragraph [ref=e393]: Admin Analyst
+                    - generic [ref=e394]:
+                      - paragraph [ref=e395]: Framework
+                      - paragraph [ref=e396]: Standalone SOP Uplift
+                    - generic [ref=e397]:
+                      - paragraph [ref=e398]: Business unit
+                      - paragraph [ref=e399]: Third Party Risk
+                  - button "Edit case details" [ref=e559] [cursor=pointer]
+              - generic [ref=e401]:
+                - heading "Overall progress" [level=3] [ref=e402]
+                - generic [ref=e403]:
+                  - generic [ref=e404]:
+                    - generic [ref=e406]: Files uploaded
+                    - generic [ref=e407]: 0/18
+                  - generic [ref=e408]:
+                    - generic [ref=e410]: Converted to Markdown
+                    - generic [ref=e411]: 0/1
+                  - generic [ref=e412]:
+                    - generic [ref=e414]: Tagged
+                    - generic [ref=e415]: 0/1
+                  - generic [ref=e416]:
+                    - generic [ref=e418]: Extraction
+                    - generic [ref=e419]: queued
+                  - generic [ref=e420]:
+                    - generic [ref=e422]: Analysis
+                    - generic [ref=e423]: ready
+                  - generic [ref=e424]:
+                    - generic [ref=e426]: Outputs
+                    - generic [ref=e427]: not started
+            - main [ref=e428]:
+              - generic [ref=e429]:
+                - generic [ref=e430]:
+                  - generic [ref=e431]:
+                    - heading "Upload documents" [level=3] [ref=e432]
+                    - paragraph [ref=e433]: Drag-and-drop equivalent buckets with explicit file tagging.
+                  - button "Upload files" [ref=e560] [cursor=pointer]:
+                    - img
+                    - text: Upload files
+                - generic [ref=e434]:
+                  - generic [ref=e435] [cursor=pointer]:
+                    - generic [ref=e436]:
+                      - img [ref=e438]
+                      - generic [ref=e441]:
+                        - paragraph [ref=e442]: SOPs
+                        - paragraph [ref=e443]: 0 files
+                    - button "SOPs 0 files" [ref=e444]
+                  - generic [ref=e445] [cursor=pointer]:
+                    - generic [ref=e446]:
+                      - img [ref=e448]
+                      - generic [ref=e451]:
+                        - paragraph [ref=e452]: Policies & Procedures
+                        - paragraph [ref=e453]: 0 files
+                    - button "Policies & Procedures 0 files" [ref=e454]
+                  - generic [ref=e455] [cursor=pointer]:
+                    - generic [ref=e456]:
+                      - img [ref=e458]
+                      - generic [ref=e461]:
+                        - paragraph [ref=e462]: Risk / Control Matrices
+                        - paragraph [ref=e463]: 0 files
+                    - button "Risk / Control Matrices 0 files" [ref=e464]
+                  - generic [ref=e465] [cursor=pointer]:
+                    - generic [ref=e466]:
+                      - img [ref=e468]
+                      - generic [ref=e470]:
+                        - paragraph [ref=e471]: Risk Registers
+                        - paragraph [ref=e472]: 0 files
+                    - button "Risk Registers 0 files" [ref=e473]
+                  - generic [ref=e474] [cursor=pointer]:
+                    - generic [ref=e475]:
+                      - img [ref=e477]
+                      - generic [ref=e481]:
+                        - paragraph [ref=e482]: Control Inventories
+                        - paragraph [ref=e483]: 0 files
+                    - button "Control Inventories 0 files" [ref=e484]
+                  - generic [ref=e485] [cursor=pointer]:
+                    - generic [ref=e486]:
+                      - img [ref=e488]
+                      - generic [ref=e492]:
+                        - paragraph [ref=e493]: Evidence
+                        - paragraph [ref=e494]: 0 files
+                    - button "Evidence 0 files" [ref=e495]
+                  - generic [ref=e496] [cursor=pointer]:
+                    - generic [ref=e497]:
+                      - img [ref=e499]
+                      - generic [ref=e503]:
+                        - paragraph [ref=e504]: Diagrams
+                        - paragraph [ref=e505]: 0 files
+                    - button "Diagrams 0 files" [ref=e506]
+                  - generic [ref=e507] [cursor=pointer]:
+                    - generic [ref=e508]:
+                      - img [ref=e510]
+                      - generic [ref=e513]:
+                        - paragraph [ref=e514]: Audit Reports / Issues
+                        - paragraph [ref=e515]: 0 files
+                    - button "Audit Reports / Issues 0 files" [ref=e516]
+              - generic [ref=e517]:
+                - generic [ref=e518]:
+                  - generic [ref=e519]:
+                    - heading "Uploaded documents" [level=3] [ref=e520]
+                    - paragraph [ref=e521]: 0 documents ready for tagging
+                  - generic [ref=e522]:
+                    - generic [ref=e523]:
+                      - img
+                      - textbox "Search documents..." [ref=e524]
+                    - button "Filter" [ref=e561] [cursor=pointer]
+                - table [ref=e526]:
+                  - rowgroup [ref=e527]:
+                    - row "File Bucket AI tag Confidence User override / notes Status Actions" [ref=e528]:
+                      - columnheader "File" [ref=e529]
+                      - columnheader "Bucket" [ref=e530]
+                      - columnheader "AI tag" [ref=e531]
+                      - columnheader "Confidence" [ref=e532]
+                      - columnheader "User override / notes" [ref=e533]
+                      - columnheader "Status" [ref=e534]
+                      - columnheader "Actions" [ref=e535]
+                  - rowgroup [ref=e536]:
+                    - row "No uploaded documents yet Create a case, then upload SOP source files into the buckets above." [ref=e537]:
+                      - cell "No uploaded documents yet Create a case, then upload SOP source files into the buckets above." [ref=e538]:
+                        - img [ref=e539]
+                        - paragraph [ref=e541]: No uploaded documents yet
+                        - paragraph [ref=e542]: Create a case, then upload SOP source files into the buckets above.
+            - generic [ref=e543]:
+              - generic [ref=e544]:
+                - generic [ref=e545]:
+                  - heading "Case chat" [level=3] [ref=e546]
+                  - paragraph [ref=e547]: Scoped to this case only
+                - generic [ref=e548]: BETA
+              - generic [ref=e550]: Add case-specific instructions, clarifications, or process context here. Chat content is indexed only inside this SOP Uplift case.
+              - generic [ref=e552]:
+                - textbox "Add case context for the agent..." [ref=e553]
+                - button [ref=e554] [cursor=pointer]:
+                  - img
+      - contentinfo [ref=e555]:
+        - generic [ref=e556]: © 2026 KPMG Assurance and Consulting Services LLP, an Indian Limited Liability Partnership and a member firm of the KPMG global organization of independent member firms affiliated with KPMG International Limited, a private English company limited by guarantee. All rights reserved.
+        - generic [ref=e557]: Confidential

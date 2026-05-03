@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 
 
 NodeType = Literal["activity", "decision", "approval", "control", "risk", "evidence", "handoff"]
+NodeShape = Literal["process", "decision", "start_end", "data_store"]
 
 
 class DiagramLane(BaseModel):
@@ -14,12 +15,23 @@ class DiagramLane(BaseModel):
     order: int = 1
 
 
+class DiagramMeta(BaseModel):
+    process_owner: str = ""
+    version: str = "1.0"
+    effective_date: str = ""
+    review_date: str = ""
+    document_id: str = ""
+
+
 class DiagramNode(BaseModel):
     node_id: str
     lane_id: str
     type: NodeType = "activity"
+    shape: NodeShape = "process"
     label: str
     description: str = ""
+    column: int = 0
+    badge: str = ""
     source_anchor_ids: list[str] = Field(default_factory=list)
     linked_control_ids: list[str] = Field(default_factory=list)
     linked_risk_ids: list[str] = Field(default_factory=list)
@@ -36,7 +48,10 @@ class DiagramModel(BaseModel):
     title: str
     case_title: str = ""
     process_name: str = ""
+    meta: DiagramMeta = Field(default_factory=DiagramMeta)
     lanes: list[DiagramLane] = Field(default_factory=list)
     nodes: list[DiagramNode] = Field(default_factory=list)
     edges: list[DiagramEdge] = Field(default_factory=list)
+    control_summary: list[dict] = Field(default_factory=list)
+    risk_summary: list[dict] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)

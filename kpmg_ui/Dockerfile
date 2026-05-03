@@ -50,13 +50,20 @@ COPY --from=builder /kpmg_ui/shared ./shared
 # because the server bundle still touches Vite-side modules at runtime.
 COPY --from=deps /kpmg_ui/node_modules ./node_modules
 
-# Create directories for vectorstore data
-RUN mkdir -p /kpmg_ui/saved_global_vectorstore /kpmg_ui/saved_company_vectorstore /kpmg_ui/chat_attachment_vectorstore /kpmg_ui/chat_attachments
-
-# Create non-root user
+# Create non-root user and only chown runtime-writable directories.
+# Avoid recursively chowning /kpmg_ui because node_modules is large and slow
+# to traverse on Docker Desktop / Windows.
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 appuser && \
-    chown -R appuser:nodejs /kpmg_ui
+    mkdir -p /kpmg_ui/saved_global_vectorstore \
+      /kpmg_ui/saved_company_vectorstore \
+      /kpmg_ui/chat_attachment_vectorstore \
+      /kpmg_ui/chat_attachments && \
+    chown -R appuser:nodejs \
+      /kpmg_ui/saved_global_vectorstore \
+      /kpmg_ui/saved_company_vectorstore \
+      /kpmg_ui/chat_attachment_vectorstore \
+      /kpmg_ui/chat_attachments
 
 USER appuser
 

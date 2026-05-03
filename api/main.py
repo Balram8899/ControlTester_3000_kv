@@ -467,13 +467,15 @@ async def health():
 
 @app.get("/models", tags=["models"], summary="Available models")
 async def models():
-    import os
-    if os.environ.get("LLM_PROVIDER", "ollama").lower() == "gemini":
-        model = os.environ.get("GOOGLE_LLM_MODEL", "gemini-3-flash-preview")
-        return {"models": [model], "count": 1}
+    from utils.llm_config_store import get_active_llm_config, PROVIDER_REGISTRY
+    config = get_active_llm_config()
+    registry = PROVIDER_REGISTRY[config["provider"]]
+    if config["provider"] != "ollama":
+        models = registry.get("models") or [config["model"]]
+        return {"models": models, "count": len(models), "active_provider": config["provider"], "active_model": config["model"]}
     try:
         names = get_ollama_model_names()
-        return {"models": names, "count": len(names)}
+        return {"models": names, "count": len(names), "active_provider": config["provider"], "active_model": config["model"]}
     except Exception as e:
         raise HTTPException(500, f"Failed fetching models: {e}")
 

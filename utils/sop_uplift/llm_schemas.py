@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 Severity = Literal["low", "medium", "high", "critical"]
@@ -18,6 +18,8 @@ SuggestionType = Literal[
     "process_gap",
     "policy_alignment",
     "testability_gap",
+    "mapping_gap",
+    "weak_control_description",
     "diagram_gap",
     "chat_context",
 ]
@@ -25,10 +27,35 @@ SuggestionType = Literal[
 
 class PolicyRequirement(BaseModel):
     requirement_id: str = ""
-    text: str
+    text: str = ""
     source_anchor_id: str = ""
     source_anchor_ids: list[str] = Field(default_factory=list)
     quality_warnings: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_requirement_text(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+        if str(data.get("text") or "").strip():
+            return data
+        for key in (
+            "requirement_text",
+            "requirement",
+            "requirement_statement",
+            "statement",
+            "description",
+            "content",
+            "regulatory_text",
+            "regulatory_requirement",
+        ):
+            value = str(data.get(key) or "").strip()
+            if value:
+                return {**data, "text": value}
+        warnings = list(data.get("quality_warnings") or [])
+        if "Requirement text missing from LLM extraction." not in warnings:
+            warnings.append("Requirement text missing from LLM extraction.")
+        return {**data, "text": "", "quality_warnings": warnings}
 
 
 class PolicyRequirementExtractionResponse(BaseModel):
@@ -93,6 +120,26 @@ class DiagramReferenceExtractionResponse(BaseModel):
     warnings: list[str] = Field(default_factory=list)
 
 
+class FullDocumentExtractionResponse(BaseModel):
+    sections: list[dict[str, Any]] = Field(default_factory=list)
+    process_steps: list[dict[str, Any]] = Field(default_factory=list)
+    requirements: list[PolicyRequirement] = Field(default_factory=list)
+    controls: list[dict[str, Any]] = Field(default_factory=list)
+    risks: list[dict[str, Any]] = Field(default_factory=list)
+    risk_events: list[dict[str, Any]] = Field(default_factory=list)
+    evidence_items: list[dict[str, Any]] = Field(default_factory=list)
+    findings: list[dict[str, Any]] = Field(default_factory=list)
+    diagram_summary: str = ""
+    lanes_or_roles: list[str] = Field(default_factory=list)
+    steps: list[dict[str, Any] | str] = Field(default_factory=list)
+    decisions: list[dict[str, Any] | str] = Field(default_factory=list)
+    systems: list[str] = Field(default_factory=list)
+    diagram_controls: list[dict[str, Any] | str] = Field(default_factory=list)
+    diagram_risks: list[dict[str, Any] | str] = Field(default_factory=list)
+    evidence_points: list[dict[str, Any] | str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+
+
 class CaseChatContextExtractionResponse(BaseModel):
     captured_context: list[dict[str, Any]] = Field(default_factory=list)
     agent_follow_up_questions: list[dict[str, Any] | str] = Field(default_factory=list)
@@ -134,6 +181,7 @@ class SopSuggestion(BaseModel):
     impact: str = ""
     original_text: str = ""
     suggested_text: str = ""
+    style_match_notes: str = ""
     source_references: list[dict[str, Any]] = Field(default_factory=list)
     anchor_confidence: Confidence = "medium"
 
@@ -158,6 +206,41 @@ class AgentFollowUpQuestionsResponse(BaseModel):
     questions: list[dict[str, Any]] = Field(default_factory=list)
 
 
+class DiagramMetaSchema(BaseModel):
+    process_owner: str = ""
+    version: str = "1.0"
+    effective_date: str = ""
+    review_date: str = ""
+    document_id: str = ""
+
+
+class DiagramLaneSchema(BaseModel):
+    lane_id: str
+    name: str
+    order: int = 1
+
+
+class DiagramNodeSchema(BaseModel):
+    node_id: str
+    lane_id: str
+    type: str = "activity"
+    shape: str = "process"
+    label: str = ""
+    description: str = ""
+    column: int = 0
+    badge: str = ""
+    source_anchor_ids: list[str] = Field(default_factory=list)
+    linked_control_ids: list[str] = Field(default_factory=list)
+    linked_risk_ids: list[str] = Field(default_factory=list)
+
+
+class DiagramEdgeSchema(BaseModel):
+    edge_id: str
+    from_node_id: str
+    to_node_id: str
+    label: str = ""
+
+
 class RewriteAcceptedSectionResponse(BaseModel):
     anchor_id: str = ""
     rewritten_text: str = ""
@@ -168,9 +251,12 @@ class RewriteAcceptedSectionResponse(BaseModel):
 
 class SwimlaneDiagramModelResponse(BaseModel):
     title: str = ""
-    lanes: list[dict[str, Any]] = Field(default_factory=list)
-    nodes: list[dict[str, Any]] = Field(default_factory=list)
-    edges: list[dict[str, Any]] = Field(default_factory=list)
+    meta: DiagramMetaSchema = Field(default_factory=DiagramMetaSchema)
+    lanes: list[DiagramLaneSchema] = Field(default_factory=list)
+    nodes: list[DiagramNodeSchema] = Field(default_factory=list)
+    edges: list[DiagramEdgeSchema] = Field(default_factory=list)
+    control_summary: list[dict[str, Any]] = Field(default_factory=list)
+    risk_summary: list[dict[str, Any]] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
 
 
@@ -183,3 +269,13 @@ class FinalSummaryResponse(BaseModel):
     case_chat_context_summary: list[str] = Field(default_factory=list)
     open_items: list[str] = Field(default_factory=list)
     limitations: list[str] = Field(default_factory=list)
+
+
+class CaseFinalizationResponse(BaseModel):
+    missing_control_recommendations: list[dict[str, Any]] = Field(default_factory=list)
+    duplicate_groups: list[dict[str, Any]] = Field(default_factory=list)
+    conflicting_suggestions: list[dict[str, Any]] = Field(default_factory=list)
+    questions: list[dict[str, Any]] = Field(default_factory=list)
+    diagram_model: SwimlaneDiagramModelResponse = Field(default_factory=SwimlaneDiagramModelResponse)
+    final_summary: FinalSummaryResponse = Field(default_factory=FinalSummaryResponse)
+    warnings: list[str] = Field(default_factory=list)

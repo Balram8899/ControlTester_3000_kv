@@ -9,7 +9,7 @@ pydantic-settings==2.9.1
 # LangChain stack
 langchain==0.3.25
 langchain-community==0.3.24
-langchain-core==0.3.61
+langchain-core==0.3.63
 langchain-ollama==0.3.3
 langchain-google-genai==2.0.10
 langchain-openai==0.3.16

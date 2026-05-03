@@ -18,11 +18,13 @@ logger = logging.getLogger(__name__)
 _llm_cache = None
 
 def get_llm(model: str):
-    """Lazy load the configured Ollama LLM."""
+    """Lazy load the active Settings LLM."""
     global _llm_cache
-    if _llm_cache is None or _llm_cache[0] != model:
+    from utils.llm_config_store import get_active_llm_signature
+    signature = get_active_llm_signature()
+    if _llm_cache is None or _llm_cache[0] != signature:
         from utils.llm_chain import _make_llm
-        _llm_cache = (model, _make_llm(model, temperature=0.1))
+        _llm_cache = (signature, _make_llm(model, temperature=0.1))
     return _llm_cache[1]
 
 

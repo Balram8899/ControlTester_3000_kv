@@ -22,6 +22,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { PROVIDER_MODELS, providerLabel } from "@/lib/llm-provider-models";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 interface ContextFile {
@@ -53,13 +54,6 @@ interface LLMStatus {
   latency_ms: number;
   available_providers: string[];
 }
-
-const PROVIDER_MODELS: Record<string, string[]> = {
-  gemini:    ["gemini-3-flash-preview"],
-  openai:    ["gpt-5.5", "gpt-5.4"],
-  anthropic: ["claude-opus-4-7", "claude-sonnet-4-6"],
-  ollama:    ["llama3:latest"],
-};
 
 export default function SettingsPage() {
   const [generalContextFiles, setGeneralContextFiles] = useState<ContextFile[]>([]);
@@ -113,8 +107,8 @@ export default function SettingsPage() {
       }
       return res.json();
     },
-    onSuccess: () => {
-      toast({ title: "Provider saved", description: `Now using ${llmProvider} / ${llmModel}` });
+    onSuccess: (data) => {
+      toast({ title: "Provider saved", description: `Now using ${data.provider} / ${data.model}` });
       queryClient.invalidateQueries({ queryKey: ["/api/settings/llm-status"] });
     },
     onError: (err: Error) => {
@@ -126,7 +120,11 @@ export default function SettingsPage() {
     setTestLoading(true);
     setTestResult(null);
     try {
-      const res = await fetch("/api/settings/llm-status");
+      const params = new URLSearchParams();
+      if (llmProvider) params.set("provider", llmProvider);
+      if (llmModel) params.set("model", llmModel);
+      const query = params.toString();
+      const res = await fetch(`/api/settings/llm-status${query ? `?${query}` : ""}`);
       const data: LLMStatus = await res.json();
       setTestResult(data);
     } catch {
@@ -431,7 +429,7 @@ export default function SettingsPage() {
                         <SelectContent>
                           {(llmStatus?.available_providers ?? []).map((p) => (
                             <SelectItem key={p} value={p}>
-                              {p.charAt(0).toUpperCase() + p.slice(1)}
+                              {providerLabel(p)}
                             </SelectItem>
                           ))}
                         </SelectContent>

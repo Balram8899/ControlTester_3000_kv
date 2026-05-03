@@ -48,7 +48,9 @@
       "Read(//c/Users/kvarm/AppData/Local/Temp/**)",
       "Bash(kill %1)",
       "mcp__plugin_socraticode_socraticode__codebase_graph_build",
-      "mcp__plugin_socraticode_socraticode__codebase_graph_status"
+      "mcp__plugin_socraticode_socraticode__codebase_graph_status",
+      "Bash(python -m pytest tests/test_regulatory_comparison_performance.py -v)",
+      "Bash(python -m pytest tests/ -v --ignore=tests/test_settings.py --ignore=tests/test_regulatory_comparison_performance.py)"
     ]
   }
 }

@@ -21,6 +21,48 @@
   background: hsl(var(--muted-foreground) / 0.3);
 }
 
+.trace-docx-comment {
+  position: relative;
+  display: inline;
+  border-radius: 3px;
+  background: #FFF8E1;
+  box-shadow: 0 0 0 1px rgba(234, 170, 0, 0.55);
+  cursor: help;
+}
+
+.trace-docx-highlight {
+  display: inline;
+  border-radius: 3px;
+  background: #FFF8E1;
+  box-shadow: 0 0 0 1px rgba(234, 170, 0, 0.35);
+}
+
+.trace-docx-floating-tooltip {
+  position: fixed;
+  z-index: 10000;
+  width: min(320px, 70vw);
+  border: 1px solid #D8E0ED;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 16px 40px -24px rgba(12, 35, 60, 0.45);
+  color: #0C233C;
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 12px;
+  white-space: normal;
+}
+
+.trace-docx-floating-tooltip strong,
+.trace-docx-floating-tooltip span {
+  display: block;
+}
+
+.trace-docx-floating-tooltip span + span {
+  margin-top: 8px;
+  border-top: 1px solid #E6ECF5;
+  padding-top: 8px;
+}
+
 /* Firefox scrollbar */
 * {
   scrollbar-width: thin;

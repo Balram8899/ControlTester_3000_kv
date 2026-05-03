@@ -17,6 +17,10 @@ def build_preview_model(
         "highlights": [
             {
                 "anchor_id": anchor.get("anchor_id"),
+                "document_id": anchor.get("document_id"),
+                "file_id": anchor.get("file_id"),
+                "section_path": anchor.get("section_path", []),
+                "block_type": anchor.get("block_type", ""),
                 "text": anchor.get("text", ""),
                 "suggestions": suggestion_by_anchor.get(anchor.get("anchor_id"), []),
             }

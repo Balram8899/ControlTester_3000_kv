@@ -45,7 +45,23 @@ def run_json_prompt(
     llm: Any | None = None,
     max_retries: int = 1,
 ) -> PromptRunResult:
-    model = llm or get_llm()
+    try:
+        model = llm or get_llm()
+    except Exception as exc:
+        error = str(exc)
+        return PromptRunResult(
+            parsed=None,
+            raw="",
+            record={
+                "stage": stage,
+                "model": "unavailable",
+                "created_at": datetime.utcnow().isoformat(),
+                "validation_status": "invalid",
+                "error": f"LLM unavailable for {stage}: {error}",
+                "attempts": 0,
+                "errors": [error],
+            },
+        )
     record = {
         "stage": stage,
         "model": model.__class__.__name__,

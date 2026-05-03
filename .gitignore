@@ -10,3 +10,5 @@ audit_pipeline.log
 .node_modules/
 node_modules
 claude.md
+./claude
+./docs

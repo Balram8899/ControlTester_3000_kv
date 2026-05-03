@@ -2,9 +2,11 @@ node_modules/
 dist/
 .vite/
 .cache/
+.playwright-cli/
 coverage/
 .git/
 *.log
+tmp/
 README.md
 replit.md
 design_guidelines.md

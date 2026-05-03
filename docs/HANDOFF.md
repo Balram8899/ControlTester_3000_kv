@@ -261,6 +261,21 @@ response = llm.invoke([HumanMessage(content=prompt)])
 - **Amendments implemented:** prompt-injection screening via `content_sanitizer.py`, chunk length capping, structural `<document_content>` delimiters, batch `extract`/`analyze` endpoints, per-stage `processing_state`, CairoSVG-backed diagram PDF path with ReportLab fallback, and SOP Uplift env vars.
 - **Current limitation:** Prompt templates and JSON validation are in place, and extract/analyze can opt into the LLM runner, but extraction and suggestions still fall back to deterministic V1 scaffolds. The 21 prompt stages need deeper schema-specific parsing, retry policy, and UX surfacing before this should be treated as complete AI analysis.
 
+### SOP Uplift Swimlane Output Fix (2026-05-03)
+
+- Final generated swimlane artifacts now rebuild the diagram from `revised_sop_sections` at `generate-outputs` time instead of reusing stale `case.diagram_model` preview data.
+- Accepted suggestions use `suggested_text`; edited suggestions use `user_text`; rejected and open suggestions are excluded from the implemented process diagram and surfaced through warnings.
+- Supporting controls/risks can enrich summaries, but supporting-document-only process steps are not added as flow nodes.
+- The swimlane prompt now states the effective SOP source priority, supporting-document enrichment limits, C#/R#/E# anti-invention rules, reference-artifact paths, and sizing/readability guardrails.
+
+### LLM Provider Expansion (2026-05-03)
+
+- Settings now supports `kimi` and `deepseek` alongside Gemini, OpenAI, Anthropic, and Ollama.
+- Kimi uses the OpenAI-compatible Moonshot endpoint with `kimi-k2.6` as the default model. Set either `MOONSHOT_API_KEY` or `KIMI_API_KEY`; optional vars are `KIMI_BASE_URL`, `KIMI_TEMPERATURE`, and `KIMI_THINKING`.
+- DeepSeek defaults to `deepseek-v4-pro` per the current local preference. Other selectable options are `deepseek-v4-flash`, `deepseek-chat`, and `deepseek-reasoner`; set `DEEPSEEK_API_KEY`, with optional `DEEPSEEK_BASE_URL`, `DEEPSEEK_TEMPERATURE`, `DEEPSEEK_THINKING`, and `DEEPSEEK_REASONING_EFFORT`.
+- The Settings Test Connection action can test the currently selected provider/model before saving it.
+- Provider-specific client setup remains centralized in `utils/llm_provider.py` and `utils/llm_factory.py`; feature code should still call `get_llm()` or `make_llm()` only.
+
 ### Confirmed Bugs (not yet fixed as of last session)
 None critical — all reported bugs have been fixed and deployed.
 

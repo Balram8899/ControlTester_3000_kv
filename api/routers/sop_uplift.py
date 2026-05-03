@@ -2,31 +2,41 @@ from __future__ import annotations
 
 import base64
 import json
+import mimetypes
 import os
+import threading
+from datetime import datetime
 from typing import Any, Literal, Optional
+from urllib.parse import quote
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
+from utils.sop_uplift.case_index import build_case_local_index, search_case_local_index
 from utils.sop_uplift.case_store import SopUpliftCaseStore
 from utils.sop_uplift.readiness import compute_readiness
+from utils.sop_uplift.analysis_engine import generate_rule_based_suggestions, mark_rule_fallback_suggestions, quality_gate_suggestions
 from utils.sop_uplift.anchor_builder import build_anchors
 from utils.sop_uplift.change_log import build_json_audit_log, build_markdown_change_log
 from utils.sop_uplift.chunker import build_chunks
 from utils.sop_uplift.content_sanitizer import sanitize_chunk
 from utils.sop_uplift.diagram_exporters.drawio_exporter import export_drawio
+from utils.sop_uplift.diagram_exporters.mermaid_exporter import export_mermaid
 from utils.sop_uplift.diagram_exporters.pdf_exporter import export_diagram_pdf
+from utils.sop_uplift.diagram_exporters.png_exporter import export_png
 from utils.sop_uplift.diagram_exporters.svg_exporter import export_svg
 from utils.sop_uplift.diagram_exporters.vsdx_exporter import export_vsdx_stub
 from utils.sop_uplift.diagram_model import DiagramEdge, DiagramLane, DiagramModel, DiagramNode
-from utils.sop_uplift.llm_schemas import PolicyRequirementExtractionResponse, SopSuggestionResponse
+from utils.sop_uplift.llm_schemas import AgentFollowUpQuestionsResponse, PolicyRequirementExtractionResponse, SopSuggestionResponse
 from utils.sop_uplift.llm_orchestrator import run_json_prompt
-from utils.sop_uplift.markdown_ingestion import convert_bytes_to_markdown
-from utils.sop_uplift.pipeline import run_full_sop_pipeline
+from utils.sop_uplift.markdown_ingestion import convert_bytes_to_markdown, looks_corrupt_markdown
+from utils.sop_uplift.pipeline import build_suggestion_context, normalize_diagram_model, run_full_sop_pipeline, suggestion_quality_context
 from utils.sop_uplift.preview_renderer import build_preview_model
 from utils.sop_uplift.prompt_templates import build_prompt
-from utils.sop_uplift.rewrite_generator import generate_docx
+from utils.sop_uplift.retrieval import retrieve_context
+from utils.sop_uplift.rewrite_generator import build_revised_sections, generate_docx
+from utils.sop_uplift.tagging import suggest_document_tag
 
 router = APIRouter(prefix="/sop-uplift", tags=["sop-uplift"])
 
@@ -56,6 +66,7 @@ class TagUpdate(BaseModel):
 class ChatMessageCreate(BaseModel):
     role: Literal["agent", "user"] = "user"
     content: str = Field(..., min_length=1)
+    context_snapshot: dict[str, Any] = Field(default_factory=dict)
 
 
 class SuggestionUpdate(BaseModel):
@@ -76,12 +87,21 @@ class BulkSuggestionUpdate(BaseModel):
 class BatchProcessRequest(BaseModel):
     batch_size: int = Field(default_factory=lambda: int(os.getenv("SOP_UPLIFT_DEFAULT_BATCH_SIZE", "5")), ge=1, le=50)
     section_ids: list[str] = Field(default_factory=list)
-    use_llm: bool = False
+    use_llm: bool = True
 
 
 class PipelineRunRequest(BaseModel):
-    use_llm: bool = False
+    use_llm: bool = True
     max_chunk_chars: int = Field(default_factory=lambda: int(os.getenv("SOP_UPLIFT_MAX_CHUNK_CHARS", "4000")), ge=500, le=20000)
+
+
+class FollowUpQuestionsRequest(BaseModel):
+    use_llm: bool = True
+
+
+class CaseIndexSearchRequest(BaseModel):
+    query: str = Field(..., min_length=1)
+    limit: int = Field(5, ge=1, le=25)
 
 
 _store: SopUpliftCaseStore | None = None
@@ -101,19 +121,32 @@ def _require_case(case_id: str) -> dict[str, Any]:
     return case
 
 
+def _public_file_metadata(file_meta: dict[str, Any]) -> dict[str, Any]:
+    public = dict(file_meta)
+    public.pop("raw_content", None)
+    public.pop("raw_content_b64", None)
+    return public
+
+
+def _public_case(case: dict[str, Any]) -> dict[str, Any]:
+    public = dict(case)
+    public["uploaded_files"] = [_public_file_metadata(item) for item in case.get("uploaded_files", [])]
+    return public
+
+
 @router.post("/cases", status_code=201)
 def create_case(body: SopCaseCreate):
-    return get_store().create_case(body.model_dump())
+    return _public_case(get_store().create_case(body.model_dump()))
 
 
 @router.get("/cases")
 def list_cases():
-    return {"cases": get_store().list_cases()}
+    return {"cases": [_public_case(case) for case in get_store().list_cases()]}
 
 
 @router.get("/cases/{case_id}")
 def get_case(case_id: str):
-    return _require_case(case_id)
+    return _public_case(_require_case(case_id))
 
 
 @router.patch("/cases/{case_id}")
@@ -121,7 +154,7 @@ def update_case(case_id: str, body: SopCaseUpdate):
     updated = get_store().update_case(case_id, body.model_dump(exclude_unset=True))
     if not updated:
         raise HTTPException(404, "SOP Uplift case not found")
-    return updated
+    return _public_case(updated)
 
 
 @router.delete("/cases/{case_id}", status_code=204)
@@ -155,13 +188,34 @@ async def upload_file(
     )
     if not metadata:
         raise HTTPException(404, "SOP Uplift case not found")
-    return metadata
+    return _public_file_metadata(metadata)
 
 
 @router.get("/cases/{case_id}/files")
 def list_files(case_id: str):
     case = _require_case(case_id)
-    return {"files": case.get("uploaded_files", [])}
+    return {"files": [_public_file_metadata(item) for item in case.get("uploaded_files", [])]}
+
+
+@router.get("/cases/{case_id}/files/{file_id}/content")
+def get_file_content(case_id: str, file_id: str):
+    case = _require_case(case_id)
+    file_meta = next((item for item in case.get("uploaded_files", []) if item.get("file_id") == file_id), None)
+    if not file_meta:
+        raise HTTPException(404, "SOP Uplift file not found")
+    content = get_store().get_file_content(case_id, file_id)
+    if content is None:
+        raise HTTPException(404, "SOP Uplift file content not found")
+    filename = file_meta.get("filename") or "document"
+    media_type = file_meta.get("content_type") or mimetypes.guess_type(filename)[0] or "application/octet-stream"
+    return Response(
+        content=content,
+        media_type=media_type,
+        headers={
+            "Content-Disposition": f"inline; filename*=UTF-8''{quote(filename)}",
+            "X-SOP-Uplift-Filename": filename,
+        },
+    )
 
 
 @router.delete("/cases/{case_id}/files/{file_id}", status_code=204)
@@ -189,31 +243,43 @@ def list_document_tags(case_id: str):
 def tag_documents(case_id: str):
     case = _require_case(case_id)
     tags = []
+    markdown_by_file_id = {
+        document.get("file_id"): document.get("markdown", "")
+        for document in case.get("markdown_documents", [])
+        if document.get("file_id")
+    }
     for file_meta in case.get("uploaded_files", []):
         file_id = file_meta.get("file_id")
         if not file_id:
             continue
-        filename = (file_meta.get("filename") or "").lower()
-        bucket = (file_meta.get("bucket") or "").lower()
-        tag = _infer_document_tag(filename, bucket)
-        confidence = "high" if bucket else "medium"
+        suggested = suggest_document_tag(file_meta, markdown_by_file_id.get(file_id, ""))
         stored = get_store().set_document_tag(
             case_id,
             file_id,
-            {"suggested_tag": tag, "confirmed_tag": tag, "confidence": confidence},
+            {
+                "suggested_tag": suggested["suggested_tag"],
+                "confirmed_tag": suggested["confirmed_tag"],
+                "confidence": suggested["confidence"],
+            },
         )
-        tags.append(stored or {"file_id": file_id, "confirmed_tag": tag, "confidence": confidence})
+        tags.append(stored or suggested)
     return {"document_tags": tags}
 
 
 @router.post("/cases/{case_id}/convert")
 def convert_case_documents(case_id: str):
     case = _require_case(case_id)
+    updates = _convert_case_documents(case_id, case)
+    get_store().update_case(case_id, updates)
+    return updates
+
+
+def _convert_case_documents(case_id: str, case: dict[str, Any]) -> dict[str, Any]:
     uploaded_files = [dict(file_meta) for file_meta in case.get("uploaded_files", [])]
     markdown_documents = list(case.get("markdown_documents", []))
     anchors = list(case.get("anchors", []))
     chunks = list(case.get("chunks", []))
-    converted_file_ids = {doc.get("file_id") for doc in markdown_documents}
+    converted_by_file_id = {doc.get("file_id"): doc for doc in markdown_documents}
     completed = 0
     failed = 0
 
@@ -221,15 +287,40 @@ def convert_case_documents(case_id: str):
 
     for file_meta in uploaded_files:
         file_id = file_meta.get("file_id")
-        if not file_id or file_id in converted_file_ids:
+        if not file_id:
             continue
+        filename = file_meta.get("filename", "")
+        suffix = filename.lower().rsplit(".", 1)[-1] if "." in filename else ""
+        preferred_converter = {"docx": "python-docx", "xlsx": "openpyxl", "xlsm": "openpyxl", "xltx": "openpyxl", "xltm": "openpyxl"}.get(suffix)
+        existing_document = converted_by_file_id.get(file_id)
+        existing_converter = (existing_document or {}).get("conversion", {}).get("converter")
+        existing_markdown = (existing_document or {}).get("markdown", "")
+        needs_reconvert = bool(
+            existing_document
+            and (
+                looks_corrupt_markdown(existing_markdown)
+                or (preferred_converter and existing_converter and existing_converter != preferred_converter)
+            )
+        )
+        if existing_document and not needs_reconvert:
+            continue
+        if needs_reconvert:
+            document_id = existing_document.get("document_id") or f"doc_{file_id}"
+            markdown_documents = [doc for doc in markdown_documents if doc.get("file_id") != file_id]
+            removed_anchor_ids = {anchor.get("anchor_id") for anchor in anchors if anchor.get("file_id") == file_id or anchor.get("document_id") == document_id}
+            anchors = [anchor for anchor in anchors if anchor.get("file_id") != file_id and anchor.get("document_id") != document_id]
+            chunks = [
+                chunk
+                for chunk in chunks
+                if chunk.get("document_id") != document_id and not set(chunk.get("anchor_ids", [])).intersection(removed_anchor_ids)
+            ]
         try:
             raw = get_store().get_file_content(case_id, file_id)
             if not isinstance(raw, (bytes, bytearray)):
                 raw = base64.b64decode(file_meta.get("raw_content_b64", ""))
             conversion = convert_bytes_to_markdown(
                 bytes(raw),
-                file_meta.get("filename", ""),
+                filename,
                 file_meta.get("content_type", ""),
             )
             markdown = conversion.markdown
@@ -239,9 +330,18 @@ def convert_case_documents(case_id: str):
                 "fallback_used": conversion.fallback_used,
                 "warnings": conversion.warnings,
             }
+            if conversion.status != "converted" or looks_corrupt_markdown(markdown):
+                conversion_metadata = {
+                    **conversion_metadata,
+                    "status": "failed",
+                    "warnings": [*conversion_metadata.get("warnings", []), "Converted content looked binary/corrupt and was excluded from review."],
+                }
+                file_meta["conversion"] = conversion_metadata
+                failed += 1
+                continue
             document_id = f"doc_{file_id}"
             doc_anchors = build_anchors(markdown, document_id=document_id, file_id=file_id)
-            doc_chunks = build_chunks(markdown, doc_anchors, document_id=document_id)
+            doc_chunks = build_chunks(markdown, doc_anchors, document_id=document_id, file_id=file_id)
             if len(chunks) + len(doc_chunks) > max_chunks:
                 doc_chunks = doc_chunks[: max(0, max_chunks - len(chunks))]
             markdown_documents.append(
@@ -278,7 +378,27 @@ def convert_case_documents(case_id: str):
         "processing_state": processing_state,
         "status": "tagging" if markdown_documents else case.get("status", "draft"),
     }
-    get_store().update_case(case_id, updates)
+    removed_anchor_ids = {anchor.get("anchor_id") for anchor in case.get("anchors", [])} - {anchor.get("anchor_id") for anchor in anchors}
+    if removed_anchor_ids:
+        updates["suggestions"] = [
+            suggestion
+            for suggestion in case.get("suggestions", [])
+            if suggestion.get("anchor_id") not in removed_anchor_ids
+        ]
+    updates["case_index"] = build_case_local_index({**case, **updates})
+    safe_markdown_documents = [doc for doc in markdown_documents if not looks_corrupt_markdown(doc.get("markdown", ""))]
+    safe_document_ids = {doc.get("document_id") for doc in safe_markdown_documents}
+    safe_file_ids = {doc.get("file_id") for doc in safe_markdown_documents}
+    safe_anchors = [
+        anchor
+        for anchor in anchors
+        if anchor.get("document_id") in safe_document_ids or anchor.get("file_id") in safe_file_ids
+    ]
+    updates["preview_model"] = build_preview_model(
+        safe_markdown_documents,
+        safe_anchors,
+        updates.get("suggestions", case.get("suggestions", [])),
+    )
     return updates
 
 
@@ -301,11 +421,53 @@ def list_chat(case_id: str):
 
 @router.post("/cases/{case_id}/chat", status_code=201)
 def add_chat_message(case_id: str, body: ChatMessageCreate):
-    _require_case(case_id)
-    message = get_store().add_chat_message(case_id, body.role, body.content)
+    case = _require_case(case_id)
+    message = get_store().add_chat_message(case_id, body.role, body.content, body.context_snapshot)
     if not message:
         raise HTTPException(404, "SOP Uplift case not found")
-    return message
+    if body.role != "user":
+        return message
+    reply = _case_chat_agent_reply(case, body.content, body.context_snapshot or {})
+    agent_message = get_store().add_chat_message(case_id, "agent", reply, body.context_snapshot)
+    return {**message, "agent_message": agent_message}
+
+
+def _case_chat_agent_reply(case: dict[str, Any], content: str, context_snapshot: dict[str, Any]) -> str:
+    text = content.lower()
+    step = str(context_snapshot.get("workflow_step") or "").lower()
+    readiness = case.get("readiness", {}) or {}
+    missing = readiness.get("missing_recommended_inputs") or []
+    tags = case.get("document_tags", []) or []
+    files = case.get("uploaded_files", []) or []
+    suggestions = case.get("suggestions", []) or []
+    outputs = case.get("outputs", []) or []
+    if "missing" in text or "document" in text or step == "upload":
+        if missing:
+            return f"Based on the current uploads, the next useful document type is: {', '.join(str(item).replace('_', ' ') for item in missing)}. Uploaded files currently tagged: {len(tags)} of {len(files)}."
+        return f"The upload set is currently sufficient for analysis. I see {len(files)} uploaded file(s) and {len(tags)} confirmed document tag(s)."
+    if "tag" in text:
+        if tags:
+            labels = ", ".join(f"{tag.get('filename') or tag.get('file_id')}: {str(tag.get('confirmed_tag', '')).replace('_', ' ')}" for tag in tags[:5])
+            return f"Current confirmed tags are: {labels}. You can override any tag before running analysis."
+        return "No confirmed document tags are available yet. Upload files or run tagging first, then I can explain the detected tags."
+    if "suggestion" in text or step == "review":
+        open_count = sum(1 for item in suggestions if item.get("status") == "open")
+        accepted_count = sum(1 for item in suggestions if item.get("status") == "accepted")
+        return f"There are {open_count} open suggestion(s) and {accepted_count} accepted suggestion(s). I can help explain a selected suggestion or convert your chat context into a new suggestion."
+    if "download" in text or "artifact" in text or "output" in text or step == "outputs":
+        if outputs:
+            names = ", ".join(output.get("filename", output.get("type", "artifact")) for output in outputs[:6])
+            return f"Generated artifacts available: {names}. For diagrams, use PDF for review, PNG/SVG for images, Draw.io for editing, and Mermaid for text-based diagrams."
+        return "No outputs have been generated yet. After review, generate outputs to download the updated SOP plus diagram formats."
+    if "readiness" in text or "summarize" in text:
+        message = readiness.get("message") or "Readiness has not been computed yet."
+        return f"Current case readiness: {message}"
+    return "I captured that for this case. I can help with upload readiness, document tags, review suggestions, or generated outputs from the current workflow context."
+
+
+def _llm_unavailable_error(record: dict[str, Any]) -> bool:
+    error = str(record.get("error") or "")
+    return record.get("model") == "unavailable" or "LLM unavailable" in error
 
 
 @router.get("/cases/{case_id}/suggestions")
@@ -343,15 +505,27 @@ def update_suggestion(case_id: str, suggestion_id: str, body: SuggestionUpdate):
 @router.get("/cases/{case_id}/preview")
 def get_preview(case_id: str):
     case = _require_case(case_id)
-    preview_model = case.get("preview_model") or build_preview_model(
-        case.get("markdown_documents", []),
-        case.get("anchors", []),
+    safe_markdown_documents = [
+        document
+        for document in case.get("markdown_documents", [])
+        if not looks_corrupt_markdown(document.get("markdown", ""))
+    ]
+    safe_document_ids = {document.get("document_id") for document in safe_markdown_documents}
+    safe_file_ids = {document.get("file_id") for document in safe_markdown_documents}
+    safe_anchors = [
+        anchor
+        for anchor in case.get("anchors", [])
+        if anchor.get("document_id") in safe_document_ids or anchor.get("file_id") in safe_file_ids
+    ]
+    preview_model = build_preview_model(
+        safe_markdown_documents,
+        safe_anchors,
         case.get("suggestions", []),
     )
     return {
         "case_id": case_id,
-        "markdown_documents": case.get("markdown_documents", []),
-        "anchors": case.get("anchors", []),
+        "markdown_documents": safe_markdown_documents,
+        "anchors": safe_anchors,
         "suggestions": case.get("suggestions", []),
         "preview_model": preview_model,
         "diagram_model": case.get("diagram_model", {}),
@@ -361,9 +535,180 @@ def get_preview(case_id: str):
 @router.post("/cases/{case_id}/run-pipeline", status_code=202)
 def run_pipeline(case_id: str, body: PipelineRunRequest):
     case = _require_case(case_id)
-    updates = run_full_sop_pipeline(case, use_llm=body.use_llm, max_chunk_chars=body.max_chunk_chars)
-    get_store().update_case(case_id, updates)
-    return {"status": "complete", **updates}
+    existing = case.get("processing_state", {}).get("pipeline", {})
+    if existing.get("status") == "running":
+        return {"task_id": "pipeline", "status": "running", "processing_state": existing}
+    initial_state = _update_pipeline_progress(
+        case_id,
+        case,
+        status="running",
+        phase="starting",
+        message="TRACE is reviewing case files...",
+        completed=0,
+        total=100,
+        percent=1,
+    )
+    options = body.model_dump()
+    thread = threading.Thread(target=_run_pipeline_background, args=(case_id, options), daemon=True)
+    thread.start()
+    return {"task_id": "pipeline", "status": "running", "processing_state": initial_state}
+
+
+def _utc_now() -> str:
+    return datetime.utcnow().isoformat() + "Z"
+
+
+def _elapsed_seconds(started_at: str | None) -> int:
+    if not started_at:
+        return 0
+    try:
+        return max(0, round((datetime.utcnow() - datetime.fromisoformat(started_at.replace("Z", ""))).total_seconds()))
+    except Exception:
+        return 0
+
+
+def _update_pipeline_progress(
+    case_id: str,
+    case: dict[str, Any] | None = None,
+    *,
+    status: str,
+    phase: str,
+    message: str,
+    completed: int,
+    total: int,
+    percent: int,
+    error: str = "",
+    warnings: list[str] | None = None,
+) -> dict[str, Any]:
+    case = case or _require_case(case_id)
+    current_state = case.get("processing_state", {})
+    current_pipeline = current_state.get("pipeline", {})
+    now = _utc_now()
+    started_at = current_pipeline.get("started_at") or now
+    pipeline_state = {
+        **current_pipeline,
+        "status": status,
+        "phase": phase,
+        "message": message,
+        "completed": max(0, completed),
+        "total": max(1, total),
+        "pending": max(0, max(1, total) - max(0, completed)) if status == "running" else 0,
+        "failed": 1 if status == "failed" else 0,
+        "percent": max(0, min(100, percent)),
+        "started_at": started_at,
+        "updated_at": now,
+        "elapsed_seconds": _elapsed_seconds(started_at),
+    }
+    if status in {"complete", "failed"}:
+        pipeline_state["completed_at"] = now
+        pipeline_state["pending"] = 0
+    if error:
+        pipeline_state["error"] = error
+    elif status != "failed":
+        pipeline_state.pop("error", None)
+    if warnings is not None:
+        pipeline_state["warnings"] = warnings
+    processing_state = {**current_state, "pipeline": pipeline_state}
+    get_store().update_case(case_id, {"processing_state": processing_state})
+    return pipeline_state
+
+
+def _run_pipeline_background(case_id: str, options: dict[str, Any]) -> None:
+    try:
+        case = _require_case(case_id)
+        _update_pipeline_progress(
+            case_id,
+            case,
+            status="running",
+            phase="converting",
+            message="Converting uploaded documents...",
+            completed=5,
+            total=100,
+            percent=5,
+        )
+        conversion_updates = _convert_case_documents(case_id, case)
+        get_store().update_case(case_id, conversion_updates)
+        converted_case = {**case, **conversion_updates}
+        _update_pipeline_progress(
+            case_id,
+            converted_case,
+            status="running",
+            phase="parsing",
+            message="Reading converted document content...",
+            completed=15,
+            total=100,
+            percent=15,
+        )
+
+        def progress_callback(phase: str, message: str, completed: int, total: int, percent: int) -> None:
+            latest_case = _require_case(case_id)
+            _update_pipeline_progress(
+                case_id,
+                latest_case,
+                status="running",
+                phase=phase,
+                message=message,
+                completed=completed,
+                total=total,
+                percent=percent,
+            )
+
+        pipeline_updates = run_full_sop_pipeline(
+            converted_case,
+            use_llm=bool(options.get("use_llm", True)),
+            max_chunk_chars=int(options.get("max_chunk_chars") or 4000),
+            progress_callback=progress_callback,
+        )
+        pipeline_warnings = pipeline_updates.get("processing_state", {}).get("pipeline", {}).get("warnings", [])
+        if "processing_state" in pipeline_updates:
+            pipeline_updates["processing_state"] = {
+                key: value
+                for key, value in pipeline_updates["processing_state"].items()
+                if key != "pipeline"
+            }
+            if not pipeline_updates["processing_state"]:
+                pipeline_updates.pop("processing_state", None)
+        updates = {**conversion_updates, **pipeline_updates}
+        _update_pipeline_progress(
+            case_id,
+            {**converted_case, **pipeline_updates},
+            status="running",
+            phase="indexing",
+            message="Finalizing case index and document preview...",
+            completed=95,
+            total=100,
+            percent=95,
+        )
+        updates["case_index"] = build_case_local_index({**converted_case, **pipeline_updates})
+        get_store().update_case(case_id, updates)
+        completed_case = _require_case(case_id)
+        _update_pipeline_progress(
+            case_id,
+            completed_case,
+            status="complete",
+            phase="complete",
+            message="Extraction complete.",
+            completed=100,
+            total=100,
+            percent=100,
+            warnings=pipeline_warnings,
+        )
+    except Exception as exc:
+        try:
+            latest_case = _require_case(case_id)
+        except Exception:
+            latest_case = {"processing_state": {}}
+        _update_pipeline_progress(
+            case_id,
+            latest_case,
+            status="failed",
+            phase="failed",
+            message="Extraction failed.",
+            completed=0,
+            total=100,
+            percent=0,
+            error=str(exc),
+        )
 
 
 @router.post("/cases/{case_id}/extract")
@@ -394,6 +739,8 @@ def extract_case(case_id: str, body: BatchProcessRequest):
             )
             result = run_json_prompt("policy_requirement_extraction", prompt, PolicyRequirementExtractionResponse)
             prompt_records.append(result.record)
+            if _llm_unavailable_error(result.record):
+                raise HTTPException(status_code=503, detail="Check LLM settings")
             if result.parsed and result.parsed.requirements:
                 for req in result.parsed.requirements:
                     req_data = req.model_dump()
@@ -433,7 +780,28 @@ def extract_case(case_id: str, body: BatchProcessRequest):
 @router.post("/cases/{case_id}/analyze")
 def analyze_case(case_id: str, body: BatchProcessRequest):
     case = _require_case(case_id)
-    anchors = [anchor for anchor in case.get("anchors", []) if anchor.get("block_type") != "heading"]
+    sop_file_ids = {
+        tag.get("file_id")
+        for tag in case.get("document_tags", [])
+        if tag.get("confirmed_tag") in {"sop", "policy"}
+    }
+    if not sop_file_ids:
+        sop_file_ids = {
+            file_meta.get("file_id")
+            for file_meta in case.get("uploaded_files", [])
+            if file_meta.get("bucket") in {"sops", "procedures"}
+        }
+    all_content_anchors = [anchor for anchor in case.get("anchors", []) if anchor.get("block_type") != "heading"]
+    anchors = [
+        anchor
+        for anchor in all_content_anchors
+        if not sop_file_ids or anchor.get("file_id") in sop_file_ids
+    ]
+    supporting_chunks = [
+        chunk
+        for chunk in case.get("chunks", [])
+        if not sop_file_ids or chunk.get("file_id") not in sop_file_ids
+    ]
     state = case.get("processing_state", {}).get("analysis", {})
     completed_ids = set(state.get("completed_section_ids", []))
     if body.section_ids:
@@ -442,21 +810,43 @@ def analyze_case(case_id: str, body: BatchProcessRequest):
         candidates = [anchor for anchor in anchors if anchor.get("anchor_id") not in completed_ids]
     selected = candidates[: body.batch_size]
     suggestions = list(case.get("suggestions", []))
+    quality_context = suggestion_quality_context(case)
 
     for anchor in selected:
         suggestion_id = f"sug_{anchor.get('anchor_id')}"
-        if any(item.get("suggestion_id") == suggestion_id for item in suggestions):
+        existing_suggestion = next((item for item in suggestions if item.get("suggestion_id") == suggestion_id), None)
+        if existing_suggestion and not (
+            existing_suggestion.get("status") == "open"
+            and existing_suggestion.get("created_from") in {"analysis", "llm", "rule_fallback"}
+        ):
             completed_ids.add(anchor.get("anchor_id"))
             continue
+        if existing_suggestion:
+            suggestions = [item for item in suggestions if item.get("suggestion_id") != suggestion_id]
         text = anchor.get("text", "")
-        suggestion_type = "ownership_gap" if "owner" in text.lower() else "testability_gap"
         if body.use_llm:
+            available_context = supporting_chunks or case.get("chunks", [])
+            supporting_context = retrieve_context(text, available_context, limit=5) or available_context[:5]
+            suggestion_context = build_suggestion_context(
+                case,
+                {
+                    "chunk_id": f"anchor_{anchor.get('anchor_id')}",
+                    "document_id": anchor.get("document_id", ""),
+                    "file_id": anchor.get("file_id", ""),
+                    "content": text,
+                    "anchor_ids": [anchor.get("anchor_id", "")],
+                },
+            )
             prompt = build_prompt(
                 "sop_uplift_suggestions",
                 sop_section=text,
-                retrieved_context=json.dumps(case.get("corpus_map", {})),
+                retrieved_context=json.dumps({"case_corpus_map": case.get("corpus_map", {}), "supporting_context": supporting_context}),
+                suggestion_context=suggestion_context,
             )
             result = run_json_prompt("sop_uplift_suggestions", prompt, SopSuggestionResponse)
+            case.setdefault("prompt_runs", []).append(result.record)
+            if _llm_unavailable_error(result.record):
+                raise HTTPException(status_code=503, detail="Check LLM settings")
             if result.parsed and result.parsed.suggestions:
                 for item in result.parsed.suggestions:
                     item_data = item.model_dump()
@@ -476,16 +866,12 @@ def analyze_case(case_id: str, body: BatchProcessRequest):
                             "user_text": "",
                             "source_references": item_data.get("source_references", []),
                             "anchor_confidence": item_data.get("anchor_confidence", "medium"),
-                            "created_from": "analysis",
+                            "style_match_notes": item_data.get("style_match_notes", ""),
+                            "created_from": "llm",
                         }
                     )
-            else:
-                suggestions.append(_fallback_suggestion(suggestion_id, suggestion_type, anchor, text))
-            case.setdefault("prompt_runs", []).append(result.record)
         else:
-            suggestions.append(
-                _fallback_suggestion(suggestion_id, suggestion_type, anchor, text)
-            )
+            suggestions.extend(mark_rule_fallback_suggestions(generate_rule_based_suggestions([anchor], context_chunks=supporting_chunks)))
         completed_ids.add(anchor.get("anchor_id"))
 
     analysis_state = {
@@ -497,14 +883,75 @@ def analyze_case(case_id: str, body: BatchProcessRequest):
         "completed_section_ids": sorted(completed_ids),
     }
     processing_state = {**case.get("processing_state", {}), "analysis": analysis_state}
+    gate_kwargs = {
+        "eligible_anchor_ids": quality_context["eligible_sop_anchor_ids"],
+        "max_suggestions": 12,
+    }
+    if body.use_llm:
+        gate_kwargs.update(
+            {
+                "concrete_terms": quality_context["concrete_terms"],
+                "anchor_text_by_id": quality_context["anchor_text_by_id"],
+                "require_source_references": True,
+            }
+        )
+
     updates = {
-        "suggestions": suggestions,
+        "suggestions": quality_gate_suggestions(suggestions, **gate_kwargs),
         "processing_state": processing_state,
         "status": "review_ready",
         "prompt_runs": case.get("prompt_runs", []),
     }
     get_store().update_case(case_id, updates)
-    return {"suggestions": suggestions, "processing_state": processing_state}
+    return {"suggestions": updates["suggestions"], "processing_state": processing_state}
+
+
+@router.post("/cases/{case_id}/follow-up-questions")
+def generate_follow_up_questions(case_id: str, body: FollowUpQuestionsRequest):
+    case = _require_case(case_id)
+    prompt_records = list(case.get("prompt_runs", []))
+    warnings: list[str] = []
+    questions: list[dict[str, Any]]
+
+    if body.use_llm:
+        prompt = build_prompt(
+            "agent_follow_up_questions",
+            context={
+                "case_id": case_id,
+                "process_name": case.get("process_name", ""),
+                "readiness": case.get("readiness", {}),
+                "case_chat": case.get("case_chat", []),
+                "corpus_map": case.get("corpus_map", {}),
+                "suggestions": case.get("suggestions", []),
+            },
+        )
+        result = run_json_prompt("agent_follow_up_questions", prompt, AgentFollowUpQuestionsResponse)
+        prompt_records.append(result.record)
+        if result.parsed:
+            questions = _normalize_follow_up_questions(result.parsed.questions)
+        else:
+            warnings.append(result.record.get("error") or "LLM follow-up question generation returned no valid questions.")
+            questions = _rule_based_follow_up_questions(case)
+    else:
+        questions = _rule_based_follow_up_questions(case)
+
+    updates = {
+        "agent_follow_up_questions": questions,
+        "prompt_runs": prompt_records,
+        "processing_state": {
+            **case.get("processing_state", {}),
+            "follow_up_questions": {
+                "status": "complete",
+                "total": len(questions),
+                "completed": len(questions),
+                "failed": 0,
+                "pending": 0,
+                "warnings": warnings,
+            },
+        },
+    }
+    get_store().update_case(case_id, updates)
+    return {"agent_follow_up_questions": questions, "warnings": warnings}
 
 
 def _fallback_suggestion(suggestion_id: str, suggestion_type: str, anchor: dict[str, Any], text: str) -> dict[str, Any]:
@@ -525,6 +972,59 @@ def _fallback_suggestion(suggestion_id: str, suggestion_type: str, anchor: dict[
                 "anchor_confidence": "high",
                 "created_from": "analysis",
     }
+
+
+def _normalize_follow_up_questions(items: list[dict[str, Any] | str]) -> list[dict[str, Any]]:
+    questions = []
+    for index, item in enumerate(items, start=1):
+        if isinstance(item, str):
+            question = {"question": item}
+        else:
+            question = dict(item)
+        if not question.get("question"):
+            continue
+        questions.append(
+            {
+                "question_id": question.get("question_id") or f"q_{index}",
+                "question": question.get("question", ""),
+                "priority": question.get("priority", "medium"),
+                **({"why_it_matters": question.get("why_it_matters")} if question.get("why_it_matters") else {}),
+            }
+        )
+    return questions
+
+
+def _rule_based_follow_up_questions(case: dict[str, Any]) -> list[dict[str, Any]]:
+    questions: list[dict[str, Any]] = []
+    coverage_gaps = case.get("corpus_map", {}).get("coverage_gaps", [])
+    if coverage_gaps:
+        questions.append(
+            {
+                "question_id": "q_coverage_gap",
+                "question": "Which owner should resolve the open coverage gaps identified for this SOP?",
+                "priority": "high",
+                "why_it_matters": "The uplift needs accountable ownership for unresolved risk, control, or evidence gaps.",
+            }
+        )
+    if any(item.get("type") == "ownership_gap" for item in case.get("suggestions", [])):
+        questions.append(
+            {
+                "question_id": "q_owner",
+                "question": "Who is accountable for the SOP steps currently flagged with ownership gaps?",
+                "priority": "high",
+                "why_it_matters": "Named owners make the procedure testable and auditable.",
+            }
+        )
+    if not any(item.get("role") == "user" for item in case.get("case_chat", [])):
+        questions.append(
+            {
+                "question_id": "q_context",
+                "question": "Are there case-specific exceptions, approvers, or evidence artifacts the SOP should preserve?",
+                "priority": "medium",
+                "why_it_matters": "Case context helps tailor suggestions to this uploaded corpus.",
+            }
+        )
+    return questions[:5]
 
 
 @router.post("/cases/{case_id}/build-corpus-map")
@@ -557,8 +1057,39 @@ def build_corpus_map(case_id: str):
         ],
         "warnings": [],
     }
-    get_store().update_case(case_id, {"corpus_map": corpus_map})
+    case_index = build_case_local_index({**case, "corpus_map": corpus_map})
+    get_store().update_case(case_id, {"corpus_map": corpus_map, "case_index": case_index})
     return {"corpus_map": corpus_map}
+
+
+@router.post("/cases/{case_id}/build-index")
+def build_index(case_id: str):
+    case = _require_case(case_id)
+    case_index = build_case_local_index(case)
+    get_store().update_case(case_id, {"case_index": case_index})
+    return {"case_index": case_index}
+
+
+@router.get("/cases/{case_id}/index")
+def get_index(case_id: str):
+    case = _require_case(case_id)
+    case_index = case.get("case_index") or build_case_local_index(case)
+    if not case.get("case_index"):
+        get_store().update_case(case_id, {"case_index": case_index})
+    return {"case_index": case_index}
+
+
+@router.post("/cases/{case_id}/index/search")
+def search_index(case_id: str, body: CaseIndexSearchRequest):
+    case = _require_case(case_id)
+    case_index = case.get("case_index") or build_case_local_index(case)
+    results = search_case_local_index(body.query, case_index, body.limit)
+    return {
+        "case_id": case_id,
+        "source_scope": case_index.get("source_scope", "case_uploads_only"),
+        "query": body.query,
+        "results": results,
+    }
 
 
 @router.post("/cases/{case_id}/chat/{message_id}/convert-to-suggestion", status_code=201)
@@ -598,10 +1129,19 @@ def convert_chat_to_suggestion(case_id: str, message_id: str):
 def get_task(case_id: str, task_id: str):
     case = _require_case(case_id)
     stage = case.get("processing_state", {}).get(task_id, {})
-    pending = stage.get("pending", 0)
+    status_value = stage.get("status")
+    if status_value not in {"running", "complete", "failed"}:
+        pending = stage.get("pending", 0)
+        status_value = "running" if pending else "done"
+    if status_value == "complete":
+        response_status = "done"
+    else:
+        response_status = status_value
+    if stage.get("started_at"):
+        stage = {**stage, "elapsed_seconds": _elapsed_seconds(stage.get("started_at"))}
     return {
         "task_id": task_id,
-        "status": "running" if pending else "done",
+        "status": response_status,
         "processing_state": stage,
     }
 
@@ -625,10 +1165,14 @@ def generate_outputs(case_id: str):
         for anchor in case.get("anchors", [])
         if anchor.get("block_type") != "heading"
     ]
-    model = DiagramModel.model_validate(case.get("diagram_model")) if case.get("diagram_model") else _build_diagram_model(case)
+    revised_sections = build_revised_sections(sections, suggestions)
+    revised_case = {**case, "revised_sop_sections": revised_sections}
+    model = _diagram_model_for_outputs(revised_case)
     docx_bytes = generate_docx(case, sections, suggestions)
     drawio_text = export_drawio(model)
+    mermaid_text = export_mermaid(model)
     svg_text = export_svg(model)
+    png_bytes = export_png(model)
     pdf_bytes = export_diagram_pdf(model)
     vsdx_bytes = export_vsdx_stub(model)
     markdown_log = build_markdown_change_log(case, suggestions, [])
@@ -651,6 +1195,8 @@ def generate_outputs(case_id: str):
     output_payloads = [
         ("docx-output", "docx", f"{safe_name}_uplift.docx", docx_bytes, "application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
         ("drawio-output", "drawio", f"{safe_name}_swimlane.drawio", drawio_text, "application/xml"),
+        ("mermaid-output", "mermaid", f"{safe_name}_swimlane.mmd", mermaid_text, "text/plain"),
+        ("diagram-png-output", "diagram_png", f"{safe_name}_diagram.png", png_bytes, "image/png"),
         ("diagram-pdf-output", "diagram_pdf", f"{safe_name}_diagram.pdf", pdf_bytes, "application/pdf"),
         ("svg-output", "svg", f"{safe_name}_diagram.svg", svg_text, "image/svg+xml"),
         ("changelog-md-output", "changelog_markdown", f"{safe_name}_change_log.md", markdown_log, "text/markdown"),
@@ -677,7 +1223,7 @@ def generate_outputs(case_id: str):
             "metadata": {"v1_status": "future-compatible stub"},
         },
     )
-    get_store().update_case(case_id, {"outputs": outputs, "status": "complete"})
+    get_store().update_case(case_id, {"outputs": outputs, "status": "complete", "revised_sop_sections": revised_sections, "diagram_model": model.model_dump()})
     try:
         from utils.rcm_report_store import RCMReportStore
 
@@ -706,6 +1252,34 @@ def generate_outputs(case_id: str):
     except Exception:
         pass
     return {"status": "generated", "outputs": outputs}
+
+
+NO_APPLIED_SUGGESTIONS_WARNING = "No accepted or edited uplift suggestions were applied; diagram reflects the current uploaded SOP."
+EXCLUDED_SUGGESTIONS_WARNING = "Rejected and open suggestions were excluded from the implemented process diagram."
+
+
+def _sections_from_case(case: dict[str, Any]) -> list[dict[str, Any]]:
+    return [
+        {
+            "anchor_id": anchor.get("anchor_id"),
+            "heading": " > ".join(anchor.get("section_path", [])) or "SOP Section",
+            "text": anchor.get("text", ""),
+        }
+        for anchor in case.get("anchors", [])
+        if anchor.get("block_type") != "heading"
+    ]
+
+
+def _effective_sections_for_outputs(case: dict[str, Any]) -> list[dict[str, Any]]:
+    revised = case.get("revised_sop_sections")
+    if revised:
+        return revised
+    return build_revised_sections(_sections_from_case(case), case.get("suggestions", []))
+
+
+def _diagram_model_for_outputs(case: dict[str, Any]) -> DiagramModel:
+    final_case = {**case, "revised_sop_sections": _effective_sections_for_outputs(case)}
+    return _build_diagram_model(final_case)
 
 
 @router.get("/cases/{case_id}/outputs")
@@ -741,15 +1315,37 @@ def _build_diagram_model(case: dict[str, Any]) -> DiagramModel:
         DiagramLane(lane_id="control_testing", name="Control Testing", order=4),
     ]
     nodes: list[DiagramNode] = []
-    source_anchors = [anchor for anchor in case.get("anchors", []) if anchor.get("block_type") != "heading"]
+    revised_sections = case.get("revised_sop_sections", [])
+    if revised_sections:
+        source_anchors = [
+            {
+                "anchor_id": section.get("anchor_id", ""),
+                "text": section.get("revised_text") or section.get("text") or section.get("original_text") or "",
+            }
+            for section in revised_sections
+        ]
+    else:
+        source_anchors = [anchor for anchor in case.get("anchors", []) if anchor.get("block_type") != "heading"]
     for index, anchor in enumerate(source_anchors[:8]):
         lane = lanes[index % len(lanes)]
+        text = str(anchor.get("text") or "SOP step").strip() or "SOP step"
+        lower = text.lower()
+        if any(term in lower for term in ["evidence", "record", "packet", "repository"]):
+            node_type = "evidence"
+        elif "control" in lower:
+            node_type = "control"
+        elif "risk" in lower:
+            node_type = "risk"
+        else:
+            node_type = "activity"
         nodes.append(
             DiagramNode(
                 node_id=f"node_{index + 1}",
                 lane_id=lane.lane_id,
-                type="activity",
-                label=(anchor.get("text") or "SOP step")[:40],
+                type=node_type,
+                shape="data_store" if node_type == "evidence" else "decision" if "?" in text else "process",
+                label=text,
+                column=index,
                 source_anchor_ids=[anchor.get("anchor_id", "")],
             )
         )
@@ -763,29 +1359,41 @@ def _build_diagram_model(case: dict[str, Any]) -> DiagramModel:
         DiagramEdge(edge_id=f"edge_{index}", from_node_id=nodes[index - 1].node_id, to_node_id=nodes[index].node_id)
         for index in range(1, len(nodes))
     ]
-    return DiagramModel(
+    suggestions = case.get("suggestions", [])
+    has_implemented = any(section.get("applied_suggestion_ids") or section.get("applied_suggestions") for section in revised_sections)
+    has_excluded = any((item.get("status") or "open") in {"open", "pending", "rejected"} for item in suggestions)
+    warnings = ["Diagram generated from output fallback"]
+    if not has_implemented:
+        warnings.append(NO_APPLIED_SUGGESTIONS_WARNING)
+    if has_excluded:
+        warnings.append(EXCLUDED_SUGGESTIONS_WARNING)
+    control_summary = _supporting_summary(case.get("extracted_controls", []) or case.get("controls", []), "C", ("description", "control_description", "text", "summary"))
+    risk_summary = _supporting_summary(case.get("extracted_risks", []) or case.get("risks", []), "R", ("description", "risk_description", "text", "summary"))
+    return normalize_diagram_model(DiagramModel(
         title=f"{case.get('process_name') or 'SOP'} Swimlane",
         case_title=case.get("title", ""),
         process_name=case.get("process_name", ""),
         lanes=lanes,
         nodes=nodes,
         edges=edges,
-    )
+        control_summary=control_summary,
+        risk_summary=risk_summary,
+        warnings=warnings,
+    ))
+
+
+def _supporting_summary(items: list[Any], prefix: str, fields: tuple[str, ...]) -> list[dict[str, str]]:
+    summary: list[dict[str, str]] = []
+    for item in items[:6]:
+        if isinstance(item, dict):
+            label = next((str(item.get(field) or "").strip() for field in fields if item.get(field)), "")
+        else:
+            label = str(item or "").strip()
+        if not label:
+            continue
+        summary.append({"badge": f"{prefix}{len(summary) + 1}", "label": label})
+    return summary
 
 
 def _infer_document_tag(filename: str, bucket: str) -> str:
-    if "sop" in filename or "procedure" in filename or bucket in {"sops", "procedures"}:
-        return "sop"
-    if "rcm" in filename or "risk_control" in bucket:
-        return "risk_control_matrix"
-    if "risk" in filename or "risk_register" in bucket:
-        return "risk_register"
-    if "control" in filename or "control_invent" in bucket:
-        return "control_inventory"
-    if "evidence" in filename or "evidence" in bucket:
-        return "evidence"
-    if "diagram" in filename or "process" in filename or "diagram" in bucket:
-        return "process_diagram"
-    if "audit" in filename or "issue" in filename:
-        return "audit_report"
-    return "supporting_material"
+    return suggest_document_tag({"filename": filename, "bucket": bucket})["confirmed_tag"]

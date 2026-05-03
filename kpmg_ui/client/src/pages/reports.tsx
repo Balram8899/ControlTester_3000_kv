@@ -260,11 +260,14 @@ export default function ReportsPage() {
   const isSopUplift = (r: ReportSummary) => r.report_type === "sop_uplift";
   const sopOutputLabel = (type: string) => {
     const labels: Record<string, string> = {
-      docx: "Uplifted SOP (DOCX)",
+      docx: "Updated SOP (DOCX)",
       vsdx: "Process Diagram (VSDX)",
-      drawio: "Process Diagram (DRAWIO)",
-      diagram_pdf: "Swimlane Diagram (PDF)",
-      diagram_svg: "Swimlane Diagram (SVG)",
+      drawio: "Diagram (Draw.io)",
+      mermaid: "Diagram (Mermaid)",
+      diagram_png: "Diagram (PNG)",
+      diagram_pdf: "Diagram (PDF)",
+      diagram_svg: "Diagram (SVG)",
+      svg: "Diagram (SVG)",
       changelog_markdown: "Change Log (Markdown)",
       changelog_json: "Audit Log (JSON)",
     };

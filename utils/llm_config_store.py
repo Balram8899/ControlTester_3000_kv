@@ -22,6 +22,29 @@ PROVIDER_REGISTRY: dict[str, dict] = {
         "default_model": "gpt-5.5",
         "models": ["gpt-5.5", "gpt-5.4"],
     },
+    "kimi": {
+        "key_env": "MOONSHOT_API_KEY",
+        "key_env_aliases": ["KIMI_API_KEY"],
+        "model_env": "KIMI_LLM_MODEL",
+        "default_model": "kimi-k2.6",
+        "models": ["kimi-k2.6"],
+        "base_url_env": "KIMI_BASE_URL",
+        "default_base_url": "https://api.moonshot.ai/v1",
+        "temperature_env": "KIMI_TEMPERATURE",
+        "thinking_env": "KIMI_THINKING",
+        "default_thinking": "disabled",
+    },
+    "deepseek": {
+        "key_env": "DEEPSEEK_API_KEY",
+        "model_env": "DEEPSEEK_LLM_MODEL",
+        "default_model": "deepseek-v4-pro",
+        "models": ["deepseek-v4-pro", "deepseek-v4-flash", "deepseek-chat", "deepseek-reasoner"],
+        "base_url_env": "DEEPSEEK_BASE_URL",
+        "default_base_url": "https://api.deepseek.com",
+        "temperature_env": "DEEPSEEK_TEMPERATURE",
+        "thinking_env": "DEEPSEEK_THINKING",
+        "reasoning_effort_env": "DEEPSEEK_REASONING_EFFORT",
+    },
     "anthropic": {
         "key_env": "ANTHROPIC_API_KEY",
         "model_env": "ANTHROPIC_LLM_MODEL",
@@ -37,9 +60,14 @@ PROVIDER_REGISTRY: dict[str, dict] = {
 }
 
 
+_client: pymongo.MongoClient | None = None
+
+
 def _get_collection():
-    client = pymongo.MongoClient(MONGO_URI, serverSelectionTimeoutMS=2000)
-    return client[_DB_NAME][_COL_NAME]
+    global _client
+    if _client is None:
+        _client = pymongo.MongoClient(MONGO_URI, serverSelectionTimeoutMS=2000)
+    return _client[_DB_NAME][_COL_NAME]
 
 
 def get_active_llm_config() -> dict[str, str]:
@@ -62,6 +90,16 @@ def get_active_llm_config() -> dict[str, str]:
     return {"provider": provider, "model": model}
 
 
+def get_active_llm_signature() -> str:
+    config = get_active_llm_config()
+    return f"{config['provider']}:{config['model']}"
+
+
+def resolve_active_llm_model(_legacy_model: str | None = None) -> str:
+    """Return the model selected on Settings, ignoring legacy per-feature model fields."""
+    return get_active_llm_config()["model"]
+
+
 def save_llm_config(provider: str, model: str) -> None:
     col = _get_collection()
     col.update_one(
@@ -71,10 +109,80 @@ def save_llm_config(provider: str, model: str) -> None:
     )
 
 
+def get_provider_key_envs(provider: str) -> list[str]:
+    reg = PROVIDER_REGISTRY[provider]
+    key_envs = []
+    if reg.get("key_env"):
+        key_envs.append(reg["key_env"])
+    key_envs.extend(reg.get("key_env_aliases", []))
+    return key_envs
+
+
+def get_provider_key_label(provider: str) -> str:
+    return " or ".join(get_provider_key_envs(provider))
+
+
+def get_provider_api_key(provider: str) -> str | None:
+    for env_name in get_provider_key_envs(provider):
+        value = os.getenv(env_name)
+        if value:
+            return value
+    return None
+
+
+def get_provider_base_url(provider: str) -> str | None:
+    reg = PROVIDER_REGISTRY[provider]
+    env_name = reg.get("base_url_env")
+    if not env_name:
+        return None
+    return os.getenv(env_name, reg.get("default_base_url"))
+
+
+def resolve_provider_temperature(provider: str, temperature: float | None) -> float | None:
+    env_name = PROVIDER_REGISTRY[provider].get("temperature_env")
+    if env_name:
+        raw_value = os.getenv(env_name)
+        if raw_value not in (None, ""):
+            try:
+                return float(raw_value)
+            except ValueError:
+                return temperature
+    return temperature
+
+
+def get_provider_extra_body(provider: str) -> dict:
+    reg = PROVIDER_REGISTRY[provider]
+    extra_body = {}
+    thinking_env = reg.get("thinking_env")
+    if thinking_env:
+        thinking = os.getenv(thinking_env, reg.get("default_thinking", "")).strip()
+        if thinking:
+            extra_body["thinking"] = {"type": thinking}
+    reasoning_effort_env = reg.get("reasoning_effort_env")
+    if reasoning_effort_env:
+        reasoning_effort = os.getenv(reasoning_effort_env, reg.get("default_reasoning_effort", "")).strip()
+        if reasoning_effort:
+            extra_body["reasoning_effort"] = reasoning_effort
+    return extra_body
+
 def get_available_providers() -> list[str]:
     """Return providers whose API key env var is set (or require no key)."""
     return [
         name
         for name, reg in PROVIDER_REGISTRY.items()
-        if reg["key_env"] is None or os.getenv(reg["key_env"])
+        if not get_provider_key_envs(name) or get_provider_api_key(name)
     ]
+
+
+def llm_temperature_kwargs(provider: str, model: str, temperature: float | None) -> dict[str, float]:
+    """Return temperature kwargs only when the selected model supports them."""
+    if temperature is None:
+        return {}
+    normalized_model = (model or "").lower()
+    if provider == "openai" and normalized_model.startswith(("gpt-5", "o1", "o3", "o4")):
+        return {}
+    if provider == "gemini" and normalized_model.startswith("gemini-3"):
+        return {}
+    if provider == "deepseek" and normalized_model == "deepseek-reasoner":
+        return {}
+    return {"temperature": temperature}

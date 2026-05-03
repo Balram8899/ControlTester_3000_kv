@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 def initialize(selected_model: str, embedding_model: str | None = None):
     """
     Initialize LLM and embeddings via the provider factory (respects LLM_PROVIDER env var).
-    selected_model is ignored when LLM_PROVIDER=gemini; the factory uses GOOGLE_LLM_MODEL.
+    selected_model is retained for legacy callers; the factory uses the active Settings provider/model.
     """
     global llm
     global embeddings
