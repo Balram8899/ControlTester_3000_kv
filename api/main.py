@@ -71,6 +71,7 @@ from api.routers.issues import router as issues_router
 from api.routers.validation_queue import router as validation_queue_router
 from api.routers.control_testing import router as control_testing_router
 from api.routers.sop_uplift import router as sop_uplift_router
+from api.routers.settings import router as settings_router
 
 # ----------------------------------------------------------------------------
 # Logging
@@ -209,6 +210,7 @@ app.include_router(issues_router)
 app.include_router(control_testing_router)
 app.include_router(validation_queue_router)
 app.include_router(sop_uplift_router)
+app.include_router(settings_router)
 
 
 # ----------------------------------------------------------------------------
