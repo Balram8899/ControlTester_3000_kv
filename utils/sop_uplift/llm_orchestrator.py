@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import time
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, TypeVar
@@ -45,6 +46,7 @@ def run_json_prompt(
     llm: Any | None = None,
     max_retries: int = 1,
 ) -> PromptRunResult:
+    started = time.perf_counter()
     try:
         model = llm or get_llm()
     except Exception as exc:
@@ -59,6 +61,9 @@ def run_json_prompt(
                 "validation_status": "invalid",
                 "error": f"LLM unavailable for {stage}: {error}",
                 "attempts": 0,
+                "prompt_chars": len(prompt),
+                "raw_chars": 0,
+                "duration_ms": round((time.perf_counter() - started) * 1000),
                 "errors": [error],
             },
         )
@@ -69,6 +74,9 @@ def run_json_prompt(
         "validation_status": "invalid",
         "error": None,
         "attempts": 0,
+        "prompt_chars": len(prompt),
+        "raw_chars": 0,
+        "duration_ms": 0,
         "errors": [],
     }
     raw = ""
@@ -76,13 +84,18 @@ def run_json_prompt(
         record["attempts"] = attempt + 1
         try:
             raw = _extract_text(model.invoke(prompt))
+            record["raw_chars"] = len(raw)
             payload = _parse_json(raw)
             parsed = schema.model_validate(payload)
             record["validation_status"] = "valid"
             record["error"] = None
+            record["duration_ms"] = round((time.perf_counter() - started) * 1000)
             return PromptRunResult(parsed=parsed, raw=raw, record=record)
         except Exception as exc:
             error = str(exc)
             record["error"] = error
+            record["raw_chars"] = len(raw)
+            record["duration_ms"] = round((time.perf_counter() - started) * 1000)
             record["errors"].append(error)
+    record["duration_ms"] = round((time.perf_counter() - started) * 1000)
     return PromptRunResult(parsed=None, raw=raw, record=record)

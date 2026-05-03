@@ -1,5 +1,7 @@
 import base64
+from io import BytesIO
 
+from docx import Document
 from fastapi.testclient import TestClient
 from unittest.mock import MagicMock, patch
 
@@ -821,6 +823,73 @@ def test_generate_outputs_returns_downloadable_non_placeholder_outputs(mock_get_
 
 
 @patch("api.routers.sop_uplift.get_store")
+def test_generate_outputs_uses_uploaded_sop_docx_as_formatted_export_base(mock_get_store):
+    from api.main import app
+
+    source = Document()
+    source.add_heading("Original SOP Template", level=0)
+    source.add_paragraph("Original control step.", style="Intense Quote")
+    source.add_table(rows=1, cols=1).cell(0, 0).text = "Template table"
+    buffer = BytesIO()
+    source.save(buffer)
+    source_bytes = buffer.getvalue()
+
+    case = {
+        "case_id": "case-1",
+        "title": "Quarterly access review SOP",
+        "process_name": "Access reviews",
+        "uploaded_files": [
+            {
+                "file_id": "file-1",
+                "filename": "access_review.docx",
+                "content_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                "bucket": "sops",
+            }
+        ],
+        "document_tags": [{"file_id": "file-1", "confirmed_tag": "sop"}],
+        "anchors": [
+            {
+                "anchor_id": "a1",
+                "file_id": "file-1",
+                "document_id": "doc_file-1",
+                "block_type": "paragraph",
+                "text": "Original control step.",
+                "section_path": ["Access Reviews"],
+            }
+        ],
+        "suggestions": [
+            {
+                "suggestion_id": "s1",
+                "status": "accepted",
+                "anchor_id": "a1",
+                "suggested_text": "Operations Risk reviews access exceptions weekly.",
+                "title": "Add owner",
+            }
+        ],
+        "case_chat": [],
+        "outputs": [],
+    }
+    stored = dict(case)
+    mock = MagicMock()
+    mock.get_case.side_effect = lambda _case_id: stored
+    mock.get_file_content.return_value = source_bytes
+    mock.update_case.side_effect = lambda _case_id, updates: stored.update(updates) or stored
+    mock_get_store.return_value = mock
+
+    response = TestClient(app).post("/sop-uplift/cases/case-1/generate-outputs")
+
+    assert response.status_code == 202
+    docx_output = next(output for output in response.json()["outputs"] if output["type"] == "docx")
+    exported = Document(BytesIO(base64.b64decode(docx_output["content_b64"])))
+    full_text = "\n".join(paragraph.text for paragraph in exported.paragraphs)
+    assert exported.paragraphs[0].text == "Original SOP Template"
+    assert exported.paragraphs[1].style.name == "Intense Quote"
+    assert len(exported.tables) == 1
+    assert "TRACE Uplift Change [accepted s1]" in full_text
+    assert "Operations Risk reviews access exceptions weekly." in full_text
+
+
+@patch("api.routers.sop_uplift.get_store")
 def test_generate_outputs_rebuilds_final_diagram_from_effective_sop_state(mock_get_store):
     from api.main import app
 
@@ -900,6 +969,153 @@ def test_generate_outputs_warns_when_no_suggestions_are_applied(mock_get_store):
     assert "No accepted or edited uplift suggestions were applied; diagram reflects the current uploaded SOP." in stored["diagram_model"]["warnings"]
 
 
+def test_final_diagram_fallback_filters_non_process_sop_fragments():
+    from api.routers.sop_uplift import _diagram_model_for_outputs
+
+    model = _diagram_model_for_outputs(
+        {
+            "title": "Wealth operations SOP",
+            "process_name": "Wealth operations",
+            "anchors": [
+                {"anchor_id": "title", "block_type": "paragraph", "text": "WEALTH CLIENT ONBOARDING", "section_path": []},
+                {"anchor_id": "subtitle", "block_type": "paragraph", "text": "Know Your Client (KYC) and Account Opening", "section_path": []},
+                {"anchor_id": "purpose", "block_type": "paragraph", "text": "This Standard Operating Procedure (SOP) establishes the end-to-end process.", "section_path": ["1. Purpose"]},
+                {"anchor_id": "scope", "block_type": "paragraph", "text": "This SOP applies to all new client relationships.", "section_path": ["2. Scope"]},
+                {"anchor_id": "notice", "block_type": "paragraph", "text": "REGULATORY NOTICE: This SOP incorporates PCMLTFA requirements.", "section_path": ["3. Regulatory Context"]},
+                {"anchor_id": "collect", "block_type": "paragraph", "text": "The IA/RM collects government-issued photo identification from the client.", "section_path": ["5. Client Onboarding Process", "5.1 Client Identification and Verification"]},
+                {"anchor_id": "review", "block_type": "paragraph", "text": "Branch Operations reviews the NAAF for completeness before the account is activated.", "section_path": ["5. Client Onboarding Process", "5.2 Know Your Client Assessment"]},
+                {"anchor_id": "screen", "block_type": "paragraph", "text": "The Compliance AML/ATF Officer screens all new clients using the approved screening platform.", "section_path": ["5. Client Onboarding Process", "5.3 AML and ATF Screening"]},
+                {"anchor_id": "refs", "block_type": "paragraph", "text": "PCMLTFA | Proceeds of Crime Regulations", "section_path": ["9. Document References"]},
+            ],
+            "suggestions": [],
+        }
+    )
+
+    labels = " ".join(node.label for node in model.nodes)
+    assert "IA/RM collects government-issued photo identification" in labels
+    assert "Branch Operations reviews the NAAF" in labels
+    assert "Compliance AML/ATF Officer screens" in labels
+    assert "WEALTH CLIENT ONBOARDING" not in labels
+    assert "Know Your Client (KYC) and Account Opening" not in labels
+    assert "This Standard Operating Procedure" not in labels
+    assert "This SOP applies" not in labels
+    assert "REGULATORY NOTICE" not in labels
+    assert "Proceeds of Crime Regulations" not in labels
+
+
+def test_final_diagram_prioritizes_accepted_uplift_steps_over_method_fragments():
+    from api.routers.sop_uplift import _diagram_model_for_outputs
+
+    model = _diagram_model_for_outputs(
+        {
+            "title": "Wealth operations SOP",
+            "process_name": "Wealth operations",
+            "revised_sop_sections": [
+                {
+                    "anchor_id": "title",
+                    "heading": "SOP Section",
+                    "revised_text": "WEALTH CLIENT ONBOARDING",
+                },
+                {
+                    "anchor_id": "purpose",
+                    "heading": "1. Purpose",
+                    "revised_text": "This Standard Operating Procedure establishes the onboarding process.",
+                },
+                {
+                    "anchor_id": "collect",
+                    "heading": "5. Client Onboarding Process > 5.1 Client Identification and Verification",
+                    "revised_text": "The IA/RM collects government-issued photo identification from the client and verifies identity using an approved FINTRAC method prior to account opening.",
+                },
+                {
+                    "anchor_id": "methods",
+                    "heading": "5. Client Onboarding Process > 5.1 Client Identification and Verification",
+                    "revised_text": "Approved identification methods (FINTRAC GL-01):",
+                },
+                {
+                    "anchor_id": "in_person",
+                    "heading": "5. Client Onboarding Process > 5.1 Client Identification and Verification",
+                    "revised_text": "In-person: Single government-issued photo ID. The ID must be valid and not expired.",
+                },
+                {
+                    "anchor_id": "dual_process",
+                    "heading": "5. Client Onboarding Process > 5.1 Client Identification and Verification",
+                    "revised_text": "Non-face-to-face: Dual-process method - two independent and reliable sources confirming the client name.",
+                },
+                {
+                    "anchor_id": "credit_file",
+                    "heading": "5. Client Onboarding Process > 5.1 Client Identification and Verification",
+                    "revised_text": "Credit file method: Reference to a credit file that has been in existence for at least three years.",
+                },
+                {
+                    "anchor_id": "corporations",
+                    "heading": "5. Client Onboarding Process > 5.1 Client Identification and Verification",
+                    "revised_text": "For corporations: Confirm legal existence and directors.",
+                },
+                {
+                    "anchor_id": "trusts",
+                    "heading": "5. Client Onboarding Process > 5.1 Client Identification and Verification",
+                    "revised_text": "For trusts: Obtain trust deed or equivalent document.",
+                },
+                {
+                    "anchor_id": "verify_records",
+                    "heading": "5. Client Onboarding Process > 5.1 Client Identification and Verification",
+                    "revised_text": "Verification results are recorded in the client record.",
+                },
+                {
+                    "anchor_id": "naaf_cert",
+                    "heading": "5. Client Onboarding Process > 5.2 Know Your Client Assessment",
+                    "revised_text": "The IA/RM must certify completeness of the NAAF before submission to Branch Operations.",
+                    "applied_suggestion_ids": ["sug_1"],
+                },
+                {
+                    "anchor_id": "naaf_review",
+                    "heading": "5. Client Onboarding Process > 5.2 Know Your Client Assessment",
+                    "revised_text": "Branch Operations must review each NAAF against the required field checklist before account activation.",
+                    "applied_suggestion_ids": ["sug_2"],
+                },
+                {
+                    "anchor_id": "screening",
+                    "heading": "5. Client Onboarding Process > 5.3 AML and ATF Screening",
+                    "revised_text": "Screening results are documented in the client file with the screening date, platform name, list version, and outcome recorded.",
+                    "applied_suggestion_ids": ["sug_3"],
+                },
+                {
+                    "anchor_id": "suitability",
+                    "heading": "5. Client Onboarding Process > 5.4 Suitability Assessment",
+                    "revised_text": "The IA/RM must retain a documented suitability assessment record in the client file before trading commences.",
+                    "applied_suggestion_ids": ["sug_4"],
+                },
+                {
+                    "anchor_id": "refresh",
+                    "heading": "5. Client Onboarding Process > 5.7 Ongoing KYC Refresh",
+                    "revised_text": "KYC refresh must be performed on a risk-rated frequency.",
+                    "applied_suggestion_ids": ["sug_5"],
+                },
+            ],
+            "suggestions": [{"suggestion_id": f"sug_{index}", "status": "accepted"} for index in range(1, 6)],
+        }
+    )
+
+    labels = " ".join(node.label for node in model.nodes)
+    assert "IA/RM certifies NAAF completeness" in labels
+    assert "Branch Operations reviews NAAF completeness" in labels
+    assert "Screening results documented" in labels
+    assert all(len(node.label) <= 80 for node in model.nodes)
+    assert all(node.shape == "process" for node in model.nodes)
+    lanes_by_anchor = {node.source_anchor_ids[0]: node.lane_id for node in model.nodes}
+    assert lanes_by_anchor["naaf_cert"] == "business_owner"
+    assert lanes_by_anchor["naaf_review"] == "operations_risk"
+    assert lanes_by_anchor["screening"] == "compliance"
+    assert lanes_by_anchor["suitability"] == "business_owner"
+    assert "Approved identification methods" not in labels
+    assert "In-person: Single government-issued photo ID" not in labels
+    assert "Non-face-to-face: Dual-process method" not in labels
+    assert "Credit file method" not in labels
+    assert "For corporations:" not in labels
+    assert "For trusts:" not in labels
+    assert all(not node.badge for node in model.nodes)
+
+
 def test_final_diagram_supporting_docs_enrich_without_creating_process_nodes():
     from api.routers.sop_uplift import _diagram_model_for_outputs
 
@@ -923,6 +1139,46 @@ def test_final_diagram_supporting_docs_enrich_without_creating_process_nodes():
     assert "Compliance performs sanctions screening" not in node_labels
     assert model.control_summary == [{"badge": "C1", "label": "Compliance sanctions screening control."}]
     assert model.risk_summary == [{"badge": "R1", "label": "Sanctions screening bypass."}]
+
+
+def test_final_diagram_summaries_skip_raw_tables_and_cap_long_text():
+    from api.routers.sop_uplift import _diagram_model_for_outputs
+
+    model = _diagram_model_for_outputs(
+        {
+            "title": "Vendor onboarding SOP",
+            "process_name": "Vendor onboarding",
+            "revised_sop_sections": [
+                {"anchor_id": "a1", "heading": "Vendor Review", "revised_text": "Business Owner submits request."}
+            ],
+            "extracted_controls": [
+                {"description": "DRAFT NOTICE: This document is draft control test evidence."},
+                {"description": "This document records the Q1 2025 control testing results."},
+                {"description": "Controls selected for testing were prioritised based on:"},
+                {"description": "Regulatory exposure - controls linked to PCMLTFA and FINTRAC obligations."},
+                {"description": "The SOP ensures that onboarding is performed in a controlled and compliant manner."},
+                {"description": "For corporations: Confirm legal existence and directors."},
+                {"description": "CONTROL TEST EVIDENCE"},
+                {"description": "| Control | Owner |\n| --- | --- |\n| C-01 | Branch Operations |"},
+                {"description": "Branch Operations reviews NAAF completeness " + ("before activation " * 20)},
+            ],
+            "extracted_risks": [
+                {"description": "For high-risk accounts, the AML Officer must approve activation."},
+                {"description": "Change in investment objectives, risk tolerance, or time horizon."},
+                {"description": "KYC refresh is performed annually as per the risk rating."},
+                {"description": "CIRO Rule 3200 requires collection of KYC information."},
+                {"description": "Risk tolerance (Low / Medium / High)"},
+                {"description": "| Risk | Impact |\n| --- | --- |\n| R-01 | Incomplete KYC |"},
+                {"description": "Incomplete onboarding may expose the firm to KYC and regulatory breaches."},
+            ],
+        }
+    )
+
+    assert len(model.control_summary) == 1
+    assert model.control_summary[0]["label"].startswith("Branch Operations reviews NAAF completeness")
+    assert model.control_summary[0]["label"].endswith("...")
+    assert "|" not in model.control_summary[0]["label"]
+    assert model.risk_summary == [{"badge": "R1", "label": "Incomplete onboarding may expose the firm to KYC and regulatory breaches."}]
 
 
 @patch("api.routers.sop_uplift.get_store")

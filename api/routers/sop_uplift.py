@@ -4,6 +4,7 @@ import base64
 import json
 import mimetypes
 import os
+import re
 import threading
 from datetime import datetime
 from typing import Any, Literal, Optional
@@ -1168,7 +1169,7 @@ def generate_outputs(case_id: str):
     revised_sections = build_revised_sections(sections, suggestions)
     revised_case = {**case, "revised_sop_sections": revised_sections}
     model = _diagram_model_for_outputs(revised_case)
-    docx_bytes = generate_docx(case, sections, suggestions)
+    docx_bytes = generate_docx(case, sections, suggestions, source_docx=_source_docx_for_outputs(case_id, case))
     drawio_text = export_drawio(model)
     mermaid_text = export_mermaid(model)
     svg_text = export_svg(model)
@@ -1254,6 +1255,38 @@ def generate_outputs(case_id: str):
     return {"status": "generated", "outputs": outputs}
 
 
+def _source_docx_for_outputs(case_id: str, case: dict[str, Any]) -> bytes | None:
+    tags_by_file_id = {
+        tag.get("file_id"): (tag.get("confirmed_tag") or tag.get("suggested_tag") or "").strip().lower()
+        for tag in case.get("document_tags", [])
+    }
+    source_tags = {"sop", "policy", "procedure", "policy_procedure"}
+    candidates: list[tuple[int, dict[str, Any]]] = []
+    for file_meta in case.get("uploaded_files", []):
+        filename = str(file_meta.get("filename") or "").lower()
+        if not filename.endswith(".docx"):
+            continue
+        file_id = file_meta.get("file_id")
+        tag = tags_by_file_id.get(file_id, "")
+        bucket = str(file_meta.get("bucket") or "").lower()
+        priority = 0 if tag in source_tags or bucket in {"sops", "procedures"} else 1
+        candidates.append((priority, file_meta))
+
+    for _priority, file_meta in sorted(candidates, key=lambda item: item[0]):
+        file_id = file_meta.get("file_id")
+        if not file_id:
+            continue
+        content = get_store().get_file_content(case_id, file_id)
+        if isinstance(content, (bytes, bytearray)):
+            return bytes(content)
+        if file_meta.get("raw_content_b64"):
+            try:
+                return base64.b64decode(file_meta["raw_content_b64"])
+            except Exception:
+                continue
+    return None
+
+
 NO_APPLIED_SUGGESTIONS_WARNING = "No accepted or edited uplift suggestions were applied; diagram reflects the current uploaded SOP."
 EXCLUDED_SUGGESTIONS_WARNING = "Rejected and open suggestions were excluded from the implemented process diagram."
 
@@ -1320,32 +1353,43 @@ def _build_diagram_model(case: dict[str, Any]) -> DiagramModel:
         source_anchors = [
             {
                 "anchor_id": section.get("anchor_id", ""),
+                "heading": section.get("heading", ""),
                 "text": section.get("revised_text") or section.get("text") or section.get("original_text") or "",
+                "applied": bool(section.get("applied_suggestion_ids") or section.get("applied_suggestions")),
             }
             for section in revised_sections
         ]
     else:
-        source_anchors = [anchor for anchor in case.get("anchors", []) if anchor.get("block_type") != "heading"]
-    for index, anchor in enumerate(source_anchors[:8]):
-        lane = lanes[index % len(lanes)]
+        source_anchors = [
+            {
+                "anchor_id": anchor.get("anchor_id", ""),
+                "heading": " > ".join(anchor.get("section_path", [])),
+                "text": anchor.get("text", ""),
+                "applied": False,
+            }
+            for anchor in case.get("anchors", [])
+            if anchor.get("block_type") != "heading"
+        ]
+    applied_anchors = [anchor for anchor in source_anchors if anchor.get("applied") and _is_diagrammable_output_anchor(anchor)]
+    fallback_anchors = [anchor for anchor in source_anchors if not anchor.get("applied") and _is_diagrammable_output_anchor(anchor)]
+    diagram_anchors = applied_anchors or fallback_anchors
+    if not diagram_anchors:
+        diagram_anchors = [anchor for anchor in source_anchors if str(anchor.get("text") or "").strip()][:8]
+    for index, anchor in enumerate(diagram_anchors[:8]):
         text = str(anchor.get("text") or "SOP step").strip() or "SOP step"
-        lower = text.lower()
-        if any(term in lower for term in ["evidence", "record", "packet", "repository"]):
-            node_type = "evidence"
-        elif "control" in lower:
-            node_type = "control"
-        elif "risk" in lower:
-            node_type = "risk"
-        else:
-            node_type = "activity"
+        lane = _lane_for_output_step(text, lanes)
+        node_type, badge = _explicit_node_type_and_badge(text)
+        label = _diagram_node_label(text)
         nodes.append(
             DiagramNode(
                 node_id=f"node_{index + 1}",
                 lane_id=lane.lane_id,
                 type=node_type,
                 shape="data_store" if node_type == "evidence" else "decision" if "?" in text else "process",
-                label=text,
+                label=label,
+                description=text if label != text else "",
                 column=index,
+                badge=badge,
                 source_anchor_ids=[anchor.get("anchor_id", "")],
             )
         )
@@ -1384,15 +1428,210 @@ def _build_diagram_model(case: dict[str, Any]) -> DiagramModel:
 
 def _supporting_summary(items: list[Any], prefix: str, fields: tuple[str, ...]) -> list[dict[str, str]]:
     summary: list[dict[str, str]] = []
-    for item in items[:6]:
+    for item in items:
         if isinstance(item, dict):
             label = next((str(item.get(field) or "").strip() for field in fields if item.get(field)), "")
         else:
             label = str(item or "").strip()
+        label = _summary_label(label, prefix)
         if not label:
             continue
         summary.append({"badge": f"{prefix}{len(summary) + 1}", "label": label})
+        if len(summary) >= 6:
+            break
     return summary
+
+
+def _lane_for_output_step(text: str, lanes: list[DiagramLane]) -> DiagramLane:
+    lower = text.lower()
+    leading = lower[:80].lstrip()
+    lane_by_id = {lane.lane_id: lane for lane in lanes}
+    if leading.startswith(("the ia/rm", "ia/rm", "the investment advisor", "investment advisor", "relationship manager", "business owner")):
+        return lane_by_id.get("business_owner", lanes[0])
+    if leading.startswith(("branch operations", "new accounts", "operations", "risk management")):
+        return lane_by_id.get("operations_risk", lanes[0])
+    if leading.startswith(("compliance", "aml", "the compliance")):
+        return lane_by_id.get("compliance", lanes[0])
+    if leading.startswith(("control testing", "internal audit")):
+        return lane_by_id.get("control_testing", lanes[-1])
+    if any(term in lower for term in ["control testing", "internal audit", "tester", "sample"]):
+        return lane_by_id.get("control_testing", lanes[-1])
+    if any(term in lower for term in ["compliance", "aml", "atf", "screening", "suitability"]):
+        return lane_by_id.get("compliance", lanes[0])
+    if any(term in lower for term in ["branch operations", "new accounts", "operations", "risk management"]):
+        return lane_by_id.get("operations_risk", lanes[0])
+    if any(term in lower for term in ["ia/rm", "investment advisor", "relationship manager", "business owner"]):
+        return lane_by_id.get("business_owner", lanes[0])
+    return lanes[0]
+
+
+def _explicit_node_type_and_badge(text: str) -> tuple[str, str]:
+    lower = text.lower()
+    control_match = re.search(r"\bC[-\s]?(\d{1,3})\b", text, flags=re.IGNORECASE)
+    risk_match = re.search(r"\bR[-\s]?(\d{1,3})\b", text, flags=re.IGNORECASE)
+    evidence_match = re.search(r"\bE[-\s]?(\d{1,3})\b", text, flags=re.IGNORECASE)
+    if control_match and "control" in lower:
+        return "control", f"C{int(control_match.group(1))}"
+    if risk_match and "risk" in lower:
+        return "risk", f"R{int(risk_match.group(1))}"
+    if evidence_match and any(term in lower for term in ["evidence", "document", "record"]):
+        return "evidence", f"E{int(evidence_match.group(1))}"
+    return "activity", ""
+
+
+def _diagram_node_label(text: str) -> str:
+    compact = " ".join(str(text or "").split())
+    lower = compact.lower()
+    if "certify completeness of the naaf" in lower:
+        return "IA/RM certifies NAAF completeness"
+    if "review each naaf" in lower and "branch operations" in lower:
+        return "Branch Operations reviews NAAF completeness"
+    if lower.startswith("screening results are documented"):
+        return "Screening results documented"
+    if "retain a documented suitability assessment record" in lower:
+        return "IA/RM retains suitability record"
+    if lower.startswith("kyc refresh must be performed"):
+        return "KYC refresh set by risk rating"
+    if len(compact) <= 80:
+        return compact
+    first_sentence = compact.split(". ", 1)[0].rstrip(".")
+    if len(first_sentence) <= 80:
+        return first_sentence
+    return first_sentence[:77].rstrip(" .,;") + "..."
+
+
+def _summary_label(label: str, prefix: str) -> str:
+    text = " ".join(str(label or "").split())
+    if not text or "|" in text:
+        return ""
+    lower = text.lower()
+    if text.isupper() and len(text.split()) <= 5:
+        return ""
+    non_summary_prefixes = (
+        "the sop ensures",
+        "this sop ensures",
+        "this sop applies",
+        "this standard operating procedure",
+        "standard operating procedure",
+        "for corporations:",
+        "for trusts:",
+        "approved identification methods",
+        "ciro rule",
+        "fintrac",
+        "risk tolerance",
+        "source of funds",
+        "draft notice:",
+        "this document records",
+        "controls selected for testing",
+        "regulatory exposure",
+        "for high-risk accounts",
+        "change in investment objectives",
+        "kyc refresh is performed",
+    )
+    if lower.startswith(non_summary_prefixes):
+        return ""
+    if prefix == "R":
+        risk_terms = (
+            "gap",
+            "breach",
+            "bypass",
+            "failure",
+            "incomplete",
+            "unidentified",
+            "unauthorized",
+            "unsuitable",
+            "not ",
+            "without",
+            "late",
+            "missing",
+            "expose",
+            "exposure",
+        )
+        if not any(term in lower for term in risk_terms):
+            return ""
+    if len(text) > 220:
+        return text[:217].rstrip(" .,;") + "..."
+    return text
+
+
+def _is_diagrammable_output_anchor(anchor: dict[str, Any]) -> bool:
+    text = " ".join(str(anchor.get("text") or "").split())
+    if not text:
+        return False
+    lower = text.lower()
+    heading = str(anchor.get("heading") or "").lower()
+    if any(term in heading for term in ["purpose", "scope", "regulatory", "reference", "history"]):
+        return False
+    if "|" in text:
+        return False
+    if text.isupper() and len(text.split()) <= 8:
+        return False
+    non_process_prefixes = (
+        "this standard operating procedure",
+        "standard operating procedure",
+        "this sop applies",
+        "this sop ensures",
+        "regulatory notice",
+        "fintrac record keeping",
+        "fintrac reporting",
+        "pep / hio notice",
+        "exclusions:",
+        "approved identification methods",
+        "in-person:",
+        "non-face-to-face:",
+        "credit file method:",
+        "for corporations:",
+        "for trusts:",
+        "verification results are recorded",
+    )
+    if lower.startswith(non_process_prefixes):
+        return False
+    if anchor.get("applied"):
+        return True
+    action_terms = (
+        "collects",
+        "verifies",
+        "completes",
+        "reviews",
+        "screens",
+        "documents",
+        "escalates",
+        "approves",
+        "retains",
+        "files",
+        "submits",
+        "records",
+        "stores",
+        "activates",
+        "performs",
+        "conducts",
+        "obtains",
+        "confirms",
+        "returns",
+        "remediates",
+        "signs",
+        "sets",
+        "updates",
+        "must not be opened",
+        "must not be activated",
+    )
+    process_headings = (
+        "process",
+        "procedure",
+        "onboarding",
+        "verification",
+        "assessment",
+        "screening",
+        "approval",
+        "setup",
+        "refresh",
+        "due diligence",
+        "exceptions",
+        "reporting",
+    )
+    return any(term in lower for term in action_terms) or (
+        any(term in heading for term in process_headings) and not lower.startswith(("this sop", "this standard"))
+    )
 
 
 def _infer_document_tag(filename: str, bucket: str) -> str:

@@ -76,6 +76,39 @@ def _case_with_supporting_context():
     }
 
 
+def _case_with_two_sop_documents():
+    case = _case_with_supporting_context()
+    case["document_tags"].append({"file_id": "policy-file", "confirmed_tag": "policy", "confidence": "high"})
+    case["markdown_documents"].append(
+        {
+            "document_id": "doc-policy",
+            "file_id": "policy-file",
+            "filename": "kyc_policy.docx",
+            "markdown": "# KYC Policy\n\nBranch Operations shall evidence KYC exception closure.",
+        }
+    )
+    case["anchors"].append(
+        {
+            "anchor_id": "policy-1",
+            "document_id": "doc-policy",
+            "file_id": "policy-file",
+            "block_type": "paragraph",
+            "text": "Branch Operations shall evidence KYC exception closure.",
+            "section_path": ["KYC Policy"],
+        }
+    )
+    case["chunks"].append(
+        {
+            "chunk_id": "c-policy",
+            "document_id": "doc-policy",
+            "file_id": "policy-file",
+            "content": "Branch Operations shall evidence KYC exception closure.",
+            "anchor_ids": ["policy-1"],
+        }
+    )
+    return case
+
+
 def _result(stage, parsed):
     return PromptRunResult(
         parsed=parsed,
@@ -299,10 +332,13 @@ def test_suggestion_context_tolerates_legacy_string_extracted_items():
 
 
 def test_case_suggestion_context_marks_sop_anchors_and_supporting_facts():
-    context = build_case_suggestion_context(_case_with_supporting_context(), _case_with_supporting_context()["chunks"], {"controls": [], "risks": [], "evidence_items": [], "requirements": [], "corpus_map": {}})
+    case = _case_with_supporting_context()
+    sop_only_units = [case["chunks"][0]]
+    context = build_case_suggestion_context(case, sop_only_units, {"controls": [], "risks": [], "evidence_items": [], "requirements": [], "corpus_map": {}})
 
     assert "supporting_facts" in context
     assert context["eligible_sop_anchor_ids"] == ["sop-1", "sop-2"]
+    assert any(item["filename"] == "risk_controls.xlsx" for item in context["supporting_context"])
     assert any("Signed NAAF approval workflow record" in str(fact) for fact in context["supporting_facts"])
 
 
@@ -348,12 +384,14 @@ def test_full_pipeline_feeds_structured_suggestion_context_and_style_to_llm():
     assert updates["suggestions"][0]["style_match_notes"].startswith("Preserves")
 
 
-def test_full_pipeline_batches_document_analysis_by_document_not_stage():
+def test_full_pipeline_runs_deep_document_analysis_only_for_sop_and_policy_documents():
     calls: list[str] = []
+    prompts: list[str] = []
 
-    def fake_run(stage, _prompt, _schema):
+    def fake_run(stage, prompt, _schema):
         calls.append(stage)
         if stage == "full_document_extraction":
+            prompts.append(prompt)
             parsed = FullDocumentExtractionResponse()
         elif stage == "case_sop_uplift_suggestions":
             parsed = SopSuggestionResponse()
@@ -371,7 +409,8 @@ def test_full_pipeline_batches_document_analysis_by_document_not_stage():
     with patch("utils.sop_uplift.pipeline.run_json_prompt", side_effect=fake_run):
         run_full_sop_pipeline(case, use_llm=True)
 
-    assert calls.count("full_document_extraction") == len(case["markdown_documents"])
+    assert calls.count("full_document_extraction") == 1
+    assert "risk_controls.xlsx" not in prompts[0]
     assert calls.count("case_sop_uplift_suggestions") == 1
     assert calls.count("case_finalization") == 1
     assert "missing_control_recommendations" not in calls
@@ -382,6 +421,36 @@ def test_full_pipeline_batches_document_analysis_by_document_not_stage():
     assert "sop_structure_extraction" not in calls
     assert "policy_requirement_extraction" not in calls
     assert "sop_uplift_suggestions" not in calls
+
+
+def test_full_pipeline_skips_deep_document_analysis_when_no_sop_or_policy_is_tagged():
+    calls: list[str] = []
+
+    def fake_run(stage, _prompt, _schema):
+        calls.append(stage)
+        if stage == "case_sop_uplift_suggestions":
+            parsed = SopSuggestionResponse()
+        elif stage == "case_chat_context_extraction":
+            parsed = CaseChatContextExtractionResponse()
+        elif stage == "corpus_map":
+            parsed = CorpusMapResponse()
+        elif stage == "case_finalization":
+            parsed = CaseFinalizationResponse()
+        else:
+            parsed = FullDocumentExtractionResponse()
+        return _result(stage, parsed)
+
+    case = _case_with_supporting_context()
+    case["document_tags"] = [{"file_id": "rcm-file", "confirmed_tag": "risk_control_matrix", "confidence": "high"}]
+    case["markdown_documents"] = [case["markdown_documents"][1]]
+    case["anchors"] = [case["anchors"][2]]
+    case["chunks"] = [case["chunks"][1]]
+
+    with patch("utils.sop_uplift.pipeline.run_json_prompt", side_effect=fake_run):
+        updates = run_full_sop_pipeline(case, use_llm=True)
+
+    assert "full_document_extraction" not in calls
+    assert any("no SOP or policy documents are tagged" in warning for warning in updates["processing_state"]["pipeline"]["warnings"])
 
 
 def test_full_pipeline_runs_document_analysis_concurrently():
@@ -413,9 +482,92 @@ def test_full_pipeline_runs_document_analysis_concurrently():
 
     with patch.dict("os.environ", {"SOP_UPLIFT_DOCUMENT_LLM_WORKERS": "2"}):
         with patch("utils.sop_uplift.pipeline.run_json_prompt", side_effect=fake_run):
-            run_full_sop_pipeline(_case_with_supporting_context(), use_llm=True)
+            run_full_sop_pipeline(_case_with_two_sop_documents(), use_llm=True)
 
     assert max_active == 2
+
+
+def test_full_document_prompt_anchor_budget_omits_body_duplicates_and_respects_limits():
+    prompts: list[str] = []
+    duplicate_anchor_text = "DUPLICATE_ANCHOR_TEXT already appears in the capped body."
+    unique_anchor_text = "UNIQUE_ANCHOR_TEXT_LONG_VALUE names an external evidence artifact for review."
+    overflow_anchor_text = "OVERFLOW_ANCHOR_TEXT should not fit once the anchor text budget is exhausted."
+    body = f"# Access\n\n{duplicate_anchor_text}\n\nShort body text."
+
+    def fake_run(stage, prompt, _schema):
+        if stage == "full_document_extraction":
+            prompts.append(prompt)
+            parsed = FullDocumentExtractionResponse()
+        elif stage == "case_sop_uplift_suggestions":
+            parsed = SopSuggestionResponse()
+        elif stage == "case_chat_context_extraction":
+            parsed = CaseChatContextExtractionResponse()
+        elif stage == "corpus_map":
+            parsed = CorpusMapResponse()
+        elif stage == "case_finalization":
+            parsed = CaseFinalizationResponse()
+        else:
+            parsed = FinalSummaryResponse()
+        return _result(stage, parsed)
+
+    case = _case()
+    case["markdown_documents"][0]["markdown"] = body
+    case["chunks"][0]["content"] = body
+    case["anchors"] = [
+        {"anchor_id": "dup", "document_id": "doc-1", "file_id": "file-1", "block_type": "paragraph", "text": duplicate_anchor_text, "section_path": ["Access"]},
+        {"anchor_id": "unique", "document_id": "doc-1", "file_id": "file-1", "block_type": "paragraph", "text": unique_anchor_text, "section_path": ["Access"]},
+        {"anchor_id": "overflow", "document_id": "doc-1", "file_id": "file-1", "block_type": "paragraph", "text": overflow_anchor_text, "section_path": ["Access"]},
+    ]
+
+    env = {
+        "SOP_UPLIFT_MAX_ANCHORS_PER_PROMPT": "2",
+        "SOP_UPLIFT_ANCHOR_EXCERPT_CHARS": "24",
+        "SOP_UPLIFT_ANCHOR_TEXT_BUDGET_CHARS": "30",
+    }
+    with patch.dict("os.environ", env):
+        with patch("utils.sop_uplift.pipeline.run_json_prompt", side_effect=fake_run):
+            run_full_sop_pipeline(case, use_llm=True, max_chunk_chars=4000)
+
+    assert len(prompts) == 1
+    assert prompts[0].count(duplicate_anchor_text) == 1
+    assert '"anchor_id": "dup"' in prompts[0]
+    assert '"section_path": [' in prompts[0]
+    assert "UNIQUE_ANCHOR_TEXT_LONG" in prompts[0]
+    assert "artifact for review" not in prompts[0]
+    assert '"anchor_id": "overflow"' not in prompts[0]
+
+
+def test_full_pipeline_caps_full_document_prompt_to_max_chunk_chars():
+    prompts: list[str] = []
+    marker = "TAIL_MARKER_SHOULD_NOT_BE_SENT"
+    long_markdown = "# Access\n\n" + ("Owner reviews access before closure.\n" * 20) + marker
+
+    def fake_run(stage, prompt, _schema):
+        if stage == "full_document_extraction":
+            prompts.append(prompt)
+            parsed = FullDocumentExtractionResponse()
+        elif stage == "case_sop_uplift_suggestions":
+            parsed = SopSuggestionResponse()
+        elif stage == "case_chat_context_extraction":
+            parsed = CaseChatContextExtractionResponse()
+        elif stage == "corpus_map":
+            parsed = CorpusMapResponse()
+        elif stage == "case_finalization":
+            parsed = CaseFinalizationResponse()
+        else:
+            parsed = FinalSummaryResponse()
+        return _result(stage, parsed)
+
+    case = _case()
+    case["markdown_documents"][0]["markdown"] = long_markdown
+    case["chunks"][0]["content"] = long_markdown
+
+    with patch("utils.sop_uplift.pipeline.run_json_prompt", side_effect=fake_run):
+        updates = run_full_sop_pipeline(case, use_llm=True, max_chunk_chars=120)
+
+    assert len(prompts) == 1
+    assert marker not in prompts[0]
+    assert "Chunk truncated to 120 characters before prompt injection." in updates["processing_state"]["pipeline"]["warnings"]
 
 
 def test_full_pipeline_uses_supporting_raci_context_for_rule_based_suggestions():

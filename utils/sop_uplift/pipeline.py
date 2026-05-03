@@ -160,6 +160,7 @@ def run_full_sop_pipeline(
             "requirements": requirements,
             "corpus_map": corpus_map,
         },
+        require_sop_ids=True,
     )
     raw_llm_suggestions = llm_result.get("suggestions", [])
     llm_suggestions = quality_gate_suggestions(
@@ -289,6 +290,62 @@ def _anchor_summary(anchor: dict[str, Any]) -> dict[str, Any]:
         "section_path": anchor.get("section_path", []),
         "text": anchor.get("text", ""),
     }
+
+
+def _env_int(name: str, default: int, minimum: int = 0) -> int:
+    try:
+        value = int(os.getenv(name, str(default)))
+    except ValueError:
+        return default
+    return max(minimum, value)
+
+
+def _normalized_inline_text(value: str) -> str:
+    return " ".join(str(value or "").split()).casefold()
+
+
+def _anchor_summaries_for_prompt(
+    case: dict[str, Any],
+    unit: dict[str, Any],
+    capped_body: str,
+) -> list[dict[str, Any]]:
+    max_anchors = _env_int("SOP_UPLIFT_MAX_ANCHORS_PER_PROMPT", 40, minimum=0)
+    excerpt_chars = _env_int("SOP_UPLIFT_ANCHOR_EXCERPT_CHARS", 160, minimum=0)
+    text_budget = _env_int("SOP_UPLIFT_ANCHOR_TEXT_BUDGET_CHARS", 3000, minimum=0)
+    if max_anchors <= 0:
+        return []
+    body_text = _normalized_inline_text(capped_body)
+    summaries: list[dict[str, Any]] = []
+    used_anchor_ids: set[str] = set()
+    used_text_chars = 0
+
+    for anchor in _anchors_for_unit(case, unit):
+        anchor_id = anchor.get("anchor_id", "")
+        if not anchor_id or anchor_id in used_anchor_ids:
+            continue
+        used_anchor_ids.add(anchor_id)
+        summary = {
+            "anchor_id": anchor_id,
+            "section_path": anchor.get("section_path", []),
+        }
+        anchor_text = " ".join(str(anchor.get("text", "")).split())
+        normalized_anchor_text = _normalized_inline_text(anchor_text)
+        if (
+            anchor_text
+            and excerpt_chars > 0
+            and text_budget > used_text_chars
+            and normalized_anchor_text
+            and normalized_anchor_text not in body_text
+        ):
+            remaining_budget = text_budget - used_text_chars
+            excerpt = anchor_text[: min(excerpt_chars, remaining_budget)].rstrip()
+            if excerpt:
+                summary["excerpt"] = excerpt
+                used_text_chars += len(excerpt)
+        summaries.append(summary)
+        if len(summaries) >= max_anchors:
+            break
+    return summaries
 
 
 def _nearby_sop_context(case: dict[str, Any], target_anchors: list[dict[str, Any]], limit: int = 2) -> list[dict[str, Any]]:
@@ -479,13 +536,26 @@ def _concrete_terms_from_facts(facts: list[dict[str, Any]]) -> list[str]:
     return terms[:100]
 
 
-def suggestion_quality_context(case: dict[str, Any], collected: dict[str, Any] | None = None) -> dict[str, Any]:
+def suggestion_quality_context(
+    case: dict[str, Any],
+    collected: dict[str, Any] | None = None,
+    require_sop_ids: bool = False,
+) -> dict[str, Any]:
     sop_ids = _sop_file_ids(case)
-    eligible = [
-        anchor
-        for anchor in case.get("anchors", [])
-        if anchor.get("block_type") != "heading" and (not sop_ids or anchor.get("file_id") in sop_ids)
-    ]
+    if sop_ids:
+        eligible = [
+            anchor
+            for anchor in case.get("anchors", [])
+            if anchor.get("block_type") != "heading" and anchor.get("file_id") in sop_ids
+        ]
+    elif require_sop_ids:
+        eligible = []
+    else:
+        eligible = [
+            anchor
+            for anchor in case.get("anchors", [])
+            if anchor.get("block_type") != "heading"
+        ]
     facts = _supporting_facts(case, collected)
     return {
         "eligible_sop_anchor_ids": [anchor.get("anchor_id", "") for anchor in eligible if anchor.get("anchor_id")],
@@ -549,35 +619,76 @@ def build_suggestion_context(case: dict[str, Any], chunk: dict[str, Any]) -> dic
     }
 
 
-def build_case_suggestion_context(case: dict[str, Any], analysis_units: list[dict[str, Any]], collected: dict[str, Any]) -> dict[str, Any]:
+def _supporting_context_from_case(case: dict[str, Any], limit: int = 8) -> list[dict[str, Any]]:
+    filenames = _filename_by_document(case)
     file_tags = _file_tag_by_id(case)
-    sop_file_ids = {
-        tag.get("file_id")
-        for tag in case.get("document_tags", [])
-        if tag.get("confirmed_tag") in {"sop", "policy"}
-    }
+    sop_file_ids = _sop_file_ids(case)
+    context: list[dict[str, Any]] = []
+    seen_keys: set[tuple[str, str]] = set()
+
+    for chunk in case.get("chunks", []):
+        file_id = chunk.get("file_id", "")
+        if sop_file_ids and file_id in sop_file_ids:
+            continue
+        excerpt = " ".join(str(chunk.get("content", "")).split())
+        if not excerpt:
+            continue
+        key = (chunk.get("document_id", ""), excerpt[:120])
+        if key in seen_keys:
+            continue
+        seen_keys.add(key)
+        context.append(
+            {
+                "source_type": file_tags.get(file_id, "other"),
+                "filename": filenames.get(chunk.get("document_id", ""), ""),
+                "document_id": chunk.get("document_id", ""),
+                "file_id": file_id,
+                "chunk_id": chunk.get("chunk_id", ""),
+                "anchor_ids": chunk.get("anchor_ids", [])[:20],
+                "excerpt": excerpt[:900],
+            }
+        )
+        if len(context) >= limit:
+            return context
+
+    document_ids_with_chunks = {chunk.get("document_id", "") for chunk in case.get("chunks", [])}
+    for document in case.get("markdown_documents", []):
+        if len(context) >= limit:
+            break
+        file_id = document.get("file_id", "")
+        document_id = document.get("document_id", "")
+        if document_id in document_ids_with_chunks or (sop_file_ids and file_id in sop_file_ids):
+            continue
+        excerpt = " ".join(str(document.get("markdown", "")).split())
+        if not excerpt:
+            continue
+        key = (document_id, excerpt[:120])
+        if key in seen_keys:
+            continue
+        seen_keys.add(key)
+        context.append(
+            {
+                "source_type": file_tags.get(file_id, "other"),
+                "filename": document.get("filename", ""),
+                "document_id": document_id,
+                "file_id": file_id,
+                "anchor_ids": [],
+                "excerpt": excerpt[:900],
+            }
+        )
+    return context[:limit]
+
+
+def build_case_suggestion_context(case: dict[str, Any], analysis_units: list[dict[str, Any]], collected: dict[str, Any]) -> dict[str, Any]:
+    sop_file_ids = _sop_file_ids(case)
     sop_anchors = [
         _anchor_summary(anchor)
         for anchor in case.get("anchors", [])
-        if anchor.get("block_type") != "heading" and (not sop_file_ids or anchor.get("file_id") in sop_file_ids)
+        if anchor.get("block_type") != "heading" and anchor.get("file_id") in sop_file_ids
     ][:80]
-    sop_texts = [anchor.get("text", "") for anchor in case.get("anchors", []) if anchor.get("block_type") != "heading" and (not sop_file_ids or anchor.get("file_id") in sop_file_ids)]
-    supporting_context = []
-    for unit in analysis_units:
-        source_type = file_tags.get(unit.get("file_id", ""), "other")
-        if source_type in {"sop", "policy"}:
-            continue
-        supporting_context.append(
-            {
-                "source_type": source_type,
-                "filename": unit.get("filename", ""),
-                "document_id": unit.get("document_id", ""),
-                "file_id": unit.get("file_id", ""),
-                "anchor_ids": unit.get("anchor_ids", [])[:20],
-                "excerpt": " ".join(str(unit.get("content", "")).split())[:2500],
-            }
-        )
-    quality_context = suggestion_quality_context(case, collected)
+    sop_texts = [anchor.get("text", "") for anchor in case.get("anchors", []) if anchor.get("block_type") != "heading" and anchor.get("file_id") in sop_file_ids]
+    supporting_context = _supporting_context_from_case(case)
+    quality_context = suggestion_quality_context(case, collected, require_sop_ids=True)
     return {
         "case": {
             "case_id": case.get("case_id", ""),
@@ -693,7 +804,7 @@ def _run_llm_pipeline(
             content,
             file_id=unit.get("document_id", ""),
             anchor_id=(unit.get("anchor_ids") or [""])[0],
-            max_chunk_chars=max(max_chunk_chars, len(content) + 1),
+            max_chunk_chars=max_chunk_chars,
         )
         stage = "full_document_extraction"
         prompt = build_prompt(
@@ -705,64 +816,68 @@ def _run_llm_pipeline(
                 "confirmed_tag": file_tags.get(unit.get("file_id", ""), "other"),
             },
             delimited_content=sanitized.delimited_content,
-            anchors_in_chunk=[_anchor_summary(anchor) for anchor in _anchors_for_unit(case, unit)][:120],
+            anchors_in_chunk=_anchor_summaries_for_prompt(case, unit, sanitized.content),
         )
         result = run_json_prompt(stage, prompt, FullDocumentExtractionResponse)
         return {"unit": unit, "result": result, "warnings": sanitized.warnings}
 
     document_workers = _document_llm_workers(len(analysis_units))
-    progress("full_document_extraction", f"Analyzing {len(analysis_units)} full documents with AI...")
-    with ThreadPoolExecutor(max_workers=document_workers) as executor:
-        futures = [executor.submit(run_document_extraction, unit) for unit in analysis_units]
-        for future in as_completed(futures):
-            extraction = future.result()
-            unit = extraction["unit"]
-            result = extraction["result"]
-            collected["warnings"].extend(extraction.get("warnings", []))
-            stage = "full_document_extraction"
-            completed_prompts += 1
-            progress(stage, f"Analyzing full document with AI ({unit.get('filename') or unit.get('document_id')})...")
-            collected["prompt_runs"].append(result.record)
-            if not result.parsed:
-                collected["warnings"].append(result.record.get("error") or f"{stage} returned invalid JSON")
-                continue
-            payload = result.parsed.model_dump()
-            if payload.get("sections") or payload.get("process_steps"):
-                collected["sop_structures"].append(
-                    {
-                        "chunk_id": unit.get("chunk_id"),
-                        "document_id": unit.get("document_id"),
-                        "sections": payload.get("sections", []),
-                        "process_steps": payload.get("process_steps", []),
-                    }
-                )
-            requirements, requirement_warning = _requirements_with_text(payload.get("requirements", []))
-            collected["requirements"].extend(requirements)
-            if requirement_warning:
-                collected["warnings"].append(requirement_warning)
-            collected["controls"].extend(_with_unit(payload.get("controls", []), unit))
-            collected["risks"].extend(_with_unit(payload.get("risks", []), unit))
-            collected["risk_events"].extend(_with_unit(payload.get("risk_events", []), unit))
-            collected["evidence_items"].extend(_with_unit(payload.get("evidence_items", []), unit))
-            collected["issues_findings"].extend(_with_unit(payload.get("findings", []), unit))
-            if payload.get("diagram_summary") or payload.get("steps") or payload.get("lanes_or_roles"):
-                collected["diagram_references"].append(
-                    {
-                        "diagram_id": f"diagram_{unit.get('chunk_id')}",
-                        "description": payload.get("diagram_summary", ""),
-                        "lanes_or_roles": payload.get("lanes_or_roles", []),
-                        "steps": payload.get("steps", []),
-                        "decisions": payload.get("decisions", []),
-                        "systems": payload.get("systems", []),
-                        "controls": payload.get("diagram_controls", []),
-                        "risks": payload.get("diagram_risks", []),
-                        "evidence_points": payload.get("evidence_points", []),
-                        "source_anchor_id": (unit.get("anchor_ids") or [""])[0],
-                        "document_id": unit.get("document_id"),
-                        "file_id": unit.get("file_id"),
-                    }
-                )
-            collected["warnings"].extend(payload.get("warnings", []))
+    if analysis_units:
+        progress("full_document_extraction", f"Analyzing {len(analysis_units)} SOP/policy documents with AI...")
+        with ThreadPoolExecutor(max_workers=document_workers) as executor:
+            futures = [executor.submit(run_document_extraction, unit) for unit in analysis_units]
+            for future in as_completed(futures):
+                extraction = future.result()
+                unit = extraction["unit"]
+                result = extraction["result"]
+                collected["warnings"].extend(extraction.get("warnings", []))
+                stage = "full_document_extraction"
+                completed_prompts += 1
+                progress(stage, f"Analyzing SOP/policy document with AI ({unit.get('filename') or unit.get('document_id')})...")
+                collected["prompt_runs"].append(result.record)
+                if not result.parsed:
+                    collected["warnings"].append(result.record.get("error") or f"{stage} returned invalid JSON")
+                    continue
+                payload = result.parsed.model_dump()
+                if payload.get("sections") or payload.get("process_steps"):
+                    collected["sop_structures"].append(
+                        {
+                            "chunk_id": unit.get("chunk_id"),
+                            "document_id": unit.get("document_id"),
+                            "sections": payload.get("sections", []),
+                            "process_steps": payload.get("process_steps", []),
+                        }
+                    )
+                requirements, requirement_warning = _requirements_with_text(payload.get("requirements", []))
+                collected["requirements"].extend(requirements)
+                if requirement_warning:
+                    collected["warnings"].append(requirement_warning)
+                collected["controls"].extend(_with_unit(payload.get("controls", []), unit))
+                collected["risks"].extend(_with_unit(payload.get("risks", []), unit))
+                collected["risk_events"].extend(_with_unit(payload.get("risk_events", []), unit))
+                collected["evidence_items"].extend(_with_unit(payload.get("evidence_items", []), unit))
+                collected["issues_findings"].extend(_with_unit(payload.get("findings", []), unit))
+                if payload.get("diagram_summary") or payload.get("steps") or payload.get("lanes_or_roles"):
+                    collected["diagram_references"].append(
+                        {
+                            "diagram_id": f"diagram_{unit.get('chunk_id')}",
+                            "description": payload.get("diagram_summary", ""),
+                            "lanes_or_roles": payload.get("lanes_or_roles", []),
+                            "steps": payload.get("steps", []),
+                            "decisions": payload.get("decisions", []),
+                            "systems": payload.get("systems", []),
+                            "controls": payload.get("diagram_controls", []),
+                            "risks": payload.get("diagram_risks", []),
+                            "evidence_points": payload.get("evidence_points", []),
+                            "source_anchor_id": (unit.get("anchor_ids") or [""])[0],
+                            "document_id": unit.get("document_id"),
+                            "file_id": unit.get("file_id"),
+                        }
+                    )
+                collected["warnings"].extend(payload.get("warnings", []))
+    else:
+        collected["warnings"].append("Skipped full-document AI extraction because no SOP or policy documents are tagged.")
+        progress("full_document_extraction", "Skipping full-document AI extraction; no SOP or policy documents are tagged.")
 
     for stage, schema in pre_suggestion_case_stages:
         progress(stage)
@@ -805,6 +920,7 @@ def _document_llm_workers(document_count: int) -> int:
 def _document_analysis_units(case: dict[str, Any], chunks: list[dict[str, Any]]) -> list[dict[str, Any]]:
     anchors_by_document: dict[str, list[dict[str, Any]]] = {}
     chunks_by_document: dict[str, list[dict[str, Any]]] = {}
+    file_tags = _file_tag_by_id(case)
     for anchor in case.get("anchors", []):
         anchors_by_document.setdefault(anchor.get("document_id", ""), []).append(anchor)
     for chunk in chunks:
@@ -813,6 +929,8 @@ def _document_analysis_units(case: dict[str, Any], chunks: list[dict[str, Any]])
     units: list[dict[str, Any]] = []
     for document in case.get("markdown_documents", []):
         document_id = document.get("document_id", "")
+        if file_tags.get(document.get("file_id", ""), "other") not in {"sop", "policy"}:
+            continue
         document_anchors = anchors_by_document.get(document_id, [])
         document_chunks = chunks_by_document.get(document_id, [])
         anchor_ids = [anchor.get("anchor_id", "") for anchor in document_anchors if anchor.get("anchor_id")]
@@ -833,7 +951,11 @@ def _document_analysis_units(case: dict[str, Any], chunks: list[dict[str, Any]])
         )
     if units:
         return units
-    return chunks
+    return [
+        chunk
+        for chunk in chunks
+        if file_tags.get(chunk.get("file_id", ""), "other") in {"sop", "policy"}
+    ]
 
 
 def _run_case_level_prompt(stage: str, schema: Any, case: dict[str, Any], collected: dict[str, Any]) -> None:
@@ -1077,7 +1199,7 @@ def _infer_shape(node: DiagramNode, index: int, total: int) -> str:
     label = node.label.lower()
     if node.shape != "process":
         return node.shape
-    if index == 0 or index == total - 1 or label in {"start", "end"}:
+    if label in {"start", "end"}:
         return "start_end"
     if node.type == "decision" or "?" in node.label or any(term in label for term in ["approved", "approve?", "exception", "high risk", "complete?"]):
         return "decision"

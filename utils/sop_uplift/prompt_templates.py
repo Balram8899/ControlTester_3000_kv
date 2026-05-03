@@ -109,14 +109,14 @@ Return JSON: {{"diagram_summary":"","lanes_or_roles":[],"steps":[],"decisions":[
     "full_document_extraction": """{global_contract}
 
 Task:
-Analyze the entire uploaded document and extract all SOP Uplift evidence in one pass.
+Analyze the uploaded SOP or policy document and extract SOP Uplift evidence in one pass.
 
 Important:
-- Process the full document content, not only isolated excerpts.
+- This prompt is only for SOP and policy documents. Supporting files such as RCMs, risk registers, evidence packs, control inventories, diagrams, audit reports, and test reports are parsed locally and supplied later as compact context.
+- Process the capped SOP/policy document content, not only isolated excerpts.
 - Preserve source anchor IDs when available.
 - Extract what is actually present. Do not infer missing owners, controls, risks, or evidence artifacts.
-- If the document is an SOP or policy, capture sections, process steps, and procedural requirements.
-- If the document is a risk/control matrix, risk register, control inventory, evidence file, diagram, or audit issue file, extract those records too.
+- Capture sections, process steps, procedural requirements, and explicit controls, risks, evidence artifacts, findings, or diagram references mentioned inside this SOP/policy.
 - Return concise structured records. Do not paste whole tables or large source dumps into fields.
 
 Document metadata:

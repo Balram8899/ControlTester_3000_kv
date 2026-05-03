@@ -2,6 +2,7 @@ from io import BytesIO
 from pathlib import Path
 
 from docx import Document
+from docx.shared import RGBColor
 
 from utils.sop_uplift.anchor_builder import build_anchors
 from utils.sop_uplift.change_log import build_json_audit_log, build_markdown_change_log
@@ -114,6 +115,17 @@ def test_diagram_exporters_generate_drawio_svg_and_pdf_bytes():
     assert b"Access Review Swimlane" in vsdx
 
 
+def test_svg_footer_wraps_long_summary_text_without_single_line_dump():
+    model = _diagram_model()
+    long_label = "Control " + ("very long retained evidence and remediation responsibility " * 12)
+    model = model.model_copy(update={"control_summary": [{"badge": "C1", "label": long_label}]})
+
+    svg = export_svg(model)
+
+    assert long_label not in svg
+    assert "Control very long retained evidence" in svg
+
+
 def test_change_logs_include_accepted_edited_and_rejected_decisions():
     case = {
         "case_id": "case-1",
@@ -175,6 +187,53 @@ def test_generate_docx_marks_accepted_and_edited_changes_with_colored_runs():
         if run.font.strike
     ]
     assert any(run.text == "Original text." for run in struck_runs)
+
+
+def test_generate_docx_preserves_source_docx_formatting_and_inserts_change_blocks():
+    source = Document()
+    source.add_heading("Source SOP", level=0)
+    paragraph = source.add_paragraph(style="Intense Quote")
+    paragraph.add_run("Original ").bold = True
+    colored = paragraph.add_run("control step.")
+    colored.font.color.rgb = RGBColor(192, 0, 0)
+    source.add_table(rows=1, cols=1).cell(0, 0).text = "Original table formatting remains"
+    buffer = BytesIO()
+    source.save(buffer)
+
+    case = {"title": "Quarterly access review SOP", "process_name": "Access reviews"}
+    sections = [{"anchor_id": "a1", "heading": "Access Review Procedure", "text": "Original control step."}]
+    suggestions = [
+        {
+            "suggestion_id": "s1",
+            "status": "accepted",
+            "anchor_id": "a1",
+            "suggested_text": "Operations Risk reviews access exceptions weekly.",
+            "severity": "medium",
+        },
+        {
+            "suggestion_id": "s2",
+            "status": "edited",
+            "anchor_id": "a1",
+            "user_text": "Retain the access review ticket export.",
+            "severity": "high",
+        },
+    ]
+
+    docx_bytes = generate_docx(case, sections, suggestions, source_docx=buffer.getvalue())
+    document = Document(BytesIO(docx_bytes))
+    full_text = "\n".join(paragraph.text for paragraph in document.paragraphs)
+
+    assert document.paragraphs[0].text == "Source SOP"
+    assert document.paragraphs[1].style.name == "Intense Quote"
+    assert document.paragraphs[1].runs[0].bold is True
+    assert document.paragraphs[1].runs[1].font.color.rgb == RGBColor(192, 0, 0)
+    assert len(document.tables) == 1
+    assert "TRACE Uplift Change [accepted s1]" in full_text
+    assert "TRACE Uplift Change [edited s2]" in full_text
+    assert "Original SOP language: Original control step." in full_text
+    assert "Applied SOP language: Operations Risk reviews access exceptions weekly." in full_text
+    assert "Applied SOP language: Retain the access review ticket export." in full_text
+    assert "TRACE Change Register" in full_text
 
 
 def test_build_revised_sections_uses_accepted_language_as_diagram_source():

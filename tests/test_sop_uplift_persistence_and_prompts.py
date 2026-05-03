@@ -343,6 +343,10 @@ def test_llm_orchestrator_validates_json_and_records_prompt_stage():
     assert result.parsed.value == "ok"
     assert result.record["stage"] == "demo_stage"
     assert result.record["validation_status"] == "valid"
+    assert result.record["prompt_chars"] == len("Return JSON")
+    assert result.record["raw_chars"] == len('{"value": "ok"}')
+    assert result.record["duration_ms"] >= 0
+    assert result.record["attempts"] == 1
 
 
 def test_llm_orchestrator_retries_invalid_json_before_accepting_valid_response():

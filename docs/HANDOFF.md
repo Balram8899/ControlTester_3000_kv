@@ -5,6 +5,30 @@
 
 ---
 
+## 2026-05-03 Update - SOP Uplift DOCX Export Formatting
+
+- Root cause: `utils/sop_uplift/rewrite_generator.py` generated uplift DOCX files with a fresh `Document()` package, so exported SOPs lost the uploaded Word document's template, paragraph styles, tables, and visual context.
+- Fix: SOP/policy `.docx` uploads are now selected as the export base when generating SOP Uplift outputs. The original DOCX package remains intact, and accepted/edited suggestions are inserted as visible `TRACE Uplift Change [...]` blocks near the matched source paragraph.
+- Change clarity: generated DOCX exports also append a `TRACE Change Register` with process metadata, original struck-through SOP language, applied SOP language, and rejected suggestions.
+- Fallback behavior: cases without a usable source `.docx` continue to use the existing generated DOCX path.
+- Regression coverage: `test_generate_docx_preserves_source_docx_formatting_and_inserts_change_blocks` and `test_generate_outputs_uses_uploaded_sop_docx_as_formatted_export_base`.
+- Verification run: `python -m pytest tests/test_sop_uplift_api.py tests/test_sop_uplift_outputs.py tests/test_sop_uplift_modules.py tests/test_sop_uplift_persistence_and_prompts.py tests/test_sop_uplift_pipeline.py -q`.
+
+---
+
+## 2026-05-03 Update - SOP Uplift Extraction Latency
+
+- Root cause: full-document SOP Uplift LLM extraction bypassed `max_chunk_chars` by expanding the sanitizer cap to the full document length. Large workbook-derived markdown could be sent to the LLM nearly whole, leaving the UI modal stuck in "Analyzing full documents with AI" for minutes.
+- Fix: `utils/sop_uplift/pipeline.py` now honors the configured prompt-size cap for document-level extraction.
+- Follow-up speed fix: full-document LLM extraction now runs only for confirmed SOP/policy documents. RCMs, risk registers, evidence, audit reports, and other supporting files stay on the deterministic extraction path and are passed into `case_sop_uplift_suggestions` as compact context.
+- Prompt-size controls: SOP/policy full-document prompts now budget anchors with `SOP_UPLIFT_MAX_ANCHORS_PER_PROMPT`, `SOP_UPLIFT_ANCHOR_EXCERPT_CHARS`, and `SOP_UPLIFT_ANCHOR_TEXT_BUDGET_CHARS`. Anchor summaries keep `anchor_id` and `section_path`, omit excerpts already present in the capped body, and cap additional excerpt text.
+- Prompt telemetry: `run_json_prompt()` records `prompt_chars`, `raw_chars`, `duration_ms`, `attempts`, and `stage` on prompt run records.
+- Regression coverage: `tests/test_sop_uplift_pipeline.py::test_full_pipeline_caps_full_document_prompt_to_max_chunk_chars`.
+- Additional regression coverage: `test_full_pipeline_runs_deep_document_analysis_only_for_sop_and_policy_documents`, `test_full_pipeline_skips_deep_document_analysis_when_no_sop_or_policy_is_tagged`, `test_full_document_prompt_anchor_budget_omits_body_duplicates_and_respects_limits`, and prompt telemetry assertions in `tests/test_sop_uplift_persistence_and_prompts.py`.
+- Verification run: `python -m pytest tests/test_sop_uplift_pipeline.py -v`, `python -m pytest tests/test_sop_uplift_api.py -v`, and `python -m pytest tests/test_sop_uplift_persistence_and_prompts.py -v`.
+
+---
+
 ## 1. What Is TRACE?
 
 **TRACE** (Control Tester 3000 / KPMG Audit Platform) is a **cybersecurity audit and compliance assessment platform** built for internal auditors and risk practitioners. It uses a local LLM (Ollama + Llama3:8b) with RAG (FAISS / MongoDB) to:
