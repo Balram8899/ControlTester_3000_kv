@@ -25,37 +25,61 @@ def get_llm_provider() -> str:
 
 
 def resolve_llm_model_name(model: str | None = None) -> str:
-    """
-    Return the effective LLM model name for the active provider.
-
-    Gemini deployments in this app are configured server-side via GOOGLE_LLM_MODEL,
-    so stale browser-provided model names should not override the active model.
-    """
-    if get_llm_provider() == "gemini":
-        return os.getenv("GOOGLE_LLM_MODEL", GOOGLE_LLM_MODEL)
-
-    requested_model = (model or "").strip()
-    return requested_model or os.getenv("OLLAMA_LLM_MODEL", OLLAMA_LLM_MODEL)
+    """Return the effective LLM model name for the active provider."""
+    from utils.llm_config_store import get_active_llm_config
+    config = get_active_llm_config()
+    if model and model.strip():
+        return model.strip()
+    return config["model"]
 
 
 def make_llm(model: str | None = None, temperature: float = 0.1):
     """Return a string-producing LLM chain for the configured provider."""
-    if get_llm_provider() == "gemini":
+    from utils.llm_config_store import get_active_llm_config, PROVIDER_REGISTRY
+
+    config = get_active_llm_config()
+    provider = config["provider"]
+    active_model = model or config["model"]
+
+    if provider == "gemini":
         from langchain_google_genai import ChatGoogleGenerativeAI
-        if not GOOGLE_API_KEY:
-            raise EnvironmentError("GOOGLE_API_KEY must be set when LLM_PROVIDER=gemini")
+        api_key = os.getenv("GOOGLE_API_KEY")
+        if not api_key:
+            raise EnvironmentError("GOOGLE_API_KEY must be set when provider is gemini")
         return ChatGoogleGenerativeAI(
-            model=resolve_llm_model_name(model),
-            google_api_key=GOOGLE_API_KEY,
+            model=active_model,
+            google_api_key=api_key,
             temperature=temperature,
             request_timeout=120,
         ) | StrOutputParser()
 
+    if provider == "openai":
+        from langchain_openai import ChatOpenAI
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise EnvironmentError("OPENAI_API_KEY must be set when provider is openai")
+        return ChatOpenAI(
+            model=active_model,
+            api_key=api_key,
+            temperature=temperature,
+        ) | StrOutputParser()
+
+    if provider == "anthropic":
+        from langchain_anthropic import ChatAnthropic
+        api_key = os.getenv("ANTHROPIC_API_KEY")
+        if not api_key:
+            raise EnvironmentError("ANTHROPIC_API_KEY must be set when provider is anthropic")
+        return ChatAnthropic(
+            model=active_model,
+            api_key=api_key,
+            temperature=temperature,
+        ) | StrOutputParser()
+
     from langchain_ollama import ChatOllama
     return ChatOllama(
-        model=resolve_llm_model_name(model),
+        model=active_model,
         temperature=temperature,
-        base_url=OLLAMA_BASE_URL,
+        base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
     ) | StrOutputParser()
 
 
