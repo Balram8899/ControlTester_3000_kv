@@ -45,6 +45,22 @@ interface VectorstoreInfo {
   graph_edges?: number;
 }
 
+interface LLMStatus {
+  provider: string;
+  model: string;
+  status: "ok" | "error";
+  message: string;
+  latency_ms: number;
+  available_providers: string[];
+}
+
+const PROVIDER_MODELS: Record<string, string[]> = {
+  gemini:    ["gemini-3-flash-preview"],
+  openai:    ["gpt-5.5", "gpt-5.4"],
+  anthropic: ["claude-opus-4-7", "claude-sonnet-4-6"],
+  ollama:    ["llama3:latest"],
+};
+
 export default function SettingsPage() {
   const [generalContextFiles, setGeneralContextFiles] = useState<ContextFile[]>([]);
   const [companyPolicyFiles, setCompanyPolicyFiles] = useState<ContextFile[]>([]);
@@ -62,6 +78,64 @@ export default function SettingsPage() {
     return localStorage.getItem("selectedModel") || "";
   });
   const { toast } = useToast();
+
+  const [llmProvider, setLlmProvider] = useState<string>("");
+  const [llmModel, setLlmModel] = useState<string>("");
+  const [testResult, setTestResult] = useState<LLMStatus | null>(null);
+  const [testLoading, setTestLoading] = useState(false);
+
+  const { data: llmStatus, isLoading: llmStatusLoading } = useQuery<LLMStatus>({
+    queryKey: ["/api/settings/llm-status"],
+    queryFn: async () => {
+      const res = await fetch("/api/settings/llm-status");
+      if (!res.ok) throw new Error("Failed to fetch LLM status");
+      return res.json();
+    },
+  });
+
+  useEffect(() => {
+    if (llmStatus) {
+      setLlmProvider(llmStatus.provider);
+      setLlmModel(llmStatus.model);
+    }
+  }, [llmStatus]);
+
+  const saveLLMConfig = useMutation({
+    mutationFn: async ({ provider, model }: { provider: string; model: string }) => {
+      const res = await fetch("/api/settings/llm-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider, model }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || "Failed to save");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Provider saved", description: `Now using ${llmProvider} / ${llmModel}` });
+      queryClient.invalidateQueries({ queryKey: ["/api/settings/llm-status"] });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Save failed", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const handleTestConnection = async () => {
+    setTestLoading(true);
+    setTestResult(null);
+    try {
+      const res = await fetch("/api/settings/llm-status");
+      const data: LLMStatus = await res.json();
+      setTestResult(data);
+    } catch {
+      setTestResult({ provider: llmProvider, model: llmModel, status: "error", message: "Network error", latency_ms: 0, available_providers: [] });
+    } finally {
+      setTestLoading(false);
+    }
+  };
+
   const loadedVectorstores = useRef<Set<string>>(new Set());
 
   const { data: models, isLoading: modelsLoading, error: modelsError } = useQuery<Model[]>({
@@ -328,6 +402,97 @@ export default function SettingsPage() {
     <div className="h-full flex flex-col">
       <HeroSection title="Settings" subtitle="Configure AI models and application preferences" icon={Network} />
       <TracePageBody width="narrow" contentClassName="space-y-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>LLM Provider</CardTitle>
+              <CardDescription>
+                Select the active cloud AI provider and model. API keys must be set in <code>.env</code> before a provider appears here.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {llmStatusLoading && (
+                <p className="text-sm text-muted-foreground">Loading provider config...</p>
+              )}
+              {!llmStatusLoading && (
+                <>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                    <div className="flex-1 space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Provider</label>
+                      <Select
+                        value={llmProvider}
+                        onValueChange={(val) => {
+                          setLlmProvider(val);
+                          setLlmModel(PROVIDER_MODELS[val]?.[0] ?? "");
+                        }}
+                      >
+                        <SelectTrigger className="w-full" data-testid="select-llm-provider">
+                          <SelectValue placeholder="Select provider" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(llmStatus?.available_providers ?? []).map((p) => (
+                            <SelectItem key={p} value={p}>
+                              {p.charAt(0).toUpperCase() + p.slice(1)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="flex-1 space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Model</label>
+                      <Select value={llmModel} onValueChange={setLlmModel}>
+                        <SelectTrigger className="w-full" data-testid="select-llm-model">
+                          <SelectValue placeholder="Select model" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(PROVIDER_MODELS[llmProvider] ?? []).map((m) => (
+                            <SelectItem key={m} value={m}>{m}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => saveLLMConfig.mutate({ provider: llmProvider, model: llmModel })}
+                      disabled={saveLLMConfig.isPending || !llmProvider || !llmModel}
+                      data-testid="btn-save-llm-config"
+                    >
+                      {saveLLMConfig.isPending ? "Saving..." : "Save"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={handleTestConnection}
+                      disabled={testLoading}
+                      data-testid="btn-test-connection"
+                    >
+                      {testLoading ? "Testing..." : "Test Connection"}
+                    </Button>
+                  </div>
+
+                  {testResult && (
+                    <div
+                      className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm ${
+                        testResult.status === "ok"
+                          ? "bg-green-50 text-green-800 dark:bg-green-950 dark:text-green-200"
+                          : "bg-red-50 text-red-800 dark:bg-red-950 dark:text-red-200"
+                      }`}
+                      data-testid="llm-test-result"
+                    >
+                      <span>{testResult.status === "ok" ? "✓" : "✗"}</span>
+                      <span>
+                        {testResult.status === "ok"
+                          ? `ok · ${testResult.latency_ms}ms · "${testResult.message}"`
+                          : testResult.message}
+                      </span>
+                    </div>
+                  )}
+                </>
+              )}
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>LLM Model</CardTitle>
