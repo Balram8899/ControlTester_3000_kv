@@ -48,3 +48,18 @@ def test_save_llm_config_upserts_document():
         {"$set": {"provider": "openai", "model": "gpt-5.5"}},
         upsert=True,
     )
+
+
+def test_get_llm_uses_db_provider_over_env():
+    with patch("utils.llm_config_store._get_collection") as mock_col_fn:
+        mock_col = _make_mock_collection(
+            {"_id": "llm_config", "provider": "ollama", "model": "llama3:latest"}
+        )
+        mock_col_fn.return_value = mock_col
+
+        with patch.dict(os.environ, {"LLM_PROVIDER": "gemini", "GOOGLE_API_KEY": "key"}):
+            from langchain_ollama import ChatOllama
+            import importlib, utils.llm_provider as mod
+            importlib.reload(mod)
+            llm = mod.get_llm()
+        assert isinstance(llm, ChatOllama)
