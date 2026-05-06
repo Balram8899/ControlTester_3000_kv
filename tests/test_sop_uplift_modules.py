@@ -10,6 +10,7 @@ from utils.sop_uplift.case_chat import capture_context_from_message
 from utils.sop_uplift.corpus_map import build_case_corpus_map
 from utils.sop_uplift.extraction_router import plan_extraction
 from utils.sop_uplift.extractors import extract_sop_structure
+from utils.sop_uplift.llm_schemas import FullDocumentExtractionResponse, SopSuggestionResponse
 from utils.sop_uplift.markdown_ingestion import convert_bytes_to_markdown, looks_corrupt_markdown
 from utils.sop_uplift.preview_renderer import build_preview_model
 from utils.sop_uplift.retrieval import retrieve_context
@@ -350,6 +351,47 @@ def test_rule_based_suggestions_include_supporting_document_improvement_areas():
     assert suggestions[0]["anchor_id"] == "rcm-1"
     assert suggestions[0]["type"] in {"ownership_gap", "frequency_gap", "evidence_gap", "mapping_gap", "weak_control_description"}
     assert "Source text:" not in suggestions[0]["suggested_text"]
+
+
+def test_llm_suggestion_response_keeps_suggestions_when_warnings_are_structured():
+    response = SopSuggestionResponse.model_validate(
+        {
+            "suggestions": [
+                {
+                    "suggestion_id": "sug-1",
+                    "anchor_id": "sop-1",
+                    "suggested_text": "Branch Operations must retain the NAAF completeness flag in the account management system.",
+                    "source_references": [{"anchor_id": "rcm-1"}],
+                }
+            ],
+            "warnings": [
+                {
+                    "warning_type": "source_scope",
+                    "message": "Evidence document is draft.",
+                    "anchor_id": "sop-1",
+                }
+            ],
+        }
+    )
+
+    assert response.suggestions[0].suggestion_id == "sug-1"
+    assert "Evidence document is draft." in response.warnings[0]
+
+
+def test_full_document_extraction_accepts_structured_warning_and_role_items():
+    response = FullDocumentExtractionResponse.model_validate(
+        {
+            "lanes_or_roles": [
+                {"role_id": "role-1", "name": "Branch Operations", "source_anchor_id": "a1"},
+            ],
+            "warnings": [
+                {"warning_id": "w1", "message": "Some table rows were skipped."},
+            ],
+        }
+    )
+
+    assert response.lanes_or_roles == ["Branch Operations"]
+    assert "Some table rows were skipped." in response.warnings[0]
 
 
 def test_document_tagging_covers_primary_document_types():

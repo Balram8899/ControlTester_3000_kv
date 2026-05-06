@@ -1,109 +1,53 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useLocation } from "wouter";
+import { useAssetRegistry } from "@/contexts/AssetRegistryContext";
 import { useCrossNav } from "@/contexts/CrossNavContext";
+import { useIssueManagement } from "@/contexts/IssueManagementContext";
 import { useLibraryMetrics } from "@/contexts/LibraryMetricsContext";
+import { useRiskAssessment } from "@/contexts/RiskAssessmentContext";
+import { useChatContext } from "@/hooks/useChatContext";
 import {
-  LayoutDashboard,
-  Library,
-  ShieldCheck,
-  Scale,
-  ArrowRight,
+  ClipboardList,
+  FileBarChart,
+  Grid2X2,
+  MessageSquare,
   RefreshCw,
-  FileText,
-  Layers,
-  Lock,
-  Activity,
-  Database,
-  Cpu,
+  Scale,
+  TestTube,
+  Workflow,
 } from "lucide-react";
 import {
-  BarChart,
   Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-  PieChart,
-  Pie,
-  Cell,
 } from "recharts";
-import { Button } from "@/components/ui/button";
-import HeroSection from "@/components/HeroSection";
-import KpiCard from "@/components/KpiCard";
+import TraceNavBar from "@/components/TraceNavBar";
 import TracePageBody from "@/components/TracePageBody";
 import {
-  CHART_TOOLTIP_STYLE,
+  AXIS_STYLE,
   CHART_TOOLTIP_ITEM_STYLE,
   CHART_TOOLTIP_LABEL_STYLE,
-  AXIS_STYLE,
+  CHART_TOOLTIP_STYLE,
   GRID_STYLE,
 } from "@/lib/chartTheme";
 
-function AnalysisCard({
-  title,
-  accentColor,
-  value,
-  valueColor,
-  subLabel,
-  detail,
-  preview = false,
-  onViewFull,
-}: {
-  title: string;
-  accentColor: string;
-  value: string;
-  valueColor: string;
-  subLabel: string;
-  detail: string;
-  preview?: boolean;
-  onViewFull: () => void;
-}) {
-  return (
-        <div className="dashboard-panel card-interactive group flex flex-col overflow-hidden rounded-[18px] border bg-card">
-      <div className="h-1 shrink-0" style={{ background: accentColor }} />
-      <div className="flex flex-1 flex-col p-5">
-        <div className="mb-3 flex items-start justify-between gap-2">
-          <span className="text-sm font-semibold leading-tight text-[var(--ink-strong)]">{title}</span>
-          {preview && (
-            <span className="landing-chip shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium">
-              PREVIEW
-            </span>
-          )}
-        </div>
-        <p className="mb-1 text-4xl font-bold leading-none" style={{ color: valueColor }}>
-          {value}
-        </p>
-        <p className="mb-2 text-xs text-[var(--ink-muted)]">{subLabel}</p>
-        <p className="mb-3 mt-auto text-[11px] text-[var(--ink-muted)]">{detail}</p>
-        <button
-          type="button"
-          className="flex items-center gap-1 text-xs font-semibold transition-all hover:gap-2"
-          style={{ color: accentColor }}
-          onClick={onViewFull}
-        >
-          View Full Analysis <ArrowRight className="h-3 w-3" />
-        </button>
-      </div>
-    </div>
-  );
-}
+type DashboardTab = "overview" | "libraries" | "workflows" | "exceptions";
 
-function AnalysisSkeleton() {
-  return (
-    <div className="dashboard-panel animate-pulse overflow-hidden rounded-2xl border bg-card">
-      <div className="h-1 bg-muted" />
-      <div className="space-y-3 p-5">
-        <div className="h-3 w-36 rounded bg-muted" />
-        <div className="h-9 w-24 rounded bg-muted" />
-        <div className="h-2.5 w-20 rounded bg-muted" />
-        <div className="h-2.5 w-44 rounded bg-muted" />
-        <div className="mt-4 h-3 w-28 rounded bg-muted" />
-      </div>
-    </div>
-  );
-}
+type Tone = "blue" | "cyan" | "purple" | "green" | "amber" | "red" | "navy" | "teal";
+
+type ChartDatum = {
+  name: string;
+  value: number;
+  fill: string;
+};
 
 type SystemStatusSnapshot = {
   active_provider?: string;
@@ -121,18 +65,366 @@ type SystemStatusSnapshot = {
   };
 };
 
+type TestingSession = {
+  id: string;
+  status?: string;
+  controls?: Array<{
+    test_result?: string;
+    evidence_text?: string;
+  }>;
+  report_markdown?: string | null;
+};
+
+type ReportSummary = {
+  report_id: string;
+  report_type?: string;
+  status?: string;
+  output_files?: Array<{ type?: string; filename?: string }>;
+};
+
+type SopCase = {
+  case_id: string;
+  status?: string;
+  uploaded_files?: unknown[];
+  suggestions?: Array<{ status?: string }>;
+  outputs?: unknown[];
+};
+
+type FrameworkDocument = {
+  document_id?: string;
+  framework_name?: string;
+  total_elements?: number;
+  elements_by_category?: Record<string, number>;
+};
+
+type FrameworkElement = {
+  risk_category?: string;
+  specificity_level?: string;
+};
+
+const TONE_COLORS: Record<Tone, string> = {
+  blue: "#1E49E2",
+  cyan: "#00B8F5",
+  purple: "#7213EA",
+  green: "#009A44",
+  amber: "#EAAA00",
+  red: "#E5001B",
+  navy: "#00338D",
+  teal: "#098E7E",
+};
+
+const TONE_TINTS: Record<Tone, string> = {
+  blue: "#EEF2FF",
+  cyan: "#EFF8FF",
+  purple: "#F3F0FF",
+  green: "#EDFBF5",
+  amber: "#FFFBEB",
+  red: "#FEEBED",
+  navy: "#EEF2FF",
+  teal: "#E6F4F2",
+};
+
+const CHART_COLORS = ["#00338D", "#1E49E2", "#00B8F5", "#098E7E", "#009A44", "#EAAA00", "#E5001B", "#7213EA"];
+const RISK_BANDS = ["Low", "Medium", "High", "Critical"] as const;
+const ASSESSMENT_STATUSES = ["draft", "in_progress", "risks_identified", "controls_applied", "complete"] as const;
+const TESTING_STATUSES = ["draft", "in_progress", "complete"] as const;
+const TEST_RESULTS = ["pass", "partial", "fail", "not_tested"] as const;
+const ISSUE_STATUSES = ["Open", "In Remediation", "Pending Review", "Returned", "Closed"] as const;
+const QUEUE_STATUSES = ["Pending", "Accepted", "Dismissed"] as const;
+
+function formatNumber(value: number) {
+  return value.toLocaleString();
+}
+
+function formatPercent(value: number) {
+  return `${Math.round(value)}%`;
+}
+
+function titleize(value: string) {
+  return value
+    .replace(/_/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\w\S*/g, word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
+}
+
+function reportTypeLabel(type?: string) {
+  if (type === "rcm_compliance") return "RCM";
+  if (type === "regulatory_gap_analysis") return "Regulatory Testing";
+  if (type === "control_testing") return "Control Testing";
+  if (type === "evidence_assessment") return "Final Reporting";
+  if (type === "sop_uplift") return "SOP Uplift";
+  return type ? titleize(type) : "Report";
+}
+
+function withColors(data: Array<{ name: string; value: number }>, start = 0): ChartDatum[] {
+  return data.map((item, index) => ({
+    ...item,
+    fill: CHART_COLORS[(index + start) % CHART_COLORS.length],
+  }));
+}
+
+function orderedCounts<T>(
+  items: T[],
+  order: readonly string[],
+  getKey: (item: T) => string | undefined | null,
+  start = 0,
+) {
+  const counts = new Map(order.map(label => [label, 0]));
+  for (const item of items) {
+    const key = getKey(item);
+    if (!key) continue;
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  return withColors(order.map(name => ({ name: titleize(name), value: counts.get(name) ?? 0 })), start);
+}
+
+function groupedCounts<T>(items: T[], getKey: (item: T) => string | undefined | null, start = 0) {
+  const counts = new Map<string, number>();
+  for (const item of items) {
+    const key = getKey(item);
+    const name = key ? titleize(key) : "Unspecified";
+    counts.set(name, (counts.get(name) ?? 0) + 1);
+  }
+  return withColors(
+    Array.from(counts.entries())
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value || a.name.localeCompare(b.name)),
+    start,
+  );
+}
+
+function hasChartData(data: ChartDatum[]) {
+  return data.some(item => item.value > 0);
+}
+
+function EmptyChart({ label = "No Records" }: { label?: string }) {
+  return (
+    <div className="flex h-[230px] items-center justify-center rounded-xl border border-dashed border-[#E2E6EF] bg-[#F8FAFC] text-[13px] font-semibold text-[#8492A6]">
+      {label}
+    </div>
+  );
+}
+
+function KpiMetricCard({
+  label,
+  value,
+  subLabel,
+  badge,
+  tone,
+  onClick,
+}: {
+  label: string;
+  value: string;
+  subLabel: string;
+  badge?: string;
+  tone: Tone;
+  onClick: () => void;
+}) {
+  const accent = TONE_COLORS[tone];
+  return (
+    <button
+      type="button"
+      data-dashboard-kpi-style="reference-number-card"
+      onClick={onClick}
+      className="group relative min-h-[168px] overflow-hidden rounded-[18px] border border-[#D9E1EC] bg-white p-6 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+    >
+      <div className="absolute left-0 right-0 top-0 h-[3px] rounded-t-[18px]" style={{ background: accent }} />
+      <p className="text-[11px] font-bold uppercase leading-4 tracking-[2.2px] text-[#8492A6]">{label}</p>
+      <p className="mt-4 text-[42px] font-bold leading-none tracking-tight text-[#0C233C]">{value}</p>
+      <p className="mt-3 text-[13px] leading-relaxed text-[#6B7890]">{subLabel}</p>
+      {badge ? (
+        <span
+          className="mt-4 inline-flex max-w-full items-center rounded-full px-3 py-1 text-[11px] font-bold"
+          style={{ background: TONE_TINTS[tone], color: accent }}
+        >
+          <span className="truncate">{badge}</span>
+        </span>
+      ) : null}
+    </button>
+  );
+}
+
+function SectionTitle({ title }: { title: string }) {
+  return (
+    <div className="mb-3">
+      <h3 className="text-[17px] font-bold tracking-tight text-[#0C233C]">{title}</h3>
+    </div>
+  );
+}
+
+function ChartCard({
+  title,
+  footerLabel,
+  footerValue,
+  children,
+  wide = false,
+}: {
+  title: string;
+  footerLabel: string;
+  footerValue: string;
+  children: ReactNode;
+  wide?: boolean;
+}) {
+  return (
+    <section className={`rounded-[18px] border border-[#D9E1EC] bg-white p-7 shadow-sm ${wide ? "xl:col-span-2" : ""}`}>
+      <SectionTitle title={title} />
+      {children}
+      <div className="mt-4 flex items-center justify-between border-t border-[#E2E6EF] pt-3 text-[12px]">
+        <span className="text-[#5A6478]">{footerLabel}</span>
+        <span className="font-bold text-[#0C233C]">{footerValue}</span>
+      </div>
+    </section>
+  );
+}
+
+function BarChartPanel({ data, height = 210 }: { data: ChartDatum[]; height?: number }) {
+  if (!hasChartData(data)) return <EmptyChart />;
+  return (
+    <ResponsiveContainer width="100%" height={height}>
+      <BarChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 16 }}>
+        <CartesianGrid {...GRID_STYLE} />
+        <XAxis dataKey="name" tick={{ ...AXIS_STYLE }} interval={0} tickMargin={8} />
+        <YAxis tick={{ ...AXIS_STYLE }} allowDecimals={false} />
+        <Tooltip contentStyle={CHART_TOOLTIP_STYLE} itemStyle={CHART_TOOLTIP_ITEM_STYLE} labelStyle={CHART_TOOLTIP_LABEL_STYLE} cursor={{ fill: "var(--osint-glow)" }} />
+        <Bar dataKey="value" radius={[5, 5, 0, 0]}>
+          {data.map((entry, index) => (
+            <Cell key={index} fill={entry.fill} />
+          ))}
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+function DonutChartPanel({ data }: { data: ChartDatum[] }) {
+  if (!hasChartData(data)) return <EmptyChart />;
+  const total = data.reduce((sum, item) => sum + item.value, 0);
+  return (
+    <div className="grid gap-4 md:grid-cols-[0.85fr_1fr] md:items-center">
+      <ResponsiveContainer width="100%" height={210}>
+        <PieChart>
+          <Pie data={data} cx="50%" cy="50%" innerRadius={54} outerRadius={86} paddingAngle={2} dataKey="value" stroke="none">
+            {data.map((entry, index) => (
+              <Cell key={index} fill={entry.fill} />
+            ))}
+          </Pie>
+          <Tooltip contentStyle={CHART_TOOLTIP_STYLE} itemStyle={CHART_TOOLTIP_ITEM_STYLE} labelStyle={CHART_TOOLTIP_LABEL_STYLE} />
+        </PieChart>
+      </ResponsiveContainer>
+      <div className="max-h-[206px] space-y-2 overflow-auto pr-1">
+        {data.filter(item => item.value > 0).map(item => (
+          <div key={item.name} className="grid grid-cols-[12px_1fr_auto] items-center gap-2 text-[12px]">
+            <span className="h-2.5 w-2.5 rounded-full" style={{ background: item.fill }} />
+            <span className="truncate text-[#0C233C]">{item.name}</span>
+            <span className="font-bold text-[#0C233C]">
+              {formatNumber(item.value)} ({total > 0 ? Math.round((item.value / total) * 100) : 0}%)
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function HorizontalPercentPanel({ data }: { data: ChartDatum[] }) {
+  if (!hasChartData(data)) return <EmptyChart />;
+  return (
+    <div className="space-y-4">
+      {data.map(item => (
+        <div key={item.name} className="grid grid-cols-[110px_1fr_44px] items-center gap-3 text-[12px]">
+          <span className="truncate font-semibold text-[#0C233C]">{item.name}</span>
+          <div className="h-8 overflow-hidden rounded-md bg-[#EEF2FF]">
+            <div className="h-full rounded-md" style={{ width: `${Math.max(0, Math.min(100, item.value))}%`, background: item.fill }} />
+          </div>
+          <span className="text-right font-bold text-[#0C233C]">{formatPercent(item.value)}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SegmentedStatusPanel({ data }: { data: ChartDatum[] }) {
+  const total = data.reduce((sum, item) => sum + item.value, 0);
+  if (total <= 0) return <EmptyChart />;
+  return (
+    <div className="space-y-5">
+      <div className="flex h-11 overflow-hidden rounded-md border border-[#D9E1EC]">
+        {data.filter(item => item.value > 0).map(item => {
+          const pct = (item.value / total) * 100;
+          return (
+            <div
+              key={item.name}
+              className="flex min-w-[42px] items-center justify-center border-r border-white/60 text-[12px] font-bold text-white last:border-r-0"
+              style={{ width: `${pct}%`, background: item.fill }}
+              title={`${item.name}: ${formatNumber(item.value)}`}
+            >
+              {Math.round(pct)}%
+            </div>
+          );
+        })}
+      </div>
+      <div className="flex flex-wrap gap-x-6 gap-y-3">
+        {data.map(item => (
+          <div key={item.name} className="flex items-center gap-2 text-[12px] text-[#5A6478]">
+            <span className="h-2.5 w-2.5 rounded-full" style={{ background: item.fill }} />
+            <span>{item.name}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ModuleMetricCard({
+  title,
+  metrics,
+  tone,
+  icon,
+  onClick,
+}: {
+  title: string;
+  metrics: Array<{ label: string; value: string }>;
+  tone: Tone;
+  icon: ReactNode;
+  onClick: () => void;
+}) {
+  const accent = TONE_COLORS[tone];
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="relative overflow-hidden rounded-lg border border-[#D9E1EC] bg-white p-5 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+    >
+      <div className="absolute left-0 right-0 top-0 h-1" style={{ background: accent }} />
+      <div className="flex items-start gap-4">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl" style={{ background: TONE_TINTS[tone], color: accent }}>
+          {icon}
+        </div>
+        <div className="min-w-0 flex-1">
+          <h3 className="text-[14px] font-bold uppercase tracking-[0.4px] text-[#0C233C]">{title}</h3>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            {metrics.map(metric => (
+              <div key={metric.label}>
+                <p className="text-[22px] font-bold leading-none" style={{ color: accent }}>{metric.value}</p>
+                <p className="mt-1 text-[11px] text-[#8492A6]">{metric.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </button>
+  );
+}
+
 export default function DashboardPage() {
   const [, setLocation] = useLocation();
   const { setPendingQualityAnalysis } = useCrossNav();
-
   const {
     regDocs,
     ctrlDocs,
     totalObligations,
-    regDomainCount,
-    frameworkNames,
     totalControls,
-    ctrlDomainCount,
     allControls,
     ctrlCoveragePct,
     orphanedCtrlCount,
@@ -142,9 +434,7 @@ export default function DashboardPage() {
     oblCoveragePct,
     potentialDuplicates,
     confirmedDuplicates,
-    regOnlyDomains,
     domainCoveragePct,
-    allDomains,
     barChartData,
     pieData,
     loading,
@@ -152,25 +442,22 @@ export default function DashboardPage() {
     lastRefreshed,
     refreshMetrics,
   } = useLibraryMetrics();
+  const { assets, fetchAssets, isLoading: assetsLoading } = useAssetRegistry();
+  const { assessments, fetchAssessments, isLoading: assessmentsLoading } = useRiskAssessment();
+  const { issues, queueItems, fetchIssues, fetchQueue, isLoading: issuesLoading, isLoadingQueue } = useIssueManagement();
+  const { messages, uploadedFiles, hasAttachments } = useChatContext();
 
+  const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
   const [systemStatus, setSystemStatus] = useState<SystemStatusSnapshot | null>(null);
   const [systemStatusLoading, setSystemStatusLoading] = useState(false);
-  const hasAnalysisData = !analysisLoading && allControls.length > 0 && totalObligations > 0;
-  const librariesLoaded = !loading && (regDocs.length > 0 || ctrlDocs.length > 0);
-  const obligationCoverageColor =
-    oblCoveragePct >= 75 ? "#009A44" : oblCoveragePct >= 50 ? "#EAAA00" : "#E5001B";
-  const gapSeverityRatio = totalObligations > 0 ? gapObligations / totalObligations : 0;
-  const gapColor = gapObligations === 0 ? "#009A44" : gapSeverityRatio > 0.2 ? "#E5001B" : "#EAAA00";
-  const activeModel = systemStatus?.active_model || "Not configured";
-  const activeProvider = systemStatus?.active_provider;
-  const regulatoryCount = systemStatus?.regulatory_library?.documents ?? regDocs.length;
-  const regulatoryState = systemStatus?.regulatory_library?.status || (regulatoryCount > 0 ? "loaded" : "empty");
-  const controlsCount = systemStatus?.controls_library?.documents ?? ctrlDocs.length;
-  const controlsState = systemStatus?.controls_library?.status || (controlsCount > 0 ? "loaded" : "empty");
-  const platformState = systemStatus?.platform?.status || "online";
-  const platformOnline = platformState.toLowerCase() === "online";
+  const [pageRecordsLoading, setPageRecordsLoading] = useState(false);
+  const [testingSessions, setTestingSessions] = useState<TestingSession[]>([]);
+  const [reports, setReports] = useState<ReportSummary[]>([]);
+  const [sopCases, setSopCases] = useState<SopCase[]>([]);
+  const [frameworkDocs, setFrameworkDocs] = useState<FrameworkDocument[]>([]);
+  const [frameworkElements, setFrameworkElements] = useState<FrameworkElement[]>([]);
 
-  const refreshSystemStatus = async () => {
+  const refreshSystemStatus = useCallback(async () => {
     setSystemStatusLoading(true);
     try {
       const response = await fetch("/api/settings/system-status");
@@ -186,410 +473,397 @@ export default function DashboardPage() {
     } finally {
       setSystemStatusLoading(false);
     }
-  };
+  }, [ctrlDocs.length, regDocs.length]);
+
+  const refreshPageRecords = useCallback(async () => {
+    setPageRecordsLoading(true);
+    try {
+      const [testingResult, reportsResult, sopResult, frameworkDocsResult, frameworkElementsResult] = await Promise.allSettled([
+        fetch("/api/control-testing").then(r => (r.ok ? r.json() : [])),
+        fetch("/api/rcm-reports").then(r => (r.ok ? r.json() : { reports: [] })),
+        fetch("/api/sop-uplift/cases").then(r => (r.ok ? r.json() : { cases: [] })),
+        fetch("/api/frameworks-library/documents").then(r => (r.ok ? r.json() : { documents: [] })),
+        fetch("/api/frameworks-library/all-elements").then(r => (r.ok ? r.json() : { elements: [] })),
+        fetchAssets(),
+        fetchAssessments(),
+        fetchIssues(),
+        fetchQueue(),
+      ]);
+
+      if (testingResult.status === "fulfilled" && Array.isArray(testingResult.value)) setTestingSessions(testingResult.value);
+      if (reportsResult.status === "fulfilled") setReports(Array.isArray(reportsResult.value?.reports) ? reportsResult.value.reports : []);
+      if (sopResult.status === "fulfilled") setSopCases(Array.isArray(sopResult.value?.cases) ? sopResult.value.cases : []);
+      if (frameworkDocsResult.status === "fulfilled") setFrameworkDocs(Array.isArray(frameworkDocsResult.value?.documents) ? frameworkDocsResult.value.documents : []);
+      if (frameworkElementsResult.status === "fulfilled") setFrameworkElements(Array.isArray(frameworkElementsResult.value?.elements) ? frameworkElementsResult.value.elements : []);
+    } finally {
+      setPageRecordsLoading(false);
+    }
+  }, [fetchAssets, fetchAssessments, fetchIssues, fetchQueue]);
 
   useEffect(() => {
     refreshSystemStatus();
+    refreshPageRecords();
     const interval = window.setInterval(refreshSystemStatus, 30000);
     return () => window.clearInterval(interval);
-  }, []);
+  }, [refreshPageRecords, refreshSystemStatus]);
 
   const refreshDashboard = () => {
     refreshMetrics();
     refreshSystemStatus();
+    refreshPageRecords();
   };
 
-  const libraryStatusText = (count: number, state: string) => {
-    if (state === "unavailable") return "unavailable";
-    return count > 0 ? `${count} loaded` : "empty";
-  };
+  const allPageLoading = loading || systemStatusLoading || pageRecordsLoading || assetsLoading || assessmentsLoading || issuesLoading || isLoadingQueue;
+  const activeModel = systemStatus?.active_model || "Not Configured";
+  const platformOnline = (systemStatus?.platform?.status || "online").toLowerCase() === "online";
+  const regulatoryCount = systemStatus?.regulatory_library?.documents ?? regDocs.length;
+  const controlsCount = systemStatus?.controls_library?.documents ?? ctrlDocs.length;
+  const lastRefreshDate = lastRefreshed ?? new Date();
+  const lastRefreshLabel = lastRefreshed ? lastRefreshed.toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : "Not Refreshed";
+
+  const risks = useMemo(() => assessments.flatMap(assessment => assessment.risks ?? []), [assessments]);
+  const riskCount = risks.length;
+  const criticalRiskCount = risks.filter(risk => risk.residual_risk_band === "Critical" || risk.inherent_risk_band === "Critical").length;
+  const appliedControlCount = assessments.reduce((sum, assessment) => sum + (assessment.applied_controls?.length ?? 0), 0);
+  const subjectAssetCount = assessments.reduce((sum, assessment) => sum + (assessment.asset_ids?.length ?? 0), 0);
+
+  const testingControls = useMemo(() => testingSessions.flatMap(session => session.controls ?? []), [testingSessions]);
+  const failedControlCount = testingControls.filter(control => control.test_result === "fail").length;
+  const controlWithEvidenceCount = testingControls.filter(control => Boolean(control.evidence_text?.trim())).length;
+  const testingReportsReady = testingSessions.filter(session => Boolean(session.report_markdown)).length;
+
+  const highAssets = assets.filter(asset => asset.criticality === "Critical" || asset.criticality === "High").length;
+  const activeAssets = assets.filter(asset => asset.status === "Operational").length;
+  const openIssues = issues.filter(issue => issue.status !== "Closed").length;
+  const criticalIssues = issues.filter(issue => issue.severity === "Critical" || issue.severity === "High").length;
+  const pendingQueue = queueItems.filter(item => item.queue_status === "Pending").length;
+  const acceptedQueue = queueItems.filter(item => item.queue_status === "Accepted").length;
+  const reportOutputCount = reports.reduce((sum, report) => sum + (report.output_files?.length ?? 0), 0);
+  const regulatoryTestingReports = reports.filter(report => report.report_type === "regulatory_gap_analysis" || report.report_type === "rcm_compliance").length;
+  const controlTestingReports = reports.filter(report => report.report_type === "control_testing").length;
+  const finalReportingReports = reports.filter(report => report.report_type === "evidence_assessment").length;
+  const sopReports = reports.filter(report => report.report_type === "sop_uplift").length;
+  const sopSuggestionCount = sopCases.reduce((sum, item) => sum + (item.suggestions?.length ?? 0), 0);
+  const sopOutputCount = sopCases.reduce((sum, item) => sum + (item.outputs?.length ?? 0), 0);
+  const chatUserMessages = messages.filter(message => message.role === "user").length;
+  const chatAssistantMessages = messages.filter(message => message.role === "assistant").length;
+  const exceptionTotal = gapObligations + potentialDuplicates + orphanedCtrlCount + openIssues + pendingQueue + failedControlCount;
+
+  const assetsByCriticality = useMemo(() => orderedCounts(assets, RISK_BANDS, asset => asset.criticality, 4), [assets]);
+  const assetsByStatus = useMemo(() => groupedCounts(assets, asset => asset.status, 2), [assets]);
+  const assessmentsByStatus = useMemo(() => orderedCounts(assessments, ASSESSMENT_STATUSES, assessment => assessment.status, 0), [assessments]);
+  const riskBands = useMemo(() => orderedCounts(risks, RISK_BANDS, risk => risk.residual_risk_band || risk.inherent_risk_band, 4), [risks]);
+  const testingByStatus = useMemo(() => orderedCounts(testingSessions, TESTING_STATUSES, session => session.status, 0), [testingSessions]);
+  const controlResults = useMemo(() => orderedCounts(testingControls, TEST_RESULTS, control => control.test_result, 3), [testingControls]);
+  const issuesBySeverity = useMemo(() => orderedCounts(issues, RISK_BANDS, issue => issue.severity, 4), [issues]);
+  const issuesByStatus = useMemo(() => orderedCounts(issues, ISSUE_STATUSES, issue => issue.status, 0), [issues]);
+  const queueByStatus = useMemo(() => orderedCounts(queueItems, QUEUE_STATUSES, item => item.queue_status, 5), [queueItems]);
+  const reportsByType = useMemo(() => groupedCounts(reports, report => reportTypeLabel(report.report_type), 0), [reports]);
+  const sopByStatus = useMemo(() => groupedCounts(sopCases, item => item.status || "Draft", 3), [sopCases]);
+  const frameworkCategoryData = useMemo(() => groupedCounts(frameworkElements, item => item.risk_category, 2), [frameworkElements]);
+  const obligationPieData = useMemo(
+    () => pieData.map((item, index) => ({ ...item, fill: item.fill || CHART_COLORS[index % CHART_COLORS.length] })),
+    [pieData],
+  );
+  const domainCoverageData = useMemo(
+    () => withColors([
+      { name: "Obligations", value: Math.max(0, Math.min(100, oblCoveragePct)) },
+      { name: "Domains", value: Math.max(0, Math.min(100, domainCoveragePct)) },
+      { name: "Controls", value: Math.max(0, Math.min(100, ctrlCoveragePct)) },
+    ], 0),
+    [ctrlCoveragePct, domainCoveragePct, oblCoveragePct],
+  );
+  const chatActivityData = useMemo(
+    () => withColors([
+      { name: "User", value: chatUserMessages },
+      { name: "Assistant", value: chatAssistantMessages },
+      { name: "Files", value: uploadedFiles.length },
+      { name: "Attachment KB", value: hasAttachments ? 1 : 0 },
+    ], 5),
+    [chatAssistantMessages, chatUserMessages, hasAttachments, uploadedFiles.length],
+  );
+
+  const tabClassName = (tab: DashboardTab) =>
+    activeTab === tab
+      ? "border-[#1E49E2] text-[#1E49E2]"
+      : "border-transparent text-[#0C233C]/80 hover:border-[#AEC5F7] hover:text-[#1E49E2]";
+
+  const overviewKpis = [
+    { label: "Library Documents", value: formatNumber(regDocs.length + ctrlDocs.length + frameworkDocs.length), subLabel: "regulatory, controls, and frameworks", badge: `${formatNumber(regulatoryCount + controlsCount)} source docs`, tone: "blue" as const, onClick: () => setLocation("/regulatory-library") },
+    { label: "Controls", value: formatNumber(totalControls), subLabel: "controls extracted from library files", badge: `${formatNumber(orphanedCtrlCount)} unmapped`, tone: "blue" as const, onClick: () => setLocation("/controls-library") },
+    { label: "Assets", value: formatNumber(assets.length), subLabel: "registered applications and services", badge: `${formatNumber(highAssets)} high or critical`, tone: "cyan" as const, onClick: () => setLocation("/asset-registry") },
+    { label: "Risk Assessments", value: formatNumber(assessments.length), subLabel: "assessment sessions in scope", badge: `${formatNumber(riskCount)} risks recorded`, tone: "purple" as const, onClick: () => setLocation("/risk-assessment") },
+    { label: "Testing Sessions", value: formatNumber(testingSessions.length), subLabel: "control testing sessions", badge: `${formatNumber(testingControls.length)} controls`, tone: "blue" as const, onClick: () => setLocation("/control-testing") },
+    { label: "Open Issues", value: formatNumber(openIssues), subLabel: "issues not closed", badge: `${formatNumber(criticalIssues)} high or critical`, tone: openIssues > 0 ? "red" as const : "green" as const, onClick: () => setLocation("/issue-management") },
+    { label: "Reports", value: formatNumber(reports.length), subLabel: "generated report records", badge: `${formatNumber(reportOutputCount)} output files`, tone: "green" as const, onClick: () => setLocation("/reports") },
+    { label: "Validation Queue", value: formatNumber(pendingQueue), subLabel: "pending validation findings", badge: `${formatNumber(acceptedQueue)} accepted`, tone: pendingQueue > 0 ? "amber" as const : "green" as const, onClick: () => setLocation("/issue-management") },
+  ];
 
   return (
-    <div className="flex h-full flex-col">
-      <HeroSection
-        title="Dashboard"
-        subtitle="Portfolio oversight for regulatory, controls, and coverage diagnostics across the active libraries"
-        icon={LayoutDashboard}
-        actions={
-          <div className="flex items-center gap-2">
-            {lastRefreshed && (
-              <span className="hidden text-[11px] text-[#D7E4FA] sm:block">
-                {lastRefreshed.toLocaleTimeString()}
-              </span>
-            )}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={refreshDashboard}
-              disabled={loading || systemStatusLoading}
-              className="h-8 w-8 text-white/70 hover:bg-white/10 hover:text-white"
-              title="Refresh"
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${loading || systemStatusLoading ? "animate-spin" : ""}`} />
-            </Button>
-          </div>
-        }
-      />
+    <div className="flex h-full flex-col overflow-hidden bg-[#F0F2F7]">
+      <TraceNavBar breadcrumb="Dashboard" />
 
-      <TracePageBody width="wide" contentClassName="space-y-6">
-          <section className="dashboard-band trace-summary-band rounded-[24px]">
-            <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+      <TracePageBody width="wide" tint contentClassName="gap-5">
+        <section
+          data-dashboard-banner="true"
+          className="rounded-lg border border-[#123B7A]/30 bg-[linear-gradient(90deg,#0C233C_0%,#082342_100%)] p-5 text-white shadow-sm"
+        >
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex min-w-0 items-center gap-4">
+              <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-[#00B8F5]">
+                <Grid2X2 className="h-6 w-6" />
+              </div>
               <div>
-                <p className="kpmg-section-label !text-[#ACEAFF]">Portfolio status</p>
-                <h2 className="mt-1 text-xl font-bold text-white">Selected library metrics</h2>
-              </div>
-              <p className="max-w-[420px] text-[12px] leading-5 text-[#DCE7FA]">
-                Live counts across the regulatory, controls, and domain reference layers.
-              </p>
-            </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
-              {loading ? (
-                Array.from({ length: 6 }).map((_, index) => (
-                  <div key={index} className="dashboard-panel rounded-2xl border bg-card p-4 animate-pulse">
-                    <div className="mb-3 h-2.5 w-20 rounded bg-muted" />
-                    <div className="mb-2 h-7 w-12 rounded bg-muted" />
-                    <div className="h-2 w-16 rounded bg-muted" />
-                  </div>
-                ))
-              ) : (
-                <>
-                  <KpiCard
-                    label="Regulations"
-                    value={regDocs.length}
-                    subtitle="documents"
-                    accentColor="var(--kpmg-blue)"
-                    icon={<FileText className="h-5 w-5" />}
-                  />
-                  <KpiCard
-                    label="Obligations"
-                    value={totalObligations.toLocaleString()}
-                    subtitle="extracted"
-                    accentColor="var(--cobalt)"
-                    icon={<Layers className="h-5 w-5" />}
-                  />
-                  <KpiCard
-                    label="Regulatory Domains"
-                    value={regDomainCount}
-                    subtitle="areas"
-                    accentColor="var(--pacific)"
-                    icon={<Scale className="h-5 w-5" />}
-                  />
-                  <KpiCard
-                    label="Policy Documents"
-                    value={ctrlDocs.length}
-                    subtitle="files"
-                    accentColor="var(--dark-blue)"
-                    icon={<FileText className="h-5 w-5" />}
-                  />
-                  <KpiCard
-                    label="Controls"
-                    value={totalControls.toLocaleString()}
-                    subtitle="extracted"
-                    accentColor="var(--green)"
-                    icon={<ShieldCheck className="h-5 w-5" />}
-                  />
-                  <KpiCard
-                    label="Control Domains"
-                    value={ctrlDomainCount}
-                    subtitle="areas"
-                    accentColor="var(--amber)"
-                    icon={<Lock className="h-5 w-5" />}
-                  />
-                </>
-              )}
-            </div>
-          </section>
-
-          {!loading && allDomains.length > 0 && (
-            <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-              <div className="dashboard-panel card-interactive rounded-2xl border bg-card p-4 lg:col-span-2">
-                <div className="mb-4 flex items-center gap-2">
-                  <Activity className="h-4 w-4 text-[var(--pacific)]" />
-                  <h3 className="text-sm font-semibold font-display">Domain Coverage</h3>
-                  <span className="ml-auto text-[11px] text-muted-foreground">Regulations vs controls</span>
-                </div>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={barChartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
-                    <CartesianGrid {...GRID_STYLE} />
-                    <XAxis
-                      dataKey="domain"
-                      tick={{ ...AXIS_STYLE }}
-                      angle={-35}
-                      textAnchor="end"
-                      height={60}
-                      interval={0}
-                    />
-                    <YAxis tick={{ ...AXIS_STYLE }} />
-                    <Tooltip
-                      contentStyle={CHART_TOOLTIP_STYLE}
-                      itemStyle={CHART_TOOLTIP_ITEM_STYLE}
-                      labelStyle={CHART_TOOLTIP_LABEL_STYLE}
-                      cursor={{ fill: "var(--osint-glow)" }}
-                    />
-                    <Legend
-                      verticalAlign="top"
-                      align="right"
-                      wrapperStyle={{ fontSize: 11, fontFamily: "Arial, sans-serif", paddingBottom: 8 }}
-                    />
-                    <Bar dataKey="Regulations" fill="#00338D" radius={[3, 3, 0, 0]} />
-                    <Bar dataKey="Controls" fill="#1E49E2" radius={[3, 3, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-
-              <div className="dashboard-panel card-interactive rounded-2xl border bg-card p-4">
-                <div className="mb-4 flex items-center gap-2">
-                  <Layers className="h-4 w-4 text-[var(--kpmg-blue)]" />
-                  <h3 className="text-sm font-semibold font-display">Obligation Distribution</h3>
-                </div>
-                <ResponsiveContainer width="100%" height={230}>
-                  <PieChart>
-                    <Pie
-                      data={pieData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={45}
-                      outerRadius={80}
-                      paddingAngle={3}
-                      dataKey="value"
-                      stroke="none"
-                    >
-                      {pieData.map((entry, index) => (
-                        <Cell key={index} fill={entry.fill} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={CHART_TOOLTIP_STYLE}
-                      itemStyle={CHART_TOOLTIP_ITEM_STYLE}
-                      labelStyle={CHART_TOOLTIP_LABEL_STYLE}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="mt-2 max-h-24 space-y-1 overflow-auto">
-                  {pieData.slice(0, 6).map((entry, index) => (
-                    <div key={index} className="flex items-center gap-2 text-[11px]">
-                      <span className="h-2 w-2 flex-shrink-0 rounded-full" style={{ background: entry.fill }} />
-                      <span className="truncate text-muted-foreground capitalize">{entry.name}</span>
-                      <span className="ml-auto font-semibold text-[#0C233C]">{entry.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </section>
-          )}
-
-          <section>
-            <div className="mb-4">
-              <p className="kpmg-section-label">Diagnostic outputs</p>
-              <h2 className="mt-1 text-lg font-bold">Cross-library analysis and quality indicators</h2>
-            </div>
-
-            {analysisLoading ? (
-              <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {Array.from({ length: 4 }).map((_, index) => (
-                  <AnalysisSkeleton key={index} />
-                ))}
-              </div>
-            ) : !librariesLoaded ? (
-              <div className="dashboard-panel rounded-2xl border bg-card p-8 text-center text-muted-foreground">
-                <Library className="mx-auto mb-2 h-8 w-8 opacity-30" />
-                <p className="text-sm">Populate both libraries to unlock analysis insights.</p>
-              </div>
-            ) : !hasAnalysisData ? (
-              <div className="dashboard-panel rounded-2xl border bg-card p-8 text-center text-muted-foreground">
-                <Library className="mx-auto mb-2 h-8 w-8 opacity-30" />
-                <p className="text-sm font-medium">Partial data available</p>
-                <p className="mt-1 text-xs">Load both the Regulatory and Controls libraries to see full analysis.</p>
-              </div>
-            ) : (
-              <>
-                <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <AnalysisCard
-                    title="Controls-Obligations Coverage"
-                    accentColor="#009A44"
-                    value={`${ctrlCoveragePct.toFixed(1)}%`}
-                    valueColor="#009A44"
-                    subLabel="coverage rate"
-                    detail={`${orphanedCtrlCount} unmapped controls - ${allControls.length} total`}
-                    onViewFull={() => setLocation("/controls-library")}
-                  />
-                  <AnalysisCard
-                    title="Control Quality Analysis"
-                    accentColor="#1E49E2"
-                    value={`${avgMatchScore.toFixed(2)}/1.0`}
-                    valueColor="#1E49E2"
-                    subLabel="average match score"
-                    detail={`${lowQualityPct.toFixed(1)}% controls need better alignment`}
-                    onViewFull={() => {
-                      setPendingQualityAnalysis(true);
-                      setLocation("/controls-library");
-                    }}
-                  />
-                  <AnalysisCard
-                    title="Control Duplicates"
-                    accentColor="#EAAA00"
-                    value={String(potentialDuplicates)}
-                    valueColor="#EAAA00"
-                    subLabel="potential duplicates"
-                    detail={`${confirmedDuplicates} likely confirmed - ${potentialDuplicates - confirmedDuplicates} under review`}
-                    onViewFull={() => setLocation("/controls-library")}
-                  />
-                  <AnalysisCard
-                    title="Domain Gap Assessment"
-                    accentColor="#00338D"
-                    value={`${domainCoveragePct.toFixed(0)}%`}
-                    valueColor="#00338D"
-                    subLabel="regulatory domains covered"
-                    detail={`${regOnlyDomains.length} domain${regOnlyDomains.length !== 1 ? "s" : ""} without controls`}
-                    onViewFull={() => setLocation("/regulatory-library")}
-                  />
-                </div>
-
-                <div className="dashboard-highlight rounded-[18px] p-6 text-white">
-                  <div className="relative z-10">
-                    <div className="mb-6 flex items-center justify-between gap-4">
-                      <div>
-                        <p className="text-[10px] uppercase tracking-[0.2em] text-[#ACEAFF] mb-0.5">
-                          Cross-library analysis
-                        </p>
-                        <h3 className="text-base font-bold">Regulation and control coverage summary</h3>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setLocation("/regulatory-library")}
-                        className="kpmg-dark-outline-button shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors flex items-center gap-1.5"
-                      >
-                        View Full Analysis <ArrowRight className="h-3 w-3" />
-                      </button>
-                    </div>
-
-                    <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-                      {[
-                        {
-                          value: `${oblCoveragePct.toFixed(0)}%`,
-                          label: "obligations covered",
-                          color: obligationCoverageColor,
-                        },
-                        {
-                          value: totalObligations.toLocaleString(),
-                          label: "total obligations",
-                          color: "#ACEAFF",
-                        },
-                        {
-                          value: String(gapObligations),
-                          label: "gap obligations",
-                          color: gapColor,
-                        },
-                        {
-                          value: String(regDocs.length),
-                          label: "regulations assessed",
-                          color: "#FFFFFF",
-                        },
-                      ].map(({ value, label, color }) => (
-                        <div key={label}>
-                          <p className="text-3xl font-bold leading-none" style={{ color }}>
-                            {value}
-                          </p>
-                          <p className="mt-1 text-[11px] text-[#DCE7FA]">{label}</p>
-                        </div>
-                      ))}
-                    </div>
-
-                    {frameworkNames.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {frameworkNames.map((name, index) => (
-                          <span
-                            key={index}
-                            className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-medium text-[#E4EEFB]"
-                          >
-                            {name}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </>
-            )}
-          </section>
-
-          <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <div className="dashboard-panel card-interactive rounded-2xl border bg-card p-4">
-              <div className="mb-4 flex items-center gap-2">
-                <Cpu className="h-4 w-4 text-[var(--green)]" />
-                <h3 className="text-sm font-semibold font-display">System Status</h3>
-              </div>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Database className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">Active model</span>
-                  </div>
-                  <span className="max-w-[190px] truncate text-xs font-semibold text-[#0C233C]" title={activeProvider ? `${activeProvider} / ${activeModel}` : activeModel}>
-                    {activeModel}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Database className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">Regulatory Library</span>
-                  </div>
-                  <span className={`text-xs font-semibold ${regulatoryState === "loaded" ? "text-[var(--green)]" : "text-muted-foreground"}`}>
-                    {libraryStatusText(regulatoryCount, regulatoryState)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Database className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">Controls Library</span>
-                  </div>
-                  <span className={`text-xs font-semibold ${controlsState === "loaded" ? "text-[var(--green)]" : "text-muted-foreground"}`}>
-                    {libraryStatusText(controlsCount, controlsState)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className={`h-1.5 w-1.5 rounded-full ${platformOnline ? "bg-[var(--green)] data-pulse" : "bg-[var(--amber)]"}`} />
-                    <span className="text-xs text-muted-foreground">Platform</span>
-                  </div>
-                  <span className={`text-xs font-semibold ${platformOnline ? "text-[var(--green)]" : "text-[var(--amber)]"}`}>
-                    {platformOnline ? "Online" : "Degraded"}
-                  </span>
-                </div>
+                <p className="text-[18px] font-bold uppercase tracking-[0.8px]">DASHBOARD</p>
+                <p className="mt-1 text-[12px] text-white/60">{platformOnline ? "Platform Online" : "Platform Degraded"} / {activeModel}</p>
               </div>
             </div>
-
-            {[
-              {
-                label: "Regulatory Testing",
-                desc: "Run regulation comparison and RCM assessment workflows.",
-                path: "/regulatory-testing",
-                icon: <Scale className="h-4 w-4" />,
-                color: "var(--kpmg-blue)",
-              },
-              {
-                label: "Controls Library",
-                desc: "Browse controls, quality signals, and mapping diagnostics.",
-                path: "/controls-library",
-                icon: <ShieldCheck className="h-4 w-4" />,
-                color: "var(--green)",
-              },
-            ].map(({ label, desc, path, icon, color }) => (
+            <div className="flex flex-wrap items-center gap-3">
               <button
-                key={path}
-                onClick={() => setLocation(path)}
-                className="dashboard-panel card-interactive group rounded-2xl border bg-card p-4 text-left"
-                style={{ borderLeft: `3px solid ${color}` }}
+                type="button"
+                onClick={refreshDashboard}
+                disabled={allPageLoading}
+                className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-white/20 bg-white/5 text-white/80 transition-colors hover:bg-white/10 hover:text-white disabled:cursor-wait disabled:text-white/45"
+                title="Refresh Dashboard"
               >
-                <div className="mb-2 flex items-center gap-2">
-                  <span style={{ color }}>{icon}</span>
-                  <ArrowRight className="ml-auto h-3 w-3 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
-                </div>
-                <p className="text-sm font-medium font-display text-foreground">{label}</p>
-                <p className="mt-0.5 text-[11px] text-muted-foreground">{desc}</p>
+                <RefreshCw className={`h-5 w-5 ${allPageLoading ? "animate-spin" : ""}`} />
               </button>
-            ))}
-          </section>
+              <div className="flex items-center gap-3 rounded-full bg-[#1E49E2]/35 px-4 py-2 text-[12px] font-semibold text-white">
+                <span className="rounded-full border border-white/20 px-2 py-1 text-white/80">Last Refresh</span>
+                <span title={lastRefreshLabel}>{lastRefreshed ? lastRefreshDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "Not Refreshed"}</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="border-b border-[#CBD5E1]">
+          <div className="flex flex-wrap gap-6">
+            <button
+              type="button"
+              data-dashboard-tab="overview"
+              onClick={() => setActiveTab("overview")}
+              className={`border-b-[3px] px-1 pb-3 text-[13px] font-semibold transition-colors ${tabClassName("overview")}`}
+            >
+              Overview
+            </button>
+            <button
+              type="button"
+              data-dashboard-tab="libraries"
+              onClick={() => setActiveTab("libraries")}
+              className={`border-b-[3px] px-1 pb-3 text-[13px] font-semibold transition-colors ${tabClassName("libraries")}`}
+            >
+              Libraries
+            </button>
+            <button
+              type="button"
+              data-dashboard-tab="workflows"
+              onClick={() => setActiveTab("workflows")}
+              className={`border-b-[3px] px-1 pb-3 text-[13px] font-semibold transition-colors ${tabClassName("workflows")}`}
+            >
+              Workflows
+            </button>
+            <button
+              type="button"
+              data-dashboard-tab="exceptions"
+              onClick={() => setActiveTab("exceptions")}
+              className={`border-b-[3px] px-1 pb-3 text-[13px] font-semibold transition-colors ${tabClassName("exceptions")}`}
+            >
+              Exceptions
+            </button>
+          </div>
+        </section>
+
+        {activeTab === "overview" ? (
+          <div className="animate-[fadeUp_0.35s_ease_both] space-y-5">
+            <section className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+              {overviewKpis.map(item => <KpiMetricCard key={item.label} {...item} />)}
+            </section>
+
+            <section className="grid gap-5 xl:grid-cols-3">
+              <ChartCard title="Assets By Criticality" footerLabel="Total Assets" footerValue={formatNumber(assets.length)}>
+                <BarChartPanel data={assetsByCriticality} />
+              </ChartCard>
+              <ChartCard title="Assessments By Status" footerLabel="Total Assessments" footerValue={formatNumber(assessments.length)}>
+                <BarChartPanel data={assessmentsByStatus} />
+              </ChartCard>
+              <ChartCard title="Issues By Severity" footerLabel="Total Issues" footerValue={formatNumber(issues.length)}>
+                <BarChartPanel data={issuesBySeverity} />
+              </ChartCard>
+              <ChartCard title="Reports By Type" footerLabel="Total Reports" footerValue={formatNumber(reports.length)}>
+                <DonutChartPanel data={reportsByType} />
+              </ChartCard>
+              <ChartCard title="Domain Coverage" footerLabel="Gap Obligations" footerValue={formatNumber(gapObligations)} wide>
+                <HorizontalPercentPanel data={domainCoverageData} />
+              </ChartCard>
+              <ChartCard title="Testing Sessions By Status" footerLabel="Total Sessions" footerValue={formatNumber(testingSessions.length)} wide>
+                <SegmentedStatusPanel data={testingByStatus} />
+              </ChartCard>
+            </section>
+          </div>
+        ) : null}
+
+        {activeTab === "libraries" ? (
+          <div className="animate-[fadeUp_0.35s_ease_both] space-y-5">
+            <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <KpiMetricCard label="Regulations" value={formatNumber(regDocs.length)} subLabel="regulatory source documents" badge={`${formatNumber(totalObligations)} obligations`} tone="blue" onClick={() => setLocation("/regulatory-library")} />
+              <KpiMetricCard label="Controls" value={formatNumber(totalControls)} subLabel="library controls extracted" badge={`${formatNumber(allControls.length)} indexed`} tone="green" onClick={() => setLocation("/controls-library")} />
+              <KpiMetricCard label="Frameworks" value={formatNumber(frameworkDocs.length)} subLabel="framework source documents" badge={`${formatNumber(frameworkElements.length)} elements`} tone="teal" onClick={() => setLocation("/frameworks-library")} />
+              <KpiMetricCard label="Quality Score" value={`${avgMatchScore.toFixed(2)}/1`} subLabel="average match score" badge={`${formatPercent(lowQualityPct)} low quality`} tone="purple" onClick={() => {
+                setPendingQualityAnalysis(true);
+                setLocation("/controls-library");
+              }} />
+            </section>
+
+            <section className="grid gap-5 xl:grid-cols-2">
+              <ChartCard title="Domain Coverage" footerLabel="Obligation Coverage" footerValue={formatPercent(oblCoveragePct)}>
+                {barChartData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={260}>
+                    <BarChart data={barChartData} margin={{ top: 10, right: 10, left: -10, bottom: 40 }}>
+                      <CartesianGrid {...GRID_STYLE} />
+                      <XAxis dataKey="domain" tick={{ ...AXIS_STYLE }} angle={-25} textAnchor="end" height={70} interval={0} />
+                      <YAxis tick={{ ...AXIS_STYLE }} allowDecimals={false} />
+                      <Tooltip contentStyle={CHART_TOOLTIP_STYLE} itemStyle={CHART_TOOLTIP_ITEM_STYLE} labelStyle={CHART_TOOLTIP_LABEL_STYLE} cursor={{ fill: "var(--osint-glow)" }} />
+                      <Legend verticalAlign="top" align="right" wrapperStyle={{ fontSize: 11, fontFamily: "Arial, sans-serif", paddingBottom: 8 }} />
+                      <Bar dataKey="Regulations" fill="#00338D" radius={[3, 3, 0, 0]} />
+                      <Bar dataKey="Controls" fill="#1E49E2" radius={[3, 3, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : <EmptyChart />}
+              </ChartCard>
+              <ChartCard title="Obligations By Domain" footerLabel="Total Obligations" footerValue={formatNumber(totalObligations)}>
+                <DonutChartPanel data={obligationPieData} />
+              </ChartCard>
+              <ChartCard title="Framework Elements By Category" footerLabel="Total Elements" footerValue={formatNumber(frameworkElements.length)}>
+                <BarChartPanel data={frameworkCategoryData} />
+              </ChartCard>
+              <ChartCard title="Assets By Status" footerLabel="Operational Assets" footerValue={formatNumber(activeAssets)}>
+                <BarChartPanel data={assetsByStatus} />
+              </ChartCard>
+            </section>
+          </div>
+        ) : null}
+
+        {activeTab === "workflows" ? (
+          <div className="animate-[fadeUp_0.35s_ease_both] space-y-5">
+            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <ModuleMetricCard title="Risk Assessment" tone="purple" icon={<ClipboardList className="h-5 w-5" />} onClick={() => setLocation("/risk-assessment")} metrics={[
+                { label: "assessments", value: formatNumber(assessments.length) },
+                { label: "risks", value: formatNumber(riskCount) },
+                { label: "critical", value: formatNumber(criticalRiskCount) },
+                { label: "controls", value: formatNumber(appliedControlCount) },
+              ]} />
+              <ModuleMetricCard title="Control Testing" tone="green" icon={<TestTube className="h-5 w-5" />} onClick={() => setLocation("/control-testing")} metrics={[
+                { label: "sessions", value: formatNumber(testingSessions.length) },
+                { label: "controls", value: formatNumber(testingControls.length) },
+                { label: "evidence", value: formatNumber(controlWithEvidenceCount) },
+                { label: "reports", value: formatNumber(testingReportsReady + controlTestingReports) },
+              ]} />
+              <ModuleMetricCard title="Regulatory Testing" tone="blue" icon={<Scale className="h-5 w-5" />} onClick={() => setLocation("/regulatory-testing")} metrics={[
+                { label: "reports", value: formatNumber(regulatoryTestingReports) },
+                { label: "obligations", value: formatNumber(totalObligations) },
+                { label: "coverage", value: formatPercent(oblCoveragePct) },
+                { label: "gaps", value: formatNumber(gapObligations) },
+              ]} />
+              <ModuleMetricCard title="Final Reporting" tone="navy" icon={<FileBarChart className="h-5 w-5" />} onClick={() => setLocation("/evidence-assessment")} metrics={[
+                { label: "reports", value: formatNumber(finalReportingReports) },
+                { label: "all reports", value: formatNumber(reports.length) },
+                { label: "outputs", value: formatNumber(reportOutputCount) },
+                { label: "testing", value: formatNumber(controlTestingReports) },
+              ]} />
+              <ModuleMetricCard title="SOP Uplift" tone="teal" icon={<Workflow className="h-5 w-5" />} onClick={() => setLocation("/sop-uplift")} metrics={[
+                { label: "cases", value: formatNumber(sopCases.length) },
+                { label: "suggestions", value: formatNumber(sopSuggestionCount) },
+                { label: "outputs", value: formatNumber(sopOutputCount) },
+                { label: "reports", value: formatNumber(sopReports) },
+              ]} />
+              <ModuleMetricCard title="Chat" tone="amber" icon={<MessageSquare className="h-5 w-5" />} onClick={() => setLocation("/chat")} metrics={[
+                { label: "user", value: formatNumber(chatUserMessages) },
+                { label: "assistant", value: formatNumber(chatAssistantMessages) },
+                { label: "files", value: formatNumber(uploadedFiles.length) },
+                { label: "kb", value: hasAttachments ? "1" : "0" },
+              ]} />
+            </section>
+
+            <section className="grid gap-5 xl:grid-cols-2">
+              <ChartCard title="Assessments By Status" footerLabel="Assessment Subjects" footerValue={formatNumber(subjectAssetCount)}>
+                <BarChartPanel data={assessmentsByStatus} />
+              </ChartCard>
+              <ChartCard title="Testing Sessions By Status" footerLabel="Total Sessions" footerValue={formatNumber(testingSessions.length)}>
+                <SegmentedStatusPanel data={testingByStatus} />
+              </ChartCard>
+              <ChartCard title="Control Test Results" footerLabel="Controls In Sessions" footerValue={formatNumber(testingControls.length)}>
+                <BarChartPanel data={controlResults} />
+              </ChartCard>
+              <ChartCard title="SOP Cases By Status" footerLabel="Total Cases" footerValue={formatNumber(sopCases.length)}>
+                <BarChartPanel data={sopByStatus} />
+              </ChartCard>
+              <ChartCard title="Reports By Type" footerLabel="Generated Reports" footerValue={formatNumber(reports.length)}>
+                <DonutChartPanel data={reportsByType} />
+              </ChartCard>
+              <ChartCard title="Chat Activity" footerLabel="Messages" footerValue={formatNumber(messages.length)}>
+                <BarChartPanel data={chatActivityData} />
+              </ChartCard>
+            </section>
+          </div>
+        ) : null}
+
+        {activeTab === "exceptions" ? (
+          <div className="animate-[fadeUp_0.35s_ease_both] space-y-5">
+            <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <KpiMetricCard label="Gap Obligations" value={formatNumber(gapObligations)} subLabel="uncovered obligations" tone={gapObligations > 0 ? "amber" : "green"} onClick={() => setLocation("/regulatory-library")} />
+              <KpiMetricCard label="Orphaned Controls" value={formatNumber(orphanedCtrlCount)} subLabel="unmapped controls" tone={orphanedCtrlCount > 0 ? "amber" : "green"} onClick={() => setLocation("/controls-library")} />
+              <KpiMetricCard label="Low Quality Controls" value={formatPercent(lowQualityPct)} subLabel="below target" tone={lowQualityPct > 0 ? "red" : "green"} onClick={() => {
+                setPendingQualityAnalysis(true);
+                setLocation("/controls-library");
+              }} />
+              <KpiMetricCard label="Potential Duplicates" value={formatNumber(potentialDuplicates)} subLabel="control records to review" badge={`${formatNumber(confirmedDuplicates)} likely confirmed`} tone={potentialDuplicates > 0 ? "amber" : "green"} onClick={() => setLocation("/controls-library")} />
+              <KpiMetricCard label="Open Issues" value={formatNumber(openIssues)} subLabel="issues not closed" tone={openIssues > 0 ? "red" : "green"} onClick={() => setLocation("/issue-management")} />
+              <KpiMetricCard label="High Severity Issues" value={formatNumber(criticalIssues)} subLabel="high or critical" tone={criticalIssues > 0 ? "red" : "green"} onClick={() => setLocation("/issue-management")} />
+              <KpiMetricCard label="Pending Queue" value={formatNumber(pendingQueue)} subLabel="validation findings" tone={pendingQueue > 0 ? "amber" : "green"} onClick={() => setLocation("/issue-management")} />
+              <KpiMetricCard label="Failed Controls" value={formatNumber(failedControlCount)} subLabel="testing failures" tone={failedControlCount > 0 ? "red" : "green"} onClick={() => setLocation("/control-testing")} />
+            </section>
+
+            <section className="grid gap-5 xl:grid-cols-2">
+              <ChartCard title="Issues By Severity" footerLabel="Total Issues" footerValue={formatNumber(issues.length)}>
+                <BarChartPanel data={issuesBySeverity} />
+              </ChartCard>
+              <ChartCard title="Issues By Status" footerLabel="Open Issues" footerValue={formatNumber(openIssues)}>
+                <BarChartPanel data={issuesByStatus} />
+              </ChartCard>
+              <ChartCard title="Validation Queue By Status" footerLabel="Pending Queue" footerValue={formatNumber(pendingQueue)}>
+                <BarChartPanel data={queueByStatus} />
+              </ChartCard>
+              <ChartCard title="Risk Bands" footerLabel="Risks Recorded" footerValue={formatNumber(riskCount)}>
+                <BarChartPanel data={riskBands} />
+              </ChartCard>
+              <ChartCard title="Control Test Results" footerLabel="Failed Controls" footerValue={formatNumber(failedControlCount)}>
+                <BarChartPanel data={controlResults} />
+              </ChartCard>
+              <ChartCard title="Exception Signals" footerLabel="Total Signals" footerValue={formatNumber(exceptionTotal)}>
+                <SegmentedStatusPanel data={withColors([
+                  { name: "Gaps", value: gapObligations },
+                  { name: "Duplicates", value: potentialDuplicates },
+                  { name: "Open Issues", value: openIssues },
+                  { name: "Queue", value: pendingQueue },
+                  { name: "Failed Controls", value: failedControlCount },
+                ], 2)} />
+              </ChartCard>
+            </section>
+          </div>
+        ) : null}
+
+        <style>{`
+          @keyframes fadeUp {
+            from {
+              opacity: 0;
+              transform: translateY(8px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+        `}</style>
       </TracePageBody>
     </div>
   );

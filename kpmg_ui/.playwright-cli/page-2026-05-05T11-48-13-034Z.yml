@@ -1,0 +1,137 @@
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list
+  - generic [ref=e3]:
+    - complementary [ref=e4]:
+      - button "Expand sidebar" [ref=e6] [cursor=pointer]:
+        - img [ref=e7]
+      - navigation [ref=e9]:
+        - generic [ref=e10]:
+          - button [ref=e11] [cursor=pointer]:
+            - img [ref=e12]
+          - button [ref=e17] [cursor=pointer]:
+            - img [ref=e18]
+          - button [ref=e20] [cursor=pointer]:
+            - img [ref=e21]
+          - button [ref=e24] [cursor=pointer]:
+            - img [ref=e25]
+          - button [ref=e27] [cursor=pointer]:
+            - img [ref=e28]
+          - button [ref=e32] [cursor=pointer]:
+            - img [ref=e33]
+          - button [ref=e36] [cursor=pointer]:
+            - img [ref=e37]
+          - button [ref=e42] [cursor=pointer]:
+            - img [ref=e43]
+          - button [ref=e48] [cursor=pointer]:
+            - img [ref=e49]
+          - button [ref=e51] [cursor=pointer]:
+            - img [ref=e52]
+          - button [ref=e55] [cursor=pointer]:
+            - img [ref=e56]
+          - button [ref=e58] [cursor=pointer]:
+            - img [ref=e59]
+          - button [ref=e61] [cursor=pointer]:
+            - img [ref=e62]
+      - generic [ref=e68]: A
+    - generic [ref=e69]:
+      - main [ref=e70]:
+        - generic [ref=e72]:
+          - generic [ref=e73]:
+            - generic [ref=e75]:
+              - generic [ref=e76]:
+                - button "KPMG | TRACE" [ref=e77] [cursor=pointer]:
+                  - generic [ref=e78]: KPMG
+                  - generic [ref=e79]: "|"
+                  - generic [ref=e80]: TRACE
+                - generic [ref=e81]:
+                  - generic [ref=e82]: /
+                  - generic [ref=e83]: Regulatory Testing
+              - button "Sign Out" [ref=e85] [cursor=pointer]:
+                - img
+                - text: Sign Out
+            - generic [ref=e87]:
+              - img [ref=e89]
+              - generic [ref=e93]:
+                - heading "Regulatory Testing" [level=1] [ref=e94]
+                - paragraph [ref=e95]: Compare regulations or assess RCM documents against regulatory requirements
+          - generic [ref=e97]:
+            - button "Process How It Works" [ref=e99] [cursor=pointer]:
+              - generic [ref=e100]:
+                - generic [ref=e101]: Process
+                - generic [ref=e102]: How It Works
+              - img [ref=e103]
+            - generic [ref=e105]:
+              - generic [ref=e106]:
+                - generic [ref=e107]:
+                  - generic [ref=e108]: Process
+                  - generic [ref=e109]: Comparison Workspace
+                  - paragraph [ref=e110]: Choose a comparison path, select source documents, and run one analysis without adding any synthetic data.
+                - generic [ref=e111]:
+                  - button "Comparison Path Regulation vs Regulation Compare two regulatory sources to identify shared domains, divergent requirements, and gaps." [ref=e112] [cursor=pointer]:
+                    - generic [ref=e113]:
+                      - generic [ref=e114]:
+                        - generic [ref=e115]: Comparison Path
+                        - generic [ref=e116]: Regulation vs Regulation
+                      - img [ref=e118]
+                    - paragraph [ref=e122]: Compare two regulatory sources to identify shared domains, divergent requirements, and gaps.
+                  - button "Assessment Path RCM vs Regulation Assess a control matrix against selected regulations and review the compliance gaps by domain." [ref=e123] [cursor=pointer]:
+                    - generic [ref=e124]:
+                      - generic [ref=e125]:
+                        - generic [ref=e126]: Assessment Path
+                        - generic [ref=e127]: RCM vs Regulation
+                      - img [ref=e129]
+                    - paragraph [ref=e133]: Assess a control matrix against selected regulations and review the compliance gaps by domain.
+              - generic [ref=e134]:
+                - generic [ref=e135]:
+                  - generic [ref=e136]: Analysis Setup
+                  - generic [ref=e137]: Regulation vs Regulation
+                - generic [ref=e138]:
+                  - generic [ref=e140]:
+                    - generic [ref=e141]:
+                      - generic [ref=e142]:
+                        - generic [ref=e143]:
+                          - heading "Regulation A" [level=3] [ref=e144]
+                          - paragraph [ref=e145]: Choose an uploaded document or a regulation already stored in the library
+                        - generic [ref=e146]: Upload
+                      - generic [ref=e147]:
+                        - button "Upload" [ref=e148] [cursor=pointer]
+                        - button "Library" [ref=e149] [cursor=pointer]
+                      - generic [ref=e151] [cursor=pointer]:
+                        - button "Choose File" [ref=e152]
+                        - img [ref=e153]
+                        - paragraph [ref=e156]: Upload Regulation A
+                        - paragraph [ref=e157]: PDF, DOCX, TXT, MD, CSV, XLSX, XLS, PNG, JPG
+                    - img [ref=e160]
+                    - generic [ref=e164]:
+                      - generic [ref=e165]:
+                        - generic [ref=e166]:
+                          - heading "Regulation B" [level=3] [ref=e167]
+                          - paragraph [ref=e168]: Choose an uploaded document or a regulation already stored in the library
+                        - generic [ref=e169]: Upload
+                      - generic [ref=e170]:
+                        - button "Upload" [ref=e171] [cursor=pointer]
+                        - button "Library" [ref=e172] [cursor=pointer]
+                      - generic [ref=e174] [cursor=pointer]:
+                        - button "Choose File" [ref=e175]
+                        - img [ref=e176]
+                        - paragraph [ref=e179]: Upload Regulation B
+                        - paragraph [ref=e180]: PDF, DOCX, TXT, MD, CSV, XLSX, XLS, PNG, JPG
+                  - generic [ref=e181]:
+                    - generic [ref=e182]: Run Readiness
+                    - generic [ref=e183]:
+                      - generic [ref=e184]:
+                        - generic [ref=e185]: Source A
+                        - generic "Data not available" [ref=e186]
+                      - generic [ref=e187]:
+                        - generic [ref=e188]: Source B
+                        - generic "Data not available" [ref=e189]
+                      - generic [ref=e190]:
+                        - generic [ref=e191]: Analysis
+                        - generic "Data not available" [ref=e192]
+                - button "Run Regulatory Comparison" [disabled] [ref=e193]:
+                  - img [ref=e194]
+                  - text: Run Regulatory Comparison
+      - contentinfo [ref=e196]:
+        - generic [ref=e197]: © 2026 KPMG Assurance and Consulting Services LLP, an Indian Limited Liability Partnership and a member firm of the KPMG global organization of independent member firms affiliated with KPMG International Limited, a private English company limited by guarantee. All rights reserved.
+        - generic [ref=e198]: Confidential

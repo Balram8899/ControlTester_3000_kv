@@ -5,6 +5,61 @@
 
 ---
 
+## 2026-05-04 Update - SOP Uplift Suggestion Parsing Robustness
+
+- Root cause: useful LLM suggestion responses could be discarded when the model returned structured warning objects instead of plain warning strings. The same strict parsing could invalidate full-document extraction when role/lane hints were returned as objects.
+- Fix: `utils/sop_uplift/llm_schemas.py` now normalizes structured warnings and role labels into concise strings, keeps valid suggestions, accepts low-confidence corpus notes as message objects, and makes case-finalization diagram payloads lenient so malformed diagram details do not invalidate the whole finalization response.
+- Regression coverage: `tests/test_sop_uplift_modules.py` adds focused tests for preserving suggestions with structured warnings and accepting structured role/warning items from full-document extraction.
+- Verification run: `python -m pytest tests/test_sop_uplift_modules.py tests/test_sop_uplift_api.py tests/test_sop_uplift_pipeline.py -q` and `node --import tsx .\client\src\pages\sop-uplift.integration.test.ts`.
+
+---
+
+## 2026-05-04 Update - Dashboard Page-Local UI Overhaul
+
+- Scope: page-local redesign of `kpmg_ui/client/src/pages/dashboard.tsx`; app shell, sidebar, footer, auth flow, routes, providers, APIs, and feature workflows were deliberately left unchanged.
+- New Dashboard structure: `Overview`, `Libraries`, `Workflows`, and `Exceptions` tabs. `Overview` follows the approved mockup with a compact dark `DASHBOARD` banner, eight KPI tiles, primary chart grid, `Domain Coverage`, and `Testing Sessions By Status`.
+- Data sources preserved and reused: `useLibraryMetrics()`, `useCrossNav()`, `useAssetRegistry()`, `useRiskAssessment()`, `useIssueManagement()`, `useChatContext()`, `/api/settings/system-status`, `/api/control-testing`, `/api/rcm-reports`, `/api/sop-uplift/cases`, `/api/frameworks-library/documents`, `/api/frameworks-library/all-elements`, and existing `setLocation(...)` navigation.
+- Dashboard does not add `/api/dashboard-summary` or backend aggregation. Empty states are numeric/source-backed only.
+- Design references created: `docs/ui-overhaul/dashboard-design.md` and `docs/ui-overhaul/ui-overhaul-log.md`.
+- Regression coverage: `kpmg_ui/client/src/dashboard.overhaul.test.ts` asserts the tab model, default tab, smoke-test tab attributes, preserved status endpoint, no dashboard-summary endpoint, and reference docs.
+- Verification run: `node --import tsx .\client\src\dashboard.overhaul.test.ts`, `npm run check`, `npm run build`, plus Playwright smoke on `http://localhost:5175/` for sign-in, tab switching, refresh, mobile resize, and browser console errors.
+
+---
+
+## 2026-05-04 Update - Controls Library Page-Local UI Overhaul
+
+- Scope: page-local redesign of `kpmg_ui/client/src/pages/controls-library.tsx`; route, app shell, providers, backend contracts, and data model were deliberately left unchanged.
+- New Controls Library structure: one scrollable page with `Upload Policy Documents`, `Documents`, a scoped `Library Dashboard`, `5W1H Quality Charts`, and `5W1H Scores by Control`.
+- Duplicate dashboard tabs were removed. The unified dashboard now uses `All Uploaded Database` / `Selected Document` scope so metrics, charts, and table rows can reflect the whole library or one uploaded document.
+- Functionality preserved: upload, queued file removal, ingest polling, document selection, delete, clear library, refresh, `Map Obligations`, merged view, backend 5W1H quality analysis, CSV export, mapped obligation navigation, and control detail modal.
+- Data sources preserved: `/api/controls-library/documents`, `/api/controls-library/documents/{document_id}`, `/api/controls-library/ingest`, `/api/ingest-task/{task_id}`, `/api/controls-library/remap-obligations`, `/api/controls-library/all-controls`, `/api/controls-library/merged`, `/api/controls-library/quality-analysis`, `useCrossNav()`, and `useLibraryMetrics()`.
+- Design reference created: `docs/ui-overhaul/controls-library-design.md`; running log updated in `docs/ui-overhaul/ui-overhaul-log.md`.
+- Regression coverage: `kpmg_ui/client/src/controls-library.overhaul.test.ts` asserts preserved endpoints/handlers, scope model, approved one-page section markers, removal of duplicate dashboard tabs, and documentation updates.
+- Verification run: `node --import tsx .\client\src\controls-library.overhaul.test.ts`, `npm run check`, `npm run build`, `docker compose build web_ui_agent`, `docker compose up -d --force-recreate web_ui_agent`, `docker compose ps`, and HTTP 200 on `http://localhost:5000/`.
+- Browser smoke note: Playwright CLI open was attempted, but local Playwright Chrome was missing and `install-browser chrome` failed due insufficient install privileges.
+- 413 fix: Quality analysis now sends capped, batched frontend requests to `/api/controls-library/quality-analysis` instead of posting the full controls corpus in one JSON body. This addresses Express HTTP 413 errors on larger uploaded libraries while preserving the endpoint and backend behavior.
+- Quality display fix: Controls Library no longer auto-populates 5W1H-derived dashboard values on page load or immediately after ingest. Quality KPIs, charts, table scoring, CSV export, and detail quality fields show `Data not available` until `Run Quality Check` is clicked.
+- Backend `Analysis unavailable` fallback rows are excluded from scoring visuals and listed as unavailable analysis instead of being counted as real `0/6` red findings.
+- Visual polish: Controls Library chart typography and graph colors were standardized to TRACE/KPMG tokens, and the control detail modal was restyled as a light TRACE dialog without changing its data or obligation navigation behavior.
+- Combined analysis update: the visible `Map Obligations` and `Run Quality Check` actions were consolidated into one `Run Analysis` button that refreshes obligation mappings before running 5W1H quality scoring. `Quality RAG by Process Area` now shows readable TRACE-styled domain bars and `Tagged Domains` pills.
+
+---
+
+## 2026-05-05 Update - Regulatory Testing Page-Local UI Overhaul
+
+- Scope: page-local redesign of `kpmg_ui/client/src/pages/regulatory-testing.tsx`; route, app shell, context, backend endpoints, payload construction, and export handlers were deliberately left unchanged.
+- New landing/setup structure: `Regulation vs Regulation` and `RCM vs Regulation` are explicit path cards, followed by the existing upload/library source selectors and a `Run Readiness` card.
+- New result structure: post-run output is a four-view workbench: `Summary`, `Domain Drilldown`, `Gap Analysis`, and `Report`.
+- Functionality preserved: Regulation A/B upload or library selection, RCM file upload, RCM baseline selection from library or upload, run comparison, export JSON, export markdown report, export PDF, and new comparison reset.
+- Data sources preserved: `/api/regulatory-library/documents`, `/api/compare-regulations`, `/api/rcm_compliance_v2`, `/api/rcm_compliance`, and `/api/regulatory-library/gap-analysis/pdf`.
+- Design reference created: `docs/ui-overhaul/regulatory-testing-design.md`; running log updated in `docs/ui-overhaul/ui-overhaul-log.md`.
+- Regression coverage: `kpmg_ui/client/src/regulatory-testing.overhaul.test.ts` asserts preserved endpoints/actions, redesigned setup/result smoke markers, approved labels, no synthetic feed copy, and documentation updates.
+- Verification run: `node --import tsx .\client\src\regulatory-testing.overhaul.test.ts`, `node --import tsx .\client\src\pages\regulatory-testing.helpers.test.ts`, `npm run check`, `npm run build`, `docker compose build web_ui_agent`, `docker compose up -d --force-recreate web_ui_agent`, HTTP 200 on `http://localhost:5000/regulatory-testing`, and Playwright CLI smoke on Microsoft Edge for sign-in, setup render, RCM mode switch, mobile resize, and console errors. Vite emitted the existing chunk-size and PostCSS `from` option warnings.
+- Setup layout correction: Regulation A/B now uses explicit high-contrast source toggles, compact library selection rows, bounded source-card grid columns, and `min-w-0` guards to avoid horizontal page scroll. Verification rerun: `node --import tsx .\client\src\regulatory-testing.overhaul.test.ts` and `npm run check`. Containers were not rebuilt for this correction per active UI testing request.
+- Result presentation correction: post-run views now use short source labels, a plain-language summary insight, `Coverage By Domain`, a clearer `Gap Matrix`, and a styled `Formatted Report` preview with title-cased markdown headings. Verification rerun: `node --import tsx .\client\src\regulatory-testing.overhaul.test.ts` and `npm run check`. Containers were not rebuilt for this correction per active UI testing request.
+
+---
+
 ## 2026-05-03 Update - SOP Uplift DOCX Export Formatting
 
 - Root cause: `utils/sop_uplift/rewrite_generator.py` generated uplift DOCX files with a fresh `Document()` package, so exported SOPs lost the uploaded Word document's template, paragraph styles, tables, and visual context.
