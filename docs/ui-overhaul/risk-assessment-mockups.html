@@ -1,0 +1,1191 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TRACE Risk Assessment Mockups</title>
+    <style>
+      :root {
+        --page-bg: #f0f2f7;
+        --ink: #0c233c;
+        --muted: #5a6478;
+        --soft: #8492a6;
+        --line: #e2e6ef;
+        --brand: #00338d;
+        --navy: #0c233c;
+        --cobalt: #1e49e2;
+        --pacific: #00b8f5;
+        --teal: #098e7e;
+        --green: #009a44;
+        --amber: #eaaa00;
+        --red: #e5001b;
+        --purple: #7213ea;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(30, 73, 226, 0.1), transparent 28%),
+          radial-gradient(circle at top right, rgba(0, 184, 245, 0.08), transparent 26%),
+          var(--page-bg);
+        color: var(--ink);
+      }
+
+      .page {
+        width: min(1520px, calc(100vw - 40px));
+        margin: 0 auto;
+        padding: 28px 0 40px;
+      }
+
+      .header {
+        padding: 0 8px 24px;
+      }
+
+      .eyebrow {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 2.5px;
+        text-transform: uppercase;
+        color: var(--brand);
+        margin-bottom: 10px;
+      }
+
+      .title {
+        font-size: 36px;
+        font-weight: 700;
+        letter-spacing: -1.6px;
+        margin: 0 0 10px;
+      }
+
+      .lede {
+        max-width: 920px;
+        font-size: 16px;
+        line-height: 1.7;
+        color: var(--muted);
+        margin: 0;
+      }
+
+      .board {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 26px;
+      }
+
+      .screen-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .screen-label {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        padding: 0 8px;
+      }
+
+      .screen-label strong {
+        font-size: 12px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--brand);
+      }
+
+      .screen-label span {
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: -0.4px;
+      }
+
+      .screen {
+        background: #fff;
+        border: 1px solid #d8dfea;
+        border-radius: 26px;
+        overflow: hidden;
+        box-shadow: 0 24px 48px -34px rgba(12, 35, 60, 0.24);
+      }
+
+      .app {
+        display: grid;
+        grid-template-columns: 88px minmax(0, 1fr);
+        min-height: 640px;
+      }
+
+      .sidebar {
+        background: #102843;
+        color: rgba(255, 255, 255, 0.86);
+        padding: 18px 12px;
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .brand {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 24px;
+      }
+
+      .brand .kpmg {
+        font-size: 15px;
+        font-weight: 700;
+      }
+
+      .brand .trace {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--pacific);
+      }
+
+      .navdot {
+        width: 100%;
+        height: 46px;
+        border-radius: 14px;
+        margin-bottom: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .navdot.active {
+        background: rgba(0, 184, 245, 0.14);
+        border-color: rgba(0, 184, 245, 0.5);
+      }
+
+      .main {
+        background: var(--page-bg);
+      }
+
+      .hero {
+        background: linear-gradient(135deg, var(--navy) 0%, var(--cobalt) 100%);
+        color: white;
+        padding: 22px 24px 26px;
+      }
+
+      .hero h3 {
+        margin: 0;
+        font-size: 17px;
+        color: white;
+        font-weight: 700;
+        letter-spacing: 0;
+      }
+
+      .hero p {
+        margin: 8px 0 0;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.76);
+        line-height: 1.6;
+      }
+
+      .content {
+        padding: 22px 22px 26px;
+      }
+
+      .section-head {
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid var(--line);
+      }
+
+      .section-head .mini {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 2.4px;
+        color: var(--brand);
+        font-weight: 700;
+        margin-bottom: 6px;
+      }
+
+      .section-head .big {
+        font-size: 17px;
+        font-weight: 700;
+      }
+
+      .split {
+        display: grid;
+        grid-template-columns: 280px minmax(0, 1fr);
+        gap: 18px;
+      }
+
+      .panel,
+      .metric,
+      .line-card,
+      .question-card,
+      .risk-card,
+      .control-card,
+      .report-card {
+        background: white;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+      }
+
+      .panel {
+        padding: 16px;
+      }
+
+      .rail-item {
+        padding: 12px 12px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        margin-bottom: 10px;
+        background: white;
+      }
+
+      .rail-item.active {
+        border-color: rgba(30, 73, 226, 0.46);
+        background: #eef2ff;
+      }
+
+      .rail-title {
+        font-size: 13px;
+        font-weight: 700;
+        margin-bottom: 6px;
+      }
+
+      .meta {
+        font-size: 11px;
+        color: var(--soft);
+      }
+
+      .status {
+        display: inline-block;
+        margin-top: 7px;
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 700;
+        border: 1px solid var(--line);
+      }
+
+      .status.draft { background: #f3f6fa; color: #6a748a; }
+      .status.progress { background: #eef2ff; color: var(--cobalt); }
+      .status.complete { background: #edfbf5; color: var(--green); }
+
+      .flow {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      .step {
+        padding: 16px;
+        border-radius: 18px;
+        color: white;
+      }
+
+      .step.purple { background: #7213ea; }
+      .step.blue { background: #1e49e2; }
+      .step.teal { background: #098e7e; }
+
+      .step .n {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.18);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 10px;
+      }
+
+      .step h4 {
+        margin: 0 0 6px;
+        font-size: 14px;
+      }
+
+      .step p {
+        margin: 0;
+        font-size: 11px;
+        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.84);
+      }
+
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .metric {
+        position: relative;
+        overflow: hidden;
+        padding: 18px;
+      }
+
+      .metric::before {
+        content: "";
+        position: absolute;
+        inset: 0 auto auto 0;
+        width: 100%;
+        height: 4px;
+        background: var(--cobalt);
+      }
+
+      .metric.green::before { background: var(--green); }
+      .metric.amber::before { background: var(--amber); }
+
+      .metric .m-label {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: var(--soft);
+        font-weight: 700;
+      }
+
+      .metric .m-value {
+        font-size: 30px;
+        font-weight: 700;
+        letter-spacing: -1px;
+        margin: 14px 0 8px;
+      }
+
+      .metric .m-sub {
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .toolbar .cta,
+      .action,
+      .ghost {
+        border-radius: 12px;
+        border: 0;
+        font-weight: 700;
+        font-size: 13px;
+        padding: 10px 14px;
+      }
+
+      .cta,
+      .action {
+        background: var(--cobalt);
+        color: white;
+      }
+
+      .ghost {
+        background: #eef2ff;
+        color: var(--cobalt);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th, td {
+        padding: 11px 10px;
+        font-size: 12px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+      }
+
+      th {
+        color: var(--soft);
+        text-transform: uppercase;
+        letter-spacing: 1.6px;
+        font-size: 10px;
+      }
+
+      .setup-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+        gap: 16px;
+      }
+
+      .field {
+        margin-bottom: 12px;
+      }
+
+      .field .label {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--soft);
+        text-transform: uppercase;
+        letter-spacing: 1.8px;
+        margin-bottom: 6px;
+      }
+
+      .input,
+      .box {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: white;
+      }
+
+      .input {
+        height: 42px;
+      }
+
+      .box {
+        padding: 12px;
+      }
+
+      .pick {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        margin-bottom: 8px;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 5px 8px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 700;
+        border: 1px solid var(--line);
+      }
+
+      .badge.high { background: #fff4e8; color: #ab5c00; }
+      .badge.critical { background: #feebed; color: var(--red); }
+      .badge.medium { background: #fff9e8; color: #8a6a00; }
+      .badge.green { background: #edfbf5; color: var(--green); }
+      .badge.blue { background: #eef2ff; color: var(--cobalt); }
+
+      .cia {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .cia-card {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 12px;
+        background: #fbfcfe;
+      }
+
+      .cia-card strong {
+        display: block;
+        font-size: 11px;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: var(--soft);
+        margin-bottom: 8px;
+      }
+
+      .chips,
+      .tabs,
+      .steps {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .chip,
+      .tab,
+      .step-pill {
+        padding: 8px 11px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: white;
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .chip.active,
+      .tab.active,
+      .step-pill.active {
+        background: var(--cobalt);
+        border-color: var(--cobalt);
+        color: white;
+      }
+
+      .step-pill.done {
+        background: #edfbf5;
+        color: var(--green);
+        border-color: rgba(0, 154, 68, 0.24);
+      }
+
+      .progress-strip {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 12px 14px;
+        margin: 14px 0;
+      }
+
+      .accordion {
+        display: grid;
+        gap: 12px;
+      }
+
+      .question-card {
+        padding: 14px;
+      }
+
+      .question-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .q-lines {
+        display: grid;
+        gap: 10px;
+      }
+
+      .q-row {
+        padding-top: 10px;
+        border-top: 1px solid var(--line);
+      }
+
+      .q-row:first-child {
+        border-top: 0;
+        padding-top: 0;
+      }
+
+      .q-row p {
+        margin: 0 0 10px;
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .mini-input {
+        height: 34px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fbfcfe;
+      }
+
+      .analysis-shell {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 280px;
+        gap: 18px;
+      }
+
+      .analysis-core,
+      .analysis-side {
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        background: white;
+        padding: 24px;
+      }
+
+      .ring {
+        width: 168px;
+        height: 168px;
+        border-radius: 50%;
+        margin: 18px auto 14px;
+        background:
+          radial-gradient(circle at center, white 48%, transparent 49%),
+          conic-gradient(var(--cobalt) 0 58%, #dbe4f3 58% 100%);
+        border: 1px solid var(--line);
+      }
+
+      .progress-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .check {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 11px 12px;
+        border-radius: 14px;
+        background: #f7f9fd;
+        font-size: 12px;
+      }
+
+      .risk-grid,
+      .control-grid,
+      .residual-grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .risk-card,
+      .control-card {
+        padding: 16px;
+      }
+
+      .risk-top,
+      .control-top,
+      .residual-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: flex-start;
+      }
+
+      .risk-card h4,
+      .control-card h4,
+      .report-card h4 {
+        margin: 0 0 8px;
+        font-size: 15px;
+      }
+
+      .risk-card p,
+      .control-card p,
+      .report-card p {
+        margin: 0;
+        font-size: 12px;
+        line-height: 1.6;
+        color: var(--muted);
+      }
+
+      .stats {
+        display: flex;
+        gap: 14px;
+        margin-top: 12px;
+        color: var(--soft);
+        font-size: 11px;
+      }
+
+      .applied {
+        margin-top: 12px;
+        padding: 11px 12px;
+        border-radius: 14px;
+        background: #edfbf5;
+        color: var(--green);
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .control-grid .line-card {
+        padding: 12px;
+      }
+
+      .line-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 8px;
+      }
+
+      .bar {
+        height: 9px;
+        border-radius: 999px;
+        background: #dbe4f3;
+        overflow: hidden;
+      }
+
+      .bar > span {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--cobalt), var(--pacific));
+      }
+
+      .bar.green > span { background: linear-gradient(90deg, var(--green), var(--teal)); }
+      .bar.amber > span { background: linear-gradient(90deg, #f2b100, var(--amber)); }
+      .bar.red > span { background: linear-gradient(90deg, #ff5d6d, var(--red)); }
+
+      .residual-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .line-card {
+        padding: 16px;
+      }
+
+      .report-card {
+        padding: 20px 22px;
+      }
+
+      .report-title {
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 10px;
+      }
+
+      .report-rule {
+        height: 1px;
+        background: var(--line);
+        margin: 14px 0;
+      }
+
+      .report-section {
+        margin-top: 12px;
+      }
+
+      .report-section h5 {
+        margin: 0 0 8px;
+        font-size: 13px;
+      }
+
+      .report-list {
+        display: grid;
+        gap: 8px;
+      }
+
+      .report-row {
+        display: grid;
+        grid-template-columns: 1.3fr 0.7fr 0.7fr;
+        gap: 10px;
+        padding: 10px 0;
+        border-top: 1px solid var(--line);
+        font-size: 11px;
+      }
+
+      @media (max-width: 1280px) {
+        .board,
+        .residual-grid,
+        .setup-grid,
+        .analysis-shell,
+        .split {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="header">
+        <div class="eyebrow">Risk Assessment Mockups</div>
+        <h1 class="title">TRACE Risk Assessment Feature Storyboard</h1>
+        <p class="lede">
+          Screen-by-screen reference mockups for the Risk Assessment flow only. These are docs-only artifacts based on the current feature workflow and the canonical KPMG TRACE page language.
+        </p>
+      </div>
+
+      <div class="board">
+        <section class="screen-wrap">
+          <div class="screen-label"><strong>Screen 1</strong><span>Assessment Dashboard</span></div>
+          <div class="screen">
+            <div class="app">
+              <aside class="sidebar">
+                <div class="brand"><div class="kpmg">KPMG</div><div class="trace">TRACE</div></div>
+                <div class="navdot"></div>
+                <div class="navdot"></div>
+                <div class="navdot"></div>
+                <div class="navdot"></div>
+                <div class="navdot active"></div>
+              </aside>
+              <div class="main">
+                <div class="hero">
+                  <h3>Risk Assessment</h3>
+                  <p>Questionnaire, inherent scoring, residual analysis and reporting.</p>
+                </div>
+                <div class="content">
+                  <div class="section-head"><div class="mini">Overview</div><div class="big">Assessment Dashboard</div></div>
+                  <div class="split">
+                    <div class="panel">
+                      <div class="toolbar"><strong style="font-size:14px">Assessment Sessions</strong><button class="cta">New Assessment</button></div>
+                      <div class="rail-item active"><div class="rail-title">FY26 Cloud Payments Review</div><div class="meta">4 applications in scope</div><span class="status progress">In Progress</span></div>
+                      <div class="rail-item"><div class="rail-title">Identity Governance Annual Review</div><div class="meta">2 applications in scope</div><span class="status draft">Draft</span></div>
+                      <div class="rail-item"><div class="rail-title">Vendor Onboarding Workflow</div><div class="meta">3 applications in scope</div><span class="status complete">Complete</span></div>
+                    </div>
+                    <div>
+                      <div class="flow">
+                        <div class="step purple"><div class="n">1</div><h4>Define Scope</h4><p>Select applications and any ad hoc systems in scope.</p></div>
+                        <div class="step blue"><div class="n">2</div><h4>Capture Responses</h4><p>Run the structured questionnaire across each application.</p></div>
+                        <div class="step teal"><div class="n">3</div><h4>Score & Report</h4><p>Review risks, apply controls, and publish the final output.</p></div>
+                      </div>
+                      <div class="metrics">
+                        <div class="metric"><div class="m-label">Active Assessments</div><div class="m-value">7</div><div class="m-sub">Sessions currently progressing</div></div>
+                        <div class="metric amber"><div class="m-label">High / Critical Risks</div><div class="m-value">19</div><div class="m-sub">Across open assessments</div></div>
+                        <div class="metric green"><div class="m-label">Drafts</div><div class="m-value">3</div><div class="m-sub">Waiting for scope confirmation</div></div>
+                      </div>
+                      <div class="panel">
+                        <div class="toolbar"><strong style="font-size:14px">Recent Assessments</strong><button class="ghost">View All</button></div>
+                        <table>
+                          <thead><tr><th>Assessment</th><th>Apps</th><th>Status</th><th>Updated</th></tr></thead>
+                          <tbody>
+                            <tr><td>FY26 Cloud Payments Review</td><td>4</td><td>In Progress</td><td>Today</td></tr>
+                            <tr><td>Identity Governance Annual Review</td><td>2</td><td>Draft</td><td>Yesterday</td></tr>
+                            <tr><td>Vendor Onboarding Workflow</td><td>3</td><td>Complete</td><td>02 May 2026</td></tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen-wrap">
+          <div class="screen-label"><strong>Screen 2</strong><span>Create Assessment</span></div>
+          <div class="screen">
+            <div class="app">
+              <aside class="sidebar">
+                <div class="brand"><div class="kpmg">KPMG</div><div class="trace">TRACE</div></div>
+                <div class="navdot"></div><div class="navdot"></div><div class="navdot"></div><div class="navdot"></div><div class="navdot active"></div>
+              </aside>
+              <div class="main">
+                <div class="hero">
+                  <h3>Risk Assessment</h3>
+                  <p>Set the assessment scope, select applications, and capture ad hoc context before the questionnaire begins.</p>
+                </div>
+                <div class="content">
+                  <div class="section-head"><div class="mini">Setup</div><div class="big">Create New Assessment</div></div>
+                  <div class="setup-grid">
+                    <div class="panel">
+                      <div class="field"><div class="label">Assessment Title</div><div class="input"></div></div>
+                      <div class="field"><div class="label">Description</div><div class="box" style="height:88px"></div></div>
+                      <div class="field"><div class="label">Applications In Scope</div></div>
+                      <div class="pick"><div><strong style="font-size:13px">Cloud Payments Platform</strong><div class="meta">Core customer transaction engine</div></div><span class="badge critical">Critical</span></div>
+                      <div class="pick"><div><strong style="font-size:13px">Identity Governance Portal</strong><div class="meta">Privileged access approvals</div></div><span class="badge high">High</span></div>
+                      <div class="pick"><div><strong style="font-size:13px">Vendor Onboarding Workflow</strong><div class="meta">Third-party onboarding process</div></div><span class="badge medium">Medium</span></div>
+                    </div>
+                    <div class="panel">
+                      <div class="toolbar"><strong style="font-size:14px">Ad Hoc Application</strong><button class="ghost">Add Entry</button></div>
+                      <div class="field"><div class="label">Application Name</div><div class="input"></div></div>
+                      <div class="field"><div class="label">Assessment Context</div><div class="box" style="height:78px"></div></div>
+                      <div class="field"><div class="label">CIA Scoring</div></div>
+                      <div class="cia">
+                        <div class="cia-card"><strong>Confidentiality</strong><div class="chips"><span class="chip">1</span><span class="chip">2</span><span class="chip active">3</span><span class="chip">4</span><span class="chip">5</span></div></div>
+                        <div class="cia-card"><strong>Integrity</strong><div class="chips"><span class="chip">1</span><span class="chip">2</span><span class="chip active">3</span><span class="chip">4</span><span class="chip">5</span></div></div>
+                        <div class="cia-card"><strong>Availability</strong><div class="chips"><span class="chip">1</span><span class="chip">2</span><span class="chip">3</span><span class="chip active">4</span><span class="chip">5</span></div></div>
+                      </div>
+                      <div class="box" style="margin-top:14px;background:#fbfcfe">
+                        <div class="meta" style="margin-bottom:10px">Scope Summary</div>
+                        <div class="chips">
+                          <span class="badge blue">3 Registry Assets</span>
+                          <span class="badge green">1 Ad Hoc Application</span>
+                          <span class="badge">4 Systems Total</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="toolbar" style="margin-top:16px">
+                    <button class="ghost">Cancel</button>
+                    <button class="cta">Create Assessment</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen-wrap">
+          <div class="screen-label"><strong>Screen 3</strong><span>Questionnaire Workspace</span></div>
+          <div class="screen">
+            <div class="app">
+              <aside class="sidebar">
+                <div class="brand"><div class="kpmg">KPMG</div><div class="trace">TRACE</div></div>
+                <div class="navdot"></div><div class="navdot"></div><div class="navdot"></div><div class="navdot"></div><div class="navdot active"></div>
+              </aside>
+              <div class="main">
+                <div class="hero">
+                  <h3>Risk Assessment</h3>
+                  <p>Walk each in-scope application through the structured control and exposure questionnaire.</p>
+                </div>
+                <div class="content">
+                  <div class="steps">
+                    <span class="step-pill done">Create</span>
+                    <span class="step-pill active">Questionnaire</span>
+                    <span class="step-pill">Analyse</span>
+                    <span class="step-pill">Risks</span>
+                    <span class="step-pill">Controls</span>
+                    <span class="step-pill">Residual</span>
+                    <span class="step-pill">Report</span>
+                  </div>
+                  <div class="progress-strip">
+                    <div><strong style="font-size:13px">Identity Governance Portal</strong><div class="meta">Application 2 of 4 · 18 of 32 answered</div></div>
+                    <button class="cta">Save And Next</button>
+                  </div>
+                  <div class="tabs" style="margin-bottom:14px">
+                    <span class="tab">Cloud Payments Platform</span>
+                    <span class="tab active">Identity Governance Portal</span>
+                    <span class="tab">Vendor Onboarding Workflow</span>
+                    <span class="tab">Data Retention Utility</span>
+                  </div>
+                  <div class="accordion">
+                    <div class="question-card">
+                      <div class="question-head"><strong style="font-size:14px">Governance</strong><span class="badge green">5 / 8 Answered</span></div>
+                      <div class="q-lines">
+                        <div class="q-row">
+                          <div class="chips" style="margin-bottom:8px"><span class="badge blue">Exposure</span></div>
+                          <p>Does the application support privileged access functions that could materially impact production services?</p>
+                          <div class="chips"><span class="chip active">Yes</span><span class="chip">No</span><span class="chip">N/A</span></div>
+                          <div class="mini-input" style="margin-top:10px"></div>
+                        </div>
+                        <div class="q-row">
+                          <div class="chips" style="margin-bottom:8px"><span class="badge">Control</span></div>
+                          <p>Are quarterly access reviews formally performed by an independent owner?</p>
+                          <div class="chips"><span class="chip">Yes</span><span class="chip active">No</span><span class="chip">N/A</span></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="question-card">
+                      <div class="question-head"><strong style="font-size:14px">Access Control</strong><span class="badge">Collapsed</span></div>
+                    </div>
+                    <div class="question-card">
+                      <div class="question-head"><strong style="font-size:14px">Third Party</strong><span class="badge">Collapsed</span></div>
+                    </div>
+                    <div class="question-card">
+                      <div class="question-head"><strong style="font-size:14px">Resilience</strong><span class="badge">Collapsed</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen-wrap">
+          <div class="screen-label"><strong>Screen 4</strong><span>Analysis Running</span></div>
+          <div class="screen">
+            <div class="app">
+              <aside class="sidebar">
+                <div class="brand"><div class="kpmg">KPMG</div><div class="trace">TRACE</div></div>
+                <div class="navdot"></div><div class="navdot"></div><div class="navdot"></div><div class="navdot"></div><div class="navdot active"></div>
+              </aside>
+              <div class="main">
+                <div class="hero">
+                  <h3>Risk Assessment</h3>
+                  <p>Review in-flight scoring while the system turns captured responses into a structured risk set.</p>
+                </div>
+                <div class="content">
+                  <div class="steps">
+                    <span class="step-pill done">Create</span>
+                    <span class="step-pill done">Questionnaire</span>
+                    <span class="step-pill active">Analyse</span>
+                    <span class="step-pill">Risks</span>
+                    <span class="step-pill">Controls</span>
+                    <span class="step-pill">Residual</span>
+                    <span class="step-pill">Report</span>
+                  </div>
+                  <div class="analysis-shell" style="margin-top:18px">
+                    <div class="analysis-core">
+                      <div class="section-head" style="margin-bottom:0"><div class="mini">Processing</div><div class="big">Scoring Inherent Risk Across Selected Applications</div></div>
+                      <div class="ring"></div>
+                      <p style="text-align:center;font-size:13px;color:var(--muted);margin:0">Applying questionnaire logic, grouping exposure themes, and drafting risk candidates per application.</p>
+                    </div>
+                    <div class="analysis-side">
+                      <div class="mini" style="margin-bottom:10px">Current Run</div>
+                      <div class="progress-list">
+                        <div class="check"><span>Responses Validated</span><span class="badge green">Done</span></div>
+                        <div class="check"><span>Exposure Patterns Identified</span><span class="badge blue">Running</span></div>
+                        <div class="check"><span>Draft Risks Generated</span><span class="badge">Queued</span></div>
+                        <div class="check"><span>Risk Bands Assigned</span><span class="badge">Queued</span></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen-wrap">
+          <div class="screen-label"><strong>Screen 5</strong><span>Identified Risks</span></div>
+          <div class="screen">
+            <div class="app">
+              <aside class="sidebar">
+                <div class="brand"><div class="kpmg">KPMG</div><div class="trace">TRACE</div></div>
+                <div class="navdot"></div><div class="navdot"></div><div class="navdot"></div><div class="navdot"></div><div class="navdot active"></div>
+              </aside>
+              <div class="main">
+                <div class="hero">
+                  <h3>Risk Assessment</h3>
+                  <p>Review the generated risks before linking compensating or preventive controls.</p>
+                </div>
+                <div class="content">
+                  <div class="toolbar"><div class="section-head" style="flex:1;margin:0;border-bottom:0;padding:0"><div class="mini">Risks</div><div class="big">Identified Risks</div></div><button class="cta">Apply Controls</button></div>
+                  <div class="risk-grid">
+                    <div class="risk-card">
+                      <div class="risk-top">
+                        <div><h4>Privileged Access Misuse</h4><p>Privileged approvals are concentrated with limited detective review over emergency elevation activity.</p></div>
+                        <span class="badge critical">Critical</span>
+                      </div>
+                      <div class="stats"><span>Likelihood 5 / 5</span><span>Impact 5 / 5</span><span>Score 25</span><span>Identity</span></div>
+                    </div>
+                    <div class="risk-card">
+                      <div class="risk-top">
+                        <div><h4>Third-Party Provisioning Delay</h4><p>Manual handoffs in vendor onboarding create timing gaps between access approval and actual account activation.</p></div>
+                        <span class="badge high">High</span>
+                      </div>
+                      <div class="stats"><span>Likelihood 4 / 5</span><span>Impact 4 / 5</span><span>Score 16</span><span>Third Party</span></div>
+                    </div>
+                    <div class="risk-card">
+                      <div class="risk-top">
+                        <div><h4>Break-Glass Monitoring Weakness</h4><p>Emergency admin activity is logged, but review cadence and escalation criteria are not consistently evidenced.</p></div>
+                        <span class="badge high">High</span>
+                      </div>
+                      <div class="stats"><span>Likelihood 4 / 5</span><span>Impact 5 / 5</span><span>Score 20</span><span>Operations</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen-wrap">
+          <div class="screen-label"><strong>Screen 6</strong><span>Control Application</span></div>
+          <div class="screen">
+            <div class="app">
+              <aside class="sidebar">
+                <div class="brand"><div class="kpmg">KPMG</div><div class="trace">TRACE</div></div>
+                <div class="navdot"></div><div class="navdot"></div><div class="navdot"></div><div class="navdot"></div><div class="navdot active"></div>
+              </aside>
+              <div class="main">
+                <div class="hero">
+                  <h3>Risk Assessment</h3>
+                  <p>Map suggested controls to each risk and confirm which responses should reduce residual exposure.</p>
+                </div>
+                <div class="content">
+                  <div class="toolbar"><div class="section-head" style="flex:1;margin:0;border-bottom:0;padding:0"><div class="mini">Controls</div><div class="big">Apply Controls To Risks</div></div><div style="display:flex;gap:8px"><button class="ghost">Refresh Suggestions</button><button class="cta">Calculate Residual</button></div></div>
+                  <div class="control-grid">
+                    <div class="control-card">
+                      <div class="control-top">
+                        <div><h4>Privileged Access Misuse</h4><p>Controls are ranked by relevance and grouped under the current risk candidate.</p></div>
+                        <span class="badge critical">Critical</span>
+                      </div>
+                      <div class="applied">Applied: Quarterly Privileged Access Review · Break-Glass Approval Log</div>
+                      <div class="line-card" style="margin-top:12px">
+                        <div class="line-head"><strong style="font-size:13px">Emergency Access Approval Workflow</strong><span class="badge blue">Relevance 5 / 5</span></div>
+                        <p>Formalises emergency elevation approvals and ties them to retrospective review.</p>
+                      </div>
+                      <div class="line-card" style="margin-top:10px">
+                        <div class="line-head"><strong style="font-size:13px">Privileged Session Monitoring</strong><button class="action">Apply</button></div>
+                        <p>Captures session telemetry for critical admin actions and exception review.</p>
+                      </div>
+                    </div>
+                    <div class="control-card">
+                      <div class="control-top">
+                        <div><h4>Third-Party Provisioning Delay</h4><p>Suggested controls remain visible until explicitly applied or dismissed.</p></div>
+                        <span class="badge high">High</span>
+                      </div>
+                      <div class="line-card" style="margin-top:12px">
+                        <div class="line-head"><strong style="font-size:13px">Vendor Access Activation Checklist</strong><span class="badge blue">Relevance 4 / 5</span></div>
+                        <p>Reduces manual gaps between approval, provisioning, and evidence capture.</p>
+                      </div>
+                      <div class="line-card" style="margin-top:10px">
+                        <div class="line-head"><strong style="font-size:13px">Joiner / Mover SLA Monitoring</strong><button class="action">Apply</button></div>
+                        <p>Adds operational monitoring over delayed third-party activation tasks.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen-wrap">
+          <div class="screen-label"><strong>Screen 7</strong><span>Residual Risk Review</span></div>
+          <div class="screen">
+            <div class="app">
+              <aside class="sidebar">
+                <div class="brand"><div class="kpmg">KPMG</div><div class="trace">TRACE</div></div>
+                <div class="navdot"></div><div class="navdot"></div><div class="navdot"></div><div class="navdot"></div><div class="navdot active"></div>
+              </aside>
+              <div class="main">
+                <div class="hero">
+                  <h3>Risk Assessment</h3>
+                  <p>Compare inherent and residual risk posture after control application and effectiveness scoring.</p>
+                </div>
+                <div class="content">
+                  <div class="toolbar"><div class="section-head" style="flex:1;margin:0;border-bottom:0;padding:0"><div class="mini">Residual</div><div class="big">Residual Risk Review</div></div><div style="display:flex;gap:8px"><button class="ghost">Refresh</button><button class="cta">Generate Report</button></div></div>
+                  <div class="residual-grid">
+                    <div class="line-card">
+                      <div class="residual-top"><strong style="font-size:14px">Privileged Access Misuse</strong><span class="badge critical">Residual High</span></div>
+                      <div class="meta" style="margin:10px 0 8px">Inherent Critical</div>
+                      <div class="bar red"><span style="width:92%"></span></div>
+                      <div class="meta" style="margin:12px 0 8px">Residual High</div>
+                      <div class="bar amber"><span style="width:64%"></span></div>
+                      <div class="stats"><span>Controls Applied 3</span><span>Avg Effectiveness 62%</span><span>Residual Score 16</span></div>
+                    </div>
+                    <div class="line-card">
+                      <div class="residual-top"><strong style="font-size:14px">Third-Party Provisioning Delay</strong><span class="badge medium">Residual Medium</span></div>
+                      <div class="meta" style="margin:10px 0 8px">Inherent High</div>
+                      <div class="bar amber"><span style="width:76%"></span></div>
+                      <div class="meta" style="margin:12px 0 8px">Residual Medium</div>
+                      <div class="bar green"><span style="width:44%"></span></div>
+                      <div class="stats"><span>Controls Applied 2</span><span>Avg Effectiveness 71%</span><span>Residual Score 9</span></div>
+                    </div>
+                    <div class="line-card">
+                      <div class="residual-top"><strong style="font-size:14px">Break-Glass Monitoring Weakness</strong><span class="badge high">Residual High</span></div>
+                      <div class="meta" style="margin:10px 0 8px">Inherent High</div>
+                      <div class="bar amber"><span style="width:82%"></span></div>
+                      <div class="meta" style="margin:12px 0 8px">Residual High</div>
+                      <div class="bar amber"><span style="width:58%"></span></div>
+                      <div class="stats"><span>Controls Applied 2</span><span>Avg Effectiveness 59%</span><span>Residual Score 14</span></div>
+                    </div>
+                    <div class="line-card">
+                      <div class="residual-top"><strong style="font-size:14px">Session Summary</strong><span class="badge green">2 Reduced</span></div>
+                      <div class="panel" style="padding:12px;background:#fbfcfe">
+                        <div class="metrics" style="grid-template-columns:repeat(3,minmax(0,1fr));margin:0">
+                          <div class="metric green"><div class="m-label">Critical To High</div><div class="m-value" style="font-size:24px">1</div><div class="m-sub">Material reduction</div></div>
+                          <div class="metric amber"><div class="m-label">High To Medium</div><div class="m-value" style="font-size:24px">1</div><div class="m-sub">Reduced exposure</div></div>
+                          <div class="metric"><div class="m-label">Open High</div><div class="m-value" style="font-size:24px">2</div><div class="m-sub">Needs management action</div></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen-wrap">
+          <div class="screen-label"><strong>Screen 8</strong><span>Final Report</span></div>
+          <div class="screen">
+            <div class="app">
+              <aside class="sidebar">
+                <div class="brand"><div class="kpmg">KPMG</div><div class="trace">TRACE</div></div>
+                <div class="navdot"></div><div class="navdot"></div><div class="navdot"></div><div class="navdot"></div><div class="navdot active"></div>
+              </aside>
+              <div class="main">
+                <div class="hero">
+                  <h3>Risk Assessment</h3>
+                  <p>Present the assessment in a structured report layout suitable for review, challenge, and export.</p>
+                </div>
+                <div class="content">
+                  <div class="toolbar"><div class="section-head" style="flex:1;margin:0;border-bottom:0;padding:0"><div class="mini">Report</div><div class="big">Risk Assessment Report</div></div><div style="display:flex;gap:8px"><button class="ghost">Regenerate</button><button class="cta">Export Report</button></div></div>
+                  <div class="report-card">
+                    <div class="report-title">FY26 Cloud Payments Review</div>
+                    <p>Assessment scope includes the Cloud Payments Platform, Identity Governance Portal, Vendor Onboarding Workflow, and one ad hoc utility supporting retention and access evidence.</p>
+                    <div class="report-rule"></div>
+                    <div class="report-section">
+                      <h5>Executive Summary</h5>
+                      <p>Three priority risks were identified. One critical risk was reduced after control application, while two high residual risks remain open for management remediation.</p>
+                    </div>
+                    <div class="report-section">
+                      <h5>Top Findings</h5>
+                      <div class="report-list">
+                        <p>Privileged access monitoring remains the highest open concern across the assessment scope.</p>
+                        <p>Third-party provisioning controls reduce operational delay risk, but evidence capture remains inconsistent.</p>
+                        <p>Break-glass review requires tighter escalation criteria and owner accountability.</p>
+                      </div>
+                    </div>
+                    <div class="report-section">
+                      <h5>Risk Posture Snapshot</h5>
+                      <div class="report-row"><strong>Risk</strong><strong>Inherent</strong><strong>Residual</strong></div>
+                      <div class="report-row"><span>Privileged Access Misuse</span><span>Critical</span><span>High</span></div>
+                      <div class="report-row"><span>Third-Party Provisioning Delay</span><span>High</span><span>Medium</span></div>
+                      <div class="report-row"><span>Break-Glass Monitoring Weakness</span><span>High</span><span>High</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </body>
+</html>

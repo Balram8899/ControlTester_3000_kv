@@ -71,7 +71,9 @@ from api.routers.issues import router as issues_router
 from api.routers.validation_queue import router as validation_queue_router
 from api.routers.control_testing import router as control_testing_router
 from api.routers.sop_uplift import router as sop_uplift_router
+from api.routers.document_uplift import router as document_uplift_router
 from api.routers.settings import router as settings_router
+from utils.sop_processing.pipeline import start_async_pipeline_workers, stop_async_pipeline_workers
 
 # ----------------------------------------------------------------------------
 # Logging
@@ -146,7 +148,12 @@ class WorkpaperResponse(BaseModel):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     _seed_nist_controls()  # resolved at call-time; defined later in module
-    yield
+    if os.getenv("TASK_BACKEND", "asyncio").strip().lower() == "asyncio":
+        start_async_pipeline_workers()
+    try:
+        yield
+    finally:
+        stop_async_pipeline_workers()
 
 
 # ----------------------------------------------------------------------------
@@ -210,6 +217,7 @@ app.include_router(issues_router)
 app.include_router(control_testing_router)
 app.include_router(validation_queue_router)
 app.include_router(sop_uplift_router)
+app.include_router(document_uplift_router)
 app.include_router(settings_router)
 
 

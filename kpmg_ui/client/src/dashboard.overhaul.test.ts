@@ -58,7 +58,6 @@ for (const hook of [
   "useAssetRegistry",
   "useRiskAssessment",
   "useIssueManagement",
-  "useChatContext",
 ]) {
   assert.match(
     dashboardSource,
@@ -66,6 +65,12 @@ for (const hook of [
     `Dashboard should consume existing ${hook} state instead of placeholder feed data`,
   );
 }
+
+assert.doesNotMatch(
+  dashboardSource,
+  /useChatContext|Chat Activity|title="Chat"/,
+  "Dashboard option 3 should remove the chat activity surface from the page",
+);
 
 assert.doesNotMatch(
   dashboardSource,
@@ -92,12 +97,8 @@ for (const label of [
   "Last Refresh",
   "Library Documents",
   "Controls",
-  "Assets",
   "Risk Assessments",
-  "Testing Sessions",
-  "Open Issues",
   "Reports",
-  "Validation Queue",
   "Assets By Criticality",
   "Assessments By Status",
   "Testing Sessions By Status",
@@ -134,7 +135,43 @@ assert.match(
 assert.match(
   dashboardSource,
   /xl:grid-cols-4/,
-  "Dashboard KPI cards should render in four-up rows like the reference dashboard",
+  "Dashboard should preserve four-up KPI rows where the reference layout calls for them",
+);
+
+assert.match(
+  dashboardSource,
+  /function BarChartPanel[\s\S]*labelMode\?: BarLabelMode/,
+  "Dashboard should use a configurable bar-chart helper for chart label density",
+);
+
+assert.match(
+  dashboardSource,
+  /labelMode="rotate"/,
+  "Dashboard should rotate long category labels instead of letting them collide",
+);
+
+assert.match(
+  dashboardSource,
+  /function DonutChartPanel[\s\S]*aspect-square[\s\S]*Total/,
+  "Dashboard donut charts should use the balanced framed layout with a center total",
+);
+
+assert.match(
+  dashboardSource,
+  /dashboardScaleX/,
+  "Dashboard horizontal and segmented charts should use the shared scale animation",
+);
+
+assert.match(
+  dashboardSource,
+  /xl:grid-cols-5/,
+  "Dashboard workflows should use the denser five-module strip from the option 3 layout",
+);
+
+assert.strictEqual(
+  (dashboardSource.match(/ChartCard title="Testing Sessions By Status"/g) ?? []).length,
+  1,
+  "Testing Sessions By Status should appear only once after moving it out of Overview",
 );
 
 const designDoc = read("../docs/ui-overhaul/dashboard-design.md");

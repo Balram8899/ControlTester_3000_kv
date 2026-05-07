@@ -71,29 +71,196 @@ def test_memory_tag_override_updates_file_bucket_for_review_grouping():
     assert updated["uploaded_files"][0]["original_bucket"] == "sops"
 
 
-def test_mongo_case_store_persists_upload_and_output_bytes_through_gridfs():
-    stored_docs: dict[str, dict] = {}
+def test_memory_case_store_splits_schema_v2_content_and_hydrates_reads():
+    store = SopUpliftCaseStore.__new__(SopUpliftCaseStore)
+    store._use_memory_fallback()
+    case = store.create_case({"title": "SOP", "process_name": "Access"})
 
+    updated = store.update_case(
+        case["case_id"],
+        {
+            "markdown_documents": [
+                {
+                    "document_id": "doc-file-1",
+                    "file_id": "file-1",
+                    "filename": "access.md",
+                    "markdown": "# Access\n\nOwner reviews users.",
+                    "conversion": {"status": "converted"},
+                }
+            ],
+            "anchors": [{"anchor_id": "a1", "file_id": "file-1", "document_id": "doc-file-1", "text": "Owner reviews users."}],
+            "chunks": [{"chunk_id": "c1", "file_id": "file-1", "document_id": "doc-file-1", "content": "Owner reviews users."}],
+        },
+    )
+
+    raw_case = store._memory[case["case_id"]]
+    assert raw_case["schema_version"] == 2
+    assert "markdown_documents" not in raw_case
+    assert "anchors" not in raw_case
+    assert "chunks" not in raw_case
+    assert store._memory_markdown[case["case_id"]][0]["markdown"].startswith("# Access")
+    assert updated["markdown_documents"][0]["file_id"] == "file-1"
+    assert store.get_case(case["case_id"])["chunks"][0]["chunk_id"] == "c1"
+
+
+def test_memory_case_store_dual_reads_legacy_schema_v1_embedded_content():
+    store = SopUpliftCaseStore.__new__(SopUpliftCaseStore)
+    store._use_memory_fallback()
+    store._memory["legacy-case"] = {
+        "case_id": "legacy-case",
+        "schema_version": 1,
+        "title": "Legacy SOP",
+        "process_name": "Access",
+        "markdown_documents": [{"document_id": "doc-1", "file_id": "file-1", "markdown": "# Legacy"}],
+        "anchors": [{"anchor_id": "a1", "document_id": "doc-1", "text": "Legacy step"}],
+        "chunks": [{"chunk_id": "c1", "document_id": "doc-1", "content": "Legacy step"}],
+    }
+
+    hydrated = store.get_case("legacy-case")
+
+    assert hydrated["markdown_documents"][0]["markdown"] == "# Legacy"
+    assert hydrated["anchors"][0]["anchor_id"] == "a1"
+    assert hydrated["chunks"][0]["chunk_id"] == "c1"
+
+
+def test_mongo_case_store_splits_schema_v2_content_into_separate_collections():
     class FakeCursor:
+        def __init__(self, docs):
+            self.docs = docs
+
         def sort(self, *_args):
-            return list(stored_docs.values())
+            return self
+
+        def __iter__(self):
+            return iter(self.docs)
 
     class FakeCollection:
+        def __init__(self):
+            self.docs: list[dict] = []
+
         def create_index(self, *_args, **_kwargs):
             return None
 
         def insert_one(self, doc):
-            stored_docs[doc["case_id"]] = dict(doc)
+            self.docs.append(dict(doc))
             return MagicMock()
 
-        def find(self, *_args, **_kwargs):
-            return FakeCursor()
+        def insert_many(self, docs):
+            self.docs.extend(dict(doc) for doc in docs)
+            return MagicMock()
+
+        def find(self, query=None, *_args, **_kwargs):
+            query = query or {}
+            return FakeCursor([doc for doc in self.docs if all(doc.get(key) == value for key, value in query.items())])
 
         def find_one(self, query):
-            return stored_docs.get(query["case_id"])
+            return next((doc for doc in self.docs if all(doc.get(key) == value for key, value in query.items())), None)
 
-        def update_one(self, query, update):
-            doc = stored_docs.get(query["case_id"])
+        def update_one(self, query, update, upsert=False):
+            doc = self.find_one(query)
+            if doc is None and upsert:
+                doc = dict(query)
+                self.docs.append(doc)
+            if doc is None:
+                return MagicMock(deleted_count=0)
+            for key, value in update.get("$set", {}).items():
+                doc[key] = value
+            for key, value in update.get("$push", {}).items():
+                doc.setdefault(key, []).append(value)
+            return MagicMock()
+
+        def delete_one(self, query):
+            before = len(self.docs)
+            self.docs = [doc for doc in self.docs if not all(doc.get(key) == value for key, value in query.items())]
+            return MagicMock(deleted_count=before - len(self.docs))
+
+        def delete_many(self, query):
+            before = len(self.docs)
+            self.docs = [doc for doc in self.docs if not all(doc.get(key) == value for key, value in query.items())]
+            return MagicMock(deleted_count=before - len(self.docs))
+
+    collections = {
+        "sop_uplift_cases": FakeCollection(),
+        "sop_markdown": FakeCollection(),
+        "sop_anchors": FakeCollection(),
+        "sop_chunks": FakeCollection(),
+    }
+
+    class FakeDb:
+        def __getitem__(self, name):
+            return collections[name]
+
+    class FakeClient:
+        admin = MagicMock()
+        admin.command.return_value = {"ok": 1}
+
+        def __getitem__(self, name):
+            assert name == "trace_db"
+            return FakeDb()
+
+    with patch("utils.sop_uplift.case_store.pymongo.MongoClient", return_value=FakeClient()), patch(
+        "utils.sop_uplift.case_store.gridfs.GridFS",
+        return_value=MagicMock(),
+    ):
+        store = SopUpliftCaseStore("mongodb://fake")
+
+    case = store.create_case({"title": "SOP", "process_name": "Access"})
+    updated = store.update_case(
+        case["case_id"],
+        {
+            "markdown_documents": [{"document_id": "doc-file-1", "file_id": "file-1", "markdown": "# Access"}],
+            "anchors": [{"anchor_id": "a1", "document_id": "doc-file-1"}],
+            "chunks": [{"chunk_id": "c1", "document_id": "doc-file-1"}],
+        },
+    )
+
+    raw_case = collections["sop_uplift_cases"].find_one({"case_id": case["case_id"]})
+    assert raw_case["schema_version"] == 2
+    assert "markdown_documents" not in raw_case
+    assert "anchors" not in raw_case
+    assert "chunks" not in raw_case
+    assert collections["sop_markdown"].find_one({"case_id": case["case_id"], "file_id": "file-1"})["markdown"] == "# Access"
+    assert collections["sop_anchors"].find_one({"case_id": case["case_id"]})["anchors"][0]["anchor_id"] == "a1"
+    assert collections["sop_chunks"].find_one({"case_id": case["case_id"]})["chunks"][0]["chunk_id"] == "c1"
+    assert updated["markdown_documents"][0]["document_id"] == "doc-file-1"
+
+
+def test_mongo_case_store_persists_upload_and_output_bytes_through_gridfs():
+    stored_docs: dict[str, dict] = {}
+
+    class FakeCursor:
+        def __init__(self, docs):
+            self.docs = docs
+
+        def sort(self, *_args):
+            return self
+
+        def __iter__(self):
+            return iter(self.docs)
+
+    class FakeCollection:
+        def __init__(self, docs=None):
+            self.docs = docs if docs is not None else {}
+
+        def create_index(self, *_args, **_kwargs):
+            return None
+
+        def insert_one(self, doc):
+            self.docs[doc["case_id"]] = dict(doc)
+            return MagicMock()
+
+        def find(self, query=None, *_args, **_kwargs):
+            query = query or {}
+            return FakeCursor([doc for doc in self.docs.values() if all(doc.get(key) == value for key, value in query.items())])
+
+        def find_one(self, query):
+            return next((doc for doc in self.docs.values() if all(doc.get(key) == value for key, value in query.items())), None)
+
+        def update_one(self, query, update, upsert=False):
+            doc = self.find_one(query)
+            if doc is None and upsert:
+                doc = dict(query)
+                self.docs[query["case_id"]] = doc
             if not doc:
                 return MagicMock(deleted_count=0)
             for key, value in update.get("$set", {}).items():
@@ -103,13 +270,29 @@ def test_mongo_case_store_persists_upload_and_output_bytes_through_gridfs():
             return MagicMock()
 
         def delete_one(self, query):
-            deleted = stored_docs.pop(query["case_id"], None) is not None
+            deleted = self.docs.pop(query["case_id"], None) is not None
             return MagicMock(deleted_count=1 if deleted else 0)
 
+        def delete_many(self, query):
+            removed = 0
+            for key in [key for key, doc in self.docs.items() if all(doc.get(field) == value for field, value in query.items())]:
+                self.docs.pop(key, None)
+                removed += 1
+            return MagicMock(deleted_count=removed)
+
     class FakeDb:
+        def __init__(self):
+            self.collections = {
+                "sop_uplift_cases": FakeCollection(stored_docs),
+                "sop_markdown": FakeCollection(),
+                "sop_anchors": FakeCollection(),
+                "sop_chunks": FakeCollection(),
+            }
+
         def __getitem__(self, name):
-            assert name == "sop_uplift_cases"
-            return FakeCollection()
+            return self.collections[name]
+
+    fake_db = FakeDb()
 
     class FakeClient:
         admin = MagicMock()
@@ -117,7 +300,7 @@ def test_mongo_case_store_persists_upload_and_output_bytes_through_gridfs():
 
         def __getitem__(self, name):
             assert name == "trace_db"
-            return FakeDb()
+            return fake_db
 
     class FakeGridFs:
         def __init__(self, *_args, **_kwargs):
@@ -168,19 +351,39 @@ def test_mongo_case_store_persists_upload_and_output_bytes_through_gridfs():
 def test_mongo_case_store_falls_back_to_raw_b64_when_gridfs_read_fails():
     stored_docs: dict[str, dict] = {}
 
+    class FakeCursor:
+        def __init__(self, docs):
+            self.docs = docs
+
+        def sort(self, *_args):
+            return self
+
+        def __iter__(self):
+            return iter(self.docs)
+
     class FakeCollection:
+        def __init__(self, docs=None):
+            self.docs = docs if docs is not None else {}
+
         def create_index(self, *_args, **_kwargs):
             return None
 
         def insert_one(self, doc):
-            stored_docs[doc["case_id"]] = dict(doc)
+            self.docs[doc["case_id"]] = dict(doc)
             return MagicMock()
 
-        def find_one(self, query):
-            return stored_docs.get(query["case_id"])
+        def find(self, query=None, *_args, **_kwargs):
+            query = query or {}
+            return FakeCursor([doc for doc in self.docs.values() if all(doc.get(key) == value for key, value in query.items())])
 
-        def update_one(self, query, update):
-            doc = stored_docs.get(query["case_id"])
+        def find_one(self, query):
+            return next((doc for doc in self.docs.values() if all(doc.get(key) == value for key, value in query.items())), None)
+
+        def update_one(self, query, update, upsert=False):
+            doc = self.find_one(query)
+            if doc is None and upsert:
+                doc = dict(query)
+                self.docs[query["case_id"]] = doc
             if not doc:
                 return MagicMock(deleted_count=0)
             for key, value in update.get("$set", {}).items():
@@ -190,9 +393,18 @@ def test_mongo_case_store_falls_back_to_raw_b64_when_gridfs_read_fails():
             return MagicMock()
 
     class FakeDb:
+        def __init__(self):
+            self.collections = {
+                "sop_uplift_cases": FakeCollection(stored_docs),
+                "sop_markdown": FakeCollection(),
+                "sop_anchors": FakeCollection(),
+                "sop_chunks": FakeCollection(),
+            }
+
         def __getitem__(self, name):
-            assert name == "sop_uplift_cases"
-            return FakeCollection()
+            return self.collections[name]
+
+    fake_db = FakeDb()
 
     class FakeClient:
         admin = MagicMock()
@@ -200,7 +412,7 @@ def test_mongo_case_store_falls_back_to_raw_b64_when_gridfs_read_fails():
 
         def __getitem__(self, name):
             assert name == "trace_db"
-            return FakeDb()
+            return fake_db
 
     class BrokenGridFs:
         def put(self, *_args, **_kwargs):

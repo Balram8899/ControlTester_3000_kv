@@ -15,6 +15,7 @@ import {
   BookOpen,
   AlertTriangle,
   FilePenLine,
+  FileStack,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -25,7 +26,16 @@ interface AppLayoutProps {
   children: React.ReactNode;
 }
 
-export const HIDEABLE_TABS = [
+interface TraceTab {
+  title: string;
+  fullTitle: string;
+  path: string;
+  icon: React.ComponentType<{ className?: string }>;
+  badge?: string;
+  tooltip?: string;
+}
+
+export const HIDEABLE_TABS: TraceTab[] = [
   { title: "Dashboard", fullTitle: "Dashboard", path: "/", icon: LayoutDashboard },
   { title: "Regulatory Library", fullTitle: "Regulatory Library", path: "/regulatory-library", icon: Library },
   { title: "Controls Library", fullTitle: "Controls Library", path: "/controls-library", icon: ShieldCheck },
@@ -35,13 +45,20 @@ export const HIDEABLE_TABS = [
   { title: "Risk Assessment", fullTitle: "Risk Assessment", path: "/risk-assessment", icon: FileSearch },
   { title: "Final Report", fullTitle: "Final Report", path: "/evidence-assessment", icon: FileSearch },
   { title: "Control Testing", fullTitle: "Control Testing", path: "/control-testing", icon: TestTube },
-  { title: "SOP Uplift", fullTitle: "SOP Uplift", path: "/sop-uplift", icon: FilePenLine },
+  {
+    title: "SOP Uplift",
+    fullTitle: "SOP Uplift",
+    path: "/sop-uplift",
+    icon: FilePenLine,
+    tooltip: "SOP Uplift - Superseded by Document Uplift. Migrate when ready.",
+  },
+  { title: "Document Uplift", fullTitle: "Document Uplift", path: "/document-uplift", icon: FileStack, badge: "NEW" },
   { title: "Chat", fullTitle: "AI Chat", path: "/chat", icon: MessageSquare },
   { title: "Issue Management", fullTitle: "Issue Management", path: "/issue-management", icon: AlertTriangle },
 ];
 
-const COMING_SOON_TABS: typeof HIDEABLE_TABS = [];
-const SETTINGS_TAB = { title: "Settings", fullTitle: "Settings", path: "/settings", icon: Settings };
+const COMING_SOON_TABS: TraceTab[] = [];
+const SETTINGS_TAB: TraceTab = { title: "Settings", fullTitle: "Settings", path: "/settings", icon: Settings };
 const NAV_HIDDEN_KEY = "nav_hidden_pages";
 
 function readHiddenPages(): string[] {
@@ -126,6 +143,11 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 >
                   <tab.icon className="h-4 w-4 flex-shrink-0" />
                   {!collapsed && <span className="flex-1 text-left text-[13px] leading-5">{tab.title}</span>}
+                  {!collapsed && tab.badge && !comingSoon && (
+                    <span className="text-[9px] font-semibold tracking-wide px-1.5 py-0.5 rounded bg-[#1E49E2] text-white flex-shrink-0">
+                      {tab.badge}
+                    </span>
+                  )}
                   {!collapsed && comingSoon && (
                     <span className="text-[9px] font-semibold tracking-wide px-1 py-0.5 rounded bg-white/10 text-[#C8D8F0] flex-shrink-0">
                       SOON
@@ -134,7 +156,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 </button>
               );
 
-              const tooltipLabel = comingSoon ? `${tab.fullTitle} - Coming Soon` : tab.fullTitle;
+              const tooltipLabel = comingSoon ? `${tab.fullTitle} - Coming Soon` : (tab.tooltip ?? tab.fullTitle);
 
               return collapsed ? (
                 <Tooltip key={tab.path} delayDuration={0}>

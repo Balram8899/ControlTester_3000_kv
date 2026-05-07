@@ -767,8 +767,6 @@ type NativeDocumentViewerProps = {
   highlights: PreviewHighlight[];
   suggestions: Suggestion[];
   hasCorruptText: boolean;
-  canAnalyze: boolean;
-  onAnalyzeSection: (anchorId: string) => void;
   onRepairPreview: () => void;
 };
 
@@ -779,8 +777,6 @@ function NativeDocumentViewer({
   highlights,
   suggestions,
   hasCorruptText,
-  canAnalyze,
-  onAnalyzeSection,
   onRepairPreview,
 }: NativeDocumentViewerProps) {
   const filename = file?.filename || markdownDocument?.filename || "Document";
@@ -854,7 +850,6 @@ function NativeDocumentViewer({
                         {cleanSuggestionText(suggestion) && <p className="mt-2 border-t border-[#E6ECF5] pt-2 leading-5 text-[#0C233C]">{cleanSuggestionText(suggestion)}</p>}
                       </div>
                     )}
-                    <Button variant="outline" size="sm" className="mt-2 h-7 text-[11px] opacity-0 transition-opacity group-hover:opacity-100" onClick={() => onAnalyzeSection(highlight.anchor_id)} disabled={!canAnalyze}>Analyze this section</Button>
                   </section>
                 );
               })}
@@ -896,7 +891,6 @@ export default function SopUpliftPage() {
   const [useLlm, setUseLlm] = useState(true);
   const [pipelineWarnings, setPipelineWarnings] = useState<string[]>([]);
   const [pipelineProgress, setPipelineProgress] = useState<PipelineProgress>({});
-  const [analysisPending, setAnalysisPending] = useState(0);
   const [agentFollowUpQuestions, setAgentFollowUpQuestions] = useState<FollowUpQuestion[]>([]);
   const [caseIndexStats, setCaseIndexStats] = useState<CaseIndexStats>({});
   const [caseIndexResults, setCaseIndexResults] = useState<CaseIndexResult[]>([]);
@@ -1356,41 +1350,6 @@ export default function SopUpliftPage() {
     }
   };
 
-  const continueAnalysis = async (sectionIds?: string[]) => {
-    if (!caseId || !uploadStageComplete) return;
-    setBusy("analysis");
-    try {
-      const response = await fetch(`${API_BASE}/${caseId}/analyze`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ batch_size: sectionIds ? 1 : 5, section_ids: sectionIds ?? [], use_llm: useLlm }),
-      });
-      const data = await response.json();
-      setSuggestions(data.suggestions ?? []);
-      setAnalysisPending(data.processing_state?.analysis?.pending ?? 0);
-      setPipelineProgress(data.processing_state?.analysis ?? {});
-      await refreshPreview(caseId);
-      await buildCaseIndex(caseId);
-    } finally {
-      setBusy("");
-    }
-  };
-
-  const refreshAnalysisTask = async (id = caseId) => {
-    if (!id) return;
-    const response = await fetch(`${API_BASE}/${id}/tasks/analysis`);
-    if (!response.ok) return;
-    const data = await response.json();
-    const state = data.processing_state ?? {};
-    setPipelineProgress(state);
-    setAnalysisPending(state.pending ?? 0);
-    if (data.status === "done") {
-      const suggestionsResponse = await fetch(`${API_BASE}/${id}/suggestions`);
-      if (suggestionsResponse.ok) setSuggestions((await suggestionsResponse.json()).suggestions ?? []);
-      await refreshPreview(id);
-    }
-  };
-
   const refreshPipelineTask = async (id = caseId, taskId = extractionTaskId || "pipeline") => {
     if (!id || !taskId) return;
     const response = await fetch(`${API_BASE}/${id}/tasks/${taskId}`);
@@ -1584,12 +1543,6 @@ export default function SopUpliftPage() {
   useEffect(() => {
     refreshCases();
   }, []);
-
-  useEffect(() => {
-    if (!caseId || analysisPending <= 0) return;
-    const interval = window.setInterval(() => refreshAnalysisTask(caseId), 2000);
-    return () => window.clearInterval(interval);
-  }, [caseId, analysisPending]);
 
   useEffect(() => {
     if (!caseId || !extractionTaskId) return;
@@ -1903,7 +1856,7 @@ export default function SopUpliftPage() {
           ["Converted to Markdown", uploadedFiles.filter((file) => file.conversion?.status === "converted").length, uploadedFiles.some((file) => file.conversion?.status === "converted")],
           ["Tagged", documentTags.length, documentTags.length > 0],
           ["Extraction", pipelineProgress.status || "not started", extractionComplete],
-          ["Analysis", analysisPending ? `${analysisPending} pending` : (extractionComplete ? "done" : "not started"), extractionComplete],
+          ["Analysis", extractionComplete ? "done" : (pipelineProgress.status === "running" ? "running" : "not started"), extractionComplete],
           ["Outputs", outputs.length || "not started", outputsStageComplete],
         ].map(([label, value, complete]) => (
           <div key={String(label)} className="flex items-center gap-2">
@@ -2206,7 +2159,6 @@ export default function SopUpliftPage() {
               <RefreshCw className={`h-3.5 w-3.5 ${busy === "rerun-analysis" ? "animate-spin" : ""}`} />
               Rerun analysis
             </Button>
-            <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => continueAnalysis()} disabled={!readiness.can_analyze || !uploadStageComplete || busy === "analysis"}>Continue Analysis</Button>
           </div>
         </div>
         <NativeDocumentViewer
@@ -2216,8 +2168,6 @@ export default function SopUpliftPage() {
           highlights={selectedReviewHighlights}
           suggestions={selectedReviewSuggestions}
           hasCorruptText={selectedReviewHasCorruptText}
-          canAnalyze={readiness.can_analyze && uploadStageComplete && busy !== "analysis"}
-          onAnalyzeSection={(anchorId) => continueAnalysis([anchorId])}
           onRepairPreview={() => repairPreview()}
         />
       </SopPreview>

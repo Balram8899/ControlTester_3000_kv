@@ -10,6 +10,21 @@ services:
     volumes:
       - mongodb_data:/data/db
 
+  redis:
+    image: redis:7-alpine
+    container_name: redis_Trace_KV
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - appnet
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
   fastapi_api:
     build:
       context: .                    # must be root of repo
@@ -42,6 +57,13 @@ services:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - ANTHROPIC_LLM_MODEL=${ANTHROPIC_LLM_MODEL:-claude-opus-4-7}
       - MONGO_URI=mongodb://mongodb:27017
+      - DOCUMENT_UPLIFT_ENABLED=${DOCUMENT_UPLIFT_ENABLED:-false}
+      - TASK_BACKEND=${TASK_BACKEND:-asyncio}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL:-redis://redis:6379/0}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND:-redis://redis:6379/0}
+      - DOCUMENT_UPLIFT_ASYNC_WORKERS=${DOCUMENT_UPLIFT_ASYNC_WORKERS:-2}
+      - DOCUMENT_UPLIFT_QUEUE_MAXSIZE=${DOCUMENT_UPLIFT_QUEUE_MAXSIZE:-20}
+      - DOCUMENT_UPLIFT_PIPELINE_TIMEOUT_SECONDS=${DOCUMENT_UPLIFT_PIPELINE_TIMEOUT_SECONDS:-3600}
       - SOP_UPLIFT_DEFAULT_BATCH_SIZE=${SOP_UPLIFT_DEFAULT_BATCH_SIZE:-5}
       - SOP_UPLIFT_MAX_CHUNK_CHARS=${SOP_UPLIFT_MAX_CHUNK_CHARS:-4000}
       - SOP_UPLIFT_MAX_CHUNKS_PER_CASE=${SOP_UPLIFT_MAX_CHUNKS_PER_CASE:-200}
@@ -52,6 +74,8 @@ services:
     depends_on:
       mongodb:
         condition: service_started
+      redis:
+        condition: service_healthy
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
@@ -62,6 +86,59 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    container_name: celery_worker_Trace_KV
+    restart: unless-stopped
+    command:
+      - celery
+      - -A
+      - utils.sop_processing.celery_app
+      - worker
+      - --loglevel=INFO
+      - -Q
+      - document_uplift,conversion,chunking,excel,llm,analysis,outputs
+    environment:
+      - LLM_PROVIDER=${LLM_PROVIDER:-gemini}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - GOOGLE_LLM_MODEL=${GOOGLE_LLM_MODEL:-gemini-3-flash-preview}
+      - GOOGLE_EMBEDDING_MODEL=${GOOGLE_EMBEDDING_MODEL:-models/text-embedding-004}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      - OLLAMA_LLM_MODEL=${OLLAMA_LLM_MODEL:-llama3:latest}
+      - OLLAMA_EMBEDDING_MODEL=${OLLAMA_EMBEDDING_MODEL:-nomic-embed-text:latest}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_LLM_MODEL=${OPENAI_LLM_MODEL:-gpt-5.5}
+      - MOONSHOT_API_KEY=${MOONSHOT_API_KEY}
+      - KIMI_API_KEY=${KIMI_API_KEY}
+      - KIMI_BASE_URL=${KIMI_BASE_URL:-https://api.moonshot.ai/v1}
+      - KIMI_LLM_MODEL=${KIMI_LLM_MODEL:-kimi-k2.6}
+      - KIMI_TEMPERATURE=${KIMI_TEMPERATURE:-0.2}
+      - KIMI_THINKING=${KIMI_THINKING:-disabled}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - DEEPSEEK_BASE_URL=${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
+      - DEEPSEEK_LLM_MODEL=${DEEPSEEK_LLM_MODEL:-deepseek-v4-pro}
+      - DEEPSEEK_TEMPERATURE=${DEEPSEEK_TEMPERATURE:-0.2}
+      - DEEPSEEK_THINKING=${DEEPSEEK_THINKING:-enabled}
+      - DEEPSEEK_REASONING_EFFORT=${DEEPSEEK_REASONING_EFFORT:-high}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - ANTHROPIC_LLM_MODEL=${ANTHROPIC_LLM_MODEL:-claude-opus-4-7}
+      - MONGO_URI=mongodb://mongodb:27017
+      - DOCUMENT_UPLIFT_ENABLED=${DOCUMENT_UPLIFT_ENABLED:-false}
+      - TASK_BACKEND=celery
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL:-redis://redis:6379/0}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND:-redis://redis:6379/0}
+    depends_on:
+      mongodb:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - appnet
 
   web_ui_agent:
     build:

@@ -4,7 +4,7 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 
 ## Project Overview
 
-**TRACE** (ControlTester 3000) is a local cybersecurity audit and compliance platform for internal auditors. It uses an LLM (Gemini by default, Ollama locally) with RAG to:
+**TRACE** (ControlTester 3000) is a local cybersecurity audit and compliance platform for internal auditors. It uses an LLM (Gemini/Anthropic/OpenAI by default, Ollama locally) with RAG to:
 
 - Ingest and manage control libraries, regulatory frameworks, and risk frameworks
 - Run structured risk assessments via LLM-assisted questionnaires

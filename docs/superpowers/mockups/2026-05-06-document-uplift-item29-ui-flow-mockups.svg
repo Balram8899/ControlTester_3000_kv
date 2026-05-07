@@ -1,0 +1,289 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="2450" viewBox="0 0 1800 2450" role="img" aria-labelledby="title desc">
+  <title id="title">Document Uplift Item 29 UI Flow Mockups</title>
+  <desc id="desc">Three KPMG TRACE Document Uplift UI mockups showing case list, upload and pipeline progress, and suggestion review with output controls.</desc>
+  <defs>
+    <linearGradient id="sidebar" x1="0" y1="0" x2="0" y2="850">
+      <stop offset="0" stop-color="#071C33"/>
+      <stop offset="1" stop-color="#031326"/>
+    </linearGradient>
+    <linearGradient id="active" x1="0" y1="0" x2="180" y2="0">
+      <stop offset="0" stop-color="#00B8F5" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#1E49E2" stop-opacity="0.08"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-12%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#0C233C" flood-opacity="0.14"/>
+    </filter>
+    <style>
+      .font { font-family: Arial, Helvetica, sans-serif; }
+      .h1 { fill:#0C233C; font-size:30px; font-weight:700; letter-spacing:-.5px; }
+      .h2 { fill:#0C233C; font-size:20px; font-weight:700; }
+      .h3 { fill:#0C233C; font-size:15px; font-weight:700; }
+      .body { fill:#5A6478; font-size:13px; }
+      .small { fill:#8492A6; font-size:11px; }
+      .label { fill:#00338D; font-size:10px; font-weight:700; letter-spacing:1.8px; }
+      .white { fill:#FFFFFF; }
+      .blue { fill:#00338D; }
+      .line { stroke:#DDE5F0; stroke-width:1; }
+      .card { fill:#FFFFFF; stroke:#DDE5F0; stroke-width:1; }
+      .btn { fill:#064BB4; }
+      .btn2 { fill:#FFFFFF; stroke:#BFD0E6; stroke-width:1; }
+      .input { fill:#FFFFFF; stroke:#CAD7E8; stroke-width:1; }
+      .chip { fill:#EEF2FF; stroke:#C9D7FF; stroke-width:1; }
+      .green { fill:#009A44; }
+      .amber { fill:#EAAA00; }
+      .red { fill:#E5001B; }
+      .nav { fill:#C8D8F0; font-size:12px; }
+      .nav-active { fill:#FFFFFF; font-size:12px; font-weight:700; }
+    </style>
+  </defs>
+
+  <rect width="1800" height="2450" fill="#EEF2F7"/>
+  <text class="font h1" x="60" y="52">Document Uplift - Item 29 UI Mockups</text>
+  <text class="font body" x="60" y="78">Review board before TSX implementation. The existing SOP Uplift stays separate; this is the new /document-uplift feature.</text>
+
+  <!-- Screen 1 -->
+  <g transform="translate(60 120)">
+    <text class="font label" x="0" y="-18">SCREEN 1</text>
+    <text class="font h2" x="92" y="-18">Case List + Create Case</text>
+    <rect width="1680" height="640" rx="18" fill="#F8FAFD" stroke="#D9E3F0"/>
+    <rect width="206" height="640" rx="18" fill="url(#sidebar)"/>
+    <text class="font white" x="22" y="42" font-size="24" font-weight="700">KPMG</text>
+    <text class="font" x="86" y="42" fill="#1E49E2" font-size="24">|</text>
+    <text class="font" x="110" y="42" fill="#00B8F5" font-size="24" font-weight="700">TRACE</text>
+    <text class="font nav" x="28" y="100">Dashboard</text>
+    <text class="font nav" x="28" y="136">Regulatory Library</text>
+    <text class="font nav" x="28" y="172">Controls Library</text>
+    <text class="font nav" x="28" y="208">SOP Uplift</text>
+    <rect x="12" y="226" width="182" height="42" rx="9" fill="url(#active)"/>
+    <text class="font nav-active" x="28" y="252">Document Uplift</text>
+    <rect x="140" y="235" width="38" height="18" rx="9" fill="#1E49E2"/>
+    <text class="font white" x="159" y="248" font-size="9" font-weight="700" text-anchor="middle">NEW</text>
+    <text class="font nav" x="28" y="304">Chat</text>
+    <text class="font nav" x="28" y="340">Settings</text>
+
+    <rect x="206" y="0" width="1474" height="66" fill="#FFFFFF"/>
+    <text class="font body" x="236" y="40">Document Uplift / Cases</text>
+    <rect x="1440" y="18" width="170" height="34" rx="8" fill="#064BB4"/>
+    <text class="font white" x="1525" y="40" font-size="13" font-weight="700" text-anchor="middle">Create Case</text>
+
+    <text class="font h1" x="236" y="118">Document Uplift</text>
+    <text class="font body" x="236" y="144">Upload SOPs, RCMs, risk registers, evidence, and diagrams into a governed uplift workflow.</text>
+    <g transform="translate(236 182)">
+      <rect class="card" width="240" height="88" rx="8"/>
+      <text class="font small" x="18" y="28">OPEN CASES</text>
+      <text class="font h1" x="18" y="66">12</text>
+      <rect class="card" x="260" width="240" height="88" rx="8"/>
+      <text class="font small" x="278" y="28">REVIEW READY</text>
+      <text class="font h1" x="278" y="66">4</text>
+      <rect class="card" x="520" width="240" height="88" rx="8"/>
+      <text class="font small" x="538" y="28">OUTPUTS READY</text>
+      <text class="font h1" x="538" y="66">3</text>
+      <rect class="card" x="780" width="240" height="88" rx="8"/>
+      <text class="font small" x="798" y="28">AVG LLM CALLS</text>
+      <text class="font h1" x="798" y="66">61</text>
+    </g>
+
+    <g filter="url(#shadow)">
+      <rect class="card" x="236" y="310" width="630" height="270" rx="10"/>
+      <rect class="card" x="890" y="310" width="650" height="270" rx="10"/>
+    </g>
+    <text class="font h2" x="260" y="348">Recent Cases</text>
+    <rect class="input" x="260" y="370" width="570" height="38" rx="8"/>
+    <text class="font small" x="278" y="394">Search cases...</text>
+    <g transform="translate(260 430)">
+      <rect width="570" height="46" rx="8" fill="#F6F8FC"/>
+      <text class="font h3" x="16" y="29">Asset and wealth management KYC</text>
+      <rect x="378" y="13" width="82" height="20" rx="10" fill="#FFFBEB"/>
+      <text class="font" x="419" y="27" fill="#7A5400" font-size="10" font-weight="700" text-anchor="middle">IN PROGRESS</text>
+      <text class="font small" x="482" y="29">16 open</text>
+      <rect y="58" width="570" height="46" rx="8" fill="#FFFFFF" stroke="#E1E8F2"/>
+      <text class="font h3" x="16" y="87">Payments operations SOP uplift</text>
+      <rect x="378" y="71" width="82" height="20" rx="10" fill="#EDFBF5"/>
+      <text class="font" x="419" y="85" fill="#007A3D" font-size="10" font-weight="700" text-anchor="middle">COMPLETE</text>
+      <text class="font small" x="482" y="87">3 outputs</text>
+      <rect y="116" width="570" height="46" rx="8" fill="#FFFFFF" stroke="#E1E8F2"/>
+      <text class="font h3" x="16" y="145">Vendor onboarding controls refresh</text>
+      <rect x="378" y="129" width="82" height="20" rx="10" fill="#EEF2FF"/>
+      <text class="font" x="419" y="143" fill="#00338D" font-size="10" font-weight="700" text-anchor="middle">DRAFT</text>
+      <text class="font small" x="482" y="145">5 files</text>
+    </g>
+
+    <text class="font h2" x="914" y="348">Create New Case</text>
+    <text class="font small" x="914" y="376">TITLE</text>
+    <rect class="input" x="914" y="388" width="580" height="38" rx="8"/>
+    <text class="font body" x="932" y="412">Asset and wealth management</text>
+    <text class="font small" x="914" y="454">PROCESS NAME</text>
+    <rect class="input" x="914" y="466" width="580" height="38" rx="8"/>
+    <text class="font body" x="932" y="490">Client onboarding KYC</text>
+    <rect class="btn" x="914" y="528" width="140" height="38" rx="8"/>
+    <text class="font white" x="984" y="552" font-size="13" font-weight="700" text-anchor="middle">Create Case</text>
+  </g>
+
+  <!-- Screen 2 -->
+  <g transform="translate(60 845)">
+    <text class="font label" x="0" y="-18">SCREEN 2</text>
+    <text class="font h2" x="92" y="-18">Case Setup, Uploads, and Pipeline Progress</text>
+    <rect width="1680" height="700" rx="18" fill="#F8FAFD" stroke="#D9E3F0"/>
+    <rect width="206" height="700" rx="18" fill="url(#sidebar)"/>
+    <text class="font white" x="22" y="42" font-size="24" font-weight="700">KPMG</text>
+    <text class="font" x="86" y="42" fill="#1E49E2" font-size="24">|</text>
+    <text class="font" x="110" y="42" fill="#00B8F5" font-size="24" font-weight="700">TRACE</text>
+    <rect x="12" y="226" width="182" height="42" rx="9" fill="url(#active)"/>
+    <text class="font nav-active" x="28" y="252">Document Uplift</text>
+    <rect x="206" y="0" width="1474" height="66" fill="#FFFFFF"/>
+    <text class="font body" x="236" y="40">Document Uplift / Asset and wealth management</text>
+    <rect x="1370" y="18" width="130" height="34" rx="8" fill="#064BB4"/>
+    <text class="font white" x="1435" y="40" font-size="13" font-weight="700" text-anchor="middle">Run Pipeline</text>
+    <rect x="1514" y="18" width="96" height="34" rx="8" fill="#FFFFFF" stroke="#BFD0E6"/>
+    <text class="font blue" x="1562" y="40" font-size="12" font-weight="700" text-anchor="middle">Actions</text>
+
+    <text class="font h1" x="236" y="116">Asset and wealth management</text>
+    <rect x="598" y="92" width="88" height="26" rx="13" fill="#FFFBEB"/>
+    <text class="font" x="642" y="109" fill="#7A5400" font-size="11" font-weight="700" text-anchor="middle">IN PROGRESS</text>
+    <g transform="translate(236 150)">
+      <rect class="card" width="1350" height="62" rx="8"/>
+      <circle cx="30" cy="31" r="15" fill="#009A44"/>
+      <text class="font white" x="30" y="36" font-size="15" font-weight="700" text-anchor="middle">1</text>
+      <text class="font h3" x="58" y="28">Case setup and upload</text>
+      <text class="font small" x="58" y="46">Upload and tag documents</text>
+      <line class="line" x1="330" y1="0" x2="330" y2="62"/>
+      <circle cx="366" cy="31" r="15" fill="#009A44"/>
+      <text class="font white" x="366" y="36" font-size="15" font-weight="700" text-anchor="middle">2</text>
+      <text class="font h3" x="394" y="28">Extract and analyze</text>
+      <text class="font small" x="394" y="46">Running services</text>
+      <line class="line" x1="680" y1="0" x2="680" y2="62"/>
+      <circle cx="716" cy="31" r="15" fill="#1E49E2"/>
+      <text class="font white" x="716" y="36" font-size="15" font-weight="700" text-anchor="middle">3</text>
+      <text class="font h3" x="744" y="28">Review suggestions</text>
+      <text class="font small" x="744" y="46">Queued next</text>
+      <line class="line" x1="1010" y1="0" x2="1010" y2="62"/>
+      <circle cx="1046" cy="31" r="15" fill="#FFFFFF" stroke="#BFD0E6"/>
+      <text class="font blue" x="1046" y="36" font-size="15" font-weight="700" text-anchor="middle">4</text>
+      <text class="font h3" x="1074" y="28">Generate outputs</text>
+      <text class="font small" x="1074" y="46">Word and diagrams</text>
+    </g>
+
+    <g filter="url(#shadow)">
+      <rect class="card" x="236" y="250" width="390" height="390" rx="10"/>
+      <rect class="card" x="650" y="250" width="570" height="390" rx="10"/>
+      <rect class="card" x="1244" y="250" width="342" height="390" rx="10"/>
+    </g>
+    <text class="font h2" x="260" y="288">Case Explorer</text>
+    <rect class="input" x="260" y="310" width="330" height="36" rx="8"/>
+    <text class="font small" x="278" y="333">Search files...</text>
+    <g transform="translate(260 370)">
+      <rect width="330" height="44" rx="8" fill="#EEF2FF"/>
+      <text class="font h3" x="16" y="28">SOPs</text><text class="font small" x="294" y="28">1</text>
+      <rect y="54" width="330" height="44" rx="8" fill="#FFFFFF" stroke="#E1E8F2"/>
+      <text class="font h3" x="16" y="82">Risk / Control Matrices</text><text class="font small" x="294" y="82">1</text>
+      <rect y="108" width="330" height="44" rx="8" fill="#FFFFFF" stroke="#E1E8F2"/>
+      <text class="font h3" x="16" y="136">Risk Registers</text><text class="font small" x="294" y="136">2</text>
+      <rect y="162" width="330" height="44" rx="8" fill="#FFFFFF" stroke="#E1E8F2"/>
+      <text class="font h3" x="16" y="190">Evidence</text><text class="font small" x="294" y="190">1</text>
+    </g>
+
+    <text class="font h2" x="674" y="288">Upload and Tag Documents</text>
+    <rect x="674" y="318" width="510" height="126" rx="10" fill="#F7FAFE" stroke="#BFD0E6" stroke-dasharray="8 6"/>
+    <text class="font h3" x="929" y="372" text-anchor="middle">Drop files here or click to browse</text>
+    <text class="font small" x="929" y="395" text-anchor="middle">DOCX, PDF, XLSX, CSV, PNG, JPG</text>
+    <g transform="translate(674 470)">
+      <rect class="chip" width="146" height="30" rx="15"/><text class="font blue" x="73" y="20" text-anchor="middle" font-size="11" font-weight="700">Procedure SOP</text>
+      <rect class="chip" x="160" width="146" height="30" rx="15"/><text class="font blue" x="233" y="20" text-anchor="middle" font-size="11" font-weight="700">RCM / Controls</text>
+      <rect class="chip" x="320" width="146" height="30" rx="15"/><text class="font blue" x="393" y="20" text-anchor="middle" font-size="11" font-weight="700">Risk Register</text>
+      <rect class="btn" y="64" width="150" height="38" rx="8"/><text class="font white" x="75" y="88" font-size="13" font-weight="700" text-anchor="middle">Run Pipeline</text>
+    </g>
+
+    <text class="font h2" x="1268" y="288">Pipeline Progress</text>
+    <rect x="1268" y="322" width="282" height="10" rx="5" fill="#E6EDF7"/>
+    <rect x="1268" y="322" width="184" height="10" rx="5" fill="#1E49E2"/>
+    <text class="font small" x="1268" y="356">Conversion complete</text>
+    <text class="font small" x="1268" y="390">Excel row coverage: 97%</text>
+    <text class="font small" x="1268" y="424">Analysis pass: chunk 8 of 12</text>
+    <text class="font small" x="1268" y="458">Suggestions: 16 pending</text>
+    <rect x="1268" y="504" width="282" height="82" rx="8" fill="#EEF2FF" stroke="#C9D7FF"/>
+    <text class="font h3" x="1288" y="532">Budget</text>
+    <text class="font body" x="1288" y="558">39 of 80 LLM calls used</text>
+  </g>
+
+  <!-- Screen 3 -->
+  <g transform="translate(60 1630)">
+    <text class="font label" x="0" y="-18">SCREEN 3</text>
+    <text class="font h2" x="92" y="-18">Suggestion Review, Guardrails, and Outputs</text>
+    <rect width="1680" height="720" rx="18" fill="#F8FAFD" stroke="#D9E3F0"/>
+    <rect width="206" height="720" rx="18" fill="url(#sidebar)"/>
+    <text class="font white" x="22" y="42" font-size="24" font-weight="700">KPMG</text>
+    <text class="font" x="86" y="42" fill="#1E49E2" font-size="24">|</text>
+    <text class="font" x="110" y="42" fill="#00B8F5" font-size="24" font-weight="700">TRACE</text>
+    <rect x="12" y="226" width="182" height="42" rx="9" fill="url(#active)"/>
+    <text class="font nav-active" x="28" y="252">Document Uplift</text>
+    <rect x="206" y="0" width="1474" height="66" fill="#FFFFFF"/>
+    <text class="font body" x="236" y="40">Document Uplift / Asset and wealth management / Review Suggestions</text>
+    <rect x="1330" y="18" width="160" height="34" rx="8" fill="#064BB4"/>
+    <text class="font white" x="1410" y="40" font-size="13" font-weight="700" text-anchor="middle">Generate Outputs</text>
+
+    <text class="font h1" x="236" y="116">Review Suggestions</text>
+    <rect x="525" y="92" width="112" height="26" rx="13" fill="#EEF2FF"/>
+    <text class="font blue" x="581" y="109" font-size="11" font-weight="700" text-anchor="middle">16 OPEN</text>
+    <rect x="655" y="92" width="150" height="26" rx="13" fill="#EDFBF5"/>
+    <text class="font" x="730" y="109" fill="#007A3D" font-size="11" font-weight="700" text-anchor="middle">COST: $0.42</text>
+
+    <g filter="url(#shadow)">
+      <rect class="card" x="236" y="150" width="360" height="510" rx="10"/>
+      <rect class="card" x="620" y="150" width="590" height="510" rx="10"/>
+      <rect class="card" x="1234" y="150" width="352" height="510" rx="10"/>
+    </g>
+    <text class="font h2" x="260" y="188">Suggestion Queue</text>
+    <rect class="btn2" x="260" y="210" width="110" height="34" rx="8"/><text class="font blue" x="315" y="232" font-size="12" font-weight="700" text-anchor="middle">Accept All</text>
+    <rect class="btn2" x="382" y="210" width="110" height="34" rx="8"/><text class="font" x="437" y="232" fill="#E5001B" font-size="12" font-weight="700" text-anchor="middle">Reject All</text>
+    <g transform="translate(260 270)">
+      <rect width="300" height="72" rx="8" fill="#FFF7F7" stroke="#F4C4CA"/>
+      <text class="font red" x="16" y="26" font-size="11" font-weight="700">HIGH</text>
+      <text class="font h3" x="16" y="50">Define risk rating criteria</text>
+      <rect y="84" width="300" height="72" rx="8" fill="#FFFBEB" stroke="#F4DB91"/>
+      <text class="font" x="16" y="110" fill="#9A6B00" font-size="11" font-weight="700">MEDIUM</text>
+      <text class="font h3" x="16" y="134">Clarify retained evidence</text>
+      <rect y="168" width="300" height="72" rx="8" fill="#FFFFFF" stroke="#E1E8F2"/>
+      <text class="font" x="16" y="194" fill="#9A6B00" font-size="11" font-weight="700">MEDIUM</text>
+      <text class="font h3" x="16" y="218">Specify reporting timeframe</text>
+    </g>
+
+    <text class="font label" x="646" y="188">DOCUMENT REVIEW</text>
+    <text class="font h2" x="646" y="218">WM_Client_Onboarding_KYC_SOP_v3.1.docx</text>
+    <line class="line" x1="646" y1="246" x2="1178" y2="246"/>
+    <text class="font h2" x="646" y="290">3. Client Onboarding</text>
+    <text class="font body" x="646" y="324">All new relationships must be subject to KYC checks</text>
+    <rect x="964" y="304" width="152" height="22" rx="4" fill="#FEEBED"/>
+    <text class="font body" x="972" y="320">not older than 3 months</text>
+    <text class="font h3" x="646" y="370">Suggested change</text>
+    <rect x="646" y="390" width="520" height="96" rx="8" fill="#F7FAFE" stroke="#BFD0E6"/>
+    <text class="font body" x="666" y="422">Specify the maximum acceptable age for proof of address</text>
+    <text class="font body" x="666" y="448">and link it to the supporting RCM control.</text>
+    <rect class="btn" x="666" y="512" width="84" height="34" rx="8"/><text class="font white" x="708" y="534" font-size="12" font-weight="700" text-anchor="middle">Accept</text>
+    <rect class="btn2" x="764" y="512" width="84" height="34" rx="8"/><text class="font blue" x="806" y="534" font-size="12" font-weight="700" text-anchor="middle">Edit</text>
+    <rect class="btn2" x="862" y="512" width="84" height="34" rx="8"/><text class="font red" x="904" y="534" font-size="12" font-weight="700" text-anchor="middle">Reject</text>
+
+    <text class="font h2" x="1258" y="188">Source References</text>
+    <rect x="1258" y="216" width="292" height="78" rx="8" fill="#FFFFFF" stroke="#DDE5F0"/>
+    <text class="font h3" x="1278" y="244">SOP.docx - Page 1</text>
+    <text class="font small" x="1278" y="270">Verify proof of address not older than 3 months.</text>
+    <rect x="1258" y="308" width="292" height="78" rx="8" fill="#FFFFFF" stroke="#DDE5F0"/>
+    <text class="font h3" x="1278" y="336">RCM.xlsx - Controls!B14</text>
+    <text class="font small" x="1278" y="362">KYC-02 supports current address verification.</text>
+    <text class="font h2" x="1258" y="430">Generated Outputs</text>
+    <rect x="1258" y="458" width="292" height="46" rx="8" fill="#EDFBF5" stroke="#B8E7D0"/>
+    <text class="font h3" x="1278" y="486">Track-changes Word file</text>
+    <rect x="1258" y="516" width="292" height="46" rx="8" fill="#EDFBF5" stroke="#B8E7D0"/>
+    <text class="font h3" x="1278" y="544">Swimlane PNG/PDF</text>
+
+    <!-- Guardrail overlays on the same screen. -->
+    <rect x="338" y="475" width="320" height="148" rx="12" fill="#FFFFFF" stroke="#CAD7E8" filter="url(#shadow)"/>
+    <text class="font h3" x="362" y="510">Reject all suggestions?</text>
+    <text class="font body" x="362" y="538">Type REJECT_ALL before this action is enabled.</text>
+    <rect class="input" x="362" y="560" width="190" height="34" rx="8"/>
+    <text class="font small" x="378" y="582">REJECT_ALL</text>
+    <rect x="566" y="560" width="64" height="34" rx="8" fill="#E5001B"/>
+    <text class="font white" x="598" y="582" font-size="12" font-weight="700" text-anchor="middle">Reject</text>
+    <rect x="848" y="106" width="445" height="56" rx="10" fill="#FFFBEB" stroke="#E7CA6A" filter="url(#shadow)"/>
+    <text class="font h3" x="872" y="140">2 pending suggestions were auto-accepted before output generation.</text>
+  </g>
+</svg>

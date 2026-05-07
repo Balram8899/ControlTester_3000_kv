@@ -429,6 +429,27 @@ def test_markdown_conversion_preserves_docx_paragraphs_and_tables():
     assert "| C-1 | Monthly |" in conversion.markdown
 
 
+def test_markdown_conversion_interleaves_docx_tables_at_original_position():
+    document = Document()
+    document.add_heading("Client onboarding", level=1)
+    document.add_paragraph("The maker captures the client profile.")
+    table = document.add_table(rows=2, cols=2)
+    table.rows[0].cells[0].text = "Control ID"
+    table.rows[0].cells[1].text = "Evidence"
+    table.rows[1].cells[0].text = "C-2"
+    table.rows[1].cells[1].text = "KYC checklist"
+    document.add_paragraph("The checker records sign-off after reviewing the table.")
+    payload = BytesIO()
+    document.save(payload)
+
+    conversion = convert_bytes_to_markdown(payload.getvalue(), "client_onboarding.docx")
+
+    maker_index = conversion.markdown.index("The maker captures the client profile.")
+    table_index = conversion.markdown.index("| Control ID | Evidence |")
+    checker_index = conversion.markdown.index("The checker records sign-off after reviewing the table.")
+    assert maker_index < table_index < checker_index
+
+
 def test_markdown_conversion_preserves_xlsx_rows_as_markdown_tables():
     workbook = Workbook()
     sheet = workbook.active

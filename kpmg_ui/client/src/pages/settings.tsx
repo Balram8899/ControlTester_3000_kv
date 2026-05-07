@@ -3,6 +3,9 @@ import { CheckCircle2, Network, Eye, EyeOff } from "lucide-react";
 import { HIDEABLE_TABS } from "@/components/AppLayout";
 
 const NAV_HIDDEN_KEY = "nav_hidden_pages";
+const DOCUMENT_UPLIFT_DEFAULT_MAX_LLM_CALLS = 80;
+const DOCUMENT_UPLIFT_MIN_MAX_LLM_CALLS = 5;
+const DOCUMENT_UPLIFT_MAX_MAX_LLM_CALLS = 200;
 
 function readHiddenPages(): string[] {
   try { return JSON.parse(localStorage.getItem(NAV_HIDDEN_KEY) || "[]"); } catch { return []; }
@@ -55,6 +58,11 @@ interface LLMStatus {
   available_providers: string[];
 }
 
+interface DocumentUpliftConfig {
+  max_llm_calls_per_pipeline: number;
+  saved?: boolean;
+}
+
 export default function SettingsPage() {
   const [generalContextFiles, setGeneralContextFiles] = useState<ContextFile[]>([]);
   const [companyPolicyFiles, setCompanyPolicyFiles] = useState<ContextFile[]>([]);
@@ -77,6 +85,14 @@ export default function SettingsPage() {
   const [llmModel, setLlmModel] = useState<string>("");
   const [testResult, setTestResult] = useState<LLMStatus | null>(null);
   const [testLoading, setTestLoading] = useState(false);
+  const [documentUpliftMaxCalls, setDocumentUpliftMaxCalls] = useState(
+    String(DOCUMENT_UPLIFT_DEFAULT_MAX_LLM_CALLS),
+  );
+  const documentUpliftMaxCallsValue = Number.parseInt(documentUpliftMaxCalls, 10);
+  const documentUpliftMaxCallsValid =
+    Number.isFinite(documentUpliftMaxCallsValue) &&
+    documentUpliftMaxCallsValue >= DOCUMENT_UPLIFT_MIN_MAX_LLM_CALLS &&
+    documentUpliftMaxCallsValue <= DOCUMENT_UPLIFT_MAX_MAX_LLM_CALLS;
 
   const { data: llmStatus, isLoading: llmStatusLoading } = useQuery<LLMStatus>({
     queryKey: ["/api/settings/llm-status"],
@@ -132,6 +148,63 @@ export default function SettingsPage() {
     } finally {
       setTestLoading(false);
     }
+  };
+
+  const {
+    data: documentUpliftConfig,
+    isLoading: documentUpliftConfigLoading,
+    error: documentUpliftConfigError,
+  } = useQuery<DocumentUpliftConfig>({
+    queryKey: ["/api/settings/document-uplift-config"],
+    queryFn: async () => {
+      const res = await fetch("/api/settings/document-uplift-config");
+      if (!res.ok) throw new Error("Failed to fetch Document Uplift config");
+      return res.json();
+    },
+  });
+
+  useEffect(() => {
+    if (documentUpliftConfig) {
+      setDocumentUpliftMaxCalls(String(documentUpliftConfig.max_llm_calls_per_pipeline));
+    }
+  }, [documentUpliftConfig]);
+
+  const saveDocumentUpliftConfig = useMutation({
+    mutationFn: async (maxLlmCalls: number) => {
+      const res = await fetch("/api/settings/document-uplift-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ max_llm_calls_per_pipeline: maxLlmCalls }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || "Failed to save Document Uplift config");
+      }
+      return res.json() as Promise<DocumentUpliftConfig>;
+    },
+    onSuccess: (data) => {
+      setDocumentUpliftMaxCalls(String(data.max_llm_calls_per_pipeline));
+      toast({
+        title: "Pipeline controls saved",
+        description: `Document Uplift will allow up to ${data.max_llm_calls_per_pipeline} LLM calls per new run.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/settings/document-uplift-config"] });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Save failed", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const handleSaveDocumentUpliftConfig = () => {
+    if (!documentUpliftMaxCallsValid) {
+      toast({
+        title: "Invalid call limit",
+        description: `Enter a value between ${DOCUMENT_UPLIFT_MIN_MAX_LLM_CALLS} and ${DOCUMENT_UPLIFT_MAX_MAX_LLM_CALLS}.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    saveDocumentUpliftConfig.mutate(documentUpliftMaxCallsValue);
   };
 
   const loadedVectorstores = useRef<Set<string>>(new Set());
@@ -486,6 +559,64 @@ export default function SettingsPage() {
                       </span>
                     </div>
                   )}
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Document Uplift Pipeline Controls</CardTitle>
+              <CardDescription>
+                Set the LLM call cap used by new Document Uplift pipeline runs.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {documentUpliftConfigLoading && (
+                <p className="text-sm text-muted-foreground">Loading pipeline controls...</p>
+              )}
+              {documentUpliftConfigError && (
+                <p className="text-sm text-destructive">
+                  Failed to load Document Uplift controls.
+                </p>
+              )}
+              {!documentUpliftConfigLoading && !documentUpliftConfigError && (
+                <>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Max LLM Calls Per Pipeline
+                    </label>
+                    <input
+                      type="number"
+                      min={DOCUMENT_UPLIFT_MIN_MAX_LLM_CALLS}
+                      max={DOCUMENT_UPLIFT_MAX_MAX_LLM_CALLS}
+                      value={documentUpliftMaxCalls}
+                      onChange={(event) => setDocumentUpliftMaxCalls(event.target.value)}
+                      className="flex h-10 w-full max-w-xs rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                      data-testid="input-document-uplift-max-llm-calls"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Applies to future Document Uplift runs only. Existing case outputs remain unchanged.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      onClick={handleSaveDocumentUpliftConfig}
+                      disabled={saveDocumentUpliftConfig.isPending || !documentUpliftMaxCallsValid}
+                      data-testid="btn-save-document-uplift-config"
+                    >
+                      {saveDocumentUpliftConfig.isPending ? "Saving..." : "Save"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => saveDocumentUpliftConfig.mutate(DOCUMENT_UPLIFT_DEFAULT_MAX_LLM_CALLS)}
+                      disabled={saveDocumentUpliftConfig.isPending}
+                      data-testid="btn-reset-document-uplift-config"
+                    >
+                      Reset to 80
+                    </Button>
+                  </div>
                 </>
               )}
             </CardContent>

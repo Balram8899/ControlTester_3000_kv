@@ -5,6 +5,79 @@
 
 ---
 
+## 2026-05-07 Update - Document Uplift Domain-Agnostic Analysis Addendum
+
+- Scope: implemented the Checkpoint C addendum to broaden Document Uplift analysis beyond RCM-shaped evidence while preserving the original service architecture and keeping Document Uplift independent from `utils/sop_uplift/`.
+- Added `docs/document-uplift-severity-calculation.md` as a focused severity/confidence reference. The full architecture/components/processes document is intentionally deferred until the original Document Uplift plan is complete.
+- Added normalized fact/finding models in `utils/services/schemas.py`: `DocumentFact`, `NormalizedFinding`, `DiscoveryCandidate`, expanded severity vocabulary (`critical`, `high`, `medium`, `low`, `informational`), richer `SourceReference`, corpus-map extensions, and `agent_follow_up_questions`.
+- Added `utils/services/severity.py`, `utils/services/semantic_roles.py`, and `utils/services/generic_findings.py` for deterministic severity helpers, semantic field-role classification, generic structured-document fact generation, seed finding detection, discovery routing, and suggestion mapping.
+- Updated `utils/services/excel_pipeline.py` so non-RCM structured documents preserve `_raw_attributes`, `_semantic_roles`, and `_source`, emit normalized facts, and can generate generic high-confidence suggestions without requiring `risk_id` or `control_id`.
+- Updated `utils/sop_processing/case_store.py` and `utils/sop_processing/pipeline.py` to persist detailed facts in a separate `document_uplift_facts` collection, keep large facts outside `document_uplift_cases`, merge generic finding summaries, and route low-confidence ambiguity to follow-up questions rather than uplift suggestions.
+- Updated `utils/services/analysis.py` to preserve the full severity vocabulary from LLM suggestions and to map unknown raw suggestion categories back to `process_improvement` instead of dropping them.
+- Updated `kpmg_ui/client/src/pages/document-uplift.tsx` and added `kpmg_ui/client/src/document-uplift.severity.test.ts` so the UI supports and sorts `critical`, `high`, `medium`, `low`, and `informational`.
+- Added/expanded coverage in `tests/services/test_severity.py`, `tests/services/test_schemas.py`, `tests/services/test_semantic_roles.py`, `tests/services/test_generic_findings.py`, `tests/services/test_excel_pipeline.py`, `tests/services/test_analysis.py`, and `tests/test_document_uplift_pipeline.py`.
+- Verification run: 92 backend tests passed across the Document Uplift addendum, API, and settings slice; frontend guards `document-uplift.item29`, `document-uplift.item30`, and `document-uplift.severity` passed; `npm run check` and `npm run build` passed with existing PostCSS/chunk-size warnings.
+- Remaining original-plan gates from that checkpoint: manual Word 365 review, T8 human usefulness review, and new T9 cross-domain usefulness review.
+
+---
+
+## 2026-05-07 Update - Document Uplift Items 32 and 33 Queue Infrastructure
+
+- Scope: completed the remaining technical infrastructure items from the original Document Uplift plan: Item 32 Celery/Redis wiring and Item 33 final asyncio queue.
+- Added `redis` and `celery_worker` services to `docker-compose.yml`. The Celery worker uses the existing API image and starts `celery -A utils.sop_processing.celery_app worker` over the `document_uplift,conversion,chunking,excel,llm,analysis,outputs` queues.
+- Added `CELERY_BROKER_URL`, `CELERY_RESULT_BACKEND`, `TASK_BACKEND`, `DOCUMENT_UPLIFT_ASYNC_WORKERS`, `DOCUMENT_UPLIFT_QUEUE_MAXSIZE`, and `DOCUMENT_UPLIFT_PIPELINE_TIMEOUT_SECONDS` environment settings.
+- Added `celery==5.4.0` and `redis==5.0.4` to both API and root requirements.
+- Added `utils/sop_processing/celery_app.py` with the Celery app, task routes, full Document Uplift pipeline task, and small-result service wrappers. Redis never receives markdown, chunk arrays, or full analysis payloads.
+- Replaced the interim asyncio `to_thread` dispatch path in `utils/sop_processing/pipeline.py` with `AsyncPipelineQueue`: bounded queue, fixed workers, duplicate-case protection, back-pressure errors, graceful shutdown, and `run_in_executor` for blocking pipeline work.
+- FastAPI lifespan in `api/main.py` now starts/stops the async queue when `TASK_BACKEND=asyncio`; celery mode enqueues through Celery and keeps pipeline work outside the API process.
+- `DocumentUpliftCaseStore.get_case()` now marks stale running jobs as failed after `DOCUMENT_UPLIFT_PIPELINE_TIMEOUT_SECONDS`.
+- Router dispatch errors map to HTTP 409 for duplicate queued/running cases and HTTP 429 when the async queue is full.
+- Added tests in `tests/test_document_uplift_infrastructure.py` and expanded `tests/test_document_uplift_pipeline.py` for Celery dispatch, queue behavior, executor usage, stale timeout, and Compose/requirements wiring.
+- Verification run: 99 backend tests passed across the Document Uplift, infrastructure, API, and settings slice; frontend guards passed; `npm run check`, `npm run build`, `docker compose config --quiet`, and `docker compose --dry-run build fastapi_api celery_worker` passed.
+- Remaining gates are human-only: manual Word 365 review, T8 suggestion usefulness review, and T9 cross-domain usefulness review. The final overall architecture document remains deferred until those gates are complete.
+
+---
+
+## 2026-05-06 Update - Document Uplift Service Foundation
+
+- Scope: implemented Track B Items 7 and 8 only for the new service-based Document Uplift feature; existing SOP Uplift code remains untouched.
+- Added `utils/services/__init__.py` and `utils/services/schemas.py` as the shared stateless schema layer for Document Uplift services.
+- Added `tests/services/test_schemas.py` with schema contract coverage for identity literals, conversion/chunk defaults, LLM cost records, Excel corpus maps, suggestions, `AnalysisResult`, swimlane output, and `DocumentUpliftCase` defaults.
+- Added `utils/services/conversion.py` as the new stateless conversion service for DOCX, PDF, Excel, text, corruption detection, and DOCX style extraction for procedure/policy tags.
+- Added `tests/services/test_conversion.py` with contract coverage for DOCX markdown, procedure/policy style profiles, Excel routing as `xlsx`, unsupported extensions, and corrupt PDF partial status.
+- Added `utils/services/llm_orchestrator.py` as the new stateless LLM orchestration service with budget checks, JSON retry, call records, cost calculation, and model-aware batch sizing.
+- Added `tests/services/test_llm_orchestrator.py` with contract coverage for budget exhaustion, successful JSON calls, call telemetry, malformed JSON retry, Ollama zero-cost, Gemini Flash cost, and batch sizing.
+- Added `utils/services/excel_pipeline.py` as the new structured Excel pipeline with schema detection, merged-cell propagation, row completeness scanning, and corpus map output.
+- Added `tests/services/test_excel_pipeline.py` with coverage for 500-row RCM processing, ownership gaps, merged cells, row-2 headers, multi-sheet handling, empty-sheet skipping, budget skipping, corpus maps, and capped RowGap-derived suggestions.
+- Added `utils/services/analysis.py` as the Item 13 skeleton `analyze_documents()` interface only; full Stage 1 extraction remains deferred to later plan items.
+- Added `tests/services/test_analysis.py` with skeleton success and budget-exhaustion coverage.
+- Added `utils/sop_processing/sse_events.py` as the Item 18 SSE formatting helper only; no router endpoint was added.
+- Added `tests/sop_processing/test_sse_events.py` with SSE event formatting coverage.
+- Added Document Uplift budget config helpers in `utils/llm_config_store.py`: `get_document_uplift_config()` and `save_document_uplift_config()`, backed by MongoDB and seeded from `MAX_LLM_CALLS_PER_PIPELINE` only when absent.
+- Added `tests/test_settings.py` coverage for reading the DB budget, env seeding, and clamping to the 5-200 range.
+- Added `utils/sop_processing/content_sanitizer.py` and `utils/sop_processing/prompts.py` for Item 20, including FD7 delimiter wrapping, injection-risk screening, truncation, all eight prompt templates, and prompt version constants.
+- Added `tests/sop_processing/test_content_sanitizer.py` and `tests/test_prompts.py` coverage for sanitizer behavior and prompt contracts.
+- Plan/schema correction: Item 11 required a capped `Suggestion` list from RowGap entries, so `ExcelPipelineResult.suggestions` was added to `utils/services/schemas.py` and documented in the plan’s Topic 1 block.
+- Build tracking: `docs/document-uplift-build-log.md` marks Items 7, 8, 9, 10, 11, 13, 18, 19, and 20 complete and records the red/green TDD evidence.
+- Verification: `python -m pytest tests/test_settings.py tests/test_prompts.py tests/services/ tests/sop_processing/ -v` reports 66 passed with one Pydantic warning for the plan-required `SheetResult.schema` field name.
+- Next Document Uplift item: Item 16, but it is blocked because the implementation table lists deferred Track A Item 4 as a dependency.
+
+---
+
+## 2026-05-06 Update - Risk Assessment Page-Local UI Overhaul
+
+- Scope: page-local redesign of `kpmg_ui/client/src/pages/risk-assessment.tsx`; route, providers, backend contracts, and all non-risk-assessment features were deliberately left unchanged.
+- New page structure: a TRACE-style assessment workspace with a session rail, dashboard state, create-assessment workspace, and a clearer selected-assessment workflow.
+- Preserved workflow stages: `Create`, `Questionnaire`, `Analyse`, `Risks`, `Controls`, `Residual`, and `Report`.
+- Functionality preserved: assessment creation, asset loading, section loading, batch questionnaire submission, automatic analysis trigger, control suggestions, control application, residual fetch, report generation, and direct assessment refresh.
+- Data sources preserved: `useRiskAssessment()`, `useAssetRegistry()`, and the existing direct refresh call to `GET /api/risk-assessment/{id}`.
+- New browser smoke markers: `data-risk-assessment-page`, `data-risk-assessment-rail`, `data-risk-assessment-dashboard`, `data-risk-assessment-create`, `data-risk-assessment-stepper`, `data-risk-assessment-questionnaire`, `data-risk-assessment-analysis`, `data-risk-assessment-risks`, `data-risk-assessment-controls`, `data-risk-assessment-residual`, and `data-risk-assessment-report`.
+- Design references added: `docs/ui-overhaul/risk-assessment-design.md`, `docs/ui-overhaul/risk-assessment-mockups.html`, `docs/ui-overhaul/risk-assessment-mockups-board-1.svg`, `docs/ui-overhaul/risk-assessment-mockups-board-2.svg`, and the Risk Assessment entry in `docs/ui-overhaul/ui-overhaul-log.md`.
+- Regression coverage added: `kpmg_ui/client/src/risk-assessment.overhaul.test.ts`.
+- Verification run: `node --import tsx .\client\src\risk-assessment.overhaul.test.ts`, `npm run check`, and `npm run build`. Build completed with the existing Vite chunk-size and PostCSS `from` option warnings only.
+
+---
+
 ## 2026-05-04 Update - SOP Uplift Suggestion Parsing Robustness
 
 - Root cause: useful LLM suggestion responses could be discarded when the model returned structured warning objects instead of plain warning strings. The same strict parsing could invalidate full-document extraction when role/lane hints were returned as objects.
@@ -23,6 +96,17 @@
 - Design references created: `docs/ui-overhaul/dashboard-design.md` and `docs/ui-overhaul/ui-overhaul-log.md`.
 - Regression coverage: `kpmg_ui/client/src/dashboard.overhaul.test.ts` asserts the tab model, default tab, smoke-test tab attributes, preserved status endpoint, no dashboard-summary endpoint, and reference docs.
 - Verification run: `node --import tsx .\client\src\dashboard.overhaul.test.ts`, `npm run check`, `npm run build`, plus Playwright smoke on `http://localhost:5175/` for sign-in, tab switching, refresh, mobile resize, and browser console errors.
+
+## 2026-05-07 Update - Dashboard Option 3 Chart-System Refinement
+
+- Scope: dashboard-only refinement of `kpmg_ui/client/src/pages/dashboard.tsx` after live review of label collisions, undersized donut charts, uneven chart motion, low-value `Chat Activity`, and an orphaned `Testing Sessions By Status` card on `Overview`.
+- New chart-system behavior: shared bar-chart label density modes, centered framed donut charts with total readouts, shared horizontal/segmented fill animation, and tightened chart card composition across tabs.
+- New tab composition:
+  - `Overview`: four KPI cards, `Assets By Criticality`, `Assessments By Status`, `Issues By Severity`, `Reports By Type`, and `Domain Coverage`.
+  - `Workflows`: module health row plus `Testing Sessions By Status`, `Control Test Results`, `SOP Cases By Status`, and `Reports By Type`.
+  - `Chat Activity` removed from the dashboard.
+- Data sources preserved: `useLibraryMetrics()`, `useCrossNav()`, `useAssetRegistry()`, `useRiskAssessment()`, `useIssueManagement()`, `/api/settings/system-status`, `/api/control-testing`, `/api/rcm-reports`, `/api/sop-uplift/cases`, `/api/frameworks-library/documents`, `/api/frameworks-library/all-elements`, and existing `setLocation(...)` navigation.
+- Design references added: `docs/ui-overhaul/dashboard-option-3-mockups.html` and `docs/ui-overhaul/dashboard-option-3-chart-system.html`. Existing dashboard reference docs were updated to match the shipped composition.
 
 ---
 
@@ -486,3 +570,138 @@ For future debugging and maintenance sessions, follow this working agreement:
 8. **Controls ingest** — Excel column detection is flexible; handles CCF (`CCF ID`), ISO (`Control Reference`), and generic (`ID`, `Name`) headers. See `parse_rcm_excel` in `rcm_compliance_analyzer.py`.
 9. **Risk assessment responses** — ALL questionnaire answers (including N/A) are now submitted to backend. The analyse endpoint proceeds even with empty responses.
 10. **Docker service name** — the web UI container is named `web_ui_agent` in docker-compose but runs as `agent_assess_web`.
+
+---
+
+## 16. SOP / Document Uplift Plan Progress - 2026-05-06
+
+Implemented Track A Items 1-6, 12, 14, and 15 from `docs/superpowers/plans/2026-05-05-sop-uplift-scale-quality-plan.md`.
+
+Key changes:
+- SOP Uplift output storage now fails loudly on GridFS write errors and stores generated output metadata without `content_b64`.
+- SOP full-document prompt ceiling is 20,000 chars, and section routing excludes obvious boilerplate sections before LLM extraction.
+- SOP pipeline runs have a per-case mutex, stale-running detection, and `TASK_BACKEND` dispatch abstraction with `asyncio` local mode and explicit Celery stub.
+- DOCX table conversion now preserves embedded table position for both `utils/sop_uplift/markdown_ingestion.py` and the independent `utils/services/conversion.py` clone.
+- SOP schema v2 split storage is in `utils/sop_uplift/case_store.py`: new cases keep markdown/anchors/chunks in `sop_markdown`, `sop_anchors`, and `sop_chunks`; `get_case_content()` hydrates schema v1 and v2 cases.
+- Offline migration script added at `scripts/migrate_sop_schema_v2.py` with rollback-safe write ordering and validation/report support.
+
+Current checkpoint:
+- Item 17 is frontend-facing. Mockups were created at `docs/superpowers/mockups/2026-05-06-sop-uplift-item17-run-pipeline-mockups.md`.
+- Do not edit `kpmg_ui/client/src/pages/sop-uplift.tsx` for Item 17 until the human reviews those mockups.
+
+---
+
+## 17. Document Uplift Item 28 Settings Controls - 2026-05-06
+
+Implemented Item 28 from `docs/superpowers/plans/2026-05-05-sop-uplift-scale-quality-plan.md`.
+
+Key changes:
+- Added `GET /settings/document-uplift-config` and `POST /settings/document-uplift-config` in `api/routers/settings.py`.
+- The endpoints use the existing MongoDB-backed `utils.llm_config_store` Document Uplift budget config helpers seeded by `MAX_LLM_CALLS_PER_PIPELINE`.
+- Added the Settings page card "Document Uplift Pipeline Controls" below the existing LLM Provider card, without replacing LLM Provider, LLM Model, context upload, or Navigation Visibility.
+- Added frontend source coverage in `kpmg_ui/client/src/pages/settings.document-uplift-config.test.ts`.
+
+Verification:
+- `python -m pytest tests\test_settings.py tests\test_document_uplift_api.py -v` passed.
+- `node --import tsx .\client\src\pages\settings.document-uplift-config.test.ts` passed.
+- `npm run check` and `npm run build` passed.
+
+Current checkpoint:
+- Item 29 mockups were approved and Item 29 was implemented; see section 18 below.
+
+---
+
+## 18. Document Uplift Item 29 Frontend Page - 2026-05-06
+
+Implemented Item 29 from `docs/superpowers/plans/2026-05-05-sop-uplift-scale-quality-plan.md` after human approval of the Item 29 mockups.
+
+Key changes:
+- Added `/document-uplift` route in `kpmg_ui/client/src/App.tsx`.
+- Added a new Document Uplift sidebar entry with `NEW` badge in `kpmg_ui/client/src/components/AppLayout.tsx`.
+- Kept SOP Uplift visible, with a tooltip noting it is superseded by Document Uplift.
+- Added `kpmg_ui/client/src/pages/document-uplift.tsx` with case explorer/create, upload and tag workflow, pipeline run/generate controls, suggestion queue, document review/edit/reject/accept actions, source references, generated outputs, cost badge, reject-all confirmation, and auto-accepted warning display.
+- Added source coverage in `kpmg_ui/client/src/document-uplift.item29.test.ts`.
+
+Verification:
+- `node --import tsx .\client\src\document-uplift.item29.test.ts` passed.
+- `npm run check` passed.
+- `npm run build` passed with existing PostCSS `from` and large chunk warnings.
+
+Current checkpoint:
+- Item 29 is complete.
+- Next plan item is Item 30: add the Document Uplift SSE endpoint and wire `EventSource` in `document-uplift.tsx` for live progress updates.
+
+---
+
+## 19. Document Uplift Item 30 SSE Progress - 2026-05-06
+
+Implemented Item 30 from `docs/superpowers/plans/2026-05-05-sop-uplift-scale-quality-plan.md`.
+
+Key changes:
+- Added `GET /document-uplift/cases/{case_id}/pipeline/stream` in `api/routers/document_uplift.py`.
+- The stream uses `utils.sop_processing.sse_events.yield_sse_event()` and emits `stage`, `progress`, `complete`, and `error` events from persisted case state.
+- Wired `EventSource` in `kpmg_ui/client/src/pages/document-uplift.tsx`.
+- The UI maps SSE `step` values to readable labels and updates the pipeline progress bar; existing polling/refetch remains as fallback.
+- Added backend and frontend coverage in `tests/test_document_uplift_api.py` and `kpmg_ui/client/src/document-uplift.item30.test.ts`.
+
+Verification:
+- `python -m pytest tests\test_document_uplift_api.py -v` passed.
+- `node --import tsx .\client\src\document-uplift.item29.test.ts` passed.
+- `node --import tsx .\client\src\document-uplift.item30.test.ts` passed.
+- `npm run check` and `npm run build` passed.
+
+Current checkpoint:
+- Items 29 and 30 are complete.
+- Next plan item is Item 31: cross-document data-flow integration test before Checkpoint C.
+
+---
+
+## 20. Document Uplift Item 31 Cross-Document Data Flow - 2026-05-06
+
+Implemented Item 31 from `docs/superpowers/plans/2026-05-05-sop-uplift-scale-quality-plan.md`.
+
+Key changes:
+- Added `tests/test_document_uplift_pipeline.py::test_cross_document_corpus_map_flows_from_excel_to_analysis`.
+- The test runs Stage 1 with a real in-memory Excel RCM through `utils.services.excel_pipeline` and real `utils.services.analysis` flow, with deterministic mocked LLM responses.
+- `AnalysisResult` now carries optional `corpus_map`.
+- `utils/services/analysis.py` derives `sop_to_control_map` from process steps that include `anchor_id` and control identifiers.
+- `utils/sop_processing/pipeline.py` persists both Excel-derived risk/evidence mappings and analysis-derived SOP/control mappings into the case `corpus_map`.
+
+Verification:
+- `python -m pytest tests\test_document_uplift_pipeline.py -v` passed.
+- `python -m pytest tests\services\test_analysis.py tests\services\test_excel_pipeline.py -v` passed.
+- `python -m pytest tests\test_document_uplift_api.py -v` passed.
+
+Current checkpoint:
+- Item 31 is complete.
+- Next plan step is CHECKPOINT C. This requires an end-to-end local run plus manual verification that Word track-changes opens in Word 365, diagrams render, cost badge is correct, Mongo case document stays under 500KB, and TC-05 cross-document suggestion is present.
+
+---
+
+## 21. Document Uplift Checkpoint C Automated Verification - 2026-05-07
+
+Completed the automated/runtime portions of CHECKPOINT C from `docs/superpowers/plans/2026-05-05-sop-uplift-scale-quality-plan.md`.
+
+Key changes verified:
+- Rebuilt and recreated `fastapi_api` and `web_ui_agent` with `DOCUMENT_UPLIFT_ENABLED=true`.
+- Reran Stage 1 and Stage 2 on live case `fa7cd113-19d0-4505-b565-cd88ea1835c2`.
+- Stage 1 persisted `stage1_cost.call_count = 13`.
+- Stage 2 persisted `final_cost.call_count = 19` for `gemini-3-flash-preview`.
+- Live case has 6 suggestions, including 5 cross-document `mapping_gap` suggestions with both SOP and RCM source references.
+- Generated outputs are stored in GridFS and downloadable through `GET /document-uplift/cases/{case_id}/outputs/{output_id}`.
+- Direct Mongo BSON size check for the case document is 28,436 bytes, below the 500KB T3 target.
+
+Verification:
+- `python -m pytest tests\services\test_analysis.py tests\services\test_excel_pipeline.py tests\sop_processing\test_output_generator.py tests\test_document_uplift_api.py tests\test_document_uplift_pipeline.py tests\test_settings.py -v` passed: 70 passed.
+- `node --import tsx .\client\src\document-uplift.item29.test.ts` passed.
+- `node --import tsx .\client\src\document-uplift.item30.test.ts` passed.
+- `node --import tsx .\client\src\pages\settings.document-uplift-config.test.ts` passed.
+- `npm run check` passed.
+- `npm run build` passed with existing PostCSS `from` and large chunk warnings.
+- Download endpoint returned HTTP 200 for all outputs: DOCX 18,977 bytes, PNG 507,291 bytes, PDF 32,249 bytes.
+- GridFS inspection found valid PNG/PDF signatures and DOCX `word/document.xml`, `word/comments.xml`, `w:ins`, and rationale comments.
+
+Remaining gates:
+- Manual Word 365 review of the downloaded DOCX is still required. The live DOCX has insertions and rationale comments; it has no `w:del` because the live accepted suggestions are additive mapping-gap insertions. Replacement/deletion markup is covered by `tests/sop_processing/test_output_generator.py`.
+- T8 human usefulness review is still required: randomly sample 3 suggestions and rate at least 2 as useful before permanently enabling the feature flag.
+- After those gates, next implementation item is Item 32: Celery + Redis Docker Compose wiring.

@@ -35,6 +35,7 @@ import ControlQualityAnalysisPage from "@/pages/control-quality-analysis";
 import RegulationControlsCoveragePage from "@/pages/regulation-controls-coverage";
 import Control360Page from "@/pages/control-360";
 import SopUpliftPage from "@/pages/sop-uplift";
+import DocumentUpliftPage from "@/pages/document-uplift";
 import { AssetRegistryProvider } from "@/contexts/AssetRegistryContext";
 import { RiskAssessmentProvider } from "@/contexts/RiskAssessmentContext";
 import { IssueManagementProvider } from "@/contexts/IssueManagementContext";
@@ -50,6 +51,7 @@ const PAGES = [
   { path: "/evidence-assessment",  Page: EvidenceAssessmentPage  },
   { path: "/control-testing",      Page: ControlTestingPage      },
   { path: "/sop-uplift",           Page: SopUpliftPage           },
+  { path: "/document-uplift",      Page: DocumentUpliftPage      },
   { path: "/chat",                 Page: ChatPage                },
   { path: "/regulatory-library",   Page: RegulatoryLibraryPage   },
   { path: "/controls-library",     Page: ControlsLibraryPage     },

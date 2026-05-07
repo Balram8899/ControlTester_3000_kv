@@ -1,0 +1,169 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1916" height="1700" viewBox="0 0 1916 1700" role="img" aria-labelledby="title desc">
+  <title id="title">Document Uplift Settings Option Mockup</title>
+  <desc id="desc">Current KPMG TRACE Settings page with one added Document Uplift Pipeline Controls card while preserving existing LLM, context upload, and navigation visibility sections.</desc>
+  <defs>
+    <linearGradient id="heroGradient" x1="88" y1="80" x2="1916" y2="218" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#102B4A"/>
+      <stop offset="0.46" stop-color="#133B78"/>
+      <stop offset="1" stop-color="#244BE3"/>
+    </linearGradient>
+    <linearGradient id="sideGradient" x1="0" y1="0" x2="88" y2="1700" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#08243E"/>
+      <stop offset="1" stop-color="#061628"/>
+    </linearGradient>
+    <filter id="cardShadow" x="-10%" y="-12%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#07111E" flood-opacity="0.38"/>
+    </filter>
+    <filter id="softShadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#07111E" flood-opacity="0.22"/>
+    </filter>
+    <style>
+      .font { font-family: Arial, Helvetica, sans-serif; }
+      .top-label { fill: #DCE7FA; font-size: 18px; }
+      .title { fill: #FFFFFF; font-size: 44px; font-weight: 700; letter-spacing: -1.1px; }
+      .subtitle { fill: #DCE7FA; font-size: 20px; }
+      .card-title { fill: #FFFFFF; font-size: 31px; font-weight: 700; letter-spacing: -0.5px; }
+      .card-copy { fill: #BDD0EC; font-size: 18px; }
+      .label { fill: #B9CBE7; font-size: 14px; letter-spacing: 0.9px; text-transform: uppercase; }
+      .field-text { fill: #FFFFFF; font-size: 18px; font-weight: 700; }
+      .muted { fill: #91A4BF; font-size: 15px; }
+      .button { fill: #FFFFFF; font-size: 17px; font-weight: 700; }
+      .small { fill: #91A4BF; font-size: 13px; }
+      .nav-icon { stroke: #D3E2F5; stroke-width: 2.2; fill: none; stroke-linecap: round; stroke-linejoin: round; opacity: 0.92; }
+      .upload-dash { stroke: #244263; stroke-width: 2; stroke-dasharray: 8 7; fill: none; }
+    </style>
+  </defs>
+
+  <rect width="1916" height="1700" fill="#EAF0F7"/>
+
+  <!-- Collapsed app sidebar, matching the current Settings screenshot. -->
+  <rect x="0" y="0" width="88" height="1700" fill="url(#sideGradient)"/>
+  <rect x="0" y="0" width="88" height="2" fill="#00B8F5"/>
+  <line x1="88" y1="0" x2="88" y2="1700" stroke="#16344F"/>
+  <circle cx="44" cy="60" r="20" fill="#0C2844" stroke="#2A4868"/>
+  <path class="nav-icon" d="M39 52l8 8-8 8"/>
+  <line x1="0" y1="120" x2="88" y2="120" stroke="#17364F"/>
+  <g class="nav-icons" opacity="0.98">
+    <g transform="translate(44 170)"><rect class="nav-icon" x="-7" y="-7" width="6" height="6"/><rect class="nav-icon" x="2" y="-7" width="6" height="6"/><rect class="nav-icon" x="-7" y="2" width="6" height="6"/><rect class="nav-icon" x="2" y="2" width="6" height="6"/></g>
+    <g transform="translate(44 225)"><path class="nav-icon" d="M-8 8v-16M0 8v-12M8 8v-8"/></g>
+    <g transform="translate(44 280)"><path class="nav-icon" d="M-7 -4l7 -5 7 5v8c0 4-7 8-7 8s-7-4-7-8z"/></g>
+    <g transform="translate(44 335)"><path class="nav-icon" d="M-9 4h18M-5 -8l-4 12 4 5 4-5-4-12M5 -8l-4 12 4 5 4-5-4-12M0 -10v22"/></g>
+    <g transform="translate(44 390)"><path class="nav-icon" d="M-6 -10h8l6 6v14H-6zM2 -10v6h6"/></g>
+    <g transform="translate(44 445)"><path class="nav-icon" d="M-8 -8h9l5 5v11H-8zM1 -8v5h5M-5 5h8"/></g>
+    <g transform="translate(44 500)"><path class="nav-icon" d="M-7 -7h8l6 6v10H-7zM1 -7v6h6M-4 5h7"/></g>
+    <g transform="translate(44 555)"><path class="nav-icon" d="M0 -11v22M-4 -11h8M-4 11h8"/></g>
+    <g transform="translate(44 610)"><path class="nav-icon" d="M-8 8h16M-5 -9h10v14H-5zM1 -4h5"/></g>
+    <g transform="translate(44 665)"><path class="nav-icon" d="M-8 8v-14h16v10M-3 3l4 4 8-10"/></g>
+    <g transform="translate(44 720)"><path class="nav-icon" d="M-9 8l9-16 9 16zM0 -1v4M0 6h.1"/></g>
+  </g>
+  <rect x="8" y="775" width="72" height="50" rx="11" fill="#083657" stroke="#00B8F5" stroke-opacity="0.8"/>
+  <g transform="translate(44 800)"><circle class="nav-icon" cx="0" cy="0" r="7"/><path class="nav-icon" d="M0 -11v4M0 7v4M-11 0h4M7 0h4M-8 -8l3 3M5 5l3 3M8 -8l-3 3M-5 5l-3 3"/></g>
+  <line x1="0" y1="1538" x2="88" y2="1538" stroke="#17364F"/>
+  <circle cx="44" cy="1602" r="18" fill="#0047BA" stroke="#1E79F2"/>
+  <text class="font" x="44" y="1608" text-anchor="middle" fill="#FFFFFF" font-size="17" font-weight="700">A</text>
+
+  <!-- Top TRACE bar. -->
+  <rect x="88" y="0" width="1828" height="80" fill="#0B263F"/>
+  <text class="font" x="160" y="48" fill="#FFFFFF" font-size="27" font-weight="700">KPMG</text>
+  <line x1="245" y1="28" x2="245" y2="55" stroke="#1E49E2" stroke-width="2"/>
+  <text class="font" x="266" y="48" fill="#00B8F5" font-size="27" font-weight="700">TRACE</text>
+  <text class="font top-label" x="360" y="48">/ Settings</text>
+  <rect x="1722" y="24" width="120" height="40" rx="20" fill="#0D2A47" stroke="#55708E"/>
+  <path d="M1744 35v18M1744 35h15M1759 35l-5-5M1759 35l-5 5" stroke="#FFFFFF" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <text class="font" x="1771" y="49" fill="#FFFFFF" font-size="16" font-weight="700">Sign Out</text>
+
+  <!-- Current Settings hero. -->
+  <rect x="88" y="80" width="1828" height="138" fill="url(#heroGradient)"/>
+  <g filter="url(#softShadow)">
+    <rect x="210" y="118" width="54" height="54" rx="16" fill="rgba(255,255,255,0.09)" stroke="rgba(255,255,255,0.18)"/>
+  </g>
+  <g transform="translate(237 145)" stroke="#ACEAFF" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="-5" y="-11" width="10" height="8"/>
+    <path d="M0 -3v8M-14 5h28M-14 5v10M14 5v10"/>
+    <rect x="-20" y="15" width="12" height="9"/>
+    <rect x="-6" y="15" width="12" height="9"/>
+    <rect x="8" y="15" width="12" height="9"/>
+  </g>
+  <text class="font title" x="282" y="141">Settings</text>
+  <text class="font subtitle" x="282" y="184">Configure AI models and application preferences</text>
+
+  <!-- Scrollable page body preview. -->
+  <rect x="88" y="218" width="1828" height="1440" fill="#EDF2F8"/>
+  <rect x="1908" y="226" width="5" height="1385" rx="2.5" fill="#D7DFEA"/>
+  <rect x="1908" y="430" width="5" height="180" rx="2.5" fill="#BEC9DA"/>
+
+  <!-- Card 1: existing LLM Provider. -->
+  <g filter="url(#cardShadow)">
+    <rect x="370" y="250" width="1228" height="302" rx="10" fill="#0B1726" stroke="#1C2B40"/>
+  </g>
+  <text class="font card-title" x="400" y="306">LLM Provider</text>
+  <text class="font card-copy" x="400" y="338">Select the active cloud AI provider and model. API keys must be set in</text>
+  <text class="font card-copy" x="875" y="338">.env</text>
+  <text class="font card-copy" x="914" y="338">before a provider appears here.</text>
+  <text class="font label" x="400" y="400">PROVIDER</text>
+  <text class="font label" x="994" y="400">MODEL</text>
+  <rect x="400" y="414" width="574" height="44" rx="8" fill="#07121E" stroke="#24354B"/>
+  <text class="font field-text" x="416" y="442">Gemini</text>
+  <path d="M944 431l7 7 7-7" stroke="#9BAAC0" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <rect x="994" y="414" width="574" height="44" rx="8" fill="#07121E" stroke="#24354B"/>
+  <text class="font field-text" x="1010" y="442">gemini-3-flash-preview</text>
+  <path d="M1538 431l7 7 7-7" stroke="#9BAAC0" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <rect x="400" y="480" width="82" height="48" rx="9" fill="#064BB4"/>
+  <text class="font button" x="441" y="511" text-anchor="middle">Save</text>
+  <rect x="494" y="480" width="168" height="48" rx="9" fill="#0B1726" stroke="#2A3A51"/>
+  <text class="font button" x="578" y="511" text-anchor="middle">Test Connection</text>
+
+  <!-- New card only: Document Uplift pipeline option, placed below LLM Provider per Item 28. -->
+  <g filter="url(#cardShadow)">
+    <rect x="370" y="610" width="1228" height="218" rx="10" fill="#0B1726" stroke="#1C2B40"/>
+  </g>
+  <rect x="400" y="641" width="4" height="30" rx="2" fill="#00B8F5"/>
+  <text class="font card-title" x="416" y="668">Document Uplift Pipeline Controls</text>
+  <text class="font card-copy" x="416" y="702">Set the LLM call cap used by new Document Uplift pipeline runs.</text>
+  <text class="font label" x="416" y="754">MAX LLM CALLS PER PIPELINE</text>
+  <rect x="416" y="768" width="168" height="44" rx="8" fill="#07121E" stroke="#24354B"/>
+  <text class="font field-text" x="438" y="796">80</text>
+  <rect x="612" y="768" width="82" height="44" rx="9" fill="#064BB4"/>
+  <text class="font button" x="653" y="796" text-anchor="middle">Save</text>
+  <rect x="708" y="768" width="150" height="44" rx="9" fill="#0B1726" stroke="#2A3A51"/>
+  <text class="font button" x="783" y="796" text-anchor="middle">Reset to 80</text>
+  <text class="font small" x="895" y="796">Applies to future Document Uplift runs only. Existing cases keep their saved run data.</text>
+
+  <!-- Card 2: existing LLM Model. -->
+  <g filter="url(#cardShadow)">
+    <rect x="370" y="886" width="1228" height="198" rx="10" fill="#0B1726" stroke="#1C2B40"/>
+  </g>
+  <text class="font card-title" x="400" y="948">LLM Model</text>
+  <text class="font card-copy" x="400" y="980">Select the AI model to use for your conversations</text>
+  <rect x="400" y="1018" width="480" height="44" rx="8" fill="#07121E" stroke="#24354B"/>
+  <text class="font field-text" x="416" y="1046">gemini-3-flash-preview</text>
+  <path d="M846 1035l7 7 7-7" stroke="#9BAAC0" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+  <!-- Existing context sections continue below the new card. -->
+  <g filter="url(#cardShadow)">
+    <rect x="370" y="1142" width="1228" height="278" rx="10" fill="#0B1726" stroke="#1C2B40"/>
+  </g>
+  <text class="font card-title" x="400" y="1202">General Context</text>
+  <text class="font card-copy" x="400" y="1258">General Context</text>
+  <text class="font card-copy" x="400" y="1292">Upload general reference documents and knowledge base files (unlimited)</text>
+  <rect x="400" y="1318" width="1168" height="72" rx="10" fill="#0A1726"/>
+  <rect class="upload-dash" x="416" y="1334" width="1136" height="40" rx="8"/>
+  <path d="M970 1358v-28M970 1330l-14 14M970 1330l14 14M955 1363h30" stroke="#AAB8CA" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <text class="font muted" x="1010" y="1358">Drop files here or click to browse</text>
+
+  <!-- Lower existing cards are shown as preserved below the fold. -->
+  <g opacity="0.78">
+    <rect x="370" y="1475" width="584" height="112" rx="10" fill="#0B1726" stroke="#1C2B40"/>
+    <text class="font" x="400" y="1528" fill="#FFFFFF" font-size="24" font-weight="700">Company Policy Context</text>
+    <text class="font muted" x="400" y="1560">Existing upload section remains below General Context.</text>
+    <rect x="984" y="1475" width="614" height="112" rx="10" fill="#0B1726" stroke="#1C2B40"/>
+    <text class="font" x="1014" y="1528" fill="#FFFFFF" font-size="24" font-weight="700">Navigation Visibility</text>
+    <text class="font muted" x="1014" y="1560">Existing page visibility controls remain unchanged.</text>
+  </g>
+
+  <!-- Fixed footer, matching the current shell. -->
+  <rect x="88" y="1658" width="1828" height="42" fill="#E7EDF5" stroke="#D5DEE9"/>
+  <text class="font" x="130" y="1684" fill="#607087" font-size="12">© 2026 KPMG Assurance and Consulting Services LLP, an Indian Limited Liability Partnership and a member firm of the KPMG global organization of independent member firms affiliated with KPMG International Limited, a private English company limited by guarantee. All rights reserved.</text>
+  <rect x="1772" y="1674" width="102" height="18" rx="9" fill="#F8FAFD" stroke="#CCD7E5"/>
+  <text class="font" x="1823" y="1688" text-anchor="middle" fill="#607087" font-size="10" font-weight="700" letter-spacing="1.4">CONFIDENTIAL</text>
+</svg>

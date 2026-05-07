@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import json
+import logging
 import mimetypes
 import os
 import re
@@ -40,6 +41,7 @@ from utils.sop_uplift.rewrite_generator import build_revised_sections, generate_
 from utils.sop_uplift.tagging import suggest_document_tag
 
 router = APIRouter(prefix="/sop-uplift", tags=["sop-uplift"])
+logger = logging.getLogger(__name__)
 
 
 class SopCaseCreate(BaseModel):
@@ -93,7 +95,7 @@ class BatchProcessRequest(BaseModel):
 
 class PipelineRunRequest(BaseModel):
     use_llm: bool = True
-    max_chunk_chars: int = Field(default_factory=lambda: int(os.getenv("SOP_UPLIFT_MAX_CHUNK_CHARS", "4000")), ge=500, le=20000)
+    max_chunk_chars: int = Field(default_factory=lambda: int(os.getenv("SOP_UPLIFT_MAX_CHUNK_CHARS", "20000")), ge=500, le=20000)
 
 
 class FollowUpQuestionsRequest(BaseModel):
@@ -106,6 +108,8 @@ class CaseIndexSearchRequest(BaseModel):
 
 
 _store: SopUpliftCaseStore | None = None
+_active_pipeline_cases: set[str] = set()
+_active_pipeline_cases_lock = threading.Lock()
 
 
 def get_store() -> SopUpliftCaseStore:
@@ -113,6 +117,47 @@ def get_store() -> SopUpliftCaseStore:
     if _store is None:
         _store = SopUpliftCaseStore()
     return _store
+
+
+def _pipeline_timeout_seconds() -> int:
+    raw_value = os.getenv("SOP_UPLIFT_PIPELINE_TIMEOUT_SECONDS", os.getenv("PIPELINE_TIMEOUT_SECONDS", "3600"))
+    try:
+        return max(1, int(raw_value))
+    except (TypeError, ValueError):
+        return 3600
+
+
+def _is_stale_pipeline_state(pipeline_state: dict[str, Any]) -> bool:
+    if pipeline_state.get("status") != "running":
+        return False
+    heartbeat = pipeline_state.get("updated_at") or pipeline_state.get("started_at")
+    return _elapsed_seconds(heartbeat) > _pipeline_timeout_seconds()
+
+
+def _claim_pipeline_case(case_id: str) -> bool:
+    with _active_pipeline_cases_lock:
+        if case_id in _active_pipeline_cases:
+            return False
+        _active_pipeline_cases.add(case_id)
+        return True
+
+
+def _release_pipeline_case(case_id: str) -> None:
+    with _active_pipeline_cases_lock:
+        _active_pipeline_cases.discard(case_id)
+
+
+def dispatch_pipeline(case_id: str, stage: int = 1) -> None:
+    backend = os.getenv("TASK_BACKEND", "asyncio").strip().lower() or "asyncio"
+    if stage != 1:
+        raise HTTPException(status_code=501, detail=f"SOP Uplift pipeline stage {stage} is not implemented.")
+    if backend == "asyncio":
+        thread = threading.Thread(target=_run_pipeline_background, args=(case_id,), daemon=True)
+        thread.start()
+        return
+    if backend == "celery":
+        raise HTTPException(status_code=501, detail="TASK_BACKEND=celery is configured, but the Celery dispatcher is not wired yet.")
+    raise HTTPException(status_code=400, detail=f"Unsupported TASK_BACKEND value: {backend}")
 
 
 def _require_case(case_id: str) -> dict[str, Any]:
@@ -538,7 +583,51 @@ def run_pipeline(case_id: str, body: PipelineRunRequest):
     case = _require_case(case_id)
     existing = case.get("processing_state", {}).get("pipeline", {})
     if existing.get("status") == "running":
-        return {"task_id": "pipeline", "status": "running", "processing_state": existing}
+        if not _is_stale_pipeline_state(existing):
+            return {"task_id": "pipeline", "status": "running", "processing_state": existing}
+        stale_warning = (
+            f"Previous pipeline run was marked stale after {_pipeline_timeout_seconds()} seconds and can be retried."
+        )
+        existing_warnings = list(existing.get("warnings") or [])
+        if stale_warning not in existing_warnings:
+            existing_warnings.append(stale_warning)
+        stale_state = _update_pipeline_progress(
+            case_id,
+            case,
+            status="failed",
+            phase="failed",
+            message="Previous pipeline run was marked stale.",
+            completed=0,
+            total=100,
+            percent=0,
+            error=stale_warning,
+            warnings=existing_warnings,
+        )
+        _release_pipeline_case(case_id)
+        case = {
+            **case,
+            "processing_state": {
+                **case.get("processing_state", {}),
+                "pipeline": stale_state,
+            },
+        }
+    if not _claim_pipeline_case(case_id):
+        return {
+            "task_id": "pipeline",
+            "status": "running",
+            "processing_state": existing
+            or {
+                "status": "running",
+                "phase": "starting",
+                "message": "Pipeline is already running for this case.",
+                "completed": 0,
+                "total": 100,
+                "pending": 100,
+                "failed": 0,
+                "percent": 1,
+            },
+        }
+    options = body.model_dump()
     initial_state = _update_pipeline_progress(
         case_id,
         case,
@@ -548,10 +637,13 @@ def run_pipeline(case_id: str, body: PipelineRunRequest):
         completed=0,
         total=100,
         percent=1,
+        options=options,
     )
-    options = body.model_dump()
-    thread = threading.Thread(target=_run_pipeline_background, args=(case_id, options), daemon=True)
-    thread.start()
+    try:
+        dispatch_pipeline(case_id)
+    except Exception:
+        _release_pipeline_case(case_id)
+        raise
     return {"task_id": "pipeline", "status": "running", "processing_state": initial_state}
 
 
@@ -580,6 +672,7 @@ def _update_pipeline_progress(
     percent: int,
     error: str = "",
     warnings: list[str] | None = None,
+    options: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     case = case or _require_case(case_id)
     current_state = case.get("processing_state", {})
@@ -609,14 +702,17 @@ def _update_pipeline_progress(
         pipeline_state.pop("error", None)
     if warnings is not None:
         pipeline_state["warnings"] = warnings
+    if options is not None:
+        pipeline_state["options"] = options
     processing_state = {**current_state, "pipeline": pipeline_state}
     get_store().update_case(case_id, {"processing_state": processing_state})
     return pipeline_state
 
 
-def _run_pipeline_background(case_id: str, options: dict[str, Any]) -> None:
+def _run_pipeline_background(case_id: str) -> None:
     try:
         case = _require_case(case_id)
+        options = case.get("processing_state", {}).get("pipeline", {}).get("options", {})
         _update_pipeline_progress(
             case_id,
             case,
@@ -657,7 +753,7 @@ def _run_pipeline_background(case_id: str, options: dict[str, Any]) -> None:
         pipeline_updates = run_full_sop_pipeline(
             converted_case,
             use_llm=bool(options.get("use_llm", True)),
-            max_chunk_chars=int(options.get("max_chunk_chars") or 4000),
+            max_chunk_chars=int(options.get("max_chunk_chars") or 20000),
             progress_callback=progress_callback,
         )
         pipeline_warnings = pipeline_updates.get("processing_state", {}).get("pipeline", {}).get("warnings", [])
@@ -710,6 +806,8 @@ def _run_pipeline_background(case_id: str, options: dict[str, Any]) -> None:
             percent=0,
             error=str(exc),
         )
+    finally:
+        _release_pipeline_case(case_id)
 
 
 @router.post("/cases/{case_id}/extract")
@@ -721,7 +819,7 @@ def extract_case(case_id: str, body: BatchProcessRequest):
     pending = [chunk for chunk in chunks if chunk.get("chunk_id") not in completed_ids]
     selected = pending[: body.batch_size]
     warnings = []
-    max_chars = int(os.getenv("SOP_UPLIFT_MAX_CHUNK_CHARS", "4000"))
+    max_chars = int(os.getenv("SOP_UPLIFT_MAX_CHUNK_CHARS", "20000"))
     prompt_records = list(case.get("prompt_runs", []))
 
     extracted_requirements = list(case.get("extracted_requirements", []))
@@ -1179,8 +1277,7 @@ def generate_outputs(case_id: str):
     markdown_log = build_markdown_change_log(case, suggestions, [])
     json_log = build_json_audit_log(case, suggestions, [])
 
-    def output_item(output_id: str, output_type: str, filename: str, content: bytes | str, content_type: str):
-        raw = content.encode("utf-8") if isinstance(content, str) else content
+    def output_item(output_id: str, output_type: str, filename: str, content_type: str) -> dict[str, Any]:
         return {
             "output_id": output_id,
             "type": output_type,
@@ -1188,9 +1285,11 @@ def generate_outputs(case_id: str):
             "gridfs_file_id": "",
             "status": "generated",
             "content_type": content_type,
-            "content_b64": base64.b64encode(raw).decode("ascii"),
             "metadata": {"generated_by": "TRACE SOP Uplift"},
         }
+
+    def output_bytes(content: bytes | str) -> bytes:
+        return content.encode("utf-8") if isinstance(content, str) else content
 
     safe_name = (case.get("process_name") or "sop").replace(" ", "_").lower()
     output_payloads = [
@@ -1202,28 +1301,22 @@ def generate_outputs(case_id: str):
         ("svg-output", "svg", f"{safe_name}_diagram.svg", svg_text, "image/svg+xml"),
         ("changelog-md-output", "changelog_markdown", f"{safe_name}_change_log.md", markdown_log, "text/markdown"),
         ("changelog-json-output", "changelog_json", f"{safe_name}_audit_log.json", json.dumps(json_log, indent=2), "application/json"),
+        ("vsdx-future-stub", "vsdx", f"{safe_name}_future.vsdx", vsdx_bytes, "application/octet-stream"),
     ]
     outputs = []
     for output_id, output_type, filename, content, content_type in output_payloads:
-        item = output_item(output_id, output_type, filename, content, content_type)
+        item = output_item(output_id, output_type, filename, content_type)
         try:
-            stored = get_store().save_output_content(case_id, item, base64.b64decode(item["content_b64"]))
-            item["gridfs_file_id"] = stored.get("gridfs_file_id", "")
-        except Exception:
-            pass
+            stored = get_store().save_output_content(case_id, item, output_bytes(content))
+            item = {**item, **stored}
+            item.pop("content_b64", None)
+        except Exception as exc:
+            logger.exception("SOP Uplift output storage failed for case_id=%s output_id=%s", case_id, output_id)
+            raise HTTPException(503, f"Output storage error, try again: {exc}") from exc
         outputs.append(item)
-    outputs.append(
-        {
-            "output_id": "vsdx-future-stub",
-            "type": "vsdx",
-            "filename": f"{safe_name}_future.vsdx",
-            "gridfs_file_id": "",
-            "status": "generated",
-            "content_type": "application/octet-stream",
-            "content_b64": base64.b64encode(vsdx_bytes).decode("ascii"),
-            "metadata": {"v1_status": "future-compatible stub"},
-        },
-    )
+    for output in outputs:
+        if output.get("type") == "vsdx":
+            output["metadata"] = {**output.get("metadata", {}), "v1_status": "future-compatible stub"}
     get_store().update_case(case_id, {"outputs": outputs, "status": "complete", "revised_sop_sections": revised_sections, "diagram_model": model.model_dump()})
     try:
         from utils.rcm_report_store import RCMReportStore
@@ -1250,8 +1343,8 @@ def generate_outputs(case_id: str):
                     "change_log_markdown": markdown_log,
                 }
             )
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.warning("Unable to persist SOP Uplift report for case_id=%s: %s", case_id, exc)
     return {"status": "generated", "outputs": outputs}
 
 

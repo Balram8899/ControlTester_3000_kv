@@ -5,6 +5,8 @@
 **Status:** Revised — 2026-05-05  
 **Scope:** New TRACE feature "Document Uplift" — backend pipeline, service layer, MongoDB storage, LLM orchestration, output quality  
 
+**Implementation directive — 2026-05-06:** Track A is now explicitly authorized by the human owner. Proceed with all Track A and Track B items in dependency order. Existing SOP Uplift code may be modified only while executing Track A items; Track B Document Uplift code remains independent and must not import from `utils/sop_uplift/`. Before implementing any UI screen, report surface, diagram output, or other visual deliverable, create mockups for human review first. Dockerfiles, `docker-compose.yml`, dependency manifests/lockfiles, and requirements files may be modified when needed to make planned implementation, testing, or builds work; keep those changes scoped to the relevant plan item and document them in the build log.
+
 **Input document types (what users upload):**
 | Type | Format | Role in pipeline |
 |---|---|---|
@@ -920,6 +922,7 @@ class ExcelPipelineResult(ServiceResult):
     total_rows_assessed: int = 0
     total_gaps_found: int = 0
     corpus_map: Optional[CorpusMapContribution] = None
+    suggestions: list[Suggestion] = Field(default_factory=list)  # Item 11: capped RowGap-derived suggestions
 
 
 # --- Analysis outputs ---
@@ -2013,7 +2016,7 @@ Export:
 **Two distinct tracks. Read this before starting.**
 
 **Track A — SOP Uplift infrastructure fixes (Items 1–6, 12, 14, 15, 17):**
-These items fix bugs in the *existing* SOP Uplift feature. They are explicitly permitted to modify files under `utils/sop_uplift/`, `api/routers/sop_uplift.py`, and the existing SOP Uplift frontend code. The FD1 rule ("never edit existing sop_uplift code") does NOT apply to Track A items. Track A must complete before Track B begins — Track B services depend on the infrastructure Track A puts in place.
+These items are now explicitly authorized by the human owner. They fix bugs in the *existing* SOP Uplift feature and are permitted to modify files under `utils/sop_uplift/`, `api/routers/sop_uplift.py`, and the existing SOP Uplift frontend code only while executing Track A work.
 
 **Track B — Document Uplift new feature (Items 7–11, 13, 16–33):**
 These items build the new Document Uplift feature from scratch. FD1 applies in full: no edits to `utils/sop_uplift/` or `api/routers/sop_uplift.py`. All new code goes into `utils/services/`, `utils/sop_processing/`, and `api/routers/document_uplift.py`.
@@ -2022,7 +2025,7 @@ These items build the new Document Uplift feature from scratch. FD1 applies in f
 
 | # | Work Item | Track | Solves | Effort | Dependency |
 |---|---|---|---|---|---|
-| **Track A — SOP Uplift Fixes** | | | | | |
+| **Track A — SOP Uplift Fixes (authorized 2026-05-06)** | | | | | |
 | 1 | Fix GridFS saves — remove bare `except: pass`, fail loud | A | P3 (partial) | 0.5 days | None |
 | 2 | Move outputs to GridFS-only (remove content_b64 from case doc) | A | P3 (partial) | 1 day | Item 1 |
 | 3 | Raise SOP truncation ceiling to 20,000 chars | A | P2 (partial) | 0.5 days | None |
@@ -2063,7 +2066,7 @@ These items build the new Document Uplift feature from scratch. FD1 applies in f
 | 32 | Wire `TASK_BACKEND=celery` — Redis + Celery worker in Docker Compose, implement thin Celery task wrappers per service, route svc.* queues | B | P5 / Arch | 2 days | Items 6, 7–13, 26, 26a |
 | 33 | Full asyncio worker queue (concurrency limits, back-pressure, graceful shutdown, `run_in_executor` for all blocking I/O) | B | P5 | 2 days | Item 6 |
 
-**Build sequence rationale:** Items are ordered by dependency, not by shippability. Nothing in this sequence is a partial or MVP delivery — the complete feature is the target. Build all 35 items (items 1–33 numbered + 23b + 26a). Checkpoints A, B, and C are hard stops — the agent must verify the specified conditions before continuing. After each item, append an entry to `docs/document-uplift-build-log.md` (see FD6).
+**Build sequence rationale:** Items are ordered by dependency, not by shippability. Nothing in this sequence is a partial or MVP delivery — the complete feature is the target. Track A is now authorized and must be completed where required by dependencies before continuing dependent Track B items. Checkpoints A, B, and C are hard stops — the agent must verify the specified conditions before continuing. After each item, append an entry to `docs/document-uplift-build-log.md` (see FD6).
 
 > **Service extraction note:** Items 7–13 build `utils/services/` from scratch for the new Document Uplift feature. Existing `utils/sop_uplift/` modules are not touched. The new services do not import from `utils/sop_uplift/` — they are independent implementations informed by that code as reference only.
 

@@ -1,188 +1,505 @@
-// kpmg_ui/client/src/pages/risk-assessment.tsx
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
-  ChevronDown, ChevronRight,
-  CheckCircle2, FileBarChart, Loader2, Plus, ShieldAlert, Sparkles,
+  ArrowRight,
+  CheckCircle2,
+  ChevronDown,
+  ChevronRight,
+  FileBarChart,
+  Layers3,
+  Loader2,
+  Play,
+  Plus,
+  RefreshCw,
+  Search,
+  ShieldAlert,
+  ShieldCheck,
+  Sparkles,
 } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
 import HowItWorks from "@/components/HowItWorks";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useToast } from "@/hooks/use-toast";
 import {
-  useRiskAssessment,
-  AdHocApplication,
-  AnswerType,
-  Section,
-} from "@/contexts/RiskAssessmentContext";
-import { useAssetRegistry } from "@/contexts/AssetRegistryContext";
+  TraceLockedState,
+  TraceMetricCard,
+  TracePanel,
+  TraceSectionHeading,
+  TraceStatusRibbon,
+} from "@/components/TraceAnalysisPrimitives";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
 import CiaRatingWidget from "@/components/CiaRatingWidget";
-
-// ── Constants ─────────────────────────────────────────────────────────────
+import { useToast } from "@/hooks/use-toast";
+import { useAssetRegistry } from "@/contexts/AssetRegistryContext";
+import {
+  type AdHocApplication,
+  type AnswerType,
+  type ResidualResult,
+  type Risk,
+  type RiskAssessment,
+  type Section,
+  type SuggestedControl,
+  useRiskAssessment,
+} from "@/contexts/RiskAssessmentContext";
 
 const STATUS_LABELS: Record<string, string> = {
-  draft: "Draft", in_progress: "In Progress",
-  risks_identified: "Risks Identified", controls_applied: "Controls Applied", complete: "Complete",
+  draft: "Draft",
+  in_progress: "In Progress",
+  risks_identified: "Risks Identified",
+  controls_applied: "Controls Applied",
+  complete: "Complete",
 };
-const STATUS_COLOR: Record<string, string> = {
-  draft: "bg-slate-100 text-slate-600 border-slate-300",
-  in_progress: "bg-blue-100 text-blue-700 border-blue-300",
-  risks_identified: "bg-amber-100 text-amber-700 border-amber-300",
-  controls_applied: "bg-violet-100 text-violet-700 border-violet-300",
-  complete: "bg-emerald-100 text-emerald-700 border-emerald-300",
+
+const STATUS_CLASS: Record<string, string> = {
+  draft: "border-[#DCE3EE] bg-[#F3F6FA] text-[#6A748A]",
+  in_progress: "border-[#C9D7FF] bg-[#EEF2FF] text-[#1E49E2]",
+  risks_identified: "border-[#F6D3A0] bg-[#FFF4E8] text-[#AB5C00]",
+  controls_applied: "border-[#D7C0FA] bg-[#F3F0FF] text-[#7213EA]",
+  complete: "border-[#BFE7D1] bg-[#EDFBF5] text-[#009A44]",
 };
-const BAND_COLOR: Record<string, string> = {
-  Critical: "bg-red-100 text-red-700 border-red-300",
-  High: "bg-orange-100 text-orange-700 border-orange-300",
-  Medium: "bg-yellow-100 text-yellow-700 border-yellow-300",
-  Low: "bg-emerald-100 text-emerald-700 border-emerald-300",
+
+const BAND_CLASS: Record<string, string> = {
+  Critical: "border-[#F3C6CF] bg-[#FEEBED] text-[#E5001B]",
+  High: "border-[#F6D3A0] bg-[#FFF4E8] text-[#AB5C00]",
+  Medium: "border-[#F8E8B7] bg-[#FFF9E8] text-[#8A6A00]",
+  Low: "border-[#BFE7D1] bg-[#EDFBF5] text-[#009A44]",
 };
-const ANSWER_STYLE: Record<AnswerType, string> = {
-  yes: "bg-red-100 text-red-700 border-red-300 font-semibold",
-  no: "bg-emerald-100 text-emerald-700 border-emerald-300 font-semibold",
-  na: "bg-slate-100 text-slate-500 border-slate-300",
+
+const ANSWER_CLASS: Record<AnswerType, string> = {
+  yes: "border-[#F3C6CF] bg-[#FEEBED] text-[#E5001B]",
+  no: "border-[#BFE7D1] bg-[#EDFBF5] text-[#009A44]",
+  na: "border-[#DCE3EE] bg-[#F3F6FA] text-[#6A748A]",
 };
 
 const WIZARD_STEPS = ["Create", "Questionnaire", "Analyse", "Risks", "Controls", "Residual", "Report"];
 
-type RightTab = "dashboard" | "wizard";
-
-// ── Local Q&A state types ─────────────────────────────────────────────────
+const PRIMARY_BUTTON =
+  "inline-flex items-center justify-center gap-2 rounded-[16px] bg-[#1E49E2] px-5 py-3 text-[14px] font-bold text-white transition-transform hover:-translate-y-px disabled:cursor-not-allowed disabled:bg-[#8EA4D9]";
+const SECONDARY_BUTTON =
+  "inline-flex items-center justify-center gap-2 rounded-[16px] border border-[#DCE3EE] bg-white px-5 py-3 text-[14px] font-bold text-[#0C233C] transition-colors hover:bg-[#F7F9FC] disabled:cursor-not-allowed disabled:text-[#9AA8BC]";
+const SOFT_BUTTON =
+  "inline-flex items-center justify-center gap-2 rounded-[16px] bg-[#EEF2FF] px-4 py-2.5 text-[13px] font-bold text-[#1E49E2] transition-colors hover:bg-[#E3EBFF] disabled:cursor-not-allowed disabled:text-[#93A6D8]";
 
 interface LocalAnswer {
   answer: AnswerType;
   details: string;
 }
 
-// ── Component ─────────────────────────────────────────────────────────────
+function statusToStep(status: RiskAssessment["status"]) {
+  switch (status) {
+    case "draft":
+      return 0;
+    case "in_progress":
+      return 1;
+    case "risks_identified":
+      return 3;
+    case "controls_applied":
+      return 5;
+    case "complete":
+      return 6;
+    default:
+      return 0;
+  }
+}
+
+function formatDate(value?: string | null) {
+  if (!value) return "Recently updated";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Recently updated";
+  return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function assessmentAppCount(assessment: RiskAssessment) {
+  return assessment.asset_ids.length + (assessment.ad_hoc_applications?.length ?? 0);
+}
+
+function statusToneTitle(assessment: RiskAssessment | null) {
+  if (!assessment) return "Ready To Begin";
+  return STATUS_LABELS[assessment.status] ?? "Assessment Selected";
+}
+
+function sectionProgress(
+  answers: Record<string, Record<string, Record<string, LocalAnswer>>>,
+  assetId: string,
+  section: Section,
+) {
+  return Object.values(answers[assetId]?.[section.id] ?? {}).length;
+}
+
+function getAssessmentRiskSummary(assessment: RiskAssessment | null) {
+  if (!assessment) return "Select or create a risk assessment to begin the workflow.";
+  if (assessment.status === "draft") return "Assessment scope is set. Start the questionnaire when the selected applications are confirmed.";
+  if (assessment.status === "in_progress") return "Questionnaire responses are being captured across the applications in scope.";
+  if (assessment.status === "risks_identified") return "Inherent risks are available and ready for control application.";
+  if (assessment.status === "controls_applied") return "Controls have been applied and the residual view is available for review.";
+  if (assessment.status === "complete") return "The assessment is complete and ready for report review or rerun.";
+  return "Assessment selected.";
+}
+
+function StepPill({ label, index, currentStep }: { label: string; index: number; currentStep: number }) {
+  const complete = index < currentStep;
+  const active = index === currentStep;
+  const className = complete
+    ? "border-[#BFE7D1] bg-[#EDFBF5] text-[#009A44]"
+    : active
+      ? "border-[#1E49E2] bg-[#1E49E2] text-white"
+      : "border-[#DCE3EE] bg-white text-[#7E91AE]";
+
+  return (
+    <div
+      className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-[12px] font-bold ${className}`}
+      data-risk-assessment-step={label.toLowerCase()}
+    >
+      <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-current/20 bg-current/10 text-[11px]">
+        {complete ? <CheckCircle2 className="h-3.5 w-3.5" /> : index + 1}
+      </span>
+      {label}
+    </div>
+  );
+}
+
+function StatusBadge({ status }: { status: RiskAssessment["status"] }) {
+  return (
+    <span
+      className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-bold ${STATUS_CLASS[status] ?? STATUS_CLASS.draft}`}
+    >
+      {STATUS_LABELS[status] ?? status}
+    </span>
+  );
+}
+
+function BandBadge({ band }: { band: string }) {
+  return (
+    <span
+      className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-bold ${BAND_CLASS[band] ?? BAND_CLASS.Medium}`}
+    >
+      {band}
+    </span>
+  );
+}
+
+function SurfaceSection({
+  eyebrow,
+  title,
+  action,
+  children,
+  className = "",
+}: {
+  eyebrow?: string;
+  title: string;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <section
+      className={`rounded-[24px] border border-[#DCE3EE] bg-white p-6 shadow-[0_18px_42px_-34px_rgba(12,35,60,0.26)] ${className}`}
+    >
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          {eyebrow ? (
+            <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.28em] text-[#00338D]">{eyebrow}</p>
+          ) : null}
+          <h2 className="text-[22px] font-bold tracking-[-0.03em] text-[#0C233C]">{title}</h2>
+        </div>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function RiskSummaryCard({ risk }: { risk: Risk }) {
+  return (
+    <div className="rounded-[20px] border border-[#DCE3EE] bg-white p-5 shadow-[0_16px_34px_-30px_rgba(12,35,60,0.28)]">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="text-[16px] font-bold tracking-[-0.02em] text-[#0C233C]">{risk.title}</h3>
+          <p className="mt-2 text-[13px] leading-6 text-[#5A6478]">{risk.description}</p>
+        </div>
+        <BandBadge band={risk.inherent_risk_band} />
+      </div>
+      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-[12px] text-[#7388A8]">
+        <span>Likelihood {risk.likelihood_score}/5</span>
+        <span>Impact {risk.impact_score}/5</span>
+        <span>Score {risk.inherent_risk_score}</span>
+        <span>{risk.risk_category}</span>
+      </div>
+    </div>
+  );
+}
+
+function AppliedControlChip({ label }: { label: string }) {
+  return (
+    <div className="inline-flex items-center gap-2 rounded-full border border-[#BFE7D1] bg-[#EDFBF5] px-3 py-1.5 text-[11px] font-bold text-[#009A44]">
+      <CheckCircle2 className="h-3.5 w-3.5" />
+      {label}
+    </div>
+  );
+}
+
+function SuggestedControlRow({
+  suggestion,
+  alreadyApplied,
+  onApply,
+}: {
+  suggestion: SuggestedControl;
+  alreadyApplied: boolean;
+  onApply: () => Promise<void>;
+}) {
+  return (
+    <div className="rounded-[16px] border border-[#E2E6EF] bg-[#FBFCFE] p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[14px] font-bold text-[#0C233C]">{suggestion.control_title}</p>
+          <p className="mt-1.5 text-[12px] leading-6 text-[#7388A8]">{suggestion.rationale}</p>
+          <div className="mt-3 inline-flex rounded-full border border-[#DCE3EE] bg-white px-3 py-1 text-[11px] font-bold text-[#6A748A]">
+            Relevance {suggestion.relevance_score}/5
+          </div>
+        </div>
+        {alreadyApplied ? (
+          <span className="inline-flex items-center gap-1 rounded-full border border-[#BFE7D1] bg-[#EDFBF5] px-3 py-1 text-[11px] font-bold text-[#009A44]">
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            Applied
+          </span>
+        ) : (
+          <button className={SOFT_BUTTON} onClick={() => void onApply()}>
+            Apply
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ResidualCard({ result }: { result: ResidualResult }) {
+  const inherentWidth = Math.min(100, result.inherent_risk_score * 4);
+  const residualWidth = Math.min(100, result.residual_risk_score * 4);
+  const residualBarClass =
+    result.residual_risk_band === "Low"
+      ? "bg-[linear-gradient(90deg,#009A44_0%,#098E7E_100%)]"
+      : result.residual_risk_band === "Medium"
+        ? "bg-[linear-gradient(90deg,#EAAA00_0%,#F2B100_100%)]"
+        : "bg-[linear-gradient(90deg,#EAAA00_0%,#E5001B_100%)]";
+
+  return (
+    <div className="rounded-[20px] border border-[#DCE3EE] bg-white p-5 shadow-[0_16px_34px_-30px_rgba(12,35,60,0.28)]">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="text-[16px] font-bold tracking-[-0.02em] text-[#0C233C]">{result.risk_title}</h3>
+          <p className="mt-1 text-[12px] text-[#7388A8]">{result.controls_applied} controls applied</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <BandBadge band={result.inherent_risk_band} />
+          <BandBadge band={result.residual_risk_band} />
+        </div>
+      </div>
+      <div className="mt-4 space-y-3">
+        <div>
+          <div className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-[#8492A6]">Inherent</div>
+          <div className="h-2.5 overflow-hidden rounded-full bg-[#DCE3EE]">
+            <div className="h-full rounded-full bg-[linear-gradient(90deg,#E5001B_0%,#F05A6C_100%)]" style={{ width: `${inherentWidth}%` }} />
+          </div>
+        </div>
+        <div>
+          <div className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-[#8492A6]">Residual</div>
+          <div className="h-2.5 overflow-hidden rounded-full bg-[#DCE3EE]">
+            <div className={`h-full rounded-full ${residualBarClass}`} style={{ width: `${residualWidth}%` }} />
+          </div>
+        </div>
+      </div>
+      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-[12px] text-[#7388A8]">
+        <span>Avg effectiveness {(result.avg_effectiveness * 100).toFixed(0)}%</span>
+        <span>Residual score {result.residual_risk_score}</span>
+      </div>
+    </div>
+  );
+}
+
+function CommandDeckMetric({
+  label,
+  value,
+  detail,
+}: {
+  label: string;
+  value: string | number;
+  detail: string;
+}) {
+  return (
+    <div className="rounded-[18px] border border-white/12 bg-white/8 px-4 py-4 backdrop-blur-sm">
+      <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/58">{label}</div>
+      <div className="mt-2 text-[30px] font-bold tracking-[-0.04em] text-white">{value}</div>
+      <div className="mt-1 text-[12px] leading-6 text-white/64">{detail}</div>
+    </div>
+  );
+}
 
 export default function RiskAssessmentPage() {
   const {
-    assessments, selectedAssessment, sections, residualResults,
-    isLoading, isAnalyzing, isGeneratingReport, error, report,
-    fetchAssessments, selectAssessment, createAssessment,
-    fetchSections, submitResponseBatch, analyzeAssessment, addHumanRisk,
-    applyControl, fetchResidual, suggestControls, generateReport,
+    assessments,
+    selectedAssessment,
+    sections,
+    residualResults,
+    isLoading,
+    isAnalyzing,
+    isGeneratingReport,
+    error,
+    report,
+    fetchAssessments,
+    selectAssessment,
+    createAssessment,
+    fetchSections,
+    submitResponseBatch,
+    analyzeAssessment,
+    applyControl,
+    fetchResidual,
+    suggestControls,
+    generateReport,
   } = useRiskAssessment();
   const { assets, fetchAssets } = useAssetRegistry();
   const { toast } = useToast();
 
-  const [rightTab, setRightTab] = useState<RightTab>("dashboard");
   const [wizardStep, setWizardStep] = useState(0);
   const [showCreate, setShowCreate] = useState(false);
-
-  // Create form state
   const [form, setForm] = useState<{ title: string; description: string; selectedAssetIds: string[] }>({
-    title: "", description: "", selectedAssetIds: [],
+    title: "",
+    description: "",
+    selectedAssetIds: [],
   });
   const [adHocApps, setAdHocApps] = useState<AdHocApplication[]>([]);
   const [showAdHocForm, setShowAdHocForm] = useState(false);
   const [adHocDraft, setAdHocDraft] = useState<AdHocApplication>({
-    name: "", description: "", assessment_context: "", confidentiality: 3, integrity: 3, availability: 3,
+    name: "",
+    description: "",
+    assessment_context: "",
+    confidentiality: 3,
+    integrity: 3,
+    availability: 3,
   });
-
-  // Q&A state
   const [qaAssetIdx, setQaAssetIdx] = useState(0);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
-  // answers[assetId][sectionId][questionId] = LocalAnswer
   const [answers, setAnswers] = useState<Record<string, Record<string, Record<string, LocalAnswer>>>>({});
   const [submittingQa, setSubmittingQa] = useState(false);
 
-  useEffect(() => { fetchAssessments(); fetchAssets(); fetchSections(); }, []);
+  useEffect(() => {
+    fetchAssessments();
+    fetchAssets();
+    fetchSections();
+  }, [fetchAssessments, fetchAssets, fetchSections]);
 
-  // Auto-trigger analysis on entering step 2
   useEffect(() => {
     if (wizardStep !== 2 || !selectedAssessment || isAnalyzing) return;
-    if (selectedAssessment.risks.length > 0) { setWizardStep(3); return; }
+    if (selectedAssessment.risks.length > 0) {
+      setWizardStep(3);
+      return;
+    }
     analyzeAssessment(selectedAssessment.id).then(() => setWizardStep(3)).catch(() => {});
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wizardStep, selectedAssessment?.id]);
+  }, [analyzeAssessment, isAnalyzing, selectedAssessment, wizardStep]);
 
-  // Auto-suggest controls on entering step 4
   useEffect(() => {
     if (wizardStep !== 4 || !selectedAssessment) return;
     if ((selectedAssessment.suggested_controls ?? []).length === 0) {
       suggestControls(selectedAssessment.id).catch(() => {});
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wizardStep, selectedAssessment?.id]);
+  }, [selectedAssessment, suggestControls, wizardStep]);
 
-  // Auto-fetch residual on entering step 5
   useEffect(() => {
     if (wizardStep !== 5 || !selectedAssessment) return;
     fetchResidual(selectedAssessment.id).catch(() => {});
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wizardStep, selectedAssessment?.id]);
+  }, [fetchResidual, selectedAssessment, wizardStep]);
 
-  // ── KPIs ──────────────────────────────────────────────────────────────
-
-  const active = assessments.filter(a => a.status !== "complete").length;
-  const allRisks = assessments.flatMap(a => a.risks);
-  const highCrit = allRisks.filter(r =>
-    r.inherent_risk_band === "Critical" || r.inherent_risk_band === "High"
+  const activeAssessments = assessments.filter((assessment) => assessment.status !== "complete").length;
+  const allRisks = assessments.flatMap((assessment) => assessment.risks);
+  const highCriticalRisks = allRisks.filter(
+    (risk) => risk.inherent_risk_band === "Critical" || risk.inherent_risk_band === "High",
   ).length;
-  const drafts = assessments.filter(a => a.status === "draft").length;
+  const drafts = assessments.filter((assessment) => assessment.status === "draft").length;
+  const selectedHighRisks = selectedAssessment
+    ? selectedAssessment.risks.filter(
+        (risk) => risk.inherent_risk_band === "Critical" || risk.inherent_risk_band === "High",
+      ).length
+    : 0;
 
-  // ── Helpers ───────────────────────────────────────────────────────────
+  const currentAssetId = selectedAssessment?.asset_ids[qaAssetIdx] ?? "";
+  const currentReport = report ?? selectedAssessment?.report_markdown ?? null;
+
+  const assetName = (id: string) =>
+    assets.find((asset) => asset.id === id)?.name ??
+    selectedAssessment?.ad_hoc_applications?.find((app) => app.id === id)?.name ??
+    id;
+
+  function resetCreateState() {
+    setForm({ title: "", description: "", selectedAssetIds: [] });
+    setAdHocApps([]);
+    setAdHocDraft({
+      name: "",
+      description: "",
+      assessment_context: "",
+      confidentiality: 3,
+      integrity: 3,
+      availability: 3,
+    });
+    setShowAdHocForm(false);
+  }
 
   function setAnswer(assetId: string, sectionId: string, questionId: string, answer: AnswerType) {
-    setAnswers(prev => ({
+    setAnswers((prev) => ({
       ...prev,
       [assetId]: {
         ...(prev[assetId] ?? {}),
         [sectionId]: {
           ...(prev[assetId]?.[sectionId] ?? {}),
-          [questionId]: { answer, details: prev[assetId]?.[sectionId]?.[questionId]?.details ?? "" },
+          [questionId]: {
+            answer,
+            details: prev[assetId]?.[sectionId]?.[questionId]?.details ?? "",
+          },
         },
       },
     }));
   }
 
   function setDetails(assetId: string, sectionId: string, questionId: string, details: string) {
-    setAnswers(prev => ({
+    setAnswers((prev) => ({
       ...prev,
       [assetId]: {
         ...(prev[assetId] ?? {}),
         [sectionId]: {
           ...(prev[assetId]?.[sectionId] ?? {}),
-          [questionId]: { answer: prev[assetId]?.[sectionId]?.[questionId]?.answer ?? "na", details },
+          [questionId]: {
+            answer: prev[assetId]?.[sectionId]?.[questionId]?.answer ?? "na",
+            details,
+          },
         },
       },
     }));
   }
 
-  function answeredCount(assetId: string): number {
+  function answeredCount(assetId: string) {
     const assetAnswers = answers[assetId] ?? {};
-    return Object.values(assetAnswers).flatMap(s => Object.values(s)).length; // count all including N/A
+    return Object.values(assetAnswers).flatMap((sectionAnswer) => Object.values(sectionAnswer)).length;
   }
 
-  // ── Handlers ──────────────────────────────────────────────────────────
-
   async function handleCreate() {
-    if (!form.title || (form.selectedAssetIds.length === 0 && adHocApps.length === 0)) {
+    if (!form.title.trim() || (form.selectedAssetIds.length === 0 && adHocApps.length === 0)) {
       toast({ title: "Title and at least one application required", variant: "destructive" });
       return;
     }
+
     try {
-      const ra = await createAssessment({
+      const assessment = await createAssessment({
         title: form.title,
         description: form.description,
         asset_ids: form.selectedAssetIds,
         ad_hoc_applications: adHocApps,
       });
-      selectAssessment(ra);
+      selectAssessment(assessment);
       setShowCreate(false);
-      setAdHocApps([]);
-      setWizardStep(1);
-      setRightTab("wizard");
+      setWizardStep(statusToStep(assessment.status));
       setQaAssetIdx(0);
       setExpandedSection(sections[0]?.id ?? null);
+      resetCreateState();
       toast({ title: "Assessment created" });
     } catch {
       toast({ title: "Failed to create assessment", variant: "destructive" });
@@ -191,36 +508,45 @@ export default function RiskAssessmentPage() {
 
   function handleAddAdHoc() {
     if (!adHocDraft.name?.trim()) return;
-    setAdHocApps(prev => [...prev, { ...adHocDraft }]);
-    setAdHocDraft({ name: "", description: "", assessment_context: "", confidentiality: 3, integrity: 3, availability: 3 });
+    setAdHocApps((prev) => [...prev, { ...adHocDraft }]);
+    setAdHocDraft({
+      name: "",
+      description: "",
+      assessment_context: "",
+      confidentiality: 3,
+      integrity: 3,
+      availability: 3,
+    });
     setShowAdHocForm(false);
   }
 
   async function handleSubmitQa() {
-    if (!selectedAssessment) return;
-    const assetId = selectedAssessment.asset_ids[qaAssetIdx];
+    if (!selectedAssessment || !currentAssetId) return;
     setSubmittingQa(true);
+
     try {
-      const responses = sections.flatMap(section =>
-        section.questions.map(question => {
-          const local = answers[assetId]?.[section.id]?.[question.id];
+      const responses = sections.flatMap((section) =>
+        section.questions.map((question) => {
+          const local = answers[currentAssetId]?.[section.id]?.[question.id];
           return {
-            asset_id: assetId,
+            asset_id: currentAssetId,
             section_id: section.id,
             question_id: question.id,
             answer: (local?.answer ?? "na") as AnswerType,
             details: local?.details ?? "",
           };
-        })
+        }),
       );
+
       await submitResponseBatch(selectedAssessment.id, responses);
+
       if (qaAssetIdx < selectedAssessment.asset_ids.length - 1) {
-        setQaAssetIdx(i => i + 1);
+        setQaAssetIdx((prev) => prev + 1);
         setExpandedSection(sections[0]?.id ?? null);
-        toast({ title: "Responses saved — next application" });
+        toast({ title: "Responses saved for this application" });
       } else {
         setWizardStep(2);
-        toast({ title: "All responses submitted — running analysis…" });
+        toast({ title: "All responses submitted. Starting analysis." });
       }
     } catch {
       toast({ title: "Failed to save responses", variant: "destructive" });
@@ -229,531 +555,993 @@ export default function RiskAssessmentPage() {
     }
   }
 
-  async function refreshAssessment(raId: string) {
+  async function refreshAssessment(assessmentId: string) {
     try {
-      const r = await fetch(`/api/risk-assessment/${raId}`);
-      if (r.ok) { const ra = await r.json(); selectAssessment(ra); }
-    } catch { /* non-critical */ }
-  }
-
-  async function handleAnalyse() {
-    if (!selectedAssessment) return;
-    try {
-      await analyzeAssessment(selectedAssessment.id);
-      setWizardStep(3);
-      toast({ title: "Analysis complete" });
+      const response = await fetch(`/api/risk-assessment/${assessmentId}`);
+      if (!response.ok) return;
+      const updated = await response.json();
+      selectAssessment(updated);
     } catch {
-      toast({ title: "Analysis failed", variant: "destructive" });
+      // Non-critical UI refresh path.
     }
   }
 
-  async function handleFetchResidual() {
+  async function handleGenerateReport() {
     if (!selectedAssessment) return;
-    await fetchResidual(selectedAssessment.id);
-    setWizardStep(4);
+    try {
+      await generateReport(selectedAssessment.id);
+      toast({ title: "Report generated" });
+    } catch {
+      toast({ title: "Report failed", variant: "destructive" });
+    }
   }
 
-  // ── Section accordion helpers ─────────────────────────────────────────
-
-  function sectionProgress(assetId: string, section: Section): number {
-    const sectionAnswers = answers[assetId]?.[section.id] ?? {};
-    return Object.values(sectionAnswers).length; // count all answers including N/A
+  async function handleApplySuggestion(riskId: string, suggestion: SuggestedControl) {
+    if (!selectedAssessment) return;
+    try {
+      await applyControl(selectedAssessment.id, riskId, suggestion.control_id, "suggested", suggestion.rationale);
+      await refreshAssessment(selectedAssessment.id);
+      toast({ title: "Control applied" });
+    } catch {
+      toast({ title: "Failed to apply control", variant: "destructive" });
+    }
   }
 
-  // ── Render ────────────────────────────────────────────────────────────
+  function openCreate() {
+    setShowCreate(true);
+    selectAssessment(null);
+    setWizardStep(0);
+  }
 
-  const assetName = (id: string) =>
-    assets.find(a => a.id === id)?.name ??
-    selectedAssessment?.ad_hoc_applications?.find(a => a.id === id)?.name ??
-    id;
+  function closeCreate() {
+    setShowCreate(false);
+    resetCreateState();
+  }
+
+  function selectExistingAssessment(assessment: RiskAssessment) {
+    setShowCreate(false);
+    selectAssessment(assessment);
+    setWizardStep(statusToStep(assessment.status));
+    setQaAssetIdx(0);
+    setExpandedSection(sections[0]?.id ?? null);
+  }
 
   return (
-    <div className="trace-workbench-shell flex flex-col h-screen bg-slate-50">
+    <div className="h-full overflow-auto bg-[#F0F2F7]" data-risk-assessment-page="true">
       <HeroSection
         title="Risk Assessment"
-        subtitle="Application risk assessments — questionnaire, inherent scoring, residual analysis"
+        subtitle="Application risk assessments, structured questionnaires, inherent scoring, residual analysis, and reporting."
         icon={ShieldAlert}
       />
 
-      <div className="trace-workbench-layout">
-        {/* ── Left panel: assessment list ── */}
-        <div className="trace-workbench-rail w-72 bg-white border-r border-slate-200 flex flex-col">
-          <div className="p-4 border-b border-slate-100">
-            <Button className="w-full" size="sm" onClick={() => { setShowCreate(true); setRightTab("dashboard"); }}>
-              <Plus className="w-4 h-4 mr-2" /> New Assessment
-            </Button>
-          </div>
-          <ScrollArea className="trace-workbench-scroll flex-1">
-            {error && (
-              <div className="mx-3 mt-3 p-2 rounded bg-red-50 border border-red-200 text-xs text-red-600">{error}</div>
-            )}
-            {isLoading ? (
-              <div className="flex justify-center p-8"><Loader2 className="animate-spin w-5 h-5 text-slate-400" /></div>
-            ) : assessments.length === 0 ? (
-              <p className="text-xs text-slate-400 text-center py-10 px-4">No assessments yet. Create one to get started.</p>
-            ) : assessments.map(a => (
-              <button
-                key={a.id}
-                onClick={() => { selectAssessment(a); setRightTab("wizard"); setWizardStep(a.status === "draft" ? 0 : a.status === "in_progress" ? 1 : a.status === "risks_identified" ? 3 : a.status === "controls_applied" ? 5 : a.status === "complete" ? 6 : 3); }}
-                className={`w-full text-left px-4 py-3 border-b border-slate-50 hover:bg-slate-50 transition-colors ${selectedAssessment?.id === a.id ? "bg-blue-50 border-l-2 border-l-blue-500" : ""}`}
-              >
-                <p className="font-medium text-sm text-slate-800 truncate">{a.title}</p>
-                <div className="flex items-center gap-2 mt-1">
-                  <Badge variant="outline" className={`text-xs ${STATUS_COLOR[a.status]}`}>
-                    {STATUS_LABELS[a.status]}
-                  </Badge>
-                  <span className="text-xs text-slate-400">{a.asset_ids.length + (a.ad_hoc_applications?.length ?? 0)} app{(a.asset_ids.length + (a.ad_hoc_applications?.length ?? 0)) !== 1 ? "s" : ""}</span>
-                </div>
+      <main className="mx-auto max-w-[1460px] px-5 py-8 sm:px-6 lg:px-10 lg:py-10">
+        <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
+          <aside
+            className="rounded-[28px] border border-[#11345A] bg-[linear-gradient(180deg,#0C233C_0%,#14355F_100%)] p-5 text-white shadow-[0_24px_54px_-32px_rgba(12,35,60,0.46)]"
+            data-risk-assessment-rail="true"
+          >
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.28em] text-white/46">Sessions</p>
+                <h2 className="text-[20px] font-bold tracking-[-0.03em] text-white">Assessments</h2>
+              </div>
+              <button className={PRIMARY_BUTTON} onClick={openCreate}>
+                <Plus className="h-4 w-4" />
+                New
               </button>
-            ))}
-          </ScrollArea>
-        </div>
-
-        {/* ── Right panel ── */}
-        <div className="trace-workbench-main flex-1 overflow-auto p-6">
-          {/* Create modal */}
-          {showCreate && (
-            <Card className="max-w-lg mx-auto mb-6">
-              <CardHeader><CardTitle>New Risk Assessment</CardTitle></CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-slate-700 mb-1 block">Assessment title <span className="text-red-500">*</span></label>
-                  <Input placeholder="e.g. FY2025 Cloud App Risk Review" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700 mb-1 block">Description</label>
-                  <Textarea placeholder="High-level description of the assessment scope" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={2} />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-700 mb-2">Select applications in scope *</p>
-                  <div className="space-y-1 max-h-48 overflow-y-auto border rounded p-2">
-                    {assets.map(a => (
-                      <label key={a.id} className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 p-1 rounded">
-                        <input
-                          type="checkbox"
-                          checked={form.selectedAssetIds.includes(a.id)}
-                          onChange={e => setForm(p => ({
-                            ...p,
-                            selectedAssetIds: e.target.checked
-                              ? [...p.selectedAssetIds, a.id]
-                              : p.selectedAssetIds.filter(id => id !== a.id),
-                          }))}
-                        />
-                        <span className="text-sm">{a.name}</span>
-                        <Badge variant="outline" className={`text-xs ml-auto ${BAND_COLOR[a.criticality]}`}>{a.criticality}</Badge>
-                      </label>
-                    ))}
-                    {assets.length === 0 && (
-                      <p className="text-xs text-slate-400 p-2">No applications in Asset Registry yet.</p>
-                    )}
-                  </div>
-                </div>
-                {/* Ad hoc applications */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-medium text-slate-700">Ad hoc applications</p>
-                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setShowAdHocForm(v => !v)}>
-                      <Plus className="w-3 h-3 mr-1" /> Add
-                    </Button>
-                  </div>
-                  {adHocApps.map((app, i) => (
-                    <div key={i} className="flex items-center justify-between p-2 bg-slate-50 rounded border border-slate-200 mb-1 text-xs">
-                      <span className="font-medium text-slate-700">{app.name}</span>
-                      <button className="text-slate-400 hover:text-red-500 text-xs ml-2" onClick={() => setAdHocApps(p => p.filter((_, j) => j !== i))}>✕</button>
-                    </div>
-                  ))}
-                  {showAdHocForm && (
-                    <div className="border rounded p-3 space-y-2 bg-slate-50 mt-1">
-                      <Input placeholder="Application name *" className="h-7 text-xs"
-                        value={adHocDraft.name ?? ""} onChange={e => setAdHocDraft(p => ({ ...p, name: e.target.value }))} />
-                      <Textarea placeholder="Description" rows={1} className="text-xs"
-                        value={adHocDraft.description ?? ""} onChange={e => setAdHocDraft(p => ({ ...p, description: e.target.value }))} />
-                      <Input placeholder="Assessment context (what this assessment is about)" className="h-7 text-xs"
-                        value={adHocDraft.assessment_context ?? ""} onChange={e => setAdHocDraft(p => ({ ...p, assessment_context: e.target.value }))} />
-                      <CiaRatingWidget
-                        confidentiality={adHocDraft.confidentiality ?? 3}
-                        confidentiality_min={adHocDraft.confidentiality ?? 3}
-                        integrity={adHocDraft.integrity ?? 3}
-                        integrity_min={adHocDraft.integrity ?? 3}
-                        availability={adHocDraft.availability ?? 3}
-                        availability_min={adHocDraft.availability ?? 3}
-                        onChange={(field, _min, max) => setAdHocDraft(p => ({ ...p, [field]: max }))}
-                      />
-                      <div className="flex gap-2">
-                        <Button size="sm" className="h-7 text-xs" onClick={handleAddAdHoc} disabled={!adHocDraft.name?.trim()}>Add</Button>
-                        <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setShowAdHocForm(false)}>Cancel</Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex gap-2 items-center">
-                  <Button onClick={handleCreate} disabled={!form.title.trim() || (form.selectedAssetIds.length === 0 && adHocApps.length === 0)}>Create</Button>
-                  <Button variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>
-                  {!form.title.trim() && <span className="text-xs text-red-500">Title required</span>}
-                  {form.title.trim() && form.selectedAssetIds.length === 0 && adHocApps.length === 0 && (
-                    <span className="text-xs text-red-500">Select or add at least one application</span>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Dashboard */}
-          {!selectedAssessment && !showCreate && (
-            <div>
-              <HowItWorks
-                steps={[
-                  { number: 1, title: "Define Assessment Scope", desc: "Create an assessment, name it, and select the applications or assets in scope. Ad-hoc entries can be added where an asset isn't in the register.", color: "#7213EA" },
-                  { number: 2, title: "Capture Risks & Scoring", desc: "Walk through the guided wizard to record inherent and residual risks, link controls, and apply structured scoring across impact and likelihood dimensions.", color: "#1E49E2" },
-                  { number: 3, title: "Finalise & Report", desc: "Review scored results, tag drafts vs. active assessments, and export the risk assessment output for reporting and downstream workflows.", color: "#098E7E" },
-                ]}
-              />
-              <div className="grid grid-cols-3 gap-4 mb-6">
-                <Card><CardContent className="pt-6"><p className="text-2xl font-bold text-blue-600">{active}</p><p className="text-sm text-slate-500">Active Assessments</p></CardContent></Card>
-                <Card><CardContent className="pt-6"><p className="text-2xl font-bold text-orange-600">{highCrit}</p><p className="text-sm text-slate-500">High / Critical Risks</p></CardContent></Card>
-                <Card><CardContent className="pt-6"><p className="text-2xl font-bold text-slate-500">{drafts}</p><p className="text-sm text-slate-500">Drafts</p></CardContent></Card>
-              </div>
-              <p className="text-slate-400 text-sm">Select an assessment from the left, or create a new one.</p>
             </div>
-          )}
 
-          {/* Wizard */}
-          {selectedAssessment && rightTab === "wizard" && (
-            <div className="max-w-3xl">
-              {/* Stepper */}
-              <div className="flex items-center gap-2 mb-6">
-                {WIZARD_STEPS.map((label, i) => (
-                  <div key={label} className="flex items-center gap-1">
-                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold border-2 ${i < wizardStep ? "bg-emerald-500 border-emerald-500 text-white" : i === wizardStep ? "bg-blue-500 border-blue-500 text-white" : "bg-white border-slate-300 text-slate-400"}`}>
-                      {i < wizardStep ? <CheckCircle2 className="w-4 h-4" /> : i + 1}
-                    </div>
-                    <span className={`text-xs font-medium ${i === wizardStep ? "text-blue-600" : "text-slate-400"}`}>{label}</span>
-                    {i < WIZARD_STEPS.length - 1 && <ChevronRight className="w-3 h-3 text-slate-300 ml-1" />}
-                  </div>
-                ))}
+            {error ? (
+              <div className="mb-4 rounded-[16px] border border-[#F3C6CF] bg-[#FEEBED] px-4 py-3 text-[12px] font-medium text-[#E5001B]">
+                {error}
               </div>
+            ) : null}
 
-              {/* Step 0: Summary */}
-              {wizardStep === 0 && (
-                <Card>
-                  <CardHeader><CardTitle>{selectedAssessment.title}</CardTitle></CardHeader>
-                  <CardContent className="space-y-3">
-                    <p className="text-sm text-slate-600">{selectedAssessment.description}</p>
-                    <div>
-                      <p className="text-sm font-medium text-slate-700 mb-1">Applications in scope</p>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedAssessment.asset_ids.map(id => (
-                          <Badge key={id} variant="outline">{assetName(id)}</Badge>
-                        ))}
+            <div className="mb-4 grid grid-cols-3 gap-2">
+              <div className="rounded-[16px] border border-white/10 bg-white/8 px-3 py-3 backdrop-blur-sm">
+                <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/46">Active</div>
+                <div className="mt-2 text-[26px] font-bold tracking-[-0.03em] text-white">{activeAssessments}</div>
+              </div>
+              <div className="rounded-[16px] border border-white/10 bg-white/8 px-3 py-3 backdrop-blur-sm">
+                <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/46">High</div>
+                <div className="mt-2 text-[26px] font-bold tracking-[-0.03em] text-white">{highCriticalRisks}</div>
+              </div>
+              <div className="rounded-[16px] border border-white/10 bg-white/8 px-3 py-3 backdrop-blur-sm">
+                <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/46">Drafts</div>
+                <div className="mt-2 text-[26px] font-bold tracking-[-0.03em] text-white">{drafts}</div>
+              </div>
+            </div>
+
+            <ScrollArea className="h-[560px] pr-3">
+              <div className="space-y-3">
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-10">
+                    <Loader2 className="h-5 w-5 animate-spin text-[#7E91AE]" />
+                  </div>
+                ) : assessments.length === 0 ? (
+                  <div className="rounded-[18px] border border-dashed border-white/18 bg-white/6 px-4 py-8 text-center text-[13px] leading-6 text-white/60">
+                    No assessments yet. Create a new session to start the workflow.
+                  </div>
+                ) : (
+                  assessments.map((assessment) => {
+                    const selected = selectedAssessment?.id === assessment.id && !showCreate;
+                    return (
+                      <button
+                        key={assessment.id}
+                        className={`w-full rounded-[20px] border px-4 py-4 text-left transition-all ${
+                          selected
+                            ? "border-[#7FB0FF] bg-[linear-gradient(135deg,rgba(30,73,226,0.34)_0%,rgba(0,184,245,0.18)_100%)] shadow-[0_16px_34px_-24px_rgba(0,184,245,0.45)]"
+                            : "border-white/10 bg-white/6 hover:border-white/18 hover:bg-white/10"
+                        }`}
+                        onClick={() => selectExistingAssessment(assessment)}
+                        data-risk-assessment-session={assessment.id}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="truncate text-[14px] font-bold tracking-[-0.02em] text-white">
+                              {assessment.title}
+                            </p>
+                            <p className="mt-1 text-[12px] text-white/62">
+                              {assessmentAppCount(assessment)} application{assessmentAppCount(assessment) === 1 ? "" : "s"}
+                            </p>
+                          </div>
+                          <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-white/36" />
+                        </div>
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          <StatusBadge status={assessment.status} />
+                          <span className="text-[11px] text-white/46">{formatDate(assessment.updated_at)}</span>
+                        </div>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </ScrollArea>
+          </aside>
+
+          <div className="min-w-0 space-y-6">
+            {!selectedAssessment && !showCreate ? (
+              <>
+                <TraceStatusRibbon
+                  title="Assessment Dashboard"
+                  detail="Create sessions, capture questionnaire responses, score inherent risks, apply controls, and review residual posture without leaving the feature."
+                  icon={ShieldCheck}
+                  action={
+                    <button className={PRIMARY_BUTTON} onClick={openCreate}>
+                      <Plus className="h-4 w-4" />
+                      New Assessment
+                    </button>
+                  }
+                />
+
+                <HowItWorks
+                  steps={[
+                    {
+                      number: 1,
+                      title: "Define Assessment Scope",
+                      desc: "Name the session, select applications from the Asset Registry, and add ad hoc systems where required.",
+                      color: "#7213EA",
+                    },
+                    {
+                      number: 2,
+                      title: "Run The Questionnaire",
+                      desc: "Capture exposure, control, and context responses for each in-scope application in a guided sequence.",
+                      color: "#1E49E2",
+                    },
+                    {
+                      number: 3,
+                      title: "Review And Report",
+                      desc: "Validate the resulting risks, apply controls, compare residual posture, and generate the final report.",
+                      color: "#098E7E",
+                    },
+                  ]}
+                />
+
+                <div className="grid gap-5 md:grid-cols-3" data-risk-assessment-dashboard="true">
+                  <TraceMetricCard
+                    label="Active Assessments"
+                    value={activeAssessments}
+                    sub="Sessions currently progressing"
+                    accentColor="#1E49E2"
+                    badge={`${assessments.length} total sessions`}
+                    badgeClassName="bg-[#EEF2FF] text-[#1E49E2]"
+                  />
+                  <TraceMetricCard
+                    label="High / Critical Risks"
+                    value={highCriticalRisks}
+                    sub="Across all fetched assessments"
+                    accentColor="#EAAA00"
+                    badge={`${allRisks.length} total recorded risks`}
+                    badgeClassName="bg-[#FFF9E8] text-[#8A6A00]"
+                  />
+                  <TraceMetricCard
+                    label="Draft Assessments"
+                    value={drafts}
+                    sub="Waiting to begin questionnaire capture"
+                    accentColor="#009A44"
+                    badge={`${assets.length} asset registry applications available`}
+                    badgeClassName="bg-[#EDFBF5] text-[#009A44]"
+                  />
+                </div>
+
+                {assessments.length > 0 ? (
+                  <TracePanel
+                    title="Recent Assessments"
+                    subtitle="Open a session from the rail or jump back into the most recently updated assessments below."
+                  >
+                    <div className="overflow-hidden rounded-[18px] border border-[#E2E6EF]">
+                      <table className="w-full border-collapse">
+                        <thead className="bg-[#F7F9FC]">
+                          <tr>
+                            {["Assessment", "Scope", "Status", "Updated"].map((label) => (
+                              <th
+                                key={label}
+                                className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-[0.2em] text-[#7E91AE]"
+                              >
+                                {label}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {assessments.slice(0, 5).map((assessment) => (
+                            <tr key={assessment.id} className="border-t border-[#E2E6EF]">
+                              <td className="px-4 py-3 text-[13px] font-bold text-[#0C233C]">{assessment.title}</td>
+                              <td className="px-4 py-3 text-[13px] text-[#5A6478]">
+                                {assessmentAppCount(assessment)} application{assessmentAppCount(assessment) === 1 ? "" : "s"}
+                              </td>
+                              <td className="px-4 py-3">
+                                <StatusBadge status={assessment.status} />
+                              </td>
+                              <td className="px-4 py-3 text-[13px] text-[#5A6478]">{formatDate(assessment.updated_at)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </TracePanel>
+                ) : (
+                  <TraceLockedState
+                    title="No Risk Assessments Yet"
+                    description="Start the first session to define scope, run the questionnaire, and generate the assessment output inside this feature."
+                    action={
+                      <button className={PRIMARY_BUTTON} onClick={openCreate}>
+                        <Plus className="h-4 w-4" />
+                        Create The First Assessment
+                      </button>
+                    }
+                  />
+                )}
+              </>
+            ) : null}
+
+            {showCreate ? (
+              <SurfaceSection
+                eyebrow="Setup"
+                title="Create New Assessment"
+                action={
+                  <div className="flex flex-wrap gap-2" data-risk-assessment-create="true">
+                    <button className={SECONDARY_BUTTON} onClick={closeCreate}>
+                      Cancel
+                    </button>
+                    <button className={PRIMARY_BUTTON} onClick={() => void handleCreate()}>
+                      <Play className="h-4 w-4" />
+                      Create Assessment
+                    </button>
+                  </div>
+                }
+              >
+                <div className="grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+                  <div className="space-y-5">
+                    <div className="overflow-hidden rounded-[22px] border border-[#123863] bg-[linear-gradient(135deg,#0C233C_0%,#163B67_58%,#1E49E2_100%)] p-6 text-white shadow-[0_20px_44px_-30px_rgba(12,35,60,0.48)]">
+                      <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.28em] text-white/46">Assessment Setup</p>
+                      <h3 className="text-[24px] font-bold tracking-[-0.04em] text-white">Define Scope Before We Ask Anything</h3>
+                      <p className="mt-3 max-w-[560px] text-[14px] leading-7 text-white/66">
+                        Name the session, choose the core applications in scope, and add any ad hoc systems that need to be assessed without touching the wider registry.
+                      </p>
+                      <div className="mt-5 grid gap-3 md:grid-cols-3">
+                        <CommandDeckMetric
+                          label="Registry Assets"
+                          value={form.selectedAssetIds.length}
+                          detail="Selected from the live registry"
+                        />
+                        <CommandDeckMetric
+                          label="Ad Hoc Systems"
+                          value={adHocApps.length}
+                          detail="Scoped only to this assessment"
+                        />
+                        <CommandDeckMetric
+                          label="Questionnaire Path"
+                          value={Math.max(form.selectedAssetIds.length, 0)}
+                          detail="Registry-backed applications will enter the guided questionnaire"
+                        />
                       </div>
                     </div>
-                    <Button onClick={() => { setWizardStep(1); setExpandedSection(sections[0]?.id ?? null); }}>
-                      Start Questionnaire <ChevronRight className="w-4 h-4 ml-1" />
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
 
-              {/* Step 1: Questionnaire */}
-              {wizardStep === 1 && (
-                <div className="space-y-4">
-                  {/* Sticky submit bar */}
-                  <div className="sticky top-0 z-10 bg-white/95 backdrop-blur border border-slate-200 rounded-lg px-4 py-2 flex items-center justify-between shadow-sm">
-                    <span className="text-xs text-slate-500">
-                      {selectedAssessment.asset_ids.indexOf(selectedAssessment.asset_ids[qaAssetIdx]) + 1} of {selectedAssessment.asset_ids.length} application(s)
-                      · {answeredCount(selectedAssessment.asset_ids[qaAssetIdx])} answered
-                    </span>
-                    <Button size="sm" onClick={handleSubmitQa} disabled={submittingQa}>
-                      {submittingQa && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                      {qaAssetIdx < selectedAssessment.asset_ids.length - 1 ? "Save & Next →" : "Submit All Responses →"}
-                    </Button>
-                  </div>
-                  {/* Asset tab bar */}
-                  <div className="flex gap-2">
-                    {selectedAssessment.asset_ids.map((id, idx) => (
-                      <button
-                        key={id}
-                        onClick={() => setQaAssetIdx(idx)}
-                        className={`px-3 py-1 rounded text-sm font-medium border transition-colors ${idx === qaAssetIdx ? "bg-blue-500 text-white border-blue-500" : "bg-white text-slate-600 border-slate-300 hover:bg-slate-50"}`}
-                      >
-                        {assetName(id)}
-                        <span className="ml-1 text-xs opacity-70">({answeredCount(id)})</span>
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Section accordion */}
-                  {sections.map(section => {
-                    const assetId = selectedAssessment.asset_ids[qaAssetIdx];
-                    const done = sectionProgress(assetId, section);
-                    const total = section.questions.length;
-                    const isOpen = expandedSection === section.id;
-                    return (
-                      <Card key={section.id} className={isOpen ? "ring-1 ring-blue-300" : ""}>
-                        <button
-                          className="w-full flex items-center justify-between px-4 py-3 text-left"
-                          onClick={() => setExpandedSection(isOpen ? null : section.id)}
-                        >
-                          <div className="flex items-center gap-3">
-                            {isOpen ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
-                            <span className="font-medium text-sm text-slate-800">{section.title}</span>
+                    <div>
+                      <label className="mb-2 block text-[11px] font-bold uppercase tracking-[0.22em] text-[#7E91AE]">
+                        Assessment Title
+                      </label>
+                      <Input
+                        value={form.title}
+                        onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
+                        placeholder="FY2026 Cloud Payments Review"
+                        className="h-12 rounded-[16px] border-[#DCE3EE]"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-[11px] font-bold uppercase tracking-[0.22em] text-[#7E91AE]">
+                        Description
+                      </label>
+                      <Textarea
+                        value={form.description}
+                        onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))}
+                        placeholder="Describe the scope, timing, and assessment objective."
+                        rows={4}
+                        className="rounded-[16px] border-[#DCE3EE]"
+                      />
+                    </div>
+                    <TracePanel
+                      title="Applications In Scope"
+                      subtitle="Select existing applications from the Asset Registry. These drive the questionnaire path."
+                    >
+                      <div className="space-y-3">
+                        {assets.length === 0 ? (
+                          <div className="rounded-[16px] border border-dashed border-[#DCE3EE] bg-[#FBFCFE] px-4 py-6 text-[13px] leading-6 text-[#7388A8]">
+                            No applications are available in the Asset Registry yet.
                           </div>
-                          <Badge variant="outline" className={done === total ? "border-emerald-400 text-emerald-600" : "border-slate-300 text-slate-500"}>
-                            {done}/{total}
-                          </Badge>
-                        </button>
-                        {isOpen && (
-                          <CardContent className="pt-0 space-y-4">
-                            {section.questions.map(q => {
-                              const local = answers[assetId]?.[section.id]?.[q.id];
-                              return (
-                                <div key={q.id} className="border-t pt-3">
-                                  <div className="flex items-start gap-2 mb-2">
-                                    <span className={`text-xs px-1.5 py-0.5 rounded border ${q.question_type === "Exposure" ? "bg-orange-50 text-orange-600 border-orange-200" : q.question_type === "Control" ? "bg-blue-50 text-blue-600 border-blue-200" : "bg-slate-50 text-slate-500 border-slate-200"}`}>
-                                      {q.question_type}
-                                    </span>
-                                    <p className="text-sm text-slate-700 flex-1">{q.text}</p>
+                        ) : (
+                          assets.map((asset) => {
+                            const checked = form.selectedAssetIds.includes(asset.id);
+                            return (
+                              <label
+                                key={asset.id}
+                                className={`flex cursor-pointer items-start gap-3 rounded-[18px] border px-4 py-4 transition-colors ${
+                                  checked ? "border-[#AFC1F8] bg-[#EEF2FF]" : "border-[#E2E6EF] bg-white hover:bg-[#F8FAFF]"
+                                }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  className="mt-1 h-4 w-4 rounded border-[#B4C1D6]"
+                                  checked={checked}
+                                  onChange={(event) =>
+                                    setForm((prev) => ({
+                                      ...prev,
+                                      selectedAssetIds: event.target.checked
+                                        ? [...prev.selectedAssetIds, asset.id]
+                                        : prev.selectedAssetIds.filter((value) => value !== asset.id),
+                                    }))
+                                  }
+                                />
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0">
+                                      <p className="text-[14px] font-bold text-[#0C233C]">{asset.name}</p>
+                                      <p className="mt-1 text-[12px] leading-6 text-[#7388A8]">
+                                        {asset.description || asset.use || "Application in the asset registry"}
+                                      </p>
+                                    </div>
+                                    <BandBadge band={asset.criticality} />
                                   </div>
-                                  <div className="flex gap-2 mb-2">
-                                    {(["yes", "no", "na"] as AnswerType[]).map(a => (
-                                      <button
-                                        key={a}
-                                        onClick={() => setAnswer(assetId, section.id, q.id, a)}
-                                        className={`px-3 py-1 rounded border text-xs transition-colors ${local?.answer === a ? ANSWER_STYLE[a] : "bg-white text-slate-500 border-slate-300 hover:bg-slate-50"}`}
-                                      >
-                                        {a === "na" ? "N/A" : a.toUpperCase()}
-                                      </button>
-                                    ))}
-                                  </div>
-                                  {local?.answer && local.answer !== "na" && (
-                                    <Textarea
-                                      placeholder="Additional details (optional)"
-                                      value={local.details}
-                                      onChange={e => setDetails(assetId, section.id, q.id, e.target.value)}
-                                      rows={2}
-                                      className="text-sm"
-                                    />
-                                  )}
                                 </div>
-                              );
-                            })}
-                          </CardContent>
+                              </label>
+                            );
+                          })
                         )}
-                      </Card>
-                    );
-                  })}
-
-                </div>
-              )}
-
-              {/* Step 2: Analyse — auto-triggered */}
-              {wizardStep === 2 && (
-                <Card>
-                  <CardContent className="pt-6 flex flex-col items-center gap-4 py-12">
-                    <Sparkles className="w-10 h-10 text-violet-400 animate-pulse" />
-                    <p className="font-semibold text-slate-700">Running Risk Analysis…</p>
-                    <Loader2 className="w-6 h-6 text-violet-500 animate-spin" />
-                    <p className="text-sm text-slate-500 text-center max-w-sm">
-                      Applying rule-based scoring and LLM analysis to identify specific risks per application.
-                      This may take a minute.
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Step 3: Risks */}
-              {wizardStep === 3 && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-semibold text-slate-800">Identified Risks ({selectedAssessment.risks.length})</h3>
-                    <Button size="sm" onClick={() => setWizardStep(4)}>
-                      Apply Controls <ChevronRight className="w-4 h-4 ml-1" />
-                    </Button>
+                      </div>
+                    </TracePanel>
                   </div>
-                  {selectedAssessment.risks.map(r => (
-                    <Card key={r.id}>
-                      <CardContent className="pt-4">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1">
-                            <p className="font-medium text-sm text-slate-800">{r.title}</p>
-                            <p className="text-xs text-slate-500 mt-1">{r.description}</p>
-                          </div>
-                          <Badge variant="outline" className={BAND_COLOR[r.inherent_risk_band]}>
-                            {r.inherent_risk_band}
-                          </Badge>
-                        </div>
-                        <div className="flex gap-4 mt-2 text-xs text-slate-500">
-                          <span>Likelihood: {r.likelihood_score}/5</span>
-                          <span>Impact: {r.impact_score}/5</span>
-                          <span>Score: {r.inherent_risk_score}</span>
-                          <Badge variant="outline" className="text-xs">{r.risk_category}</Badge>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                  {selectedAssessment.risks.length === 0 && (
-                    <p className="text-slate-400 text-sm">No risks identified yet. Run analysis first.</p>
-                  )}
-                </div>
-              )}
 
-              {/* Step 4: Controls */}
-              {wizardStep === 4 && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-semibold text-slate-800">Apply Controls to Risks</h3>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={async () => {
-                        try { await suggestControls(selectedAssessment.id); toast({ title: "Suggestions refreshed" }); }
-                        catch { toast({ title: "Failed to refresh suggestions", variant: "destructive" }); }
-                      }}>
-                        <Sparkles className="w-4 h-4 mr-1" />Refresh Suggestions
-                      </Button>
-                      <Button size="sm" onClick={() => setWizardStep(5)}>
-                        Calculate Residual <ChevronRight className="w-4 h-4 ml-1" />
-                      </Button>
+                  <div className="space-y-5">
+                    <TracePanel
+                      title="Ad Hoc Applications"
+                      subtitle="Add systems not yet in the registry. They remain part of scope without touching other features."
+                    >
+                      <div className="mb-4 flex items-center justify-between gap-3">
+                        <div className="text-[13px] text-[#7388A8]">
+                          {adHocApps.length} ad hoc application{adHocApps.length === 1 ? "" : "s"} added
+                        </div>
+                        <button className={SOFT_BUTTON} onClick={() => setShowAdHocForm((prev) => !prev)}>
+                          <Plus className="h-4 w-4" />
+                          Add Entry
+                        </button>
+                      </div>
+
+                      {adHocApps.length > 0 ? (
+                        <div className="mb-4 space-y-2">
+                          {adHocApps.map((application, index) => (
+                            <div
+                              key={`${application.name}-${index}`}
+                              className="flex items-center justify-between rounded-[16px] border border-[#E2E6EF] bg-[#FBFCFE] px-4 py-3"
+                            >
+                              <div>
+                                <p className="text-[13px] font-bold text-[#0C233C]">{application.name}</p>
+                                <p className="text-[12px] text-[#7388A8]">
+                                  CIA {application.confidentiality}/{application.integrity}/{application.availability}
+                                </p>
+                              </div>
+                              <button
+                                className="text-[12px] font-bold text-[#8492A6] transition-colors hover:text-[#E5001B]"
+                                onClick={() => setAdHocApps((prev) => prev.filter((_, appIndex) => appIndex !== index))}
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
+
+                      {showAdHocForm ? (
+                        <div className="space-y-4 rounded-[18px] border border-[#E2E6EF] bg-[#F7F9FC] p-4">
+                          <Input
+                            value={adHocDraft.name ?? ""}
+                            onChange={(event) => setAdHocDraft((prev) => ({ ...prev, name: event.target.value }))}
+                            placeholder="Application name"
+                            className="h-11 rounded-[14px] border-[#DCE3EE]"
+                          />
+                          <Textarea
+                            value={adHocDraft.description ?? ""}
+                            onChange={(event) => setAdHocDraft((prev) => ({ ...prev, description: event.target.value }))}
+                            placeholder="Application description"
+                            rows={2}
+                            className="rounded-[14px] border-[#DCE3EE]"
+                          />
+                          <Textarea
+                            value={adHocDraft.assessment_context ?? ""}
+                            onChange={(event) =>
+                              setAdHocDraft((prev) => ({ ...prev, assessment_context: event.target.value }))
+                            }
+                            placeholder="Assessment context"
+                            rows={2}
+                            className="rounded-[14px] border-[#DCE3EE]"
+                          />
+                          <CiaRatingWidget
+                            confidentiality={adHocDraft.confidentiality ?? 3}
+                            confidentiality_min={adHocDraft.confidentiality ?? 3}
+                            integrity={adHocDraft.integrity ?? 3}
+                            integrity_min={adHocDraft.integrity ?? 3}
+                            availability={adHocDraft.availability ?? 3}
+                            availability_min={adHocDraft.availability ?? 3}
+                            onChange={(field, _minValue, maxValue) =>
+                              setAdHocDraft((prev) => ({ ...prev, [field]: maxValue }))
+                            }
+                          />
+                          <div className="flex flex-wrap gap-2">
+                            <button className={PRIMARY_BUTTON} onClick={handleAddAdHoc} disabled={!adHocDraft.name?.trim()}>
+                              Add Application
+                            </button>
+                            <button className={SECONDARY_BUTTON} onClick={() => setShowAdHocForm(false)}>
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : null}
+                    </TracePanel>
+                  </div>
+                </div>
+              </SurfaceSection>
+            ) : null}
+
+            {selectedAssessment && !showCreate ? (
+              <>
+                <section className="overflow-hidden rounded-[28px] border border-[#123863] bg-[linear-gradient(135deg,#0C233C_0%,#163B67_58%,#1E49E2_100%)] shadow-[0_28px_60px_-36px_rgba(12,35,60,0.5)]">
+                  <div className="border-b border-white/10 px-6 py-6 lg:px-8">
+                    <div className="flex flex-wrap items-start justify-between gap-5">
+                      <div className="min-w-0">
+                        <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.28em] text-white/46">Selected Assessment</p>
+                        <h2 className="text-[32px] font-bold tracking-[-0.04em] text-white">{selectedAssessment.title}</h2>
+                        <p className="mt-3 max-w-[760px] text-[14px] leading-7 text-white/66">
+                          {getAssessmentRiskSummary(selectedAssessment)}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <StatusBadge status={selectedAssessment.status} />
+                        <div className="rounded-full border border-white/14 bg-white/10 px-4 py-2 text-[12px] font-bold text-white/84">
+                          Updated {formatDate(selectedAssessment.updated_at)}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  {selectedAssessment.risks.length === 0 && (
-                    <p className="text-slate-400 text-sm">No risks found. Go back and re-run analysis.</p>
-                  )}
-                  {selectedAssessment.risks.map(risk => {
-                    const suggestions = (selectedAssessment.suggested_controls ?? []).filter(s => s.risk_id === risk.id);
-                    const applied = selectedAssessment.applied_controls.filter(c => c.risk_id === risk.id);
-                    return (
-                      <Card key={risk.id}>
-                        <CardContent className="pt-4">
-                          <div className="flex items-start justify-between gap-2 mb-3">
-                            <div className="flex-1">
-                              <p className="font-medium text-sm text-slate-800">{risk.title}</p>
-                              <p className="text-xs text-slate-500 mt-0.5">{risk.description}</p>
-                            </div>
-                            <Badge variant="outline" className={BAND_COLOR[risk.inherent_risk_band]}>
-                              {risk.inherent_risk_band}
-                            </Badge>
-                          </div>
-                          {applied.length > 0 && (
-                            <div className="mb-3 space-y-1">
-                              <p className="text-xs font-semibold text-emerald-700">Applied ({applied.length})</p>
-                              {applied.map(c => (
-                                <div key={c.id} className="flex items-center gap-2 text-xs text-emerald-700 bg-emerald-50 rounded px-2 py-1">
-                                  <CheckCircle2 className="w-3 h-3 flex-shrink-0" />{c.control_id}
+
+                  <div className="grid gap-3 border-b border-white/10 px-6 py-5 md:grid-cols-2 xl:grid-cols-4 lg:px-8">
+                    <CommandDeckMetric
+                      label="Applications In Scope"
+                      value={assessmentAppCount(selectedAssessment)}
+                      detail="Registry and ad hoc applications"
+                    />
+                    <CommandDeckMetric
+                      label="Inherent Risks"
+                      value={selectedAssessment.risks.length}
+                      detail={`${selectedHighRisks} high or critical`}
+                    />
+                    <CommandDeckMetric
+                      label="Controls Applied"
+                      value={selectedAssessment.applied_controls.length}
+                      detail="Mapped during the control response step"
+                    />
+                    <CommandDeckMetric
+                      label="Residual Reviews"
+                      value={residualResults.length}
+                      detail="Generated after control application"
+                    />
+                  </div>
+
+                  <div className="px-6 py-5 lg:px-8" data-risk-assessment-stepper="true">
+                    <div className="mb-3 text-[11px] font-bold uppercase tracking-[0.28em] text-white/46">Workflow Progress</div>
+                    <div className="flex flex-wrap gap-2">
+                      {WIZARD_STEPS.map((label, index) => (
+                        <StepPill key={label} label={label} index={index} currentStep={wizardStep} />
+                      ))}
+                    </div>
+                  </div>
+                </section>
+
+                {wizardStep === 0 ? (
+                  <SurfaceSection
+                    eyebrow="Scope"
+                    title="Assessment Summary"
+                    action={
+                      selectedAssessment.asset_ids.length > 0 ? (
+                        <button
+                          className={PRIMARY_BUTTON}
+                          onClick={() => {
+                            setWizardStep(1);
+                            setExpandedSection(sections[0]?.id ?? null);
+                          }}
+                        >
+                          Start Questionnaire
+                          <ArrowRight className="h-4 w-4" />
+                        </button>
+                      ) : null
+                    }
+                  >
+                    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+                      <TracePanel
+                        title="Applications In Scope"
+                        subtitle="Asset Registry applications drive the questionnaire path for this assessment."
+                      >
+                        <div className="flex flex-wrap gap-2">
+                          {selectedAssessment.asset_ids.length > 0 ? (
+                            selectedAssessment.asset_ids.map((assetId) => (
+                              <Badge key={assetId} variant="outline" className="rounded-full px-3 py-1.5 text-[12px]">
+                                {assetName(assetId)}
+                              </Badge>
+                            ))
+                          ) : (
+                            <div className="text-[13px] text-[#7388A8]">No Asset Registry applications selected.</div>
+                          )}
+                        </div>
+                        {selectedAssessment.ad_hoc_applications?.length ? (
+                          <div className="mt-4 border-t border-[#E2E6EF] pt-4">
+                            <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.22em] text-[#7E91AE]">
+                              Ad Hoc Applications
+                            </p>
+                            <div className="space-y-2">
+                              {selectedAssessment.ad_hoc_applications.map((application, index) => (
+                                <div
+                                  key={`${application.name}-${index}`}
+                                  className="rounded-[16px] border border-[#E2E6EF] bg-[#FBFCFE] px-4 py-3"
+                                >
+                                  <p className="text-[13px] font-bold text-[#0C233C]">{application.name}</p>
+                                  <p className="mt-1 text-[12px] text-[#7388A8]">
+                                    {application.assessment_context || application.description || "Added as scope context"}
+                                  </p>
                                 </div>
                               ))}
                             </div>
-                          )}
-                          {suggestions.length === 0 && applied.length === 0 && (
-                            <p className="text-xs text-slate-400 italic">Loading suggestions…</p>
-                          )}
-                          {suggestions.map((s, i) => {
-                            const alreadyApplied = applied.some(c => c.control_id === s.control_id);
-                            return (
-                              <div key={i} className="flex items-start justify-between gap-2 py-2 border-t">
-                                <div className="flex-1">
-                                  <p className="text-sm font-medium text-slate-700">{s.control_title}</p>
-                                  <p className="text-xs text-slate-400 mt-0.5">{s.rationale}</p>
-                                  <Badge variant="outline" className="text-xs mt-1">Relevance {s.relevance_score}/5</Badge>
+                          </div>
+                        ) : null}
+                      </TracePanel>
+
+                      <TracePanel title="Readiness" subtitle="Questionnaire can begin once at least one registry application is in scope.">
+                        <div className="space-y-3">
+                          <div className="rounded-[18px] bg-[#F7F9FC] px-4 py-4">
+                            <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#8492A6]">Registry Applications</div>
+                            <div className="mt-2 text-[28px] font-bold tracking-[-0.03em] text-[#0C233C]">
+                              {selectedAssessment.asset_ids.length}
+                            </div>
+                          </div>
+                          <div className="rounded-[18px] bg-[#F7F9FC] px-4 py-4">
+                            <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#8492A6]">Ad Hoc Context Entries</div>
+                            <div className="mt-2 text-[28px] font-bold tracking-[-0.03em] text-[#0C233C]">
+                              {selectedAssessment.ad_hoc_applications?.length ?? 0}
+                            </div>
+                          </div>
+                          {selectedAssessment.asset_ids.length === 0 ? (
+                            <div className="rounded-[16px] border border-[#F6D3A0] bg-[#FFF9E8] px-4 py-3 text-[12px] leading-6 text-[#8A6A00]">
+                              Questionnaire capture currently runs against Asset Registry applications only.
+                            </div>
+                          ) : null}
+                        </div>
+                      </TracePanel>
+                    </div>
+                  </SurfaceSection>
+                ) : null}
+
+                {wizardStep === 1 ? (
+                  <div className="space-y-5" data-risk-assessment-questionnaire="true">
+                    <SurfaceSection
+                      eyebrow="Questionnaire"
+                      title="Application Response Capture"
+                      action={
+                        currentAssetId ? (
+                          <button className={PRIMARY_BUTTON} onClick={() => void handleSubmitQa()} disabled={submittingQa}>
+                            {submittingQa ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                            {qaAssetIdx < selectedAssessment.asset_ids.length - 1 ? "Save And Next" : "Submit Responses"}
+                          </button>
+                        ) : null
+                      }
+                    >
+                      {selectedAssessment.asset_ids.length === 0 ? (
+                        <div className="rounded-[18px] border border-dashed border-[#DCE3EE] bg-[#FBFCFE] px-4 py-8 text-center text-[13px] leading-6 text-[#7388A8]">
+                          No Asset Registry applications were selected for questionnaire capture.
+                        </div>
+                      ) : (
+                        <>
+                          <div className="sticky top-0 z-10 mb-4 rounded-[18px] border border-[#DCE3EE] bg-white/95 px-4 py-3 shadow-[0_14px_28px_-24px_rgba(12,35,60,0.26)] backdrop-blur">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                              <div>
+                                <p className="text-[14px] font-bold text-[#0C233C]">{assetName(currentAssetId)}</p>
+                                <p className="mt-1 text-[12px] text-[#7388A8]">
+                                  Application {qaAssetIdx + 1} of {selectedAssessment.asset_ids.length} · {answeredCount(currentAssetId)} answered
+                                </p>
+                              </div>
+                              <div className="rounded-full border border-[#DCE3EE] bg-[#F7F9FC] px-4 py-2 text-[12px] font-bold text-[#7388A8]">
+                                {sections.length} sections
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="mb-4 flex flex-wrap gap-2">
+                            {selectedAssessment.asset_ids.map((assetId, index) => (
+                              <button
+                                key={assetId}
+                                className={`rounded-full border px-4 py-2 text-[12px] font-bold transition-colors ${
+                                  index === qaAssetIdx
+                                    ? "border-[#1E49E2] bg-[#1E49E2] text-white"
+                                    : "border-[#DCE3EE] bg-white text-[#6A748A] hover:bg-[#F7F9FC]"
+                                }`}
+                                onClick={() => setQaAssetIdx(index)}
+                              >
+                                {assetName(assetId)} <span className="opacity-70">({answeredCount(assetId)})</span>
+                              </button>
+                            ))}
+                          </div>
+
+                          <div className="space-y-4">
+                            {sections.map((section) => {
+                              const completed = sectionProgress(answers, currentAssetId, section);
+                              const total = section.questions.length;
+                              const isOpen = expandedSection === section.id;
+                              return (
+                                <div
+                                  key={section.id}
+                                  className={`overflow-hidden rounded-[20px] border bg-white ${
+                                    isOpen ? "border-[#AFC1F8] shadow-[0_16px_34px_-30px_rgba(30,73,226,0.35)]" : "border-[#E2E6EF]"
+                                  }`}
+                                >
+                                  <button
+                                    className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
+                                    onClick={() => setExpandedSection(isOpen ? null : section.id)}
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      {isOpen ? (
+                                        <ChevronDown className="h-4 w-4 text-[#7E91AE]" />
+                                      ) : (
+                                        <ChevronRight className="h-4 w-4 text-[#7E91AE]" />
+                                      )}
+                                      <span className="text-[15px] font-bold text-[#0C233C]">{section.title}</span>
+                                    </div>
+                                    <span
+                                      className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-bold ${
+                                        completed === total
+                                          ? "border-[#BFE7D1] bg-[#EDFBF5] text-[#009A44]"
+                                          : "border-[#DCE3EE] bg-[#F3F6FA] text-[#6A748A]"
+                                      }`}
+                                    >
+                                      {completed}/{total}
+                                    </span>
+                                  </button>
+
+                                  {isOpen ? (
+                                    <div className="border-t border-[#E2E6EF] px-5 py-5">
+                                      <div className="space-y-5">
+                                        {section.questions.map((question) => {
+                                          const local = answers[currentAssetId]?.[section.id]?.[question.id];
+                                          return (
+                                            <div key={question.id} className="border-t border-[#EFF2F7] pt-5 first:border-t-0 first:pt-0">
+                                              <div className="mb-3 flex items-start gap-3">
+                                                <span
+                                                  className={`rounded-full border px-3 py-1 text-[11px] font-bold ${
+                                                    question.question_type === "Exposure"
+                                                      ? "border-[#F6D3A0] bg-[#FFF4E8] text-[#AB5C00]"
+                                                      : question.question_type === "Control"
+                                                        ? "border-[#C9D7FF] bg-[#EEF2FF] text-[#1E49E2]"
+                                                        : "border-[#DCE3EE] bg-[#F3F6FA] text-[#6A748A]"
+                                                  }`}
+                                                >
+                                                  {question.question_type}
+                                                </span>
+                                                <p className="text-[14px] leading-7 text-[#4D6485]">{question.text}</p>
+                                              </div>
+
+                                              <div className="mb-3 flex flex-wrap gap-2">
+                                                {(["yes", "no", "na"] as AnswerType[]).map((answer) => (
+                                                  <button
+                                                    key={answer}
+                                                    className={`rounded-full border px-4 py-2 text-[12px] font-bold transition-colors ${
+                                                      local?.answer === answer
+                                                        ? ANSWER_CLASS[answer]
+                                                        : "border-[#DCE3EE] bg-white text-[#6A748A] hover:bg-[#F7F9FC]"
+                                                    }`}
+                                                    onClick={() => setAnswer(currentAssetId, section.id, question.id, answer)}
+                                                  >
+                                                    {answer === "na" ? "N/A" : answer.toUpperCase()}
+                                                  </button>
+                                                ))}
+                                              </div>
+
+                                              {local?.answer && local.answer !== "na" ? (
+                                                <Textarea
+                                                  value={local.details}
+                                                  onChange={(event) =>
+                                                    setDetails(currentAssetId, section.id, question.id, event.target.value)
+                                                  }
+                                                  placeholder="Add supporting detail or evidence notes"
+                                                  rows={2}
+                                                  className="rounded-[14px] border-[#DCE3EE]"
+                                                />
+                                              ) : null}
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  ) : null}
                                 </div>
-                                {alreadyApplied ? (
-                                  <span className="text-xs text-emerald-600 flex items-center gap-1 pt-1 flex-shrink-0">
-                                    <CheckCircle2 className="w-3 h-3" />Applied
-                                  </span>
+                              );
+                            })}
+                          </div>
+                        </>
+                      )}
+                    </SurfaceSection>
+                  </div>
+                ) : null}
+
+                {wizardStep === 2 ? (
+                  <SurfaceSection eyebrow="Analysis" title="Running Risk Analysis" data-risk-assessment-analysis="true">
+                    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
+                      <div className="rounded-[22px] border border-[#E2E6EF] bg-white px-8 py-10 text-center shadow-[0_18px_42px_-34px_rgba(12,35,60,0.26)]">
+                        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#F3F0FF] text-[#7213EA]">
+                          <Sparkles className="h-8 w-8 animate-pulse" />
+                        </div>
+                        <h3 className="mt-5 text-[24px] font-bold tracking-[-0.03em] text-[#0C233C]">
+                          Scoring Inherent Risk Across Selected Applications
+                        </h3>
+                        <p className="mx-auto mt-3 max-w-[520px] text-[15px] leading-7 text-[#7388A8]">
+                          Applying rule-based scoring and the current risk assessment analysis flow to turn questionnaire responses into structured risk candidates.
+                        </p>
+                        <div className="mx-auto mt-7 max-w-[420px] overflow-hidden rounded-full bg-[#DCE3EE]">
+                          <div className="h-3 w-[58%] rounded-full bg-[linear-gradient(90deg,#1E49E2_0%,#00B8F5_100%)]" />
+                        </div>
+                        <div className="mt-5 flex items-center justify-center gap-2 text-[13px] font-bold text-[#1E49E2]">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Analysis in progress
+                        </div>
+                      </div>
+
+                      <TracePanel title="Current Run" subtitle="The page remains inside Risk Assessment while analysis completes.">
+                        <div className="space-y-3">
+                          {[
+                            ["Responses validated", "Done", "done"],
+                            ["Exposure patterns grouped", "Running", "running"],
+                            ["Draft risks generated", "Queued", "queued"],
+                            ["Bands assigned", "Queued", "queued"],
+                          ].map(([label, state, tone]) => (
+                            <div key={label} className="flex items-center justify-between rounded-[16px] bg-[#F7F9FC] px-4 py-3">
+                              <span className="text-[13px] font-medium text-[#0C233C]">{label}</span>
+                              <span
+                                className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-bold ${
+                                  tone === "done"
+                                    ? "border-[#BFE7D1] bg-[#EDFBF5] text-[#009A44]"
+                                    : tone === "running"
+                                      ? "border-[#C9D7FF] bg-[#EEF2FF] text-[#1E49E2]"
+                                      : "border-[#DCE3EE] bg-white text-[#6A748A]"
+                                }`}
+                              >
+                                {state}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </TracePanel>
+                    </div>
+                  </SurfaceSection>
+                ) : null}
+
+                {wizardStep === 3 ? (
+                  <SurfaceSection
+                    eyebrow="Risks"
+                    title={`Identified Risks (${selectedAssessment.risks.length})`}
+                    action={
+                      <button className={PRIMARY_BUTTON} onClick={() => setWizardStep(4)} data-risk-assessment-risks="true">
+                        Apply Controls
+                        <ArrowRight className="h-4 w-4" />
+                      </button>
+                    }
+                  >
+                    {selectedAssessment.risks.length > 0 ? (
+                      <div className="grid gap-4">
+                        {selectedAssessment.risks.map((risk) => (
+                          <RiskSummaryCard key={risk.id} risk={risk} />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="rounded-[18px] border border-dashed border-[#DCE3EE] bg-[#FBFCFE] px-4 py-8 text-center text-[13px] leading-6 text-[#7388A8]">
+                        No risks have been identified for this assessment yet.
+                      </div>
+                    )}
+                  </SurfaceSection>
+                ) : null}
+
+                {wizardStep === 4 ? (
+                  <SurfaceSection
+                    eyebrow="Controls"
+                    title="Apply Controls To Risks"
+                    action={
+                      <div className="flex flex-wrap gap-2" data-risk-assessment-controls="true">
+                        <button
+                          className={SOFT_BUTTON}
+                          onClick={() =>
+                            void suggestControls(selectedAssessment.id)
+                              .then(() => toast({ title: "Suggestions refreshed" }))
+                              .catch(() => toast({ title: "Failed to refresh suggestions", variant: "destructive" }))
+                          }
+                        >
+                          <RefreshCw className="h-4 w-4" />
+                          Refresh Suggestions
+                        </button>
+                        <button className={PRIMARY_BUTTON} onClick={() => setWizardStep(5)}>
+                          Calculate Residual
+                          <ArrowRight className="h-4 w-4" />
+                        </button>
+                      </div>
+                    }
+                  >
+                    {selectedAssessment.risks.length > 0 ? (
+                      <div className="space-y-5">
+                        {selectedAssessment.risks.map((risk) => {
+                          const suggestions = (selectedAssessment.suggested_controls ?? []).filter(
+                            (suggestion) => suggestion.risk_id === risk.id,
+                          );
+                          const applied = selectedAssessment.applied_controls.filter((control) => control.risk_id === risk.id);
+                          return (
+                            <TracePanel
+                              key={risk.id}
+                              title={risk.title}
+                              subtitle={risk.description}
+                              className="border-[#E2E6EF]"
+                            >
+                              <div className="mb-4 flex flex-wrap items-center gap-2">
+                                <BandBadge band={risk.inherent_risk_band} />
+                                <span className="text-[12px] text-[#7388A8]">
+                                  {applied.length} applied · {suggestions.length} suggested
+                                </span>
+                              </div>
+
+                              {applied.length > 0 ? (
+                                <div className="mb-4">
+                                  <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.22em] text-[#7E91AE]">
+                                    Applied Controls
+                                  </p>
+                                  <div className="flex flex-wrap gap-2">
+                                    {applied.map((control) => (
+                                      <AppliedControlChip key={control.id} label={control.control_id} />
+                                    ))}
+                                  </div>
+                                </div>
+                              ) : null}
+
+                              <div className="space-y-3">
+                                {suggestions.length > 0 ? (
+                                  suggestions.map((suggestion) => (
+                                    <SuggestedControlRow
+                                      key={`${risk.id}-${suggestion.control_id}`}
+                                      suggestion={suggestion}
+                                      alreadyApplied={applied.some((control) => control.control_id === suggestion.control_id)}
+                                      onApply={() => handleApplySuggestion(risk.id, suggestion)}
+                                    />
+                                  ))
                                 ) : (
-                                  <Button size="sm" className="h-7 text-xs mt-1 flex-shrink-0" onClick={async () => {
-                                    try {
-                                      await applyControl(selectedAssessment.id, risk.id, s.control_id, "suggested", s.rationale);
-                                      await refreshAssessment(selectedAssessment.id);
-                                      toast({ title: "Control applied" });
-                                    } catch {
-                                      toast({ title: "Failed to apply control", variant: "destructive" });
-                                    }
-                                  }}>Apply</Button>
+                                  <div className="rounded-[16px] border border-dashed border-[#DCE3EE] bg-[#FBFCFE] px-4 py-6 text-[13px] text-[#7388A8]">
+                                    Loading suggestions or no control suggestions are available yet.
+                                  </div>
                                 )}
                               </div>
-                            );
-                          })}
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              )}
+                            </TracePanel>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="rounded-[18px] border border-dashed border-[#DCE3EE] bg-[#FBFCFE] px-4 py-8 text-center text-[13px] leading-6 text-[#7388A8]">
+                        No risks are available for control application.
+                      </div>
+                    )}
+                  </SurfaceSection>
+                ) : null}
 
-              {/* Step 5: Residual Risk — auto-triggered */}
-              {wizardStep === 5 && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-semibold text-slate-800">Residual Risk</h3>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => fetchResidual(selectedAssessment.id)}>
-                        <FileBarChart className="w-4 h-4 mr-1" />Refresh
-                      </Button>
-                      <Button size="sm" onClick={() => setWizardStep(6)}>
-                        Generate Report <ChevronRight className="w-4 h-4 ml-1" />
-                      </Button>
-                    </div>
-                  </div>
-                  {residualResults.length === 0 ? (
-                    <div className="flex flex-col items-center py-10 gap-3">
-                      <Loader2 className="w-8 h-8 text-slate-400 animate-spin" />
-                      <p className="text-sm text-slate-500">Calculating residual risk…</p>
-                    </div>
-                  ) : residualResults.map(r => (
-                    <Card key={r.risk_id}>
-                      <CardContent className="pt-4">
-                        <div className="flex items-center justify-between">
-                          <p className="font-medium text-sm text-slate-800">{r.risk_title}</p>
-                          <div className="flex gap-2">
-                            <Badge variant="outline" className={BAND_COLOR[r.inherent_risk_band]}>
-                              Inherent: {r.inherent_risk_band}
-                            </Badge>
-                            <Badge variant="outline" className={BAND_COLOR[r.residual_risk_band]}>
-                              Residual: {r.residual_risk_band}
-                            </Badge>
-                          </div>
-                        </div>
-                        <div className="flex gap-4 mt-1 text-xs text-slate-500">
-                          <span>Controls applied: {r.controls_applied}</span>
-                          <span>Avg effectiveness: {(r.avg_effectiveness * 100).toFixed(0)}%</span>
-                          <span>Residual score: {r.residual_risk_score}</span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
+                {wizardStep === 5 ? (
+                  <SurfaceSection
+                    eyebrow="Residual"
+                    title="Residual Risk Review"
+                    action={
+                      <div className="flex flex-wrap gap-2" data-risk-assessment-residual="true">
+                        <button className={SOFT_BUTTON} onClick={() => void fetchResidual(selectedAssessment.id)}>
+                          <RefreshCw className="h-4 w-4" />
+                          Refresh
+                        </button>
+                        <button className={PRIMARY_BUTTON} onClick={() => setWizardStep(6)}>
+                          Generate Report
+                          <ArrowRight className="h-4 w-4" />
+                        </button>
+                      </div>
+                    }
+                  >
+                    {residualResults.length > 0 ? (
+                      <div className="grid gap-4 lg:grid-cols-2">
+                        {residualResults.map((result) => (
+                          <ResidualCard key={result.risk_id} result={result} />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-3 rounded-[18px] border border-dashed border-[#DCE3EE] bg-[#FBFCFE] px-4 py-10 text-center">
+                        <Loader2 className="h-6 w-6 animate-spin text-[#7E91AE]" />
+                        <p className="text-[13px] text-[#7388A8]">Calculating residual risk.</p>
+                      </div>
+                    )}
+                  </SurfaceSection>
+                ) : null}
 
-              {/* Step 6: Final Report */}
-              {wizardStep === 6 && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-semibold text-slate-800">Risk Assessment Report</h3>
-                    <Button size="sm" onClick={async () => {
-                      try { await generateReport(selectedAssessment.id); toast({ title: "Report generated" }); }
-                      catch { toast({ title: "Report failed", variant: "destructive" }); }
-                    }} disabled={isGeneratingReport}>
-                      {isGeneratingReport ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <FileBarChart className="w-4 h-4 mr-1" />}
-                      Generate Report
-                    </Button>
-                  </div>
-                  {report ? (
-                    <Card>
-                      <CardContent className="pt-4">
-                        <div className="prose prose-sm max-w-none text-slate-700 [&_h1]:text-base [&_h2]:text-sm [&_h3]:text-xs [&_table]:text-xs [&_th]:bg-slate-50 [&_td]:border [&_th]:border [&_td]:px-2 [&_th]:px-2 [&_td]:py-1 [&_th]:py-1">
-                          <ReactMarkdown remarkPlugins={[remarkGfm]}>{report}</ReactMarkdown>
+                {wizardStep === 6 ? (
+                  <SurfaceSection
+                    eyebrow="Report"
+                    title="Risk Assessment Report"
+                    action={
+                      <button
+                        className={PRIMARY_BUTTON}
+                        onClick={() => void handleGenerateReport()}
+                        disabled={isGeneratingReport}
+                        data-risk-assessment-report="true"
+                      >
+                        {isGeneratingReport ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileBarChart className="h-4 w-4" />}
+                        Generate Report
+                      </button>
+                    }
+                  >
+                    {currentReport ? (
+                      <div className="rounded-[22px] border border-[#DCE3EE] bg-white p-6 shadow-[0_18px_42px_-34px_rgba(12,35,60,0.22)]">
+                        <div className="mb-5 border-b border-[#E2E6EF] pb-5">
+                          <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-[#00338D]">Formatted Report</p>
+                          <h3 className="mt-2 text-[28px] font-bold tracking-[-0.03em] text-[#0C233C]">
+                            {selectedAssessment.title}
+                          </h3>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    <p className="text-slate-400 text-sm">Click "Generate Report" to produce the 9-section Risk Assessment Report.</p>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+                        <div className="prose prose-sm max-w-none text-[#4D6485] [&_h1]:text-[28px] [&_h1]:font-bold [&_h1]:tracking-[-0.03em] [&_h1]:text-[#0C233C] [&_h2]:mt-8 [&_h2]:text-[20px] [&_h2]:font-bold [&_h2]:tracking-[-0.02em] [&_h2]:text-[#0C233C] [&_h3]:mt-6 [&_h3]:text-[16px] [&_h3]:font-bold [&_h3]:text-[#0C233C] [&_li]:leading-7 [&_p]:leading-7 [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:border-[#E2E6EF] [&_td]:px-3 [&_td]:py-2 [&_th]:border [&_th]:border-[#E2E6EF] [&_th]:bg-[#F7F9FC] [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_th]:text-[11px] [&_th]:uppercase [&_th]:tracking-[0.18em] [&_th]:text-[#7E91AE]">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>{currentReport}</ReactMarkdown>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="rounded-[18px] border border-dashed border-[#DCE3EE] bg-[#FBFCFE] px-4 py-8 text-center text-[13px] leading-6 text-[#7388A8]">
+                        Generate the report to preview the formatted assessment output here.
+                      </div>
+                    )}
+                  </SurfaceSection>
+                ) : null}
+              </>
+            ) : null}
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

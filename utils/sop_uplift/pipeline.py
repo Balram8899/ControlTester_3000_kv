@@ -41,7 +41,7 @@ ProgressCallback = Callable[[str, str, int, int, int], None]
 def run_full_sop_pipeline(
     case: dict[str, Any],
     use_llm: bool = False,
-    max_chunk_chars: int = 4000,
+    max_chunk_chars: int = 20000,
     progress_callback: ProgressCallback | None = None,
 ) -> dict[str, Any]:
     def progress(phase: str, message: str, completed: int, total: int, percent: int) -> None:
@@ -933,10 +933,15 @@ def _document_analysis_units(case: dict[str, Any], chunks: list[dict[str, Any]])
             continue
         document_anchors = anchors_by_document.get(document_id, [])
         document_chunks = chunks_by_document.get(document_id, [])
-        anchor_ids = [anchor.get("anchor_id", "") for anchor in document_anchors if anchor.get("anchor_id")]
-        content = document.get("markdown", "")
+        content, anchor_ids = _routed_document_analysis_content(document, document_anchors)
         if not content and document_chunks:
             content = "\n\n".join(chunk.get("content", "") for chunk in document_chunks)
+            anchor_ids = [
+                anchor_id
+                for chunk in document_chunks
+                for anchor_id in chunk.get("anchor_ids", [])
+                if anchor_id
+            ]
         if not content:
             continue
         units.append(
@@ -956,6 +961,64 @@ def _document_analysis_units(case: dict[str, Any], chunks: list[dict[str, Any]])
         for chunk in chunks
         if file_tags.get(chunk.get("file_id", ""), "other") in {"sop", "policy"}
     ]
+
+
+def _routed_document_analysis_content(
+    document: dict[str, Any],
+    document_anchors: list[dict[str, Any]],
+) -> tuple[str, list[str]]:
+    content_anchors = [
+        anchor
+        for anchor in sorted(document_anchors, key=lambda item: int(item.get("char_start") or 0))
+        if anchor.get("block_type") != "heading" and anchor.get("anchor_id")
+    ]
+    if not content_anchors:
+        return document.get("markdown", ""), []
+
+    routed_anchors = [
+        anchor
+        for anchor in content_anchors
+        if _section_type_for_anchor(anchor) in {"procedural", "purpose_scope"}
+    ]
+    if not routed_anchors:
+        return "", []
+
+    anchor_ids = [anchor.get("anchor_id", "") for anchor in routed_anchors]
+    if len(routed_anchors) == len(content_anchors):
+        return document.get("markdown", ""), anchor_ids
+
+    sections: list[str] = []
+    previous_heading = ""
+    for anchor in routed_anchors:
+        heading = " > ".join(str(part) for part in anchor.get("section_path", []) if part)
+        text = str(anchor.get("text") or "").strip()
+        if not text:
+            continue
+        if heading and heading != previous_heading:
+            sections.append(f"## {heading}")
+            previous_heading = heading
+        sections.append(text)
+    return "\n\n".join(sections), anchor_ids
+
+
+def _section_type_for_anchor(anchor: dict[str, Any]) -> str:
+    explicit = str(anchor.get("section_type") or "").strip().lower()
+    if explicit and explicit != "unknown":
+        return explicit
+    heading = " ".join(str(part) for part in anchor.get("section_path", []) if part).lower()
+    text_start = str(anchor.get("text") or "").strip().lower()[:120]
+    combined = f"{heading} {text_start}"
+    if any(term in combined for term in ("document history", "revision history", "version history", "change history", "approval history")):
+        return "document_history"
+    if any(term in combined for term in ("definition", "glossary", "acronym")):
+        return "definitions"
+    if any(term in combined for term in ("reference", "related document", "bibliography")):
+        return "references"
+    if "appendix" in combined or "annex" in combined:
+        return "appendix"
+    if any(term in combined for term in ("purpose", "scope", "objective")):
+        return "purpose_scope"
+    return "procedural"
 
 
 def _run_case_level_prompt(stage: str, schema: Any, case: dict[str, Any], collected: dict[str, Any]) -> None:

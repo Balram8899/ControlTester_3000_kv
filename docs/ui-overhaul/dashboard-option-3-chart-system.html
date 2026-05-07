@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TRACE Dashboard Option 3 Chart System</title>
+    <style>
+      :root {
+        --page-bg: #f0f2f7;
+        --ink: #0c233c;
+        --muted: #5a6478;
+        --soft: #8492a6;
+        --line: #e2e6ef;
+        --brand: #00338d;
+        --navy: #0c233c;
+        --cobalt: #1e49e2;
+        --pacific: #00b8f5;
+        --teal: #098e7e;
+        --green: #009a44;
+        --amber: #eaaa00;
+        --red: #e5001b;
+        --purple: #7213ea;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top left, rgba(30, 73, 226, 0.08), transparent 28%),
+          radial-gradient(circle at top right, rgba(0, 184, 245, 0.05), transparent 24%),
+          var(--page-bg);
+      }
+
+      .page {
+        width: min(1500px, calc(100vw - 48px));
+        margin: 0 auto;
+        padding: 28px 0 42px;
+      }
+
+      .eyebrow {
+        margin: 0 0 10px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 2.5px;
+        text-transform: uppercase;
+        color: var(--brand);
+      }
+
+      h1 {
+        margin: 0 0 12px;
+        font-size: 38px;
+        font-weight: 700;
+        letter-spacing: -1.4px;
+      }
+
+      .lede {
+        max-width: 960px;
+        margin: 0 0 24px;
+        font-size: 16px;
+        line-height: 1.7;
+        color: var(--muted);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 24px;
+      }
+
+      .card {
+        padding: 22px;
+        border-radius: 26px;
+        background: white;
+        border: 1px solid var(--line);
+        box-shadow: 0 24px 48px -34px rgba(12, 35, 60, 0.24);
+      }
+
+      .card h2 {
+        margin: 0 0 8px;
+        font-size: 24px;
+        font-weight: 700;
+        letter-spacing: -0.7px;
+      }
+
+      .card p {
+        margin: 0 0 18px;
+        font-size: 14px;
+        line-height: 1.65;
+        color: var(--muted);
+      }
+
+      .compare {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .mini {
+        border-radius: 20px;
+        border: 1px solid var(--line);
+        background: #fbfcfe;
+        padding: 16px;
+      }
+
+      .mini strong {
+        display: block;
+        margin-bottom: 10px;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .mini span {
+        display: block;
+        margin-top: 8px;
+        font-size: 11px;
+        line-height: 1.5;
+        color: var(--muted);
+      }
+
+      .plot {
+        position: relative;
+        height: 150px;
+        border-radius: 16px;
+        background:
+          linear-gradient(#edf1f7 1px, transparent 1px) top left / 100% 33%,
+          linear-gradient(90deg, #edf1f7 1px, transparent 1px) top left / 20% 100%;
+        background-repeat: repeat;
+        overflow: hidden;
+      }
+
+      .bars {
+        position: absolute;
+        inset: 16px 14px 24px;
+        display: grid;
+        grid-template-columns: repeat(var(--count, 5), 1fr);
+        gap: 10px;
+        align-items: end;
+      }
+
+      .bar {
+        height: var(--h, 40%);
+        border-radius: 8px 8px 2px 2px;
+        background: var(--fill, var(--cobalt));
+        transform-origin: bottom;
+        transform: scaleY(0);
+        animation: grow-y 1s cubic-bezier(0.2, 1, 0.3, 1) forwards;
+        animation-delay: var(--delay, 0s);
+      }
+
+      .labels {
+        display: grid;
+        grid-template-columns: repeat(var(--count, 5), 1fr);
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .labels div {
+        font-size: 9px;
+        text-align: center;
+        color: var(--soft);
+      }
+
+      .labels.rotate div {
+        transform: rotate(-28deg);
+        transform-origin: top center;
+        white-space: nowrap;
+      }
+
+      .donut-row {
+        display: grid;
+        grid-template-columns: 170px minmax(0, 1fr);
+        gap: 16px;
+        align-items: center;
+      }
+
+      .donut-frame {
+        display: grid;
+        place-items: center;
+        aspect-ratio: 1;
+        border-radius: 22px;
+        border: 1px solid #eef2f7;
+        background: white;
+      }
+
+      .donut {
+        position: relative;
+        width: 130px;
+        height: 130px;
+        border-radius: 999px;
+        background: var(--ring, conic-gradient(#1e49e2 0 72%, #00b8f5 72% 90%, #eaaa00 90% 100%));
+        transform: scale(0.86);
+        opacity: 0;
+        animation: donut-in 1s cubic-bezier(0.2, 1, 0.3, 1) 0.16s forwards;
+      }
+
+      .donut::after {
+        content: "";
+        position: absolute;
+        inset: 24px;
+        border-radius: 999px;
+        background: white;
+      }
+
+      .legend {
+        display: grid;
+        gap: 10px;
+      }
+
+      .legend-item {
+        display: grid;
+        grid-template-columns: 10px minmax(0, 1fr) auto;
+        gap: 8px;
+        align-items: center;
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .legend-item::before {
+        content: "";
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: var(--dot, var(--cobalt));
+      }
+
+      .legend-item b {
+        color: var(--ink);
+      }
+
+      .motion-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .motion-box {
+        padding: 16px;
+        border-radius: 20px;
+        border: 1px solid var(--line);
+        background: #fbfcfe;
+      }
+
+      .motion-box strong {
+        display: block;
+        margin-bottom: 10px;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .track {
+        overflow: hidden;
+        height: 18px;
+        border-radius: 999px;
+        background: #edf2fa;
+      }
+
+      .fill {
+        height: 100%;
+        width: var(--w, 50%);
+        border-radius: 999px;
+        background: var(--fill, var(--cobalt));
+        transform-origin: left;
+        transform: scaleX(0);
+        animation: fill-x 1s cubic-bezier(0.2, 1, 0.3, 1) forwards;
+        animation-delay: var(--delay, 0s);
+      }
+
+      .status-bar {
+        display: flex;
+        overflow: hidden;
+        height: 22px;
+        border-radius: 999px;
+        background: #edf2fa;
+      }
+
+      .segment {
+        width: var(--w, 25%);
+        background: var(--bg, var(--cobalt));
+        transform-origin: left;
+        transform: scaleX(0);
+        animation: fill-x .95s cubic-bezier(0.2, 1, 0.3, 1) forwards;
+        animation-delay: var(--delay, 0s);
+      }
+
+      .chip-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .chip {
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        border: 1px solid var(--line);
+        background: white;
+        color: var(--ink);
+      }
+
+      .chip.move {
+        background: #eef2ff;
+        color: var(--brand);
+        border-color: #cfdafe;
+      }
+
+      .chip.remove {
+        background: #feebed;
+        color: var(--red);
+        border-color: #f6c9d1;
+      }
+
+      .chip.keep {
+        background: #edfbf5;
+        color: var(--green);
+        border-color: #c8ead5;
+      }
+
+      @keyframes grow-y {
+        from {
+          transform: scaleY(0);
+        }
+
+        to {
+          transform: scaleY(1);
+        }
+      }
+
+      @keyframes fill-x {
+        from {
+          transform: scaleX(0);
+        }
+
+        to {
+          transform: scaleX(1);
+        }
+      }
+
+      @keyframes donut-in {
+        from {
+          transform: scale(0.72);
+          opacity: 0;
+        }
+
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      @media (max-width: 1260px) {
+        .grid,
+        .compare,
+        .motion-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <p class="eyebrow">Dashboard Option 3</p>
+      <h1>Chart System Detail</h1>
+      <p class="lede">
+        This companion board zooms in on the mechanics behind the redesign. The goal is to solve the current dashboard problems at the system level: label collision, undersized donuts, uneven motion, and weak tab storytelling.
+      </p>
+
+      <div class="grid">
+        <div class="card">
+          <h2>1. Long Labels Stop Fighting The Plot</h2>
+          <p>Instead of forcing every axis label to stay horizontal, option 3 gives narrow categorical charts a formal label rule: truncate when the labels are short enough, rotate when the labels are structurally long, and reserve the bottom margin on purpose so they do not collide.</p>
+          <div class="compare">
+            <div class="mini">
+              <strong>Current Problem</strong>
+              <div class="plot">
+                <div class="bars" style="--count:5">
+                  <div class="bar" style="--h:12%;--fill:#98a9c6"></div>
+                  <div class="bar" style="--h:34%;--fill:#1e49e2"></div>
+                  <div class="bar" style="--h:54%;--fill:#7213ea"></div>
+                  <div class="bar" style="--h:42%;--fill:#00b8f5"></div>
+                  <div class="bar" style="--h:68%;--fill:#009a44"></div>
+                </div>
+              </div>
+              <div class="labels" style="--count:5">
+                <div>Draft</div>
+                <div>In Progress</div>
+                <div>Risks Identified</div>
+                <div>Controls Applied</div>
+                <div>Complete</div>
+              </div>
+              <span>Every label is forced onto the same baseline, so the card loses legibility as soon as text gets longer.</span>
+            </div>
+            <div class="mini">
+              <strong>Option 3 Rule</strong>
+              <div class="plot">
+                <div class="bars" style="--count:5">
+                  <div class="bar" style="--h:12%;--fill:#98a9c6;--delay:.04s"></div>
+                  <div class="bar" style="--h:34%;--fill:#1e49e2;--delay:.10s"></div>
+                  <div class="bar" style="--h:54%;--fill:#7213ea;--delay:.16s"></div>
+                  <div class="bar" style="--h:42%;--fill:#00b8f5;--delay:.22s"></div>
+                  <div class="bar" style="--h:68%;--fill:#009a44;--delay:.28s"></div>
+                </div>
+              </div>
+              <div class="labels rotate" style="--count:5">
+                <div>Draft</div>
+                <div>In Progress</div>
+                <div>Risks Identified</div>
+                <div>Controls Applied</div>
+                <div>Complete</div>
+              </div>
+              <span>We spend vertical space intentionally so the plot stays readable and the labels remain honest.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>2. Donuts Get A Real Frame</h2>
+          <p>The donut charts stop floating in arbitrary card space. Each donut gets a fixed square plot frame with the same center alignment, ring scale, and legend zone. That keeps the chart proportionate even when legends vary.</p>
+          <div class="compare">
+            <div class="mini">
+              <strong>Current Feel</strong>
+              <div class="donut-row">
+                <div class="donut-frame">
+                  <div class="donut" style="width:96px;height:96px;--ring:conic-gradient(#0d3c9b 0 95%, #1e49e2 95% 100%)"></div>
+                </div>
+                <div class="legend">
+                  <div class="legend-item" style="--dot:#0d3c9b"><span>SOP Uplift</span><b>20</b></div>
+                  <div class="legend-item" style="--dot:#1e49e2"><span>Reg Testing</span><b>1</b></div>
+                </div>
+              </div>
+              <span>The ring can look tiny or cramped depending on how much legend text sits beside it.</span>
+            </div>
+            <div class="mini">
+              <strong>Option 3 Rule</strong>
+              <div class="donut-row">
+                <div class="donut-frame">
+                  <div class="donut" style="--ring:conic-gradient(#0d3c9b 0 72%, #1e49e2 72% 90%, #00b8f5 90% 100%)"></div>
+                </div>
+                <div class="legend">
+                  <div class="legend-item" style="--dot:#0d3c9b"><span>SOP Uplift</span><b>15</b></div>
+                  <div class="legend-item" style="--dot:#1e49e2"><span>Reg Testing</span><b>4</b></div>
+                  <div class="legend-item" style="--dot:#00b8f5"><span>Final Reports</span><b>2</b></div>
+                </div>
+              </div>
+              <span>The chart always owns a stable square area first. The legend gets the remaining width cleanly.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>3. One Motion Language Across All Charts</h2>
+          <p>Option 3 keeps animation restrained but consistent. Bars rise, horizontal fills draw from left to right, segmented workflow bars expand by segment, and donut charts settle into place with a soft sweep and scale. It should feel alive without ever looking decorative.</p>
+          <div class="motion-grid">
+            <div class="motion-box">
+              <strong>Vertical Bars</strong>
+              <div class="plot">
+                <div class="bars" style="--count:4">
+                  <div class="bar" style="--h:62%;--fill:#00b8f5;--delay:.04s"></div>
+                  <div class="bar" style="--h:46%;--fill:#098e7e;--delay:.12s"></div>
+                  <div class="bar" style="--h:38%;--fill:#7213ea;--delay:.20s"></div>
+                  <div class="bar" style="--h:18%;--fill:#eaaa00;--delay:.28s"></div>
+                </div>
+              </div>
+            </div>
+            <div class="motion-box">
+              <strong>Horizontal Progress</strong>
+              <div class="track"><div class="fill" style="--fill:#0d3c9b;--w:74%;--delay:.05s"></div></div>
+              <div style="height:10px"></div>
+              <div class="track"><div class="fill" style="--fill:#1e49e2;--w:61%;--delay:.12s"></div></div>
+              <div style="height:10px"></div>
+              <div class="track"><div class="fill" style="--fill:#00b8f5;--w:44%;--delay:.19s"></div></div>
+            </div>
+            <div class="motion-box">
+              <strong>Segmented Workflow Status</strong>
+              <div class="status-bar">
+                <div class="segment" style="--w:22%;--bg:#1e49e2;--delay:.05s"></div>
+                <div class="segment" style="--w:34%;--bg:#00b8f5;--delay:.12s"></div>
+                <div class="segment" style="--w:26%;--bg:#009a44;--delay:.19s"></div>
+                <div class="segment" style="--w:10%;--bg:#7213ea;--delay:.26s"></div>
+                <div class="segment" style="--w:8%;--bg:#e5001b;--delay:.33s"></div>
+              </div>
+            </div>
+            <div class="motion-box">
+              <strong>Donut Sweep</strong>
+              <div class="donut-row" style="grid-template-columns:140px minmax(0,1fr)">
+                <div class="donut-frame">
+                  <div class="donut" style="width:108px;height:108px;--ring:conic-gradient(#1e49e2 0 58%, #00b8f5 58% 81%, #009a44 81% 100%)"></div>
+                </div>
+                <span style="font-size:11px;line-height:1.6;color:var(--muted)">Not flashy. Just enough movement so the dashboard feels intentional and related across tabs.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>4. Tab Story Gets Cleaner</h2>
+          <p>The dashboard becomes easier to understand because each tab has a clearer job. Overview is for first-glance operational health. Libraries is for knowledge-base quality. Workflows is for execution status. Exceptions is for triage.</p>
+          <div class="chip-list" style="margin-bottom:18px">
+            <div class="chip keep">Overview keeps KPI row</div>
+            <div class="chip keep">Overview keeps reports donut</div>
+            <div class="chip keep">Overview keeps domain coverage</div>
+            <div class="chip move">Testing Sessions moves to Workflows</div>
+            <div class="chip remove">Chat Activity removed</div>
+          </div>
+          <div class="compare">
+            <div class="mini">
+              <strong>Overview In Option 3</strong>
+              <span>KPI row, three top comparison charts, one donut, one coverage panel. Faster to scan. No orphaned workflow strip.</span>
+            </div>
+            <div class="mini">
+              <strong>Workflows In Option 3</strong>
+              <span>Module health, assessments by status, testing sessions by status, control test results, SOP status, report output. This is where activity lives.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

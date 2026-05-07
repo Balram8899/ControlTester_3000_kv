@@ -13,17 +13,21 @@ Create a page-local operational overview for TRACE without changing existing app
 ### Approved Mockup Notes
 
 - Four local tabs: `Overview`, `Libraries`, `Workflows`, and `Exceptions`.
-- `Overview` is the default first screen and follows the approved mockup: compact dark `DASHBOARD` banner, number-first KPI cards in four-up rows, primary chart grid, `Domain Coverage`, and `Testing Sessions By Status`.
+- `Overview` is the default first screen and now follows the later option-3 direction: compact dark `DASHBOARD` banner, four number-first KPI cards, a three-chart operational row, and a lower `Reports By Type` / `Domain Coverage` row.
 - KPI cards were revised to match the later reference crop: no KPI icons, larger metric values, muted uppercase labels, source-backed pills, and softer rounded white cards.
 - `Libraries` contains regulatory, controls, and frameworks metrics, charts, cross-library diagnostics, and coverage summary.
-- `Workflows` contains activity metrics for risk assessment, control testing, regulatory testing, final reporting, SOP Uplift, reports, and chat.
+- `Workflows` contains activity metrics for risk assessment, control testing, regulatory testing, final reporting, SOP Uplift, and reports; `Testing Sessions By Status` was moved here from `Overview`.
 - `Exceptions` contains issue, validation queue, failed control, gap, duplicate, and risk-band signals.
+- Shared chart fixes applied: long labels rotate instead of colliding, donut charts now use a centered framed layout, and horizontal / segmented charts use a common fill animation.
+- `Chat Activity` was removed from the dashboard because it was not a useful first-class dashboard signal.
 
 ### Files Changed
 
 - `kpmg_ui/client/src/pages/dashboard.tsx`
 - `kpmg_ui/client/src/dashboard.overhaul.test.ts`
 - `docs/ui-overhaul/dashboard-design.md`
+- `docs/ui-overhaul/dashboard-option-3-mockups.html`
+- `docs/ui-overhaul/dashboard-option-3-chart-system.html`
 - `docs/ui-overhaul/ui-overhaul-log.md`
 
 ### Data Sources Preserved
@@ -33,7 +37,6 @@ Create a page-local operational overview for TRACE without changing existing app
 - `useAssetRegistry()`
 - `useRiskAssessment()`
 - `useIssueManagement()`
-- `useChatContext()`
 - `/api/settings/system-status`
 - `/api/control-testing`
 - `/api/rcm-reports`
@@ -60,6 +63,7 @@ Create a page-local operational overview for TRACE without changing existing app
 
 - Consider a backend summary endpoint only after repeated direct reads become a measurable performance issue.
 - Keep Dashboard empty states numeric and source-backed.
+- Browser smoke the updated chart frames and label behavior on `Overview`, `Libraries`, and `Workflows`.
 - Use the Dashboard tab and documentation pattern as the reference for later page overhauls.
 
 ## Controls Library
@@ -188,3 +192,60 @@ Create a page-local Regulatory Testing workspace that keeps existing comparison 
 ### Follow-Up Items
 
 - Run a real Reg-vs-Reg comparison and RCM-vs-Reg comparison with sample files once backend containers are available.
+
+## Risk Assessment
+
+Date: 2026-05-06
+
+### Design Intent
+
+Create a page-local Risk Assessment overhaul that keeps the workflow and endpoints intact while replacing the older generic workbench with a clearer TRACE-style assessment experience.
+
+### Approved Mockup Notes
+
+- Keep the existing app shell and route.
+- Follow the newer TRACE page language used across the recent overhaul work.
+- Keep the current feature workflow intact:
+  - assessment dashboard
+  - create assessment
+  - questionnaire
+  - analysis running
+  - identified risks
+  - control application
+  - residual risk
+  - final report
+- Keep the left app navigation and Risk Assessment route identity.
+- Treat each wizard stage as its own clear review surface instead of one long generic workbench.
+- Use only realistic utility copy and workflow labels.
+
+### Files Changed
+
+- `kpmg_ui/client/src/pages/risk-assessment.tsx`
+- `kpmg_ui/client/src/risk-assessment.overhaul.test.ts`
+- `docs/ui-overhaul/risk-assessment-design.md`
+- `docs/ui-overhaul/risk-assessment-mockups.html`
+- `docs/ui-overhaul/risk-assessment-mockups-board-1.svg`
+- `docs/ui-overhaul/risk-assessment-mockups-board-2.svg`
+- `docs/ui-overhaul/ui-overhaul-log.md`
+- `docs/HANDOFF.md`
+
+### Data Sources Preserved
+
+- `useRiskAssessment()`
+- `useAssetRegistry()`
+- `GET /api/risk-assessment/{id}` refresh path
+
+### Functionality Deliberately Untouched
+
+- Risk assessment providers, APIs, contracts, and wizard behavior.
+- Any non-risk-assessment page or shared shell logic.
+
+### Test Results
+
+- `node --import tsx .\client\src\risk-assessment.overhaul.test.ts`: passed.
+- `npm run check`: passed.
+- `npm run build`: passed. Vite emitted the existing chunk-size and PostCSS `from` option warnings.
+
+### Follow-Up Items
+
+- Browser smoke the redesigned flow after build verification.

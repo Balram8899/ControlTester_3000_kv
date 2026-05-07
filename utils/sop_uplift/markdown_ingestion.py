@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from io import BytesIO
 from html import escape
+from typing import Any, Iterator
 
 
 @dataclass
@@ -88,6 +89,46 @@ def _row_to_markdown(cells: list[str]) -> str:
     return "| " + " | ".join(escape(cell) for cell in cells) + " |"
 
 
+def _docx_paragraph_to_markdown(paragraph: Any) -> str:
+    text = paragraph.text.strip()
+    if not text:
+        return ""
+    style = (paragraph.style.name or "").lower() if paragraph.style else ""
+    if "heading" in style:
+        level = next((char for char in style if char.isdigit()), "2")
+        return f"{'#' * int(level)} {text}"
+    return text
+
+
+def _docx_table_to_markdown(table: Any) -> str:
+    rows = [[_cell_text(cell.text) for cell in row.cells] for row in table.rows]
+    rows = [row for row in rows if any(cell for cell in row)]
+    if not rows:
+        return ""
+    width = max(len(row) for row in rows)
+    padded_rows = [row + [""] * (width - len(row)) for row in rows]
+    return "\n".join(
+        [
+            _row_to_markdown(padded_rows[0]),
+            _row_to_markdown(["---"] * width),
+            *[_row_to_markdown(row) for row in padded_rows[1:]],
+        ]
+    )
+
+
+def _iter_docx_body_blocks(document: Any) -> Iterator[Any]:
+    from docx.oxml.table import CT_Tbl
+    from docx.oxml.text.paragraph import CT_P
+    from docx.table import Table
+    from docx.text.paragraph import Paragraph
+
+    for child in document.element.body.iterchildren():
+        if isinstance(child, CT_P):
+            yield Paragraph(child, document)
+        elif isinstance(child, CT_Tbl):
+            yield Table(child, document)
+
+
 def _xlsx_to_markdown(content: bytes) -> str:
     from openpyxl import load_workbook
 
@@ -111,22 +152,11 @@ def _docx_to_markdown(content: bytes) -> str:
 
     document = Document(BytesIO(content))
     blocks: list[str] = []
-    for paragraph in document.paragraphs:
-        text = paragraph.text.strip()
-        if not text:
-            continue
-        style = (paragraph.style.name or "").lower() if paragraph.style else ""
-        if "heading" in style:
-            level = next((char for char in style if char.isdigit()), "2")
-            blocks.append(f"{'#' * int(level)} {text}")
+    for block in _iter_docx_body_blocks(document):
+        if hasattr(block, "rows"):
+            markdown = _docx_table_to_markdown(block)
         else:
-            blocks.append(text)
-    for table in document.tables:
-        rows = [[_cell_text(cell.text) for cell in row.cells] for row in table.rows]
-        rows = [row for row in rows if any(cell for cell in row)]
-        if not rows:
-            continue
-        width = max(len(row) for row in rows)
-        padded_rows = [row + [""] * (width - len(row)) for row in rows]
-        blocks.append("\n".join([_row_to_markdown(padded_rows[0]), _row_to_markdown(["---"] * width), *[_row_to_markdown(row) for row in padded_rows[1:]]]))
+            markdown = _docx_paragraph_to_markdown(block)
+        if markdown:
+            blocks.append(markdown)
     return "\n\n".join(blocks).strip()

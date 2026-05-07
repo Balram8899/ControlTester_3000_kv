@@ -1,16 +1,14 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { useLocation } from "wouter";
 import { useAssetRegistry } from "@/contexts/AssetRegistryContext";
 import { useCrossNav } from "@/contexts/CrossNavContext";
 import { useIssueManagement } from "@/contexts/IssueManagementContext";
 import { useLibraryMetrics } from "@/contexts/LibraryMetricsContext";
 import { useRiskAssessment } from "@/contexts/RiskAssessmentContext";
-import { useChatContext } from "@/hooks/useChatContext";
 import {
   ClipboardList,
   FileBarChart,
   Grid2X2,
-  MessageSquare,
   RefreshCw,
   Scale,
   TestTube,
@@ -48,6 +46,8 @@ type ChartDatum = {
   value: number;
   fill: string;
 };
+
+type BarLabelMode = "default" | "rotate" | "compact";
 
 type SystemStatusSnapshot = {
   active_provider?: string;
@@ -157,6 +157,16 @@ function reportTypeLabel(type?: string) {
   return type ? titleize(type) : "Report";
 }
 
+function clampPercent(value: number) {
+  return Math.max(0, Math.min(100, value));
+}
+
+function shortenAxisLabel(value: string, maxChars: number) {
+  const trimmed = value.trim();
+  if (trimmed.length <= maxChars) return trimmed;
+  return `${trimmed.slice(0, Math.max(0, maxChars - 1)).trimEnd()}…`;
+}
+
 function withColors(data: Array<{ name: string; value: number }>, start = 0): ChartDatum[] {
   return data.map((item, index) => ({
     ...item,
@@ -259,15 +269,17 @@ function ChartCard({
   footerValue,
   children,
   wide = false,
+  className = "",
 }: {
   title: string;
   footerLabel: string;
   footerValue: string;
   children: ReactNode;
   wide?: boolean;
+  className?: string;
 }) {
   return (
-    <section className={`rounded-[18px] border border-[#D9E1EC] bg-white p-7 shadow-sm ${wide ? "xl:col-span-2" : ""}`}>
+    <section className={`rounded-[18px] border border-[#D9E1EC] bg-white p-7 shadow-sm ${wide ? "xl:col-span-2" : ""} ${className}`}>
       <SectionTitle title={title} />
       {children}
       <div className="mt-4 flex items-center justify-between border-t border-[#E2E6EF] pt-3 text-[12px]">
@@ -278,16 +290,38 @@ function ChartCard({
   );
 }
 
-function BarChartPanel({ data, height = 210 }: { data: ChartDatum[]; height?: number }) {
+function BarChartPanel({
+  data,
+  height = 210,
+  labelMode = "default",
+}: {
+  data: ChartDatum[];
+  height?: number;
+  labelMode?: BarLabelMode;
+}) {
   if (!hasChartData(data)) return <EmptyChart />;
+  const rotate = labelMode === "rotate";
+  const compact = labelMode === "compact";
+  const xAxisHeight = rotate ? 76 : 40;
+  const tickFontSize = compact ? 9 : 10;
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 16 }}>
+      <BarChart data={data} margin={{ top: 10, right: 10, left: -4, bottom: rotate ? 28 : 12 }} barCategoryGap={compact ? "22%" : "18%"}>
         <CartesianGrid {...GRID_STYLE} />
-        <XAxis dataKey="name" tick={{ ...AXIS_STYLE }} interval={0} tickMargin={8} />
-        <YAxis tick={{ ...AXIS_STYLE }} allowDecimals={false} />
+        <XAxis
+          dataKey="name"
+          tick={{ ...AXIS_STYLE, fontSize: tickFontSize }}
+          interval={0}
+          tickMargin={rotate ? 14 : 10}
+          height={xAxisHeight}
+          angle={rotate ? -28 : 0}
+          textAnchor={rotate ? "end" : "middle"}
+          tickFormatter={value => shortenAxisLabel(String(value), rotate ? 18 : compact ? 12 : 16)}
+          minTickGap={compact ? 4 : 8}
+        />
+        <YAxis tick={{ ...AXIS_STYLE, fontSize: 10 }} width={30} allowDecimals={false} />
         <Tooltip contentStyle={CHART_TOOLTIP_STYLE} itemStyle={CHART_TOOLTIP_ITEM_STYLE} labelStyle={CHART_TOOLTIP_LABEL_STYLE} cursor={{ fill: "var(--osint-glow)" }} />
-        <Bar dataKey="value" radius={[5, 5, 0, 0]}>
+        <Bar dataKey="value" radius={[8, 8, 0, 0]} isAnimationActive animationDuration={900} animationEasing="ease-out">
           {data.map((entry, index) => (
             <Cell key={index} fill={entry.fill} />
           ))}
@@ -301,20 +335,42 @@ function DonutChartPanel({ data }: { data: ChartDatum[] }) {
   if (!hasChartData(data)) return <EmptyChart />;
   const total = data.reduce((sum, item) => sum + item.value, 0);
   return (
-    <div className="grid gap-4 md:grid-cols-[0.85fr_1fr] md:items-center">
-      <ResponsiveContainer width="100%" height={210}>
-        <PieChart>
-          <Pie data={data} cx="50%" cy="50%" innerRadius={54} outerRadius={86} paddingAngle={2} dataKey="value" stroke="none">
-            {data.map((entry, index) => (
-              <Cell key={index} fill={entry.fill} />
-            ))}
-          </Pie>
-          <Tooltip contentStyle={CHART_TOOLTIP_STYLE} itemStyle={CHART_TOOLTIP_ITEM_STYLE} labelStyle={CHART_TOOLTIP_LABEL_STYLE} />
-        </PieChart>
-      </ResponsiveContainer>
-      <div className="max-h-[206px] space-y-2 overflow-auto pr-1">
+    <div className="grid gap-5 xl:grid-cols-[170px_minmax(0,1fr)] xl:items-center">
+      <div className="rounded-[18px] border border-[#EEF2F7] bg-[#FBFCFE] p-3">
+        <div className="relative mx-auto aspect-square w-full max-w-[158px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                innerRadius="58%"
+                outerRadius="92%"
+                paddingAngle={2}
+                dataKey="value"
+                stroke="none"
+                isAnimationActive
+                animationDuration={1050}
+                animationEasing="ease-out"
+              >
+                {data.map((entry, index) => (
+                  <Cell key={index} fill={entry.fill} />
+                ))}
+              </Pie>
+              <Tooltip contentStyle={CHART_TOOLTIP_STYLE} itemStyle={CHART_TOOLTIP_ITEM_STYLE} labelStyle={CHART_TOOLTIP_LABEL_STYLE} />
+            </PieChart>
+          </ResponsiveContainer>
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-[28px] font-bold leading-none tracking-tight text-[#0C233C]">{formatNumber(total)}</div>
+              <div className="mt-2 text-[10px] font-bold uppercase tracking-[2px] text-[#8492A6]">Total</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="max-h-[212px] space-y-2.5 overflow-auto pr-1">
         {data.filter(item => item.value > 0).map(item => (
-          <div key={item.name} className="grid grid-cols-[12px_1fr_auto] items-center gap-2 text-[12px]">
+          <div key={item.name} className="grid grid-cols-[12px_minmax(0,1fr)_auto] items-center gap-2 text-[12px]">
             <span className="h-2.5 w-2.5 rounded-full" style={{ background: item.fill }} />
             <span className="truncate text-[#0C233C]">{item.name}</span>
             <span className="font-bold text-[#0C233C]">
@@ -331,15 +387,24 @@ function HorizontalPercentPanel({ data }: { data: ChartDatum[] }) {
   if (!hasChartData(data)) return <EmptyChart />;
   return (
     <div className="space-y-4">
-      {data.map(item => (
+      {data.map((item, index) => {
+        const width = clampPercent(item.value);
+        const animationStyle: CSSProperties = {
+          width: `${width}%`,
+          background: item.fill,
+          transformOrigin: "left",
+          animation: `dashboardScaleX 900ms cubic-bezier(0.2, 1, 0.3, 1) ${index * 90}ms both`,
+        };
+        return (
         <div key={item.name} className="grid grid-cols-[110px_1fr_44px] items-center gap-3 text-[12px]">
           <span className="truncate font-semibold text-[#0C233C]">{item.name}</span>
           <div className="h-8 overflow-hidden rounded-md bg-[#EEF2FF]">
-            <div className="h-full rounded-md" style={{ width: `${Math.max(0, Math.min(100, item.value))}%`, background: item.fill }} />
+            <div className="h-full rounded-md" style={animationStyle} />
           </div>
           <span className="text-right font-bold text-[#0C233C]">{formatPercent(item.value)}</span>
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -350,13 +415,19 @@ function SegmentedStatusPanel({ data }: { data: ChartDatum[] }) {
   return (
     <div className="space-y-5">
       <div className="flex h-11 overflow-hidden rounded-md border border-[#D9E1EC]">
-        {data.filter(item => item.value > 0).map(item => {
+        {data.filter(item => item.value > 0).map((item, index) => {
           const pct = (item.value / total) * 100;
+          const segmentStyle: CSSProperties = {
+            width: `${pct}%`,
+            background: item.fill,
+            animation: `dashboardScaleX 950ms cubic-bezier(0.2, 1, 0.3, 1) ${index * 90}ms both`,
+            transformOrigin: "left",
+          };
           return (
             <div
               key={item.name}
               className="flex min-w-[42px] items-center justify-center border-r border-white/60 text-[12px] font-bold text-white last:border-r-0"
-              style={{ width: `${pct}%`, background: item.fill }}
+              style={segmentStyle}
               title={`${item.name}: ${formatNumber(item.value)}`}
             >
               {Math.round(pct)}%
@@ -445,7 +516,6 @@ export default function DashboardPage() {
   const { assets, fetchAssets, isLoading: assetsLoading } = useAssetRegistry();
   const { assessments, fetchAssessments, isLoading: assessmentsLoading } = useRiskAssessment();
   const { issues, queueItems, fetchIssues, fetchQueue, isLoading: issuesLoading, isLoadingQueue } = useIssueManagement();
-  const { messages, uploadedFiles, hasAttachments } = useChatContext();
 
   const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
   const [systemStatus, setSystemStatus] = useState<SystemStatusSnapshot | null>(null);
@@ -532,7 +602,6 @@ export default function DashboardPage() {
   const controlWithEvidenceCount = testingControls.filter(control => Boolean(control.evidence_text?.trim())).length;
   const testingReportsReady = testingSessions.filter(session => Boolean(session.report_markdown)).length;
 
-  const highAssets = assets.filter(asset => asset.criticality === "Critical" || asset.criticality === "High").length;
   const activeAssets = assets.filter(asset => asset.status === "Operational").length;
   const openIssues = issues.filter(issue => issue.status !== "Closed").length;
   const criticalIssues = issues.filter(issue => issue.severity === "Critical" || issue.severity === "High").length;
@@ -545,8 +614,6 @@ export default function DashboardPage() {
   const sopReports = reports.filter(report => report.report_type === "sop_uplift").length;
   const sopSuggestionCount = sopCases.reduce((sum, item) => sum + (item.suggestions?.length ?? 0), 0);
   const sopOutputCount = sopCases.reduce((sum, item) => sum + (item.outputs?.length ?? 0), 0);
-  const chatUserMessages = messages.filter(message => message.role === "user").length;
-  const chatAssistantMessages = messages.filter(message => message.role === "assistant").length;
   const exceptionTotal = gapObligations + potentialDuplicates + orphanedCtrlCount + openIssues + pendingQueue + failedControlCount;
 
   const assetsByCriticality = useMemo(() => orderedCounts(assets, RISK_BANDS, asset => asset.criticality, 4), [assets]);
@@ -567,20 +634,11 @@ export default function DashboardPage() {
   );
   const domainCoverageData = useMemo(
     () => withColors([
-      { name: "Obligations", value: Math.max(0, Math.min(100, oblCoveragePct)) },
-      { name: "Domains", value: Math.max(0, Math.min(100, domainCoveragePct)) },
-      { name: "Controls", value: Math.max(0, Math.min(100, ctrlCoveragePct)) },
+      { name: "Obligations", value: clampPercent(oblCoveragePct) },
+      { name: "Controls", value: clampPercent(ctrlCoveragePct) },
+      { name: "Domains", value: clampPercent(domainCoveragePct) },
     ], 0),
     [ctrlCoveragePct, domainCoveragePct, oblCoveragePct],
-  );
-  const chatActivityData = useMemo(
-    () => withColors([
-      { name: "User", value: chatUserMessages },
-      { name: "Assistant", value: chatAssistantMessages },
-      { name: "Files", value: uploadedFiles.length },
-      { name: "Attachment KB", value: hasAttachments ? 1 : 0 },
-    ], 5),
-    [chatAssistantMessages, chatUserMessages, hasAttachments, uploadedFiles.length],
   );
 
   const tabClassName = (tab: DashboardTab) =>
@@ -591,12 +649,8 @@ export default function DashboardPage() {
   const overviewKpis = [
     { label: "Library Documents", value: formatNumber(regDocs.length + ctrlDocs.length + frameworkDocs.length), subLabel: "regulatory, controls, and frameworks", badge: `${formatNumber(regulatoryCount + controlsCount)} source docs`, tone: "blue" as const, onClick: () => setLocation("/regulatory-library") },
     { label: "Controls", value: formatNumber(totalControls), subLabel: "controls extracted from library files", badge: `${formatNumber(orphanedCtrlCount)} unmapped`, tone: "blue" as const, onClick: () => setLocation("/controls-library") },
-    { label: "Assets", value: formatNumber(assets.length), subLabel: "registered applications and services", badge: `${formatNumber(highAssets)} high or critical`, tone: "cyan" as const, onClick: () => setLocation("/asset-registry") },
     { label: "Risk Assessments", value: formatNumber(assessments.length), subLabel: "assessment sessions in scope", badge: `${formatNumber(riskCount)} risks recorded`, tone: "purple" as const, onClick: () => setLocation("/risk-assessment") },
-    { label: "Testing Sessions", value: formatNumber(testingSessions.length), subLabel: "control testing sessions", badge: `${formatNumber(testingControls.length)} controls`, tone: "blue" as const, onClick: () => setLocation("/control-testing") },
-    { label: "Open Issues", value: formatNumber(openIssues), subLabel: "issues not closed", badge: `${formatNumber(criticalIssues)} high or critical`, tone: openIssues > 0 ? "red" as const : "green" as const, onClick: () => setLocation("/issue-management") },
     { label: "Reports", value: formatNumber(reports.length), subLabel: "generated report records", badge: `${formatNumber(reportOutputCount)} output files`, tone: "green" as const, onClick: () => setLocation("/reports") },
-    { label: "Validation Queue", value: formatNumber(pendingQueue), subLabel: "pending validation findings", badge: `${formatNumber(acceptedQueue)} accepted`, tone: pendingQueue > 0 ? "amber" as const : "green" as const, onClick: () => setLocation("/issue-management") },
   ];
 
   return (
@@ -684,19 +738,19 @@ export default function DashboardPage() {
                 <BarChartPanel data={assetsByCriticality} />
               </ChartCard>
               <ChartCard title="Assessments By Status" footerLabel="Total Assessments" footerValue={formatNumber(assessments.length)}>
-                <BarChartPanel data={assessmentsByStatus} />
+                <BarChartPanel data={assessmentsByStatus} labelMode="rotate" height={226} />
               </ChartCard>
               <ChartCard title="Issues By Severity" footerLabel="Total Issues" footerValue={formatNumber(issues.length)}>
                 <BarChartPanel data={issuesBySeverity} />
               </ChartCard>
+            </section>
+
+            <section className="grid gap-5 xl:grid-cols-[0.92fr_1.32fr]">
               <ChartCard title="Reports By Type" footerLabel="Total Reports" footerValue={formatNumber(reports.length)}>
                 <DonutChartPanel data={reportsByType} />
               </ChartCard>
-              <ChartCard title="Domain Coverage" footerLabel="Gap Obligations" footerValue={formatNumber(gapObligations)} wide>
+              <ChartCard title="Domain Coverage" footerLabel="Gap Obligations" footerValue={formatNumber(gapObligations)}>
                 <HorizontalPercentPanel data={domainCoverageData} />
-              </ChartCard>
-              <ChartCard title="Testing Sessions By Status" footerLabel="Total Sessions" footerValue={formatNumber(testingSessions.length)} wide>
-                <SegmentedStatusPanel data={testingByStatus} />
               </ChartCard>
             </section>
           </div>
@@ -718,14 +772,23 @@ export default function DashboardPage() {
               <ChartCard title="Domain Coverage" footerLabel="Obligation Coverage" footerValue={formatPercent(oblCoveragePct)}>
                 {barChartData.length > 0 ? (
                   <ResponsiveContainer width="100%" height={260}>
-                    <BarChart data={barChartData} margin={{ top: 10, right: 10, left: -10, bottom: 40 }}>
+                    <BarChart data={barChartData} margin={{ top: 10, right: 10, left: -2, bottom: 50 }} barCategoryGap="18%">
                       <CartesianGrid {...GRID_STYLE} />
-                      <XAxis dataKey="domain" tick={{ ...AXIS_STYLE }} angle={-25} textAnchor="end" height={70} interval={0} />
-                      <YAxis tick={{ ...AXIS_STYLE }} allowDecimals={false} />
+                      <XAxis
+                        dataKey="domain"
+                        tick={{ ...AXIS_STYLE, fontSize: 10 }}
+                        angle={-28}
+                        textAnchor="end"
+                        height={82}
+                        tickMargin={14}
+                        interval={0}
+                        tickFormatter={value => shortenAxisLabel(String(value), 18)}
+                      />
+                      <YAxis tick={{ ...AXIS_STYLE, fontSize: 10 }} width={30} allowDecimals={false} />
                       <Tooltip contentStyle={CHART_TOOLTIP_STYLE} itemStyle={CHART_TOOLTIP_ITEM_STYLE} labelStyle={CHART_TOOLTIP_LABEL_STYLE} cursor={{ fill: "var(--osint-glow)" }} />
                       <Legend verticalAlign="top" align="right" wrapperStyle={{ fontSize: 11, fontFamily: "Arial, sans-serif", paddingBottom: 8 }} />
-                      <Bar dataKey="Regulations" fill="#00338D" radius={[3, 3, 0, 0]} />
-                      <Bar dataKey="Controls" fill="#1E49E2" radius={[3, 3, 0, 0]} />
+                      <Bar dataKey="Regulations" fill="#00338D" radius={[6, 6, 0, 0]} isAnimationActive animationDuration={900} animationEasing="ease-out" />
+                      <Bar dataKey="Controls" fill="#1E49E2" radius={[6, 6, 0, 0]} isAnimationActive animationDuration={980} animationEasing="ease-out" />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : <EmptyChart />}
@@ -734,10 +797,10 @@ export default function DashboardPage() {
                 <DonutChartPanel data={obligationPieData} />
               </ChartCard>
               <ChartCard title="Framework Elements By Category" footerLabel="Total Elements" footerValue={formatNumber(frameworkElements.length)}>
-                <BarChartPanel data={frameworkCategoryData} />
+                <BarChartPanel data={frameworkCategoryData} labelMode="rotate" height={242} />
               </ChartCard>
               <ChartCard title="Assets By Status" footerLabel="Operational Assets" footerValue={formatNumber(activeAssets)}>
-                <BarChartPanel data={assetsByStatus} />
+                <BarChartPanel data={assetsByStatus} labelMode="compact" />
               </ChartCard>
             </section>
           </div>
@@ -745,7 +808,7 @@ export default function DashboardPage() {
 
         {activeTab === "workflows" ? (
           <div className="animate-[fadeUp_0.35s_ease_both] space-y-5">
-            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
               <ModuleMetricCard title="Risk Assessment" tone="purple" icon={<ClipboardList className="h-5 w-5" />} onClick={() => setLocation("/risk-assessment")} metrics={[
                 { label: "assessments", value: formatNumber(assessments.length) },
                 { label: "risks", value: formatNumber(riskCount) },
@@ -776,21 +839,18 @@ export default function DashboardPage() {
                 { label: "outputs", value: formatNumber(sopOutputCount) },
                 { label: "reports", value: formatNumber(sopReports) },
               ]} />
-              <ModuleMetricCard title="Chat" tone="amber" icon={<MessageSquare className="h-5 w-5" />} onClick={() => setLocation("/chat")} metrics={[
-                { label: "user", value: formatNumber(chatUserMessages) },
-                { label: "assistant", value: formatNumber(chatAssistantMessages) },
-                { label: "files", value: formatNumber(uploadedFiles.length) },
-                { label: "kb", value: hasAttachments ? "1" : "0" },
-              ]} />
             </section>
 
             <section className="grid gap-5 xl:grid-cols-2">
               <ChartCard title="Assessments By Status" footerLabel="Assessment Subjects" footerValue={formatNumber(subjectAssetCount)}>
-                <BarChartPanel data={assessmentsByStatus} />
+                <BarChartPanel data={assessmentsByStatus} labelMode="rotate" height={226} />
               </ChartCard>
               <ChartCard title="Testing Sessions By Status" footerLabel="Total Sessions" footerValue={formatNumber(testingSessions.length)}>
                 <SegmentedStatusPanel data={testingByStatus} />
               </ChartCard>
+            </section>
+
+            <section className="grid gap-5 xl:grid-cols-3">
               <ChartCard title="Control Test Results" footerLabel="Controls In Sessions" footerValue={formatNumber(testingControls.length)}>
                 <BarChartPanel data={controlResults} />
               </ChartCard>
@@ -799,9 +859,6 @@ export default function DashboardPage() {
               </ChartCard>
               <ChartCard title="Reports By Type" footerLabel="Generated Reports" footerValue={formatNumber(reports.length)}>
                 <DonutChartPanel data={reportsByType} />
-              </ChartCard>
-              <ChartCard title="Chat Activity" footerLabel="Messages" footerValue={formatNumber(messages.length)}>
-                <BarChartPanel data={chatActivityData} />
               </ChartCard>
             </section>
           </div>
@@ -861,6 +918,15 @@ export default function DashboardPage() {
             to {
               opacity: 1;
               transform: translateY(0);
+            }
+          }
+
+          @keyframes dashboardScaleX {
+            from {
+              transform: scaleX(0);
+            }
+            to {
+              transform: scaleX(1);
             }
           }
         `}</style>

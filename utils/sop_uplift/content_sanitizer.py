@@ -42,7 +42,7 @@ def sanitize_chunk(
     chunk_text: str,
     file_id: str,
     anchor_id: str,
-    max_chunk_chars: int = 4000,
+    max_chunk_chars: int = 20000,
 ) -> SanitizedChunk:
     matched = [
         pattern

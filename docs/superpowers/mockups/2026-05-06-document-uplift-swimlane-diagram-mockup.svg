@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="960" viewBox="0 0 1500 960">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#0C233C"/>
+    </marker>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="7" stdDeviation="10" flood-color="#0C233C" flood-opacity="0.16"/>
+    </filter>
+    <style>
+      .label { font-family: Arial, sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 2.5px; fill: #00338D; }
+      .title { font-family: Arial, sans-serif; font-size: 30px; font-weight: 700; fill: #0C233C; }
+      .lane { font-family: Arial, sans-serif; font-size: 16px; font-weight: 700; fill: #0C233C; }
+      .step { font-family: Arial, sans-serif; font-size: 14px; font-weight: 700; fill: #0C233C; }
+      .small { font-family: Arial, sans-serif; font-size: 12px; fill: #5A6478; }
+      .branch { font-family: Arial, sans-serif; font-size: 12px; font-weight: 700; fill: #0C233C; }
+    </style>
+  </defs>
+  <rect width="1500" height="960" fill="#F0F2F7"/>
+  <rect x="0" y="0" width="1500" height="160" fill="#0C233C"/>
+  <circle cx="1240" cy="-70" r="250" fill="#1E49E2" opacity="0.28"/>
+  <circle cx="220" cy="75" r="190" fill="#098E7E" opacity="0.22"/>
+  <text x="90" y="58" font-family="Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="2.5" fill="#00B8F5">DOCUMENT UPLIFT</text>
+  <text x="90" y="104" font-family="Arial, sans-serif" font-size="42" font-weight="700" fill="#FFFFFF">Swimlane Diagram Output Mockup</text>
+  <text x="90" y="137" font-family="Arial, sans-serif" font-size="16" fill="#FFFFFF" opacity="0.64">Matplotlib-rendered PNG at 300 DPI plus PDF, generated from SwimlaneSpec JSON.</text>
+
+  <text x="90" y="220" class="label">DIAGRAM OUTPUT</text>
+  <text x="90" y="255" class="title">KYC Access Review Process</text>
+  <text x="90" y="284" class="small">Lane colours use KPMG Trace palette and remain deterministic for audit workpaper reuse.</text>
+
+  <g filter="url(#shadow)">
+    <rect x="90" y="330" width="1320" height="520" rx="8" fill="#FFFFFF" stroke="#E2E6EF"/>
+    <rect x="110" y="360" width="1280" height="95" fill="#EEF2FF"/>
+    <rect x="110" y="455" width="1280" height="95" fill="#E6F4F2"/>
+    <rect x="110" y="550" width="1280" height="95" fill="#F3F0FF"/>
+    <rect x="110" y="645" width="1280" height="95" fill="#FFFBEB"/>
+    <line x1="245" y1="360" x2="245" y2="740" stroke="#D8DEEA"/>
+    <text x="135" y="414" class="lane">Relationship Manager</text>
+    <text x="135" y="509" class="lane">Compliance Officer</text>
+    <text x="135" y="604" class="lane">System Owner</text>
+    <text x="135" y="699" class="lane">Internal Audit</text>
+
+    <circle cx="310" cy="407" r="28" fill="#0C233C"/>
+    <text x="293" y="412" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#FFFFFF">Start</text>
+
+    <rect x="390" y="378" width="154" height="58" rx="11" fill="#FFFFFF" stroke="#1E49E2" stroke-width="2"/>
+    <text x="420" y="401" class="step">Export active</text>
+    <text x="424" y="419" class="step">KYC users</text>
+
+    <rect x="610" y="473" width="168" height="58" rx="11" fill="#FFFFFF" stroke="#098E7E" stroke-width="2"/>
+    <text x="646" y="497" class="step">Review</text>
+    <text x="635" y="515" class="step">exceptions</text>
+
+    <polygon points="890,474 948,502 890,530 832,502" fill="#FFFBEB" stroke="#EAAA00" stroke-width="2"/>
+    <text x="865" y="497" class="step">Issues</text>
+    <text x="858" y="515" class="step">found?</text>
+
+    <rect x="1030" y="568" width="175" height="58" rx="11" fill="#FFFFFF" stroke="#7213EA" stroke-width="2"/>
+    <text x="1052" y="592" class="step">Disable access</text>
+    <text x="1064" y="610" class="step">and document</text>
+
+    <rect x="1030" y="473" width="175" height="58" rx="11" fill="#FFFFFF" stroke="#098E7E" stroke-width="2"/>
+    <text x="1055" y="497" class="step">Approve review</text>
+    <text x="1066" y="515" class="step">and evidence</text>
+
+    <rect x="1230" y="663" width="130" height="58" rx="29" fill="#0C233C"/>
+    <text x="1271" y="698" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">End</text>
+
+    <path d="M338 407 H390" stroke="#0C233C" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+    <path d="M544 407 C574 407,574 502,610 502" stroke="#0C233C" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+    <path d="M778 502 H832" stroke="#0C233C" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+    <path d="M948 502 H1030" stroke="#0C233C" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+    <text x="982" y="492" class="branch">No</text>
+    <path d="M890 530 C890 596,965 597,1030 597" stroke="#0C233C" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+    <text x="940" y="577" class="branch">Yes</text>
+    <path d="M1205 502 C1240 502,1240 692,1230 692" stroke="#0C233C" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+    <path d="M1205 597 C1240 597,1240 692,1230 692" stroke="#0C233C" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  </g>
+
+  <g>
+    <rect x="90" y="880" width="18" height="18" rx="4" fill="#EEF2FF" stroke="#1E49E2"/>
+    <text x="118" y="894" class="small">Role lanes at 20% opacity</text>
+    <rect x="340" y="880" width="18" height="18" rx="4" fill="#FFFFFF" stroke="#098E7E" stroke-width="2"/>
+    <text x="368" y="894" class="small">Action step</text>
+    <polygon points="565,880 583,889 565,898 547,889" fill="#FFFBEB" stroke="#EAAA00"/>
+    <text x="594" y="894" class="small">Decision with Yes/No labels</text>
+  </g>
+</svg>

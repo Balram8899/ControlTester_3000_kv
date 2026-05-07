@@ -1,8 +1,11 @@
 import base64
 from io import BytesIO
+from typing import Any, Callable
 
 from docx import Document
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
+import pytest
 from unittest.mock import MagicMock, patch
 
 from utils.sop_uplift.llm_orchestrator import PromptRunResult
@@ -22,6 +25,19 @@ class ImmediateThread:
     def start(self):
         if self.target:
             self.target(*self.args, **self.kwargs)
+
+
+def make_gridfs_save_side_effect(
+    saved_contents: dict[str, bytes],
+) -> Callable[[str, dict[str, Any], bytes], dict[str, Any]]:
+    def save_output_content(case_id: str, item: dict[str, Any], content: bytes) -> dict[str, Any]:
+        saved_contents[item["output_id"]] = content
+        return {
+            **{key: value for key, value in item.items() if key != "content_b64"},
+            "gridfs_file_id": f"gridfs-{item['output_id']}",
+        }
+
+    return save_output_content
 
 
 def test_readiness_not_ready_without_sop_material():
@@ -587,6 +603,7 @@ def test_run_pipeline_converts_pending_uploads_before_analysis(mock_convert, moc
         "processing_state": {},
     }
     stored = dict(case)
+    saved_contents: dict[str, bytes] = {}
 
     def update_case(_case_id, updates):
         stored.update(updates)
@@ -629,6 +646,7 @@ def test_run_pipeline_endpoint_persists_full_case_artifacts(mock_get_store, _moc
         "processing_state": {},
     }
     stored = dict(case)
+    saved_contents: dict[str, bytes] = {}
 
     def update_case(_case_id, updates):
         stored.update(updates)
@@ -690,6 +708,162 @@ def test_run_pipeline_persists_failed_task_state(mock_get_store, _mock_run_pipel
     assert response["task_id"] == "pipeline"
     assert stored["processing_state"]["pipeline"]["status"] == "failed"
     assert stored["processing_state"]["pipeline"]["error"] == "broken extraction"
+
+
+@patch("api.routers.sop_uplift.threading.Thread")
+@patch("api.routers.sop_uplift.get_store")
+def test_run_pipeline_marks_stale_running_job_failed_before_restart(mock_get_store, mock_thread):
+    from api.routers import sop_uplift as router_mod
+    from api.routers.sop_uplift import PipelineRunRequest, run_pipeline
+
+    if hasattr(router_mod, "_active_pipeline_cases"):
+        router_mod._active_pipeline_cases.clear()
+
+    stored = {
+        "case_id": "case-1",
+        "title": "Quarterly access review SOP",
+        "process_name": "Access reviews",
+        "processing_state": {
+            "pipeline": {
+                "status": "running",
+                "phase": "analysis",
+                "message": "Analyzing controls...",
+                "started_at": "2000-01-01T00:00:00Z",
+                "updated_at": "2000-01-01T00:00:00Z",
+            }
+        },
+    }
+    update_history = []
+
+    def update_case(_case_id, updates):
+        update_history.append(updates)
+        stored.update(updates)
+        return stored
+
+    mock = MagicMock()
+    mock.get_case.side_effect = lambda _case_id: stored
+    mock.update_case.side_effect = update_case
+    mock_get_store.return_value = mock
+
+    response = run_pipeline("case-1", PipelineRunRequest(use_llm=False))
+
+    assert response["status"] == "running"
+    assert mock_thread.call_count == 1
+    stale_updates = [
+        updates
+        for updates in update_history
+        if updates["processing_state"]["pipeline"]["status"] == "failed"
+    ]
+    assert stale_updates
+    assert "stale" in stale_updates[0]["processing_state"]["pipeline"]["error"].lower()
+
+
+@patch("api.routers.sop_uplift.threading.Thread")
+@patch("api.routers.sop_uplift.get_store")
+def test_run_pipeline_returns_existing_fresh_running_job_without_new_thread(mock_get_store, mock_thread):
+    from api.routers import sop_uplift as router_mod
+    from api.routers.sop_uplift import PipelineRunRequest, run_pipeline
+
+    if hasattr(router_mod, "_active_pipeline_cases"):
+        router_mod._active_pipeline_cases.clear()
+
+    existing_state = {
+        "status": "running",
+        "phase": "analysis",
+        "message": "Analyzing controls...",
+        "started_at": router_mod._utc_now(),
+        "updated_at": router_mod._utc_now(),
+    }
+    mock = MagicMock()
+    mock.get_case.return_value = {"case_id": "case-1", "processing_state": {"pipeline": existing_state}}
+    mock_get_store.return_value = mock
+
+    response = run_pipeline("case-1", PipelineRunRequest(use_llm=False))
+
+    assert response == {"task_id": "pipeline", "status": "running", "processing_state": existing_state}
+    mock_thread.assert_not_called()
+    mock.update_case.assert_not_called()
+
+
+@patch("api.routers.sop_uplift.threading.Thread")
+@patch("api.routers.sop_uplift.get_store")
+def test_run_pipeline_case_mutex_prevents_duplicate_start_when_store_state_lags(mock_get_store, mock_thread):
+    from api.routers import sop_uplift as router_mod
+    from api.routers.sop_uplift import PipelineRunRequest, run_pipeline
+
+    if hasattr(router_mod, "_active_pipeline_cases"):
+        router_mod._active_pipeline_cases.clear()
+
+    case = {
+        "case_id": "case-1",
+        "title": "Quarterly access review SOP",
+        "process_name": "Access reviews",
+        "processing_state": {},
+    }
+    mock = MagicMock()
+    mock.get_case.side_effect = lambda _case_id: case
+    mock.update_case.side_effect = lambda _case_id, updates: {**case, **updates}
+    mock_get_store.return_value = mock
+
+    first = run_pipeline("case-1", PipelineRunRequest(use_llm=False))
+    second = run_pipeline("case-1", PipelineRunRequest(use_llm=False))
+
+    assert first["status"] == "running"
+    assert second["status"] == "running"
+    assert mock_thread.call_count == 1
+
+
+@patch("api.routers.sop_uplift.dispatch_pipeline", create=True)
+@patch("api.routers.sop_uplift.get_store")
+def test_run_pipeline_persists_options_and_calls_dispatch_signature(mock_get_store, mock_dispatch):
+    from api.routers import sop_uplift as router_mod
+    from api.routers.sop_uplift import PipelineRunRequest, run_pipeline
+
+    if hasattr(router_mod, "_active_pipeline_cases"):
+        router_mod._active_pipeline_cases.clear()
+
+    stored = {
+        "case_id": "case-1",
+        "title": "Quarterly access review SOP",
+        "process_name": "Access reviews",
+        "processing_state": {},
+    }
+
+    def update_case(_case_id, updates):
+        stored.update(updates)
+        return stored
+
+    mock = MagicMock()
+    mock.get_case.side_effect = lambda _case_id: stored
+    mock.update_case.side_effect = update_case
+    mock_get_store.return_value = mock
+
+    response = run_pipeline("case-1", PipelineRunRequest(use_llm=False, max_chunk_chars=20000))
+
+    assert response["status"] == "running"
+    mock_dispatch.assert_called_once_with("case-1")
+    assert stored["processing_state"]["pipeline"]["options"] == {"use_llm": False, "max_chunk_chars": 20000}
+
+
+@patch("api.routers.sop_uplift.threading.Thread")
+def test_dispatch_pipeline_asyncio_backend_starts_stage_one_background_thread(mock_thread):
+    from api.routers import sop_uplift as router_mod
+
+    with patch.dict("os.environ", {"TASK_BACKEND": "asyncio"}):
+        router_mod.dispatch_pipeline("case-1")
+
+    mock_thread.assert_called_once_with(target=router_mod._run_pipeline_background, args=("case-1",), daemon=True)
+    mock_thread.return_value.start.assert_called_once()
+
+
+def test_dispatch_pipeline_celery_backend_is_explicit_stub():
+    from api.routers import sop_uplift as router_mod
+
+    with patch.dict("os.environ", {"TASK_BACKEND": "celery"}), pytest.raises(HTTPException) as exc_info:
+        router_mod.dispatch_pipeline("case-1")
+
+    assert exc_info.value.status_code == 501
+    assert "celery" in str(exc_info.value.detail).lower()
 
 
 @patch("api.routers.sop_uplift.get_store")
@@ -802,6 +976,7 @@ def test_generate_outputs_returns_downloadable_non_placeholder_outputs(mock_get_
         "outputs": [],
     }
     stored = dict(case)
+    saved_contents: dict[str, bytes] = {}
 
     def update_case(_case_id, updates):
         stored.update(updates)
@@ -810,6 +985,7 @@ def test_generate_outputs_returns_downloadable_non_placeholder_outputs(mock_get_
     mock = MagicMock()
     mock.get_case.side_effect = lambda _case_id: stored
     mock.update_case.side_effect = update_case
+    mock.save_output_content.side_effect = make_gridfs_save_side_effect(saved_contents)
     mock_get_store.return_value = mock
 
     response = TestClient(app).post("/sop-uplift/cases/case-1/generate-outputs")
@@ -817,9 +993,37 @@ def test_generate_outputs_returns_downloadable_non_placeholder_outputs(mock_get_
     assert response.status_code == 202
     outputs = response.json()["outputs"]
     assert {output["type"] for output in outputs} >= {"docx", "drawio", "mermaid", "diagram_png", "diagram_pdf", "changelog_markdown", "changelog_json", "svg"}
-    assert all(output.get("content_b64") for output in outputs)
+    assert all("content_b64" not in output for output in outputs)
+    assert all(output.get("gridfs_file_id") for output in outputs)
+    assert set(saved_contents) >= {"docx-output", "diagram-png-output", "diagram-pdf-output", "svg-output"}
+    assert all("content_b64" not in output for output in stored["outputs"])
     assert stored["diagram_model"]["title"] == "Access reviews Swimlane"
     assert stored["diagram_model"]["nodes"][0]["label"] == "Operations Risk reviews weekly."
+
+
+@patch("api.routers.sop_uplift.get_store")
+def test_generate_outputs_returns_503_when_gridfs_save_fails(mock_get_store):
+    from api.main import app
+
+    case = {
+        "case_id": "case-1",
+        "title": "Quarterly access review SOP",
+        "process_name": "Access reviews",
+        "anchors": [{"anchor_id": "a1", "block_type": "paragraph", "text": "Original text.", "section_path": ["Access Reviews"]}],
+        "suggestions": [{"suggestion_id": "s1", "status": "accepted", "anchor_id": "a1", "suggested_text": "Operations Risk reviews weekly.", "title": "Add owner"}],
+        "case_chat": [],
+        "outputs": [],
+    }
+    mock = MagicMock()
+    mock.get_case.return_value = case
+    mock.save_output_content.side_effect = RuntimeError("GridFS unavailable")
+    mock_get_store.return_value = mock
+
+    response = TestClient(app).post("/sop-uplift/cases/case-1/generate-outputs")
+
+    assert response.status_code == 503
+    assert "Output storage error" in response.json()["detail"]
+    mock.update_case.assert_not_called()
 
 
 @patch("api.routers.sop_uplift.get_store")
@@ -870,17 +1074,20 @@ def test_generate_outputs_uses_uploaded_sop_docx_as_formatted_export_base(mock_g
         "outputs": [],
     }
     stored = dict(case)
+    saved_contents: dict[str, bytes] = {}
     mock = MagicMock()
     mock.get_case.side_effect = lambda _case_id: stored
     mock.get_file_content.return_value = source_bytes
     mock.update_case.side_effect = lambda _case_id, updates: stored.update(updates) or stored
+    mock.save_output_content.side_effect = make_gridfs_save_side_effect(saved_contents)
     mock_get_store.return_value = mock
 
     response = TestClient(app).post("/sop-uplift/cases/case-1/generate-outputs")
 
     assert response.status_code == 202
     docx_output = next(output for output in response.json()["outputs"] if output["type"] == "docx")
-    exported = Document(BytesIO(base64.b64decode(docx_output["content_b64"])))
+    assert "content_b64" not in docx_output
+    exported = Document(BytesIO(saved_contents[docx_output["output_id"]]))
     full_text = "\n".join(paragraph.text for paragraph in exported.paragraphs)
     assert exported.paragraphs[0].text == "Original SOP Template"
     assert exported.paragraphs[1].style.name == "Intense Quote"
@@ -917,6 +1124,7 @@ def test_generate_outputs_rebuilds_final_diagram_from_effective_sop_state(mock_g
         "outputs": [],
     }
     stored = dict(case)
+    saved_contents: dict[str, bytes] = {}
 
     def update_case(_case_id, updates):
         stored.update(updates)
@@ -925,6 +1133,7 @@ def test_generate_outputs_rebuilds_final_diagram_from_effective_sop_state(mock_g
     mock = MagicMock()
     mock.get_case.side_effect = lambda _case_id: stored
     mock.update_case.side_effect = update_case
+    mock.save_output_content.side_effect = make_gridfs_save_side_effect(saved_contents)
     mock_get_store.return_value = mock
 
     response = TestClient(app).post("/sop-uplift/cases/case-1/generate-outputs")
@@ -933,7 +1142,8 @@ def test_generate_outputs_rebuilds_final_diagram_from_effective_sop_state(mock_g
     labels = " ".join(node["label"] for node in stored["diagram_model"]["nodes"])
     warnings = stored["diagram_model"]["warnings"]
     svg_output = next(output for output in response.json()["outputs"] if output["type"] == "svg")
-    svg_text = base64.b64decode(svg_output["content_b64"]).decode("utf-8")
+    assert "content_b64" not in svg_output
+    svg_text = saved_contents[svg_output["output_id"]].decode("utf-8")
     assert "Business Owner submits request." in labels
     assert "Risk stores vendor packet." in labels
     assert "Stale preview only" not in labels

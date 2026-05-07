@@ -8,6 +8,10 @@ MONGO_URI = os.getenv("MONGO_URI", "mongodb://mongodb:27017")
 _DB_NAME = "trace_db"
 _COL_NAME = "settings"
 _DOC_ID = "llm_config"
+_DOCUMENT_UPLIFT_DOC_ID = "document_uplift_config"
+_DOCUMENT_UPLIFT_DEFAULT_MAX_LLM_CALLS = 80
+_DOCUMENT_UPLIFT_MIN_MAX_LLM_CALLS = 5
+_DOCUMENT_UPLIFT_MAX_MAX_LLM_CALLS = 200
 
 PROVIDER_REGISTRY: dict[str, dict] = {
     "gemini": {
@@ -63,7 +67,7 @@ PROVIDER_REGISTRY: dict[str, dict] = {
 _client: pymongo.MongoClient | None = None
 
 
-def _get_collection():
+def _get_collection() -> object:
     global _client
     if _client is None:
         _client = pymongo.MongoClient(MONGO_URI, serverSelectionTimeoutMS=2000)
@@ -106,6 +110,54 @@ def save_llm_config(provider: str, model: str) -> None:
         {"_id": _DOC_ID},
         {"$set": {"provider": provider, "model": model}},
         upsert=True,
+    )
+
+
+def get_document_uplift_config() -> dict[str, int]:
+    seed_value = _coerce_document_uplift_budget(
+        os.getenv(
+            "MAX_LLM_CALLS_PER_PIPELINE",
+            str(_DOCUMENT_UPLIFT_DEFAULT_MAX_LLM_CALLS),
+        )
+    )
+    try:
+        col = _get_collection()
+        doc = col.find_one({"_id": _DOCUMENT_UPLIFT_DOC_ID})
+        if doc and "max_llm_calls_per_pipeline" in doc:
+            return {
+                "max_llm_calls_per_pipeline": _coerce_document_uplift_budget(
+                    doc.get("max_llm_calls_per_pipeline")
+                )
+            }
+        save_document_uplift_config(seed_value)
+    except Exception:
+        return {"max_llm_calls_per_pipeline": seed_value}
+    return {"max_llm_calls_per_pipeline": seed_value}
+
+
+def save_document_uplift_config(max_llm_calls_per_pipeline: int) -> None:
+    col = _get_collection()
+    col.update_one(
+        {"_id": _DOCUMENT_UPLIFT_DOC_ID},
+        {
+            "$set": {
+                "max_llm_calls_per_pipeline": _coerce_document_uplift_budget(
+                    max_llm_calls_per_pipeline
+                )
+            }
+        },
+        upsert=True,
+    )
+
+
+def _coerce_document_uplift_budget(value: object) -> int:
+    try:
+        budget = int(value)
+    except (TypeError, ValueError):
+        budget = _DOCUMENT_UPLIFT_DEFAULT_MAX_LLM_CALLS
+    return max(
+        _DOCUMENT_UPLIFT_MIN_MAX_LLM_CALLS,
+        min(_DOCUMENT_UPLIFT_MAX_MAX_LLM_CALLS, budget),
     )
 
 

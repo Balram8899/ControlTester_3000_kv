@@ -570,6 +570,124 @@ def test_full_pipeline_caps_full_document_prompt_to_max_chunk_chars():
     assert "Chunk truncated to 120 characters before prompt injection." in updates["processing_state"]["pipeline"]["warnings"]
 
 
+def test_full_pipeline_default_prompt_ceiling_allows_twenty_thousand_chars():
+    prompts: list[str] = []
+    marker = "TAIL_MARKER_SHOULD_BE_SENT_WITH_20K_DEFAULT"
+    long_markdown = "# Access\n\n" + ("Owner reviews access before closure.\n" * 180) + marker
+
+    def fake_run(stage, prompt, _schema):
+        if stage == "full_document_extraction":
+            prompts.append(prompt)
+            parsed = FullDocumentExtractionResponse()
+        elif stage == "case_sop_uplift_suggestions":
+            parsed = SopSuggestionResponse()
+        elif stage == "case_chat_context_extraction":
+            parsed = CaseChatContextExtractionResponse()
+        elif stage == "corpus_map":
+            parsed = CorpusMapResponse()
+        elif stage == "case_finalization":
+            parsed = CaseFinalizationResponse()
+        else:
+            parsed = FinalSummaryResponse()
+        return _result(stage, parsed)
+
+    case = _case()
+    case["markdown_documents"][0]["markdown"] = long_markdown
+    case["chunks"][0]["content"] = long_markdown
+
+    with patch("utils.sop_uplift.pipeline.run_json_prompt", side_effect=fake_run):
+        updates = run_full_sop_pipeline(case, use_llm=True)
+
+    assert len(prompts) == 1
+    assert marker in prompts[0]
+    assert all("Chunk truncated" not in warning for warning in updates["processing_state"]["pipeline"]["warnings"])
+
+
+def test_full_document_extraction_routes_only_procedural_sections():
+    prompts: list[str] = []
+    full_markdown = """# Access SOP
+
+## Document History
+Approved By: Steering Committee.
+
+## Definitions
+QAR means quarterly access review.
+
+## Procedure
+Operations Risk reviews access exceptions weekly and retains the approval export.
+
+## References
+Internal reference library.
+"""
+
+    def fake_run(stage, prompt, _schema):
+        if stage == "full_document_extraction":
+            prompts.append(prompt)
+            parsed = FullDocumentExtractionResponse()
+        elif stage == "case_sop_uplift_suggestions":
+            parsed = SopSuggestionResponse()
+        elif stage == "case_chat_context_extraction":
+            parsed = CaseChatContextExtractionResponse()
+        elif stage == "corpus_map":
+            parsed = CorpusMapResponse()
+        elif stage == "case_finalization":
+            parsed = CaseFinalizationResponse()
+        else:
+            parsed = FinalSummaryResponse()
+        return _result(stage, parsed)
+
+    case = _case()
+    case["markdown_documents"][0]["markdown"] = full_markdown
+    case["chunks"][0]["content"] = full_markdown
+    case["anchors"] = [
+        {
+            "anchor_id": "history",
+            "document_id": "doc-1",
+            "file_id": "file-1",
+            "block_type": "paragraph",
+            "text": "Approved By: Steering Committee.",
+            "section_path": ["Document History"],
+            "char_start": full_markdown.index("Approved By"),
+        },
+        {
+            "anchor_id": "definitions",
+            "document_id": "doc-1",
+            "file_id": "file-1",
+            "block_type": "paragraph",
+            "text": "QAR means quarterly access review.",
+            "section_path": ["Definitions"],
+            "char_start": full_markdown.index("QAR means"),
+        },
+        {
+            "anchor_id": "procedure",
+            "document_id": "doc-1",
+            "file_id": "file-1",
+            "block_type": "paragraph",
+            "text": "Operations Risk reviews access exceptions weekly and retains the approval export.",
+            "section_path": ["Procedure"],
+            "char_start": full_markdown.index("Operations Risk"),
+        },
+        {
+            "anchor_id": "references",
+            "document_id": "doc-1",
+            "file_id": "file-1",
+            "block_type": "paragraph",
+            "text": "Internal reference library.",
+            "section_path": ["References"],
+            "char_start": full_markdown.index("Internal reference"),
+        },
+    ]
+
+    with patch("utils.sop_uplift.pipeline.run_json_prompt", side_effect=fake_run):
+        run_full_sop_pipeline(case, use_llm=True)
+
+    assert len(prompts) == 1
+    assert "Operations Risk reviews access exceptions weekly" in prompts[0]
+    assert "Approved By: Steering Committee" not in prompts[0]
+    assert "QAR means quarterly access review" not in prompts[0]
+    assert "Internal reference library" not in prompts[0]
+
+
 def test_full_pipeline_uses_supporting_raci_context_for_rule_based_suggestions():
     case = {
         "case_id": "case-1",

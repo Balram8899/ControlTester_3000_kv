@@ -1,0 +1,1594 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TRACE Dashboard Option 3 Mockups</title>
+    <style>
+      :root {
+        --page-bg: #f0f2f7;
+        --ink: #0c233c;
+        --muted: #5a6478;
+        --soft: #8492a6;
+        --line: #e2e6ef;
+        --brand: #00338d;
+        --navy: #0c233c;
+        --cobalt: #1e49e2;
+        --pacific: #00b8f5;
+        --teal: #098e7e;
+        --green: #009a44;
+        --amber: #eaaa00;
+        --red: #e5001b;
+        --purple: #7213ea;
+        --shadow: 0 28px 60px -36px rgba(12, 35, 60, 0.28);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top left, rgba(30, 73, 226, 0.08), transparent 26%),
+          radial-gradient(circle at top right, rgba(0, 184, 245, 0.06), transparent 20%),
+          var(--page-bg);
+      }
+
+      .page {
+        width: min(1600px, calc(100vw - 48px));
+        margin: 0 auto;
+        padding: 28px 0 40px;
+      }
+
+      .header {
+        padding: 0 10px 26px;
+      }
+
+      .eyebrow {
+        margin: 0 0 10px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 2.6px;
+        text-transform: uppercase;
+        color: var(--brand);
+      }
+
+      h1 {
+        margin: 0 0 12px;
+        font-size: 38px;
+        font-weight: 700;
+        letter-spacing: -1.4px;
+      }
+
+      .lede {
+        max-width: 1060px;
+        margin: 0 0 18px;
+        font-size: 16px;
+        line-height: 1.7;
+        color: var(--muted);
+      }
+
+      .pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .pill {
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--brand);
+        background: #eef2ff;
+        border: 1px solid #cfdafe;
+      }
+
+      .board {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 26px;
+      }
+
+      .screen-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .screen-label {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        padding: 0 8px;
+      }
+
+      .screen-label strong {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 2.4px;
+        text-transform: uppercase;
+        color: var(--brand);
+      }
+
+      .screen-label span {
+        font-size: 24px;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+      }
+
+      .screen {
+        overflow: hidden;
+        border: 1px solid #d6dfec;
+        border-radius: 30px;
+        background: white;
+        box-shadow: var(--shadow);
+      }
+
+      .app {
+        display: grid;
+        grid-template-columns: 92px minmax(0, 1fr);
+        min-height: 690px;
+      }
+
+      .sidebar {
+        padding: 18px 12px;
+        background: #102843;
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .brand {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 24px;
+      }
+
+      .brand .kpmg {
+        color: #ffffff;
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .brand .trace {
+        color: var(--pacific);
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .nav-icon {
+        width: 100%;
+        height: 46px;
+        margin-bottom: 10px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .nav-icon.active {
+        background: rgba(0, 184, 245, 0.14);
+        border-color: rgba(0, 184, 245, 0.5);
+      }
+
+      .main {
+        background: var(--page-bg);
+      }
+
+      .topbar {
+        height: 40px;
+        background: var(--navy);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .hero {
+        position: relative;
+        overflow: hidden;
+        padding: 18px 22px 20px;
+        background: linear-gradient(135deg, #0c233c 0%, #1e49e2 100%);
+        color: white;
+      }
+
+      .hero::before,
+      .hero::after {
+        content: "";
+        position: absolute;
+        width: 220px;
+        height: 220px;
+        border-radius: 999px;
+        filter: blur(34px);
+        opacity: 0.24;
+      }
+
+      .hero::before {
+        top: -88px;
+        right: 80px;
+        background: #00b8f5;
+      }
+
+      .hero::after {
+        bottom: -120px;
+        left: 120px;
+        background: #7213ea;
+      }
+
+      .hero-row {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .hero-title {
+        font-size: 24px;
+        font-weight: 700;
+        letter-spacing: -0.7px;
+      }
+
+      .hero-sub {
+        margin-top: 5px;
+        max-width: 540px;
+        font-size: 12px;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.74);
+      }
+
+      .hero-actions {
+        display: flex;
+        gap: 10px;
+      }
+
+      .action-chip {
+        padding: 7px 11px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 700;
+        color: white;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+      }
+
+      .tabs {
+        display: flex;
+        gap: 18px;
+        padding: 14px 22px 0;
+        border-bottom: 1px solid #d8e0ee;
+      }
+
+      .tab {
+        padding: 0 0 12px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--muted);
+        border-bottom: 3px solid transparent;
+      }
+
+      .tab.active {
+        color: var(--brand);
+        border-color: var(--cobalt);
+      }
+
+      .content {
+        padding: 18px 22px 22px;
+      }
+
+      .kpis {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .kpi {
+        position: relative;
+        overflow: hidden;
+        min-height: 112px;
+        padding: 16px 16px 14px;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: white;
+      }
+
+      .kpi::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--accent, var(--cobalt));
+      }
+
+      .kpi .mini {
+        margin-bottom: 12px;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--soft);
+      }
+
+      .kpi .value {
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: -0.8px;
+      }
+
+      .kpi .desc {
+        margin-top: 8px;
+        font-size: 11px;
+        line-height: 1.5;
+        color: var(--muted);
+      }
+
+      .kpi .badge {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 5px 8px;
+        border-radius: 999px;
+        font-size: 9px;
+        font-weight: 700;
+        background: var(--badge-bg, #eef2ff);
+        color: var(--badge-fg, var(--brand));
+      }
+
+      .rows {
+        display: grid;
+        gap: 14px;
+      }
+
+      .row-3,
+      .row-2 {
+        display: grid;
+        gap: 14px;
+      }
+
+      .row-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .row-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .chart-card,
+      .list-card,
+      .flow-card {
+        padding: 16px;
+        border-radius: 20px;
+        border: 1px solid var(--line);
+        background: white;
+      }
+
+      .chart-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .chart-head strong {
+        font-size: 15px;
+        font-weight: 700;
+      }
+
+      .chart-head span {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1.8px;
+        text-transform: uppercase;
+        color: var(--soft);
+      }
+
+      .plot {
+        position: relative;
+        height: 154px;
+        border-radius: 16px;
+        background:
+          linear-gradient(#edf1f7 1px, transparent 1px) top left / 100% 33%,
+          linear-gradient(90deg, #edf1f7 1px, transparent 1px) top left / 20% 100%;
+        background-repeat: repeat;
+        overflow: hidden;
+      }
+
+      .plot.empty {
+        display: grid;
+        place-items: center;
+        color: var(--soft);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .vbars {
+        position: absolute;
+        inset: 16px 12px 26px;
+        display: grid;
+        grid-template-columns: repeat(var(--count, 6), 1fr);
+        align-items: end;
+        gap: 10px;
+      }
+
+      .vbar {
+        border-radius: 8px 8px 2px 2px;
+        background: var(--fill, var(--cobalt));
+        transform-origin: bottom;
+        transform: scaleY(0);
+        animation: grow-y 1s cubic-bezier(0.2, 1, 0.3, 1) forwards;
+        animation-delay: var(--delay, 0s);
+        height: var(--h, 40%);
+      }
+
+      .plot-labels {
+        display: grid;
+        grid-template-columns: repeat(var(--count, 6), 1fr);
+        gap: 8px;
+        margin-top: 8px;
+      }
+
+      .plot-label {
+        font-size: 9px;
+        line-height: 1.25;
+        color: var(--soft);
+        text-align: center;
+      }
+
+      .plot-label.rotate {
+        transform: rotate(-28deg);
+        transform-origin: top center;
+        margin-top: 10px;
+        white-space: nowrap;
+      }
+
+      .donut-wrap {
+        display: grid;
+        grid-template-columns: 148px minmax(0, 1fr);
+        gap: 12px;
+        align-items: center;
+      }
+
+      .donut-frame {
+        display: grid;
+        place-items: center;
+        aspect-ratio: 1;
+        border-radius: 20px;
+        background: #fbfcfe;
+        border: 1px solid #eef2f7;
+      }
+
+      .donut {
+        position: relative;
+        width: 118px;
+        height: 118px;
+        border-radius: 999px;
+        background: var(--ring, conic-gradient(var(--cobalt) 0 60%, var(--pacific) 60% 85%, var(--amber) 85% 100%));
+        transform: scale(0.86);
+        opacity: 0;
+        animation: donut-in 1.05s cubic-bezier(0.2, 1, 0.3, 1) 0.18s forwards;
+      }
+
+      .donut::after {
+        content: "";
+        position: absolute;
+        inset: 22px;
+        border-radius: 999px;
+        background: white;
+        box-shadow: inset 0 0 0 1px #e6ebf2;
+      }
+
+      .donut-hole {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        text-align: center;
+        z-index: 1;
+      }
+
+      .donut-hole strong {
+        display: block;
+        font-size: 24px;
+        font-weight: 700;
+      }
+
+      .donut-hole span {
+        display: block;
+        font-size: 10px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--soft);
+      }
+
+      .legend {
+        display: grid;
+        gap: 8px;
+      }
+
+      .legend-item {
+        display: grid;
+        grid-template-columns: 10px minmax(0, 1fr) auto;
+        gap: 8px;
+        align-items: center;
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .legend-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: var(--dot, var(--cobalt));
+      }
+
+      .legend-item b {
+        color: var(--ink);
+        font-size: 11px;
+      }
+
+      .hbars {
+        display: grid;
+        gap: 12px;
+      }
+
+      .hrow {
+        display: grid;
+        grid-template-columns: 86px minmax(0, 1fr) 34px;
+        gap: 10px;
+        align-items: center;
+        font-size: 11px;
+      }
+
+      .track {
+        overflow: hidden;
+        height: 18px;
+        border-radius: 999px;
+        background: #edf2fa;
+      }
+
+      .fill {
+        height: 100%;
+        border-radius: 999px;
+        width: var(--w, 50%);
+        background: var(--fill, var(--cobalt));
+        transform-origin: left;
+        transform: scaleX(0);
+        animation: fill-x 1.1s cubic-bezier(0.2, 1, 0.3, 1) forwards;
+        animation-delay: var(--delay, 0s);
+      }
+
+      .status-strip {
+        display: grid;
+        gap: 12px;
+      }
+
+      .status-bar {
+        display: flex;
+        overflow: hidden;
+        height: 22px;
+        border-radius: 999px;
+        background: #edf2fa;
+      }
+
+      .segment {
+        width: var(--w, 20%);
+        background: var(--bg, var(--cobalt));
+        transform-origin: left;
+        transform: scaleX(0);
+        animation: fill-x 0.95s cubic-bezier(0.2, 1, 0.3, 1) forwards;
+        animation-delay: var(--delay, 0s);
+      }
+
+      .segment + .segment {
+        box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.4);
+      }
+
+      .status-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 14px;
+        font-size: 10px;
+        color: var(--muted);
+      }
+
+      .status-legend span::before {
+        content: "";
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        margin-right: 6px;
+        border-radius: 999px;
+        vertical-align: middle;
+        background: var(--dot, var(--cobalt));
+      }
+
+      .mini-kpis {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .mini-kpi {
+        padding: 12px 12px 10px;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: white;
+      }
+
+      .mini-kpi strong {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--soft);
+        text-transform: uppercase;
+        letter-spacing: 1.8px;
+      }
+
+      .mini-kpi b {
+        display: block;
+        margin-top: 8px;
+        font-size: 23px;
+        font-weight: 700;
+        letter-spacing: -0.6px;
+      }
+
+      .mini-kpi span {
+        display: block;
+        margin-top: 6px;
+        font-size: 10px;
+        color: var(--muted);
+      }
+
+      .module-strip {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .module {
+        padding: 12px;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: white;
+      }
+
+      .module .name {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1.7px;
+        text-transform: uppercase;
+        color: var(--soft);
+      }
+
+      .module .stats {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px 10px;
+        margin-top: 8px;
+      }
+
+      .module .stats b {
+        display: block;
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      .module .stats span {
+        display: block;
+        font-size: 9px;
+        color: var(--muted);
+      }
+
+      .list-card {
+        display: grid;
+        gap: 10px;
+      }
+
+      .list-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px;
+        padding: 12px;
+        border-radius: 16px;
+        background: #fbfcfe;
+        border: 1px solid #eef2f7;
+      }
+
+      .list-row strong {
+        display: block;
+        font-size: 13px;
+        margin-bottom: 4px;
+      }
+
+      .list-row p {
+        margin: 0;
+        font-size: 11px;
+        line-height: 1.5;
+        color: var(--muted);
+      }
+
+      .tag {
+        display: inline-block;
+        padding: 5px 8px;
+        border-radius: 999px;
+        font-size: 9px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .tag.red {
+        background: #feebed;
+        color: var(--red);
+      }
+
+      .tag.amber {
+        background: #fffbeb;
+        color: #a46600;
+      }
+
+      .tag.green {
+        background: #edfbf5;
+        color: var(--green);
+      }
+
+      .tag.blue {
+        background: #eef2ff;
+        color: var(--brand);
+      }
+
+      .callout {
+        display: grid;
+        gap: 8px;
+        padding: 14px;
+        border-radius: 18px;
+        color: white;
+        background: linear-gradient(135deg, #0c233c 0%, #1848d7 100%);
+      }
+
+      .callout strong {
+        font-size: 15px;
+        font-weight: 700;
+      }
+
+      .callout p {
+        margin: 0;
+        font-size: 11px;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.78);
+      }
+
+      .footer-note {
+        margin-top: 28px;
+        padding: 16px 18px;
+        border-radius: 20px;
+        background: white;
+        border: 1px solid var(--line);
+        box-shadow: 0 16px 30px -26px rgba(12, 35, 60, 0.2);
+      }
+
+      .footer-note strong {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 15px;
+        font-weight: 700;
+      }
+
+      .footer-note p {
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.65;
+        color: var(--muted);
+      }
+
+      @keyframes grow-y {
+        from {
+          transform: scaleY(0);
+        }
+
+        to {
+          transform: scaleY(1);
+        }
+      }
+
+      @keyframes fill-x {
+        from {
+          transform: scaleX(0);
+        }
+
+        to {
+          transform: scaleX(1);
+        }
+      }
+
+      @keyframes donut-in {
+        from {
+          transform: scale(0.72);
+          opacity: 0;
+        }
+
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      @media (max-width: 1280px) {
+        .board {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="header">
+        <p class="eyebrow">Dashboard Option 3</p>
+        <h1>Reusable Dashboard System Mockups</h1>
+        <p class="lede">
+          This is the more ambitious direction: the dashboard becomes a coordinated chart system instead of a loose set of panels. The core change is not just moving cards around. It is a shared visual grammar for bars, donuts, legends, footer totals, motion, and tab storytelling across Overview, Libraries, Workflows, and Exceptions.
+        </p>
+        <div class="pills">
+          <div class="pill">Readable Labels In Narrow Charts</div>
+          <div class="pill">Balanced Square Donut Frames</div>
+          <div class="pill">Unified Chart Animation Language</div>
+          <div class="pill">Testing Status Moved To Workflows</div>
+          <div class="pill">Chat Activity Removed</div>
+        </div>
+      </div>
+
+      <div class="board">
+        <div class="screen-wrap">
+          <div class="screen-label">
+            <strong>Screen 1</strong>
+            <span>Overview Rebalanced</span>
+          </div>
+          <div class="screen">
+            <div class="app">
+              <div class="sidebar">
+                <div class="brand">
+                  <div class="kpmg">KPMG</div>
+                  <div class="trace">TRACE</div>
+                </div>
+                <div class="nav-icon"></div>
+                <div class="nav-icon active"></div>
+                <div class="nav-icon"></div>
+                <div class="nav-icon"></div>
+                <div class="nav-icon"></div>
+                <div class="nav-icon"></div>
+              </div>
+              <div class="main">
+                <div class="topbar"></div>
+                <div class="hero">
+                  <div class="hero-row">
+                    <div>
+                      <div class="hero-title">Dashboard</div>
+                      <div class="hero-sub">Operational overview with cleaner chart framing, less noise, and the first page focused on scan speed.</div>
+                    </div>
+                    <div class="hero-actions">
+                      <div class="action-chip">Refresh</div>
+                      <div class="action-chip">Last Sync 08:12 PM</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="tabs">
+                  <div class="tab active">Overview</div>
+                  <div class="tab">Libraries</div>
+                  <div class="tab">Workflows</div>
+                  <div class="tab">Exceptions</div>
+                </div>
+                <div class="content">
+                  <div class="kpis">
+                    <div class="kpi" style="--accent:#1e49e2">
+                      <div class="mini">Library Documents</div>
+                      <div class="value">4</div>
+                      <div class="desc">Regulatory, controls, and framework sources loaded.</div>
+                      <div class="badge">3 source groups</div>
+                    </div>
+                    <div class="kpi" style="--accent:#00b8f5">
+                      <div class="mini">Controls</div>
+                      <div class="value">442</div>
+                      <div class="desc">Extracted and available for downstream diagnostics.</div>
+                      <div class="badge">162 unmapped</div>
+                    </div>
+                    <div class="kpi" style="--accent:#7213ea">
+                      <div class="mini">Risk Assessments</div>
+                      <div class="value">7</div>
+                      <div class="desc">Open assessment work in active or draft progress.</div>
+                      <div class="badge">19 high / critical</div>
+                    </div>
+                    <div class="kpi" style="--accent:#009a44">
+                      <div class="mini">Reports</div>
+                      <div class="value">21</div>
+                      <div class="desc">Generated output across reporting modules.</div>
+                      <div class="badge">160 output files</div>
+                    </div>
+                  </div>
+
+                  <div class="rows">
+                    <div class="row-3">
+                      <div class="chart-card">
+                        <div class="chart-head">
+                          <strong>Assets By Criticality</strong>
+                          <span>Animated Bars</span>
+                        </div>
+                        <div class="plot">
+                          <div class="vbars" style="--count:4">
+                            <div class="vbar" style="--h:72%;--fill:#009a44;--delay:.05s"></div>
+                            <div class="vbar" style="--h:58%;--fill:#eaaa00;--delay:.12s"></div>
+                            <div class="vbar" style="--h:34%;--fill:#f08b00;--delay:.18s"></div>
+                            <div class="vbar" style="--h:18%;--fill:#e5001b;--delay:.24s"></div>
+                          </div>
+                        </div>
+                        <div class="plot-labels" style="--count:4">
+                          <div class="plot-label">Low</div>
+                          <div class="plot-label">Medium</div>
+                          <div class="plot-label">High</div>
+                          <div class="plot-label">Critical</div>
+                        </div>
+                      </div>
+
+                      <div class="chart-card">
+                        <div class="chart-head">
+                          <strong>Assessments By Status</strong>
+                          <span>Readable Labels</span>
+                        </div>
+                        <div class="plot">
+                          <div class="vbars" style="--count:5">
+                            <div class="vbar" style="--h:12%;--fill:#98a9c6;--delay:.05s"></div>
+                            <div class="vbar" style="--h:32%;--fill:#1e49e2;--delay:.11s"></div>
+                            <div class="vbar" style="--h:54%;--fill:#7213ea;--delay:.17s"></div>
+                            <div class="vbar" style="--h:42%;--fill:#00b8f5;--delay:.23s"></div>
+                            <div class="vbar" style="--h:68%;--fill:#009a44;--delay:.29s"></div>
+                          </div>
+                        </div>
+                        <div class="plot-labels" style="--count:5">
+                          <div class="plot-label rotate">Draft</div>
+                          <div class="plot-label rotate">In Progress</div>
+                          <div class="plot-label rotate">Risks Identified</div>
+                          <div class="plot-label rotate">Controls Applied</div>
+                          <div class="plot-label rotate">Complete</div>
+                        </div>
+                      </div>
+
+                      <div class="chart-card">
+                        <div class="chart-head">
+                          <strong>Issues By Severity</strong>
+                          <span>Consistent Scale</span>
+                        </div>
+                        <div class="plot">
+                          <div class="vbars" style="--count:4">
+                            <div class="vbar" style="--h:18%;--fill:#009a44;--delay:.05s"></div>
+                            <div class="vbar" style="--h:28%;--fill:#eaaa00;--delay:.11s"></div>
+                            <div class="vbar" style="--h:46%;--fill:#f08b00;--delay:.17s"></div>
+                            <div class="vbar" style="--h:22%;--fill:#e5001b;--delay:.23s"></div>
+                          </div>
+                        </div>
+                        <div class="plot-labels" style="--count:4">
+                          <div class="plot-label">Low</div>
+                          <div class="plot-label">Medium</div>
+                          <div class="plot-label">High</div>
+                          <div class="plot-label">Critical</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="row-2">
+                      <div class="chart-card">
+                        <div class="chart-head">
+                          <strong>Reports By Type</strong>
+                          <span>Sweep Donut</span>
+                        </div>
+                        <div class="donut-wrap">
+                          <div class="donut-frame">
+                            <div class="donut" style="--ring:conic-gradient(#0d3c9b 0 72%, #1e49e2 72% 90%, #00b8f5 90% 100%)">
+                              <div class="donut-hole">
+                                <div>
+                                  <strong>21</strong>
+                                  <span>Reports</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="legend">
+                            <div class="legend-item">
+                              <span class="legend-dot" style="--dot:#0d3c9b"></span>
+                              <span>SOP Uplift</span>
+                              <b>15</b>
+                            </div>
+                            <div class="legend-item">
+                              <span class="legend-dot" style="--dot:#1e49e2"></span>
+                              <span>Regulatory Testing</span>
+                              <b>4</b>
+                            </div>
+                            <div class="legend-item">
+                              <span class="legend-dot" style="--dot:#00b8f5"></span>
+                              <span>Final Reporting</span>
+                              <b>2</b>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="chart-card">
+                        <div class="chart-head">
+                          <strong>Domain Coverage</strong>
+                          <span>Animated Fill</span>
+                        </div>
+                        <div class="hbars">
+                          <div class="hrow">
+                            <span>Obligations</span>
+                            <div class="track"><div class="fill" style="--fill:#0d3c9b;--w:74%;--delay:.06s"></div></div>
+                            <b>74%</b>
+                          </div>
+                          <div class="hrow">
+                            <span>Controls</span>
+                            <div class="track"><div class="fill" style="--fill:#1e49e2;--w:62%;--delay:.14s"></div></div>
+                            <b>62%</b>
+                          </div>
+                          <div class="hrow">
+                            <span>Assets</span>
+                            <div class="track"><div class="fill" style="--fill:#00b8f5;--w:43%;--delay:.22s"></div></div>
+                            <b>43%</b>
+                          </div>
+                          <div class="hrow">
+                            <span>Reports</span>
+                            <div class="track"><div class="fill" style="--fill:#098e7e;--w:51%;--delay:.30s"></div></div>
+                            <b>51%</b>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen-wrap">
+          <div class="screen-label">
+            <strong>Screen 2</strong>
+            <span>Libraries Diagnostic Surface</span>
+          </div>
+          <div class="screen">
+            <div class="app">
+              <div class="sidebar">
+                <div class="brand">
+                  <div class="kpmg">KPMG</div>
+                  <div class="trace">TRACE</div>
+                </div>
+                <div class="nav-icon"></div>
+                <div class="nav-icon active"></div>
+                <div class="nav-icon"></div>
+                <div class="nav-icon"></div>
+                <div class="nav-icon"></div>
+              </div>
+              <div class="main">
+                <div class="topbar"></div>
+                <div class="hero">
+                  <div class="hero-row">
+                    <div>
+                      <div class="hero-title">Dashboard</div>
+                      <div class="hero-sub">Libraries becomes a proper diagnostic workspace with coverage, quality, gaps, and category depth.</div>
+                    </div>
+                    <div class="hero-actions">
+                      <div class="action-chip">Refresh</div>
+                      <div class="action-chip">Data Sources Live</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="tabs">
+                  <div class="tab">Overview</div>
+                  <div class="tab active">Libraries</div>
+                  <div class="tab">Workflows</div>
+                  <div class="tab">Exceptions</div>
+                </div>
+                <div class="content">
+                  <div class="kpis">
+                    <div class="kpi" style="--accent:#1e49e2">
+                      <div class="mini">Regulations</div>
+                      <div class="value">1</div>
+                      <div class="desc">Regulatory source documents in active use.</div>
+                      <div class="badge">122 obligations</div>
+                    </div>
+                    <div class="kpi" style="--accent:#00b8f5">
+                      <div class="mini">Controls</div>
+                      <div class="value">442</div>
+                      <div class="desc">Control records extracted from uploaded libraries.</div>
+                      <div class="badge" style="--badge-bg:#edfbf5;--badge-fg:#009a44">442 indexed</div>
+                    </div>
+                    <div class="kpi" style="--accent:#098e7e">
+                      <div class="mini">Frameworks</div>
+                      <div class="value">1</div>
+                      <div class="desc">Framework source documents and parsed elements.</div>
+                      <div class="badge" style="--badge-bg:#e6f4f2;--badge-fg:#098e7e">307 elements</div>
+                    </div>
+                    <div class="kpi" style="--accent:#7213ea">
+                      <div class="mini">Quality Score</div>
+                      <div class="value">0.26/1</div>
+                      <div class="desc">Current average obligation match and library fitness.</div>
+                      <div class="badge" style="--badge-bg:#f3f0ff;--badge-fg:#7213ea">86% low quality</div>
+                    </div>
+                  </div>
+
+                  <div class="rows">
+                    <div class="row-2">
+                      <div class="chart-card">
+                        <div class="chart-head">
+                          <strong>Domain Coverage</strong>
+                          <span>Rotated Labels</span>
+                        </div>
+                        <div class="plot">
+                          <div class="vbars" style="--count:8">
+                            <div class="vbar" style="--h:84%;--fill:#1e49e2;--delay:.05s"></div>
+                            <div class="vbar" style="--h:20%;--fill:#3e63e7;--delay:.10s"></div>
+                            <div class="vbar" style="--h:14%;--fill:#4d74eb;--delay:.15s"></div>
+                            <div class="vbar" style="--h:18%;--fill:#5f85ef;--delay:.20s"></div>
+                            <div class="vbar" style="--h:12%;--fill:#7296f3;--delay:.25s"></div>
+                            <div class="vbar" style="--h:11%;--fill:#85a7f7;--delay:.30s"></div>
+                            <div class="vbar" style="--h:9%;--fill:#9ab8fb;--delay:.35s"></div>
+                            <div class="vbar" style="--h:16%;--fill:#afc8ff;--delay:.40s"></div>
+                          </div>
+                        </div>
+                        <div class="plot-labels" style="--count:8">
+                          <div class="plot-label rotate">Governance</div>
+                          <div class="plot-label rotate">Business Continuity</div>
+                          <div class="plot-label rotate">Incident Response</div>
+                          <div class="plot-label rotate">Audit</div>
+                          <div class="plot-label rotate">Third Party</div>
+                          <div class="plot-label rotate">Technology Refresh</div>
+                          <div class="plot-label rotate">Network Security</div>
+                          <div class="plot-label rotate">System Security</div>
+                        </div>
+                      </div>
+
+                      <div class="chart-card">
+                        <div class="chart-head">
+                          <strong>Obligations By Domain</strong>
+                          <span>Balanced Donut</span>
+                        </div>
+                        <div class="donut-wrap">
+                          <div class="donut-frame">
+                            <div class="donut" style="--ring:conic-gradient(#00b8f5 0 22%, #1e49e2 22% 39%, #009a44 39% 54%, #7213ea 54% 62%, #eaaa00 62% 70%, #ff7b6a 70% 76%, #00c389 76% 81%, #f08b00 81% 86%, #4353db 86% 91%, #0d3c9b 91% 100%)">
+                              <div class="donut-hole">
+                                <div>
+                                  <strong>122</strong>
+                                  <span>Obligations</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="legend">
+                            <div class="legend-item"><span class="legend-dot" style="--dot:#00b8f5"></span><span>Governance</span><b>27</b></div>
+                            <div class="legend-item"><span class="legend-dot" style="--dot:#1e49e2"></span><span>Business Continuity</span><b>21</b></div>
+                            <div class="legend-item"><span class="legend-dot" style="--dot:#009a44"></span><span>Incident Response</span><b>11</b></div>
+                            <div class="legend-item"><span class="legend-dot" style="--dot:#7213ea"></span><span>Audit</span><b>10</b></div>
+                            <div class="legend-item"><span class="legend-dot" style="--dot:#eaaa00"></span><span>VA / PT</span><b>8</b></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="row-2">
+                      <div class="chart-card">
+                        <div class="chart-head">
+                          <strong>Framework Elements By Category</strong>
+                          <span>Animated Bars</span>
+                        </div>
+                        <div class="plot">
+                          <div class="vbars" style="--count:7">
+                            <div class="vbar" style="--h:66%;--fill:#00b8f5;--delay:.04s"></div>
+                            <div class="vbar" style="--h:46%;--fill:#098e7e;--delay:.10s"></div>
+                            <div class="vbar" style="--h:40%;--fill:#009a44;--delay:.16s"></div>
+                            <div class="vbar" style="--h:38%;--fill:#eaaa00;--delay:.22s"></div>
+                            <div class="vbar" style="--h:34%;--fill:#7213ea;--delay:.28s"></div>
+                            <div class="vbar" style="--h:22%;--fill:#1e49e2;--delay:.34s"></div>
+                            <div class="vbar" style="--h:8%;--fill:#36b8b1;--delay:.40s"></div>
+                          </div>
+                        </div>
+                        <div class="plot-labels" style="--count:7">
+                          <div class="plot-label">Operational</div>
+                          <div class="plot-label">Tech</div>
+                          <div class="plot-label">Process</div>
+                          <div class="plot-label">Compliance</div>
+                          <div class="plot-label">Quality</div>
+                          <div class="plot-label">People</div>
+                          <div class="plot-label">Financial</div>
+                        </div>
+                      </div>
+
+                      <div class="callout">
+                        <strong>Option 3 Library Readout</strong>
+                        <p>The chart system uses the same panel frame, title spacing, footer logic, label rules, and motion timing across every library diagnostic. Donut legends no longer fight the plot for width, and long domain names have a formal rotation rule instead of overlapping.</p>
+                        <p>The visual story is: what is loaded, where coverage concentrates, where quality drops, and which domains need attention next.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen-wrap">
+          <div class="screen-label">
+            <strong>Screen 3</strong>
+            <span>Workflows As The Operations Tab</span>
+          </div>
+          <div class="screen">
+            <div class="app">
+              <div class="sidebar">
+                <div class="brand">
+                  <div class="kpmg">KPMG</div>
+                  <div class="trace">TRACE</div>
+                </div>
+                <div class="nav-icon"></div>
+                <div class="nav-icon"></div>
+                <div class="nav-icon active"></div>
+                <div class="nav-icon"></div>
+                <div class="nav-icon"></div>
+              </div>
+              <div class="main">
+                <div class="topbar"></div>
+                <div class="hero">
+                  <div class="hero-row">
+                    <div>
+                      <div class="hero-title">Dashboard</div>
+                      <div class="hero-sub">Workflows holds execution health. This is where testing status lives, instead of feeling stranded on the Overview tab.</div>
+                    </div>
+                    <div class="hero-actions">
+                      <div class="action-chip">Refresh</div>
+                      <div class="action-chip">Execution View</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="tabs">
+                  <div class="tab">Overview</div>
+                  <div class="tab">Libraries</div>
+                  <div class="tab active">Workflows</div>
+                  <div class="tab">Exceptions</div>
+                </div>
+                <div class="content">
+                  <div class="module-strip">
+                    <div class="module">
+                      <div class="name">Risk Assessment</div>
+                      <div class="stats">
+                        <div><b>7</b><span>active</span></div>
+                        <div><b>19</b><span>high risks</span></div>
+                      </div>
+                    </div>
+                    <div class="module">
+                      <div class="name">Control Testing</div>
+                      <div class="stats">
+                        <div><b>0</b><span>open sessions</span></div>
+                        <div><b>0</b><span>evidence gaps</span></div>
+                      </div>
+                    </div>
+                    <div class="module">
+                      <div class="name">Reg Testing</div>
+                      <div class="stats">
+                        <div><b>1</b><span>comparison</span></div>
+                        <div><b>4</b><span>priority gaps</span></div>
+                      </div>
+                    </div>
+                    <div class="module">
+                      <div class="name">Final Reporting</div>
+                      <div class="stats">
+                        <div><b>21</b><span>reports</span></div>
+                        <div><b>160</b><span>outputs</span></div>
+                      </div>
+                    </div>
+                    <div class="module">
+                      <div class="name">SOP Uplift</div>
+                      <div class="stats">
+                        <div><b>1</b><span>case</span></div>
+                        <div><b>10</b><span>suggestions</span></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="rows">
+                    <div class="row-2">
+                      <div class="chart-card">
+                        <div class="chart-head">
+                          <strong>Assessments By Status</strong>
+                          <span>Shared Grammar</span>
+                        </div>
+                        <div class="plot">
+                          <div class="vbars" style="--count:5">
+                            <div class="vbar" style="--h:16%;--fill:#98a9c6;--delay:.04s"></div>
+                            <div class="vbar" style="--h:34%;--fill:#1e49e2;--delay:.10s"></div>
+                            <div class="vbar" style="--h:54%;--fill:#7213ea;--delay:.16s"></div>
+                            <div class="vbar" style="--h:40%;--fill:#00b8f5;--delay:.22s"></div>
+                            <div class="vbar" style="--h:70%;--fill:#009a44;--delay:.28s"></div>
+                          </div>
+                        </div>
+                        <div class="plot-labels" style="--count:5">
+                          <div class="plot-label">Draft</div>
+                          <div class="plot-label">Active</div>
+                          <div class="plot-label">Risks</div>
+                          <div class="plot-label">Controls</div>
+                          <div class="plot-label">Done</div>
+                        </div>
+                      </div>
+
+                      <div class="chart-card">
+                        <div class="chart-head">
+                          <strong>Testing Sessions By Status</strong>
+                          <span>Moved Here</span>
+                        </div>
+                        <div class="status-strip">
+                          <div class="status-bar">
+                            <div class="segment" style="--w:22%;--bg:#1e49e2;--delay:.05s"></div>
+                            <div class="segment" style="--w:34%;--bg:#00b8f5;--delay:.12s"></div>
+                            <div class="segment" style="--w:26%;--bg:#009a44;--delay:.19s"></div>
+                            <div class="segment" style="--w:10%;--bg:#7213ea;--delay:.26s"></div>
+                            <div class="segment" style="--w:8%;--bg:#e5001b;--delay:.33s"></div>
+                          </div>
+                          <div class="status-legend">
+                            <span style="--dot:#1e49e2">Not Started</span>
+                            <span style="--dot:#00b8f5">In Review</span>
+                            <span style="--dot:#009a44">Complete</span>
+                            <span style="--dot:#7213ea">Deferred</span>
+                            <span style="--dot:#e5001b">Overdue</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="row-3">
+                      <div class="chart-card">
+                        <div class="chart-head">
+                          <strong>Control Test Results</strong>
+                          <span>Animated Bars</span>
+                        </div>
+                        <div class="plot">
+                          <div class="vbars" style="--count:4">
+                            <div class="vbar" style="--h:38%;--fill:#1e49e2;--delay:.04s"></div>
+                            <div class="vbar" style="--h:58%;--fill:#009a44;--delay:.10s"></div>
+                            <div class="vbar" style="--h:22%;--fill:#eaaa00;--delay:.16s"></div>
+                            <div class="vbar" style="--h:14%;--fill:#e5001b;--delay:.22s"></div>
+                          </div>
+                        </div>
+                        <div class="plot-labels" style="--count:4">
+                          <div class="plot-label">Pass</div>
+                          <div class="plot-label">Accepted</div>
+                          <div class="plot-label">Watch</div>
+                          <div class="plot-label">Fail</div>
+                        </div>
+                      </div>
+
+                      <div class="chart-card">
+                        <div class="chart-head">
+                          <strong>SOP Cases By Status</strong>
+                          <span>Same Scale</span>
+                        </div>
+                        <div class="plot">
+                          <div class="vbars" style="--count:3">
+                            <div class="vbar" style="--h:12%;--fill:#98a9c6;--delay:.04s"></div>
+                            <div class="vbar" style="--h:30%;--fill:#00b8f5;--delay:.12s"></div>
+                            <div class="vbar" style="--h:74%;--fill:#098e7e;--delay:.20s"></div>
+                          </div>
+                        </div>
+                        <div class="plot-labels" style="--count:3">
+                          <div class="plot-label">Queued</div>
+                          <div class="plot-label">Working</div>
+                          <div class="plot-label">Complete</div>
+                        </div>
+                      </div>
+
+                      <div class="chart-card">
+                        <div class="chart-head">
+                          <strong>Reports By Type</strong>
+                          <span>Compact Donut</span>
+                        </div>
+                        <div class="donut-wrap" style="grid-template-columns:120px minmax(0,1fr)">
+                          <div class="donut-frame">
+                            <div class="donut" style="width:100px;height:100px;--ring:conic-gradient(#0d3c9b 0 76%, #1e49e2 76% 90%, #00b8f5 90% 100%)">
+                              <div class="donut-hole">
+                                <div>
+                                  <strong style="font-size:20px">21</strong>
+                                  <span>Output</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="legend">
+                            <div class="legend-item"><span class="legend-dot" style="--dot:#0d3c9b"></span><span>SOP Uplift</span><b>15</b></div>
+                            <div class="legend-item"><span class="legend-dot" style="--dot:#1e49e2"></span><span>Reg Testing</span><b>4</b></div>
+                            <div class="legend-item"><span class="legend-dot" style="--dot:#00b8f5"></span><span>Final Reports</span><b>2</b></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="callout">
+                      <strong>What Changed From The Current Workflows Tab</strong>
+                      <p>Testing Sessions By Status moves into the operations context where it belongs. Chat activity disappears. The tab reads as workflow health instead of a generic leftovers panel.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen-wrap">
+          <div class="screen-label">
+            <strong>Screen 4</strong>
+            <span>Exceptions As A Triage Surface</span>
+          </div>
+          <div class="screen">
+            <div class="app">
+              <div class="sidebar">
+                <div class="brand">
+                  <div class="kpmg">KPMG</div>
+                  <div class="trace">TRACE</div>
+                </div>
+                <div class="nav-icon"></div>
+                <div class="nav-icon"></div>
+                <div class="nav-icon"></div>
+                <div class="nav-icon active"></div>
+                <div class="nav-icon"></div>
+              </div>
+              <div class="main">
+                <div class="topbar"></div>
+                <div class="hero">
+                  <div class="hero-row">
+                    <div>
+                      <div class="hero-title">Dashboard</div>
+                      <div class="hero-sub">Exceptions becomes a true triage surface with risk signals, queue pressure, and explicit next-action lists.</div>
+                    </div>
+                    <div class="hero-actions">
+                      <div class="action-chip">Refresh</div>
+                      <div class="action-chip">High Attention</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="tabs">
+                  <div class="tab">Overview</div>
+                  <div class="tab">Libraries</div>
+                  <div class="tab">Workflows</div>
+                  <div class="tab active">Exceptions</div>
+                </div>
+                <div class="content">
+                  <div class="mini-kpis">
+                    <div class="mini-kpi"><strong>Open Issues</strong><b>14</b><span>2 critical</span></div>
+                    <div class="mini-kpi"><strong>Queue</strong><b>8</b><span>validation items</span></div>
+                    <div class="mini-kpi"><strong>Coverage Gaps</strong><b>34</b><span>library mapping gaps</span></div>
+                    <div class="mini-kpi"><strong>Test Fails</strong><b>3</b><span>control sessions</span></div>
+                    <div class="mini-kpi"><strong>High Risks</strong><b>19</b><span>assessment portfolio</span></div>
+                  </div>
+
+                  <div class="rows">
+                    <div class="row-2">
+                      <div class="chart-card">
+                        <div class="chart-head">
+                          <strong>Issue Severity</strong>
+                          <span>Shared Bars</span>
+                        </div>
+                        <div class="plot">
+                          <div class="vbars" style="--count:4">
+                            <div class="vbar" style="--h:16%;--fill:#009a44;--delay:.04s"></div>
+                            <div class="vbar" style="--h:34%;--fill:#eaaa00;--delay:.10s"></div>
+                            <div class="vbar" style="--h:58%;--fill:#f08b00;--delay:.16s"></div>
+                            <div class="vbar" style="--h:26%;--fill:#e5001b;--delay:.22s"></div>
+                          </div>
+                        </div>
+                        <div class="plot-labels" style="--count:4">
+                          <div class="plot-label">Low</div>
+                          <div class="plot-label">Medium</div>
+                          <div class="plot-label">High</div>
+                          <div class="plot-label">Critical</div>
+                        </div>
+                      </div>
+
+                      <div class="chart-card">
+                        <div class="chart-head">
+                          <strong>Validation Queue</strong>
+                          <span>Animated Strip</span>
+                        </div>
+                        <div class="status-strip">
+                          <div class="status-bar">
+                            <div class="segment" style="--w:42%;--bg:#1e49e2;--delay:.05s"></div>
+                            <div class="segment" style="--w:28%;--bg:#eaaa00;--delay:.12s"></div>
+                            <div class="segment" style="--w:18%;--bg:#7213ea;--delay:.19s"></div>
+                            <div class="segment" style="--w:12%;--bg:#e5001b;--delay:.26s"></div>
+                          </div>
+                          <div class="status-legend">
+                            <span style="--dot:#1e49e2">Awaiting Review</span>
+                            <span style="--dot:#eaaa00">Needs Evidence</span>
+                            <span style="--dot:#7213ea">Escalated</span>
+                            <span style="--dot:#e5001b">Overdue</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="row-2">
+                      <div class="list-card">
+                        <div class="chart-head">
+                          <strong>Priority Exceptions</strong>
+                          <span>Next Actions</span>
+                        </div>
+                        <div class="list-row">
+                          <div>
+                            <strong>Identity Governance Annual Review</strong>
+                            <p>Critical residual risk remains unmitigated after control application.</p>
+                          </div>
+                          <div class="tag red">Escalate</div>
+                        </div>
+                        <div class="list-row">
+                          <div>
+                            <strong>Controls Library Quality</strong>
+                            <p>162 controls remain unmapped to obligations and need analysis attention.</p>
+                          </div>
+                          <div class="tag amber">Review</div>
+                        </div>
+                        <div class="list-row">
+                          <div>
+                            <strong>Validation Queue Backlog</strong>
+                            <p>5 findings have crossed the expected review SLA.</p>
+                          </div>
+                          <div class="tag amber">Triage</div>
+                        </div>
+                      </div>
+
+                      <div class="list-card">
+                        <div class="chart-head">
+                          <strong>Risk Bands</strong>
+                          <span>Assessment Portfolio</span>
+                        </div>
+                        <div class="hbars">
+                          <div class="hrow">
+                            <span>Low</span>
+                            <div class="track"><div class="fill" style="--fill:#009a44;--w:24%;--delay:.05s"></div></div>
+                            <b>7</b>
+                          </div>
+                          <div class="hrow">
+                            <span>Medium</span>
+                            <div class="track"><div class="fill" style="--fill:#eaaa00;--w:42%;--delay:.13s"></div></div>
+                            <b>12</b>
+                          </div>
+                          <div class="hrow">
+                            <span>High</span>
+                            <div class="track"><div class="fill" style="--fill:#f08b00;--w:56%;--delay:.21s"></div></div>
+                            <b>16</b>
+                          </div>
+                          <div class="hrow">
+                            <span>Critical</span>
+                            <div class="track"><div class="fill" style="--fill:#e5001b;--w:18%;--delay:.29s"></div></div>
+                            <b>3</b>
+                          </div>
+                        </div>
+                        <div class="list-row">
+                          <div>
+                            <strong>Exception Story</strong>
+                            <p>Option 3 treats this tab as a decision surface: what is blocked, why it matters, and who needs to move next.</p>
+                          </div>
+                          <div class="tag blue">Triage View</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-note">
+        <strong>Reading The Option 3 Proposal</strong>
+        <p>
+          The point of this direction is system quality, not extra decoration. We would standardize chart dimensions, legend behavior, label rules, and motion timings so every tab feels like the same dashboard language. The Overview tab becomes lighter and faster. Workflows becomes the home for execution status. Exceptions becomes a triage desk. Libraries becomes a proper diagnostic surface rather than a handful of unrelated charts.
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

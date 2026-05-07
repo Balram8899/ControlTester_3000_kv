@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import logging
 import os
 import uuid
 from datetime import datetime
@@ -9,6 +10,10 @@ from typing import Any
 import pymongo
 import gridfs
 from pymongo.errors import OperationFailure
+
+
+logger = logging.getLogger(__name__)
+CONTENT_FIELDS = {"markdown_documents", "anchors", "chunks"}
 
 
 def utc_now() -> str:
@@ -35,7 +40,7 @@ class SopUpliftCaseStore:
         self.client = pymongo.MongoClient(uri, serverSelectionTimeoutMS=1500)
         db_name = os.environ.get("SOP_UPLIFT_MONGO_DB", "trace_db")
         self.db = self.client[db_name]
-        self.col = self.db["sop_uplift_cases"]
+        self._bind_collections()
         self.fs = gridfs.GridFS(self.db, collection="sop_uplift_files")
         self.is_connected = True
         try:
@@ -46,7 +51,7 @@ class SopUpliftCaseStore:
                 self._use_memory_fallback()
                 return
             self.db = self.client["Trace_db"]
-            self.col = self.db["sop_uplift_cases"]
+            self._bind_collections()
             self.fs = gridfs.GridFS(self.db, collection="sop_uplift_files")
             try:
                 self._ensure_indexes()
@@ -55,15 +60,35 @@ class SopUpliftCaseStore:
         except Exception:
             self._use_memory_fallback()
 
+    def _bind_collections(self) -> None:
+        self.col = self.db["sop_uplift_cases"]
+        self.markdown_col = self.db["sop_markdown"]
+        self.anchors_col = self.db["sop_anchors"]
+        self.chunks_col = self.db["sop_chunks"]
+
     def _ensure_indexes(self) -> None:
         self.col.create_index("case_id", unique=True)
         self.col.create_index("created_at")
+        self.markdown_col.create_index([("case_id", 1), ("file_id", 1)], unique=True)
+        self.anchors_col.create_index("case_id", unique=True)
+        self.chunks_col.create_index("case_id", unique=True)
 
     def _use_memory_fallback(self) -> None:
         self.is_connected = False
         self._memory: dict[str, dict[str, Any]] = {}
         self._memory_files: dict[str, bytes] = {}
         self._memory_outputs: dict[str, bytes] = {}
+        self._memory_markdown: dict[str, list[dict[str, Any]]] = {}
+        self._memory_anchors: dict[str, list[dict[str, Any]]] = {}
+        self._memory_chunks: dict[str, list[dict[str, Any]]] = {}
+
+    def _ensure_memory_content_stores(self) -> None:
+        if not hasattr(self, "_memory_markdown"):
+            self._memory_markdown = {}
+        if not hasattr(self, "_memory_anchors"):
+            self._memory_anchors = {}
+        if not hasattr(self, "_memory_chunks"):
+            self._memory_chunks = {}
 
     def _case_template(self, data: dict[str, Any]) -> dict[str, Any]:
         now = utc_now()
@@ -73,13 +98,11 @@ class SopUpliftCaseStore:
             "process_name": data.get("process_name", "").strip(),
             "domain_label": data.get("domain_label", "").strip(),
             "notes": data.get("notes", "").strip(),
+            "schema_version": 2,
             "status": "draft",
             "readiness": {},
             "uploaded_files": [],
             "document_tags": [],
-            "markdown_documents": [],
-            "anchors": [],
-            "chunks": [],
             "case_chat": [],
             "case_context": [],
             "corpus_map": {},
@@ -99,13 +122,88 @@ class SopUpliftCaseStore:
         cleaned.pop("_id", None)
         return cleaned
 
+    def _schema_version(self, case: dict[str, Any] | None) -> int:
+        try:
+            return int((case or {}).get("schema_version") or 1)
+        except (TypeError, ValueError):
+            return 1
+
+    def _raw_case(self, case_id: str) -> dict[str, Any] | None:
+        if self.is_connected:
+            return self._clean(self.col.find_one({"case_id": case_id}))
+        case = self._memory.get(case_id)
+        return dict(case) if case else None
+
+    def get_case_content(self, case_id: str, case: dict[str, Any] | None = None) -> dict[str, list[dict[str, Any]]]:
+        case = case or self._raw_case(case_id) or {}
+        if self._schema_version(case) < 2:
+            return {
+                "markdown_documents": list(case.get("markdown_documents", [])),
+                "anchors": list(case.get("anchors", [])),
+                "chunks": list(case.get("chunks", [])),
+            }
+        if self.is_connected:
+            markdown_documents = [self._clean(doc) for doc in self.markdown_col.find({"case_id": case_id}, {"_id": 0})]
+            anchors_doc = self._clean(self.anchors_col.find_one({"case_id": case_id})) or {}
+            chunks_doc = self._clean(self.chunks_col.find_one({"case_id": case_id})) or {}
+            return {
+                "markdown_documents": markdown_documents,
+                "anchors": list(anchors_doc.get("anchors", [])),
+                "chunks": list(chunks_doc.get("chunks", [])),
+            }
+        self._ensure_memory_content_stores()
+        return {
+            "markdown_documents": list(self._memory_markdown.get(case_id, [])),
+            "anchors": list(self._memory_anchors.get(case_id, [])),
+            "chunks": list(self._memory_chunks.get(case_id, [])),
+        }
+
+    def _hydrate_case_content(self, case: dict[str, Any] | None) -> dict[str, Any] | None:
+        if not case:
+            return None
+        hydrated = dict(case)
+        hydrated.update(self.get_case_content(hydrated.get("case_id", ""), hydrated))
+        return hydrated
+
+    def _write_case_content(self, case_id: str, updates: dict[str, Any]) -> None:
+        now = utc_now()
+        if self.is_connected:
+            if "markdown_documents" in updates:
+                self.markdown_col.delete_many({"case_id": case_id})
+                markdown_documents = [
+                    {**document, "case_id": case_id, "updated_at": now}
+                    for document in updates.get("markdown_documents", [])
+                ]
+                if markdown_documents:
+                    self.markdown_col.insert_many(markdown_documents)
+            if "anchors" in updates:
+                self.anchors_col.update_one(
+                    {"case_id": case_id},
+                    {"$set": {"case_id": case_id, "anchors": updates.get("anchors", []), "updated_at": now}},
+                    upsert=True,
+                )
+            if "chunks" in updates:
+                self.chunks_col.update_one(
+                    {"case_id": case_id},
+                    {"$set": {"case_id": case_id, "chunks": updates.get("chunks", []), "updated_at": now}},
+                    upsert=True,
+                )
+            return
+        self._ensure_memory_content_stores()
+        if "markdown_documents" in updates:
+            self._memory_markdown[case_id] = list(updates.get("markdown_documents", []))
+        if "anchors" in updates:
+            self._memory_anchors[case_id] = list(updates.get("anchors", []))
+        if "chunks" in updates:
+            self._memory_chunks[case_id] = list(updates.get("chunks", []))
+
     def create_case(self, data: dict[str, Any]) -> dict[str, Any]:
         doc = self._case_template(data)
         if self.is_connected:
             self.col.insert_one({**doc, "_id": doc["case_id"]})
         else:
             self._memory[doc["case_id"]] = doc
-        return doc
+        return self._hydrate_case_content(doc)
 
     def list_cases(self) -> list[dict[str, Any]]:
         if self.is_connected:
@@ -114,11 +212,23 @@ class SopUpliftCaseStore:
 
     def get_case(self, case_id: str) -> dict[str, Any] | None:
         if self.is_connected:
-            return self._clean(self.col.find_one({"case_id": case_id}))
-        return self._memory.get(case_id)
+            return self._hydrate_case_content(self._clean(self.col.find_one({"case_id": case_id})))
+        return self._hydrate_case_content(self._memory.get(case_id))
 
     def update_case(self, case_id: str, updates: dict[str, Any]) -> dict[str, Any] | None:
         updates = {k: v for k, v in updates.items() if v is not None}
+        raw_case = self._raw_case(case_id)
+        if not raw_case:
+            return None
+        case_after_update = {**raw_case, **updates}
+        split_content = self._schema_version(case_after_update) >= 2
+        content_updates: dict[str, Any] = {}
+        if split_content:
+            for field in CONTENT_FIELDS:
+                if field in updates:
+                    content_updates[field] = updates.pop(field)
+        if content_updates:
+            self._write_case_content(case_id, content_updates)
         updates["updated_at"] = utc_now()
         if self.is_connected:
             self.col.update_one({"case_id": case_id}, {"$set": updates})
@@ -127,7 +237,7 @@ class SopUpliftCaseStore:
         if not case:
             return None
         case.update(updates)
-        return case
+        return self.get_case(case_id)
 
     def delete_case(self, case_id: str) -> bool:
         if self.is_connected:
@@ -142,10 +252,21 @@ class SopUpliftCaseStore:
                     continue
                 try:
                     self.fs.delete(ObjectId(gridfs_file_id))
-                except Exception:
-                    pass
-            return self.col.delete_one({"case_id": case_id}).deleted_count == 1
-        return self._memory.pop(case_id, None) is not None
+                except Exception as exc:
+                    logger.warning("Unable to delete SOP Uplift GridFS file %s: %s", gridfs_file_id, exc)
+            deleted = self.col.delete_one({"case_id": case_id}).deleted_count == 1
+            if deleted:
+                self.markdown_col.delete_many({"case_id": case_id})
+                self.anchors_col.delete_many({"case_id": case_id})
+                self.chunks_col.delete_many({"case_id": case_id})
+            return deleted
+        deleted = self._memory.pop(case_id, None) is not None
+        if deleted:
+            self._ensure_memory_content_stores()
+            self._memory_markdown.pop(case_id, None)
+            self._memory_anchors.pop(case_id, None)
+            self._memory_chunks.pop(case_id, None)
+        return deleted
 
     def add_file_metadata(self, case_id: str, metadata: dict[str, Any]) -> dict[str, Any] | None:
         raw_content = metadata.get("raw_content")
@@ -262,8 +383,8 @@ class SopUpliftCaseStore:
                 from bson import ObjectId
 
                 self.fs.delete(ObjectId(file_meta["gridfs_file_id"]))
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.warning("Unable to delete SOP Uplift uploaded GridFS file %s: %s", file_meta["gridfs_file_id"], exc)
         if not self.is_connected:
             if not hasattr(self, "_memory_files"):
                 self._memory_files = {}

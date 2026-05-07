@@ -48,6 +48,8 @@ markitdown>=0.1.1
 
 # MongoDB
 pymongo==4.13.0
+celery==5.4.0
+redis==5.0.4
 
 # Graph / network (used in graph_rag.py)
 networkx==3.4.2
@@ -55,6 +57,7 @@ networkx==3.4.2
 # PDF report generation
 reportlab==4.4.1
 cairosvg>=2.7.0
+matplotlib==3.10.3
 
 # General utilities
 requests==2.32.3

@@ -1,0 +1,140 @@
+<svg width="1600" height="1200" viewBox="0 0 1600 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1600" height="1200" fill="#F0F2F7"/>
+  <text x="60" y="72" fill="#00338D" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" letter-spacing="4">RISK ASSESSMENT MOCKUPS</text>
+  <text x="60" y="118" fill="#0C233C" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="700">Storyboard Board 2</text>
+  <text x="60" y="152" fill="#5A6478" font-family="Arial, Helvetica, sans-serif" font-size="18">Risk review, control application, residual posture, and report output.</text>
+
+  <g transform="translate(60 200)">
+    <text x="0" y="-18" fill="#00338D" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" letter-spacing="3">SCREEN 5</text>
+    <text x="0" y="12" fill="#0C233C" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700">Identified Risks</text>
+    <rect x="0" y="32" width="700" height="440" rx="26" fill="white" stroke="#DCE3EE"/>
+    <rect x="0" y="32" width="92" height="440" rx="26" fill="#102843"/>
+    <rect x="22" y="324" width="48" height="48" rx="14" fill="#153B62" stroke="#00B8F5"/>
+    <rect x="92" y="32" width="608" height="112" fill="url(#hero5)"/>
+    <text x="122" y="84" fill="white" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700">Risk Assessment</text>
+    <text x="122" y="110" fill="#D7E3FF" font-family="Arial, Helvetica, sans-serif" font-size="14">Review the generated risk set before linking controls and reduction actions.</text>
+    <text x="122" y="184" fill="#00338D" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" letter-spacing="3">RISKS</text>
+    <text x="122" y="212" fill="#0C233C" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700">Identified Risks</text>
+    <rect x="560" y="184" width="112" height="34" rx="14" fill="#1E49E2"/>
+    <text x="584" y="206" fill="white" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700">Apply Controls</text>
+    <rect x="122" y="238" width="550" height="62" rx="18" fill="white" stroke="#E2E6EF"/>
+    <text x="144" y="262" fill="#0C233C" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700">Privileged Access Misuse</text>
+    <text x="144" y="280" fill="#5A6478" font-family="Arial, Helvetica, sans-serif" font-size="11">Emergency elevation activity is not independently reviewed with sufficient cadence and escalation.</text>
+    <rect x="584" y="250" width="62" height="20" rx="10" fill="#FEEBED" stroke="#F3C6CF"/><text x="599" y="264" fill="#E5001B" font-family="Arial, Helvetica, sans-serif" font-size="9" font-weight="700">Critical</text>
+    <text x="144" y="293" fill="#8492A6" font-family="Arial, Helvetica, sans-serif" font-size="10">Likelihood 5 / 5 · Impact 5 / 5 · Score 25 · Identity</text>
+    <rect x="122" y="314" width="550" height="62" rx="18" fill="white" stroke="#E2E6EF"/>
+    <text x="144" y="338" fill="#0C233C" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700">Third-Party Provisioning Delay</text>
+    <text x="144" y="356" fill="#5A6478" font-family="Arial, Helvetica, sans-serif" font-size="11">Manual handoffs between approval and account activation create untracked timing gaps.</text>
+    <rect x="598" y="326" width="48" height="20" rx="10" fill="#FFF4E8" stroke="#F6D3A0"/><text x="613" y="340" fill="#AB5C00" font-family="Arial, Helvetica, sans-serif" font-size="9" font-weight="700">High</text>
+    <text x="144" y="369" fill="#8492A6" font-family="Arial, Helvetica, sans-serif" font-size="10">Likelihood 4 / 5 · Impact 4 / 5 · Score 16 · Third Party</text>
+    <rect x="122" y="390" width="550" height="62" rx="18" fill="white" stroke="#E2E6EF"/>
+    <text x="144" y="414" fill="#0C233C" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700">Break-Glass Monitoring Weakness</text>
+    <text x="144" y="432" fill="#5A6478" font-family="Arial, Helvetica, sans-serif" font-size="11">Break-glass logging exists but exception review lacks clear criteria and owner sign-off.</text>
+    <rect x="598" y="402" width="48" height="20" rx="10" fill="#FFF4E8" stroke="#F6D3A0"/><text x="613" y="416" fill="#AB5C00" font-family="Arial, Helvetica, sans-serif" font-size="9" font-weight="700">High</text>
+    <text x="144" y="445" fill="#8492A6" font-family="Arial, Helvetica, sans-serif" font-size="10">Likelihood 4 / 5 · Impact 5 / 5 · Score 20 · Operations</text>
+  </g>
+
+  <g transform="translate(840 200)">
+    <text x="0" y="-18" fill="#00338D" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" letter-spacing="3">SCREEN 6</text>
+    <text x="0" y="12" fill="#0C233C" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700">Control Application</text>
+    <rect x="0" y="32" width="700" height="440" rx="26" fill="white" stroke="#DCE3EE"/>
+    <rect x="0" y="32" width="92" height="440" rx="26" fill="#102843"/>
+    <rect x="22" y="324" width="48" height="48" rx="14" fill="#153B62" stroke="#00B8F5"/>
+    <rect x="92" y="32" width="608" height="112" fill="url(#hero6)"/>
+    <text x="122" y="84" fill="white" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700">Risk Assessment</text>
+    <text x="122" y="110" fill="#D7E3FF" font-family="Arial, Helvetica, sans-serif" font-size="14">Map suggested controls to each risk and confirm what should reduce residual exposure.</text>
+    <text x="122" y="184" fill="#00338D" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" letter-spacing="3">CONTROLS</text>
+    <text x="122" y="212" fill="#0C233C" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700">Apply Controls To Risks</text>
+    <rect x="492" y="184" width="92" height="34" rx="14" fill="#EEF2FF"/><text x="509" y="206" fill="#1E49E2" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700">Refresh Suggestions</text>
+    <rect x="592" y="184" width="80" height="34" rx="14" fill="#1E49E2"/><text x="607" y="206" fill="white" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700">Residual</text>
+    <rect x="122" y="238" width="550" height="94" rx="18" fill="white" stroke="#E2E6EF"/>
+    <text x="144" y="264" fill="#0C233C" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700">Privileged Access Misuse</text>
+    <rect x="144" y="280" width="244" height="20" rx="10" fill="#EDFBF5" stroke="#BFE7D1"/><text x="158" y="294" fill="#009A44" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700">Applied: Quarterly Privileged Access Review · Break-Glass Approval Log</text>
+    <rect x="144" y="308" width="244" height="14" rx="7" fill="#EEF2FF"/><text x="158" y="319" fill="#1E49E2" font-family="Arial, Helvetica, sans-serif" font-size="8" font-weight="700">Emergency Access Approval Workflow · Relevance 5 / 5</text>
+    <rect x="414" y="304" width="126" height="22" rx="11" fill="white" stroke="#E2E6EF"/>
+    <text x="431" y="318" fill="#0C233C" font-family="Arial, Helvetica, sans-serif" font-size="9">Privileged Session Monitoring</text>
+    <rect x="554" y="304" width="54" height="22" rx="11" fill="#1E49E2"/><text x="570" y="318" fill="white" font-family="Arial, Helvetica, sans-serif" font-size="9" font-weight="700">Apply</text>
+    <rect x="122" y="346" width="550" height="94" rx="18" fill="white" stroke="#E2E6EF"/>
+    <text x="144" y="372" fill="#0C233C" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700">Third-Party Provisioning Delay</text>
+    <rect x="144" y="400" width="206" height="14" rx="7" fill="#EEF2FF"/><text x="158" y="411" fill="#1E49E2" font-family="Arial, Helvetica, sans-serif" font-size="8" font-weight="700">Vendor Access Activation Checklist · Relevance 4 / 5</text>
+    <rect x="374" y="396" width="162" height="22" rx="11" fill="white" stroke="#E2E6EF"/>
+    <text x="390" y="410" fill="#0C233C" font-family="Arial, Helvetica, sans-serif" font-size="9">Joiner / Mover SLA Monitoring</text>
+    <rect x="550" y="396" width="54" height="22" rx="11" fill="#1E49E2"/><text x="566" y="410" fill="white" font-family="Arial, Helvetica, sans-serif" font-size="9" font-weight="700">Apply</text>
+  </g>
+
+  <g transform="translate(60 720)">
+    <text x="0" y="-18" fill="#00338D" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" letter-spacing="3">SCREEN 7</text>
+    <text x="0" y="12" fill="#0C233C" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700">Residual Risk Review</text>
+    <rect x="0" y="32" width="700" height="420" rx="26" fill="white" stroke="#DCE3EE"/>
+    <rect x="0" y="32" width="92" height="420" rx="26" fill="#102843"/>
+    <rect x="22" y="324" width="48" height="48" rx="14" fill="#153B62" stroke="#00B8F5"/>
+    <rect x="92" y="32" width="608" height="112" fill="url(#hero7)"/>
+    <text x="122" y="84" fill="white" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700">Risk Assessment</text>
+    <text x="122" y="110" fill="#D7E3FF" font-family="Arial, Helvetica, sans-serif" font-size="14">Compare inherent and residual posture after controls have been applied.</text>
+    <text x="122" y="184" fill="#00338D" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" letter-spacing="3">RESIDUAL</text>
+    <text x="122" y="212" fill="#0C233C" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700">Residual Risk Review</text>
+    <rect x="122" y="238" width="264" height="86" rx="18" fill="white" stroke="#E2E6EF"/>
+    <text x="144" y="264" fill="#0C233C" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700">Privileged Access Misuse</text>
+    <text x="144" y="286" fill="#8492A6" font-family="Arial, Helvetica, sans-serif" font-size="10">Inherent Critical</text>
+    <rect x="144" y="294" width="170" height="10" rx="5" fill="#DBE4F3"/><rect x="144" y="294" width="156" height="10" rx="5" fill="#E5001B"/>
+    <text x="144" y="320" fill="#8492A6" font-family="Arial, Helvetica, sans-serif" font-size="10">Residual High</text>
+    <rect x="144" y="328" width="170" height="10" rx="5" fill="#DBE4F3"/><rect x="144" y="328" width="110" height="10" rx="5" fill="#EAAA00"/>
+    <text x="144" y="350" fill="#5A6478" font-family="Arial, Helvetica, sans-serif" font-size="10">Controls Applied 3 · Avg Effectiveness 62% · Residual Score 16</text>
+    <rect x="408" y="238" width="264" height="86" rx="18" fill="white" stroke="#E2E6EF"/>
+    <text x="430" y="264" fill="#0C233C" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700">Third-Party Provisioning Delay</text>
+    <text x="430" y="286" fill="#8492A6" font-family="Arial, Helvetica, sans-serif" font-size="10">Inherent High</text>
+    <rect x="430" y="294" width="170" height="10" rx="5" fill="#DBE4F3"/><rect x="430" y="294" width="128" height="10" rx="5" fill="#EAAA00"/>
+    <text x="430" y="320" fill="#8492A6" font-family="Arial, Helvetica, sans-serif" font-size="10">Residual Medium</text>
+    <rect x="430" y="328" width="170" height="10" rx="5" fill="#DBE4F3"/><rect x="430" y="328" width="84" height="10" rx="5" fill="#009A44"/>
+    <text x="430" y="350" fill="#5A6478" font-family="Arial, Helvetica, sans-serif" font-size="10">Controls Applied 2 · Avg Effectiveness 71% · Residual Score 9</text>
+    <rect x="122" y="338" width="550" height="94" rx="18" fill="#FBFCFE" stroke="#E2E6EF"/>
+    <text x="144" y="364" fill="#0C233C" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700">Session Summary</text>
+    <rect x="144" y="382" width="116" height="30" rx="14" fill="#EDFBF5"/><text x="160" y="401" fill="#009A44" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700">Critical To High · 1</text>
+    <rect x="272" y="382" width="116" height="30" rx="14" fill="#FFF9E8"/><text x="289" y="401" fill="#8A6A00" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700">High To Medium · 1</text>
+    <rect x="400" y="382" width="116" height="30" rx="14" fill="#F3F6FA"/><text x="421" y="401" fill="#6A748A" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700">Open High · 2</text>
+  </g>
+
+  <g transform="translate(840 720)">
+    <text x="0" y="-18" fill="#00338D" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" letter-spacing="3">SCREEN 8</text>
+    <text x="0" y="12" fill="#0C233C" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700">Final Report</text>
+    <rect x="0" y="32" width="700" height="420" rx="26" fill="white" stroke="#DCE3EE"/>
+    <rect x="0" y="32" width="92" height="420" rx="26" fill="#102843"/>
+    <rect x="22" y="324" width="48" height="48" rx="14" fill="#153B62" stroke="#00B8F5"/>
+    <rect x="92" y="32" width="608" height="112" fill="url(#hero8)"/>
+    <text x="122" y="84" fill="white" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700">Risk Assessment</text>
+    <text x="122" y="110" fill="#D7E3FF" font-family="Arial, Helvetica, sans-serif" font-size="14">Present the assessment in a structured review document with clear findings and posture.</text>
+    <text x="122" y="184" fill="#00338D" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" letter-spacing="3">REPORT</text>
+    <text x="122" y="212" fill="#0C233C" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700">Risk Assessment Report</text>
+    <rect x="566" y="184" width="106" height="34" rx="14" fill="#1E49E2"/>
+    <text x="590" y="206" fill="white" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700">Export Report</text>
+    <rect x="122" y="238" width="550" height="192" rx="18" fill="white" stroke="#E2E6EF"/>
+    <text x="144" y="270" fill="#0C233C" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700">FY26 Cloud Payments Review</text>
+    <text x="144" y="298" fill="#5A6478" font-family="Arial, Helvetica, sans-serif" font-size="11">Scope includes the Cloud Payments Platform, Identity Governance Portal, Vendor Onboarding Workflow, and one ad hoc utility supporting retention evidence.</text>
+    <line x1="144" y1="314" x2="648" y2="314" stroke="#E2E6EF"/>
+    <text x="144" y="342" fill="#0C233C" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700">Executive Summary</text>
+    <text x="144" y="364" fill="#5A6478" font-family="Arial, Helvetica, sans-serif" font-size="11">Three priority risks were identified. One critical risk was reduced after control application, while two high residual risks remain open for management remediation.</text>
+    <text x="144" y="394" fill="#0C233C" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700">Risk Posture Snapshot</text>
+    <text x="144" y="416" fill="#0C233C" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700">Privileged Access Misuse</text>
+    <text x="368" y="416" fill="#8492A6" font-family="Arial, Helvetica, sans-serif" font-size="10">Critical</text>
+    <text x="512" y="416" fill="#8492A6" font-family="Arial, Helvetica, sans-serif" font-size="10">High</text>
+  </g>
+
+  <defs>
+    <linearGradient id="hero5" x1="92" y1="32" x2="700" y2="144" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0C233C"/>
+      <stop offset="1" stop-color="#1E49E2"/>
+    </linearGradient>
+    <linearGradient id="hero6" x1="92" y1="32" x2="700" y2="144" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0C233C"/>
+      <stop offset="1" stop-color="#1E49E2"/>
+    </linearGradient>
+    <linearGradient id="hero7" x1="92" y1="32" x2="700" y2="144" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0C233C"/>
+      <stop offset="1" stop-color="#1E49E2"/>
+    </linearGradient>
+    <linearGradient id="hero8" x1="92" y1="32" x2="700" y2="144" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0C233C"/>
+      <stop offset="1" stop-color="#1E49E2"/>
+    </linearGradient>
+  </defs>
+</svg>

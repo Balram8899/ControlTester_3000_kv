@@ -12,9 +12,11 @@ from utils.llm_config_store import (
     PROVIDER_REGISTRY,
     get_active_llm_config,
     get_available_providers,
+    get_document_uplift_config,
     get_provider_api_key,
     get_provider_key_label,
     save_llm_config,
+    save_document_uplift_config,
 )
 from utils.controls_library import MongoControlsStore
 from utils.regulatory_library import MongoLibraryStore
@@ -28,6 +30,10 @@ _PROCESS_STARTED_AT = time.time()
 class LLMConfigRequest(BaseModel):
     provider: str
     model: str
+
+
+class DocumentUpliftConfigRequest(BaseModel):
+    max_llm_calls_per_pipeline: int
 
 
 def _library_status(store_factory: type) -> dict[str, Any]:
@@ -158,3 +164,18 @@ def update_llm_config(body: LLMConfigRequest):
 
     save_llm_config(body.provider, body.model)
     return {"provider": body.provider, "model": body.model, "saved": True}
+
+
+@router.get("/document-uplift-config")
+def read_document_uplift_config() -> dict[str, int]:
+    return get_document_uplift_config()
+
+
+@router.post("/document-uplift-config")
+def update_document_uplift_config(body: DocumentUpliftConfigRequest) -> dict[str, int | bool]:
+    save_document_uplift_config(body.max_llm_calls_per_pipeline)
+    config = get_document_uplift_config()
+    return {
+        "max_llm_calls_per_pipeline": config["max_llm_calls_per_pipeline"],
+        "saved": True,
+    }

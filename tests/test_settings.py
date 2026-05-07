@@ -86,6 +86,52 @@ def test_save_llm_config_upserts_document():
     )
 
 
+def test_get_document_uplift_config_reads_db_budget() -> None:
+    from utils.llm_config_store import get_document_uplift_config
+
+    mock_col = _make_mock_collection(
+        {
+            "_id": "document_uplift_config",
+            "max_llm_calls_per_pipeline": 35,
+        }
+    )
+    with patch("utils.llm_config_store._get_collection", return_value=mock_col):
+        config = get_document_uplift_config()
+
+    assert config == {"max_llm_calls_per_pipeline": 35}
+    mock_col.update_one.assert_not_called()
+
+
+def test_get_document_uplift_config_seeds_env_budget_when_db_empty() -> None:
+    from utils.llm_config_store import get_document_uplift_config
+
+    mock_col = _make_mock_collection(None)
+    with patch("utils.llm_config_store._get_collection", return_value=mock_col):
+        with patch.dict(os.environ, {"MAX_LLM_CALLS_PER_PIPELINE": "42"}):
+            config = get_document_uplift_config()
+
+    assert config == {"max_llm_calls_per_pipeline": 42}
+    mock_col.update_one.assert_called_once_with(
+        {"_id": "document_uplift_config"},
+        {"$set": {"max_llm_calls_per_pipeline": 42}},
+        upsert=True,
+    )
+
+
+def test_save_document_uplift_config_clamps_budget_range() -> None:
+    from utils.llm_config_store import save_document_uplift_config
+
+    mock_col = MagicMock()
+    with patch("utils.llm_config_store._get_collection", return_value=mock_col):
+        save_document_uplift_config(250)
+
+    mock_col.update_one.assert_called_once_with(
+        {"_id": "document_uplift_config"},
+        {"$set": {"max_llm_calls_per_pipeline": 200}},
+        upsert=True,
+    )
+
+
 def test_get_llm_uses_db_provider_over_env():
     with patch("utils.llm_config_store._get_collection") as mock_col_fn:
         mock_col = _make_mock_collection(
