@@ -246,6 +246,43 @@ def test_bulk_review_accepts_all_pending_suggestions(
 
 @patch.dict(os.environ, {"DOCUMENT_UPLIFT_ENABLED": "true"})
 @patch("api.routers.document_uplift.get_store")
+def test_bulk_review_accept_all_skips_structural_suggestions_requiring_explicit_review(
+    mock_get_store: MagicMock,
+) -> None:
+    stored_case = {
+        "case_id": "case-1",
+        "suggestions": [
+            {"suggestion_id": "sug-1", "review_status": "pending"},
+            {
+                "suggestion_id": "struct-1",
+                "review_status": "pending",
+                "requires_explicit_review": True,
+            },
+        ],
+    }
+
+    def update_case(_case_id: str, updates: dict) -> dict:
+        stored_case.update(updates)
+        return stored_case
+
+    mock = MagicMock()
+    mock.get_case.return_value = stored_case
+    mock.update_case.side_effect = update_case
+    mock_get_store.return_value = mock
+
+    response = client().post(
+        "/document-uplift/cases/case-1/suggestions/bulk-review",
+        json={"action": "accept_all"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["updated_count"] == 1
+    assert stored_case["suggestions"][0]["review_status"] == "accepted"
+    assert stored_case["suggestions"][1]["review_status"] == "pending"
+
+
+@patch.dict(os.environ, {"DOCUMENT_UPLIFT_ENABLED": "true"})
+@patch("api.routers.document_uplift.get_store")
 def test_bulk_review_reject_all_requires_confirmation_token(
     mock_get_store: MagicMock,
 ) -> None:
@@ -309,6 +346,44 @@ def test_auto_accept_pending_suggestions_returns_warning(
     assert result["auto_accepted_count"] == 1
     assert "automatically accepted" in result["warnings"][0]
     assert stored_case["suggestions"][0]["review_status"] == "accepted"
+
+
+@patch.dict(os.environ, {"DOCUMENT_UPLIFT_ENABLED": "true"})
+@patch("api.routers.document_uplift.get_store")
+def test_auto_accept_skips_structural_suggestions_requiring_explicit_review(
+    mock_get_store: MagicMock,
+) -> None:
+    from api.routers import document_uplift
+
+    stored_case = {
+        "case_id": "case-1",
+        "suggestions": [
+            {"suggestion_id": "sug-1", "review_status": "pending"},
+            {
+                "suggestion_id": "struct-1",
+                "review_status": "pending",
+                "requires_explicit_review": True,
+                "title": "Add an accountability matrix for multi-role activities",
+            },
+        ],
+    }
+
+    def update_case(_case_id: str, updates: dict) -> dict:
+        stored_case.update(updates)
+        return stored_case
+
+    mock = MagicMock()
+    mock.get_case.return_value = stored_case
+    mock.update_case.side_effect = update_case
+    mock_get_store.return_value = mock
+
+    result = document_uplift.auto_accept_pending_suggestions("case-1")
+
+    assert result["auto_accepted_count"] == 1
+    assert result["explicit_review_count"] == 1
+    assert stored_case["suggestions"][0]["review_status"] == "accepted"
+    assert stored_case["suggestions"][1]["review_status"] == "pending"
+    assert "manual review" in " ".join(result["warnings"]).lower()
 
 
 @patch.dict(os.environ, {"DOCUMENT_UPLIFT_ENABLED": "true", "TASK_BACKEND": "asyncio"})

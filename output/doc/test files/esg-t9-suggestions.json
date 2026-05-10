@@ -1,0 +1,169 @@
+﻿{
+    "suggestions":  [
+                        {
+                            "suggestion_id":  "c1a81a76-c68c-4d07-b2f8-53b6223ac547",
+                            "suggestion_type":  "process_improvement",
+                            "severity":  "high",
+                            "title":  "Define Quantitative Deviation Thresholds",
+                            "detail":  "The current SOP relies on \u0027judgement\u0027 to identify deviations. To ensure consistency and meet SEBI/BRSR requirements, specific percentage thresholds should be defined for automated flagging.",
+                            "proposed_text":  "Identify any metrics that deviate by \u003e5% from the target or \u003e10% from the prior year reporting period. Such deviations are automatically classified as \u0027Significant\u0027 and require root cause analysis.",
+                            "original_text":  "Use judgement to determine significance.",
+                            "target_anchor_id":  "e5b19e0f-0177-406c-94cc-5500446481ed-a2",
+                            "review_status":  "pending",
+                            "edited_proposed_text":  null,
+                            "reviewer_notes":  null,
+                            "source_references":  [
+                                                      {
+                                                          "document_id":  "e5b19e0f-0177-406c-94cc-5500446481ed",
+                                                          "filename":  null,
+                                                          "document_role":  null,
+                                                          "anchor_id":  "e5b19e0f-0177-406c-94cc-5500446481ed-a2",
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  null,
+                                                          "row_index":  null,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      }
+                                                  ],
+                            "edit_targets":  [
+
+                                             ],
+                            "queue_finding":  false
+                        },
+                        {
+                            "suggestion_id":  "17842452-17ca-4ecb-9718-8bafe7ba0747",
+                            "suggestion_type":  "process_improvement",
+                            "severity":  "medium",
+                            "title":  "Implement Data Validation and 4-Eye Review",
+                            "detail":  "Section 4.2 lacks a validation step. Data should be verified against source documents (e.g., utility bills, HR reports) before consolidation to prevent reporting errors.",
+                            "proposed_text":  "The ESG team will perform a 4-eye review of the consolidated data against original source evidence. Any variance exceeding 2% between source and template must be reconciled before final consolidation.",
+                            "original_text":  "The ESG team will consolidate the data into the ESG reporting template",
+                            "target_anchor_id":  "e5b19e0f-0177-406c-94cc-5500446481ed-a2",
+                            "review_status":  "pending",
+                            "edited_proposed_text":  null,
+                            "reviewer_notes":  null,
+                            "source_references":  [
+                                                      {
+                                                          "document_id":  "e5b19e0f-0177-406c-94cc-5500446481ed",
+                                                          "filename":  null,
+                                                          "document_role":  null,
+                                                          "anchor_id":  "e5b19e0f-0177-406c-94cc-5500446481ed-a2",
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  null,
+                                                          "row_index":  null,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      }
+                                                  ],
+                            "edit_targets":  [
+
+                                             ],
+                            "queue_finding":  false
+                        },
+                        {
+                            "suggestion_id":  "8b5fe0bc-2cf6-4208-b2d3-88034fbe5cb8",
+                            "suggestion_type":  "process_improvement",
+                            "severity":  "high",
+                            "title":  "Incorporate External Assurance Requirements",
+                            "detail":  "SEBI mandates limited assurance for BRSR Core metrics. The SOP should explicitly include the requirement for third-party audit and the timeline for this engagement.",
+                            "proposed_text":  "External disclosures, specifically BRSR Core metrics, shall undergo limited assurance by an independent third-party auditor. The assurance report must be presented to the Audit Committee alongside the final ESG disclosure.",
+                            "original_text":  "External reporting should be accurate and consistent with internal records.",
+                            "target_anchor_id":  "e5b19e0f-0177-406c-94cc-5500446481ed-a2",
+                            "review_status":  "pending",
+                            "edited_proposed_text":  null,
+                            "reviewer_notes":  null,
+                            "source_references":  [
+                                                      {
+                                                          "document_id":  "e5b19e0f-0177-406c-94cc-5500446481ed",
+                                                          "filename":  null,
+                                                          "document_role":  null,
+                                                          "anchor_id":  "e5b19e0f-0177-406c-94cc-5500446481ed-a2",
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  null,
+                                                          "row_index":  null,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      }
+                                                  ],
+                            "edit_targets":  [
+
+                                             ],
+                            "queue_finding":  false
+                        },
+                        {
+                            "suggestion_id":  "3dd1618d-7239-4d05-8436-90ad622cc14c",
+                            "suggestion_type":  "process_improvement",
+                            "severity":  "medium",
+                            "title":  "Establish Formal Escalation Matrix",
+                            "detail":  "Section 5.2 lacks a clear hierarchy for escalation. Material deviations should be routed to specific committees (e.g., ESG Committee or Board) based on their impact.",
+                            "proposed_text":  "Deviations exceeding 15% of target or involving regulatory non-compliance must be escalated to the CFO and the Board Sustainability Committee within 48 hours of identification.",
+                            "original_text":  "If the deviation is material, escalate to the appropriate level of management.",
+                            "target_anchor_id":  "e5b19e0f-0177-406c-94cc-5500446481ed-a2",
+                            "review_status":  "pending",
+                            "edited_proposed_text":  null,
+                            "reviewer_notes":  null,
+                            "source_references":  [
+                                                      {
+                                                          "document_id":  "e5b19e0f-0177-406c-94cc-5500446481ed",
+                                                          "filename":  null,
+                                                          "document_role":  null,
+                                                          "anchor_id":  "e5b19e0f-0177-406c-94cc-5500446481ed-a2",
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  null,
+                                                          "row_index":  null,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      }
+                                                  ],
+                            "edit_targets":  [
+
+                                             ],
+                            "queue_finding":  false
+                        },
+                        {
+                            "suggestion_id":  "41c34b3f-b1db-4932-8247-aac82529e55c",
+                            "suggestion_type":  "process_improvement",
+                            "severity":  "low",
+                            "title":  "Add Version Control and Change History",
+                            "detail":  "The document lacks a version history table, making it difficult to track changes in reporting requirements or methodologies over time.",
+                            "proposed_text":  "A version history table shall be added to the document header, including: Version Number, Date of Issue, Summary of Changes, and Approver Name.",
+                            "original_text":  "The ESG Head is responsible for maintaining this document.",
+                            "target_anchor_id":  "e5b19e0f-0177-406c-94cc-5500446481ed-a2",
+                            "review_status":  "pending",
+                            "edited_proposed_text":  null,
+                            "reviewer_notes":  null,
+                            "source_references":  [
+                                                      {
+                                                          "document_id":  "e5b19e0f-0177-406c-94cc-5500446481ed",
+                                                          "filename":  null,
+                                                          "document_role":  null,
+                                                          "anchor_id":  "e5b19e0f-0177-406c-94cc-5500446481ed-a2",
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  null,
+                                                          "row_index":  null,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      }
+                                                  ],
+                            "edit_targets":  [
+
+                                             ],
+                            "queue_finding":  false
+                        }
+                    ]
+}

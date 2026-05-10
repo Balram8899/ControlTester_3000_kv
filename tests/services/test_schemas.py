@@ -150,6 +150,15 @@ def test_suggestions_and_analysis_result_start_pending() -> None:
     schemas = load_schemas()
 
     source = schemas.SourceReference(document_id="doc-1", anchor_id="anchor-1")
+    target = schemas.SuggestionEditTarget(
+        target_id="sug-1:procedure",
+        target_type="procedure_step",
+        title="Procedure update",
+        proposed_text="The owner reviews the activity monthly.",
+        target_anchor_id="anchor-1",
+        target_text="The owner performs the activity.",
+        source_references=[source],
+    )
     extracted = schemas.ExtractedItem(
         item_id="item-1",
         item_type="control",
@@ -163,6 +172,7 @@ def test_suggestions_and_analysis_result_start_pending() -> None:
         title="Clarify owner",
         detail="The procedure does not identify the accountable owner.",
         source_references=[source],
+        edit_targets=[target],
     )
     result = schemas.AnalysisResult(
         status="partial",
@@ -174,6 +184,8 @@ def test_suggestions_and_analysis_result_start_pending() -> None:
 
     assert suggestion.review_status == "pending"
     assert suggestion.queue_finding is False
+    assert suggestion.edit_targets[0].target_type == "procedure_step"
+    assert suggestion.edit_targets[0].target_text == "The owner performs the activity."
     assert result.extracted_controls[0].source_references[0].anchor_id == "anchor-1"
     assert result.llm_calls_used == 3
 

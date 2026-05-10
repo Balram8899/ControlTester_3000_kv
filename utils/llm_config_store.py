@@ -67,11 +67,24 @@ PROVIDER_REGISTRY: dict[str, dict] = {
 _client: pymongo.MongoClient | None = None
 
 
+def _resolve_db_name(client: pymongo.MongoClient) -> str:
+    try:
+        database_names = client.list_database_names()
+    except Exception:
+        return _DB_NAME
+    if _DB_NAME in database_names:
+        return _DB_NAME
+    for name in database_names:
+        if name.lower() == _DB_NAME.lower():
+            return name
+    return _DB_NAME
+
+
 def _get_collection() -> object:
     global _client
     if _client is None:
         _client = pymongo.MongoClient(MONGO_URI, serverSelectionTimeoutMS=2000)
-    return _client[_DB_NAME][_COL_NAME]
+    return _client[_resolve_db_name(_client)][_COL_NAME]
 
 
 def get_active_llm_config() -> dict[str, str]:
@@ -236,5 +249,7 @@ def llm_temperature_kwargs(provider: str, model: str, temperature: float | None)
     if provider == "gemini" and normalized_model.startswith("gemini-3"):
         return {}
     if provider == "deepseek" and normalized_model == "deepseek-reasoner":
+        return {}
+    if provider == "anthropic" and normalized_model.startswith(("claude-opus-4", "claude-sonnet-4")):
         return {}
     return {"temperature": temperature}

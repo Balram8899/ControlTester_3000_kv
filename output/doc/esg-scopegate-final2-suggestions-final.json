@@ -1,0 +1,1868 @@
+[
+  {
+    "suggestion_id": "9b45f332-615d-40a5-b0d5-65cf07f228bd",
+    "suggestion_type": "process_improvement",
+    "severity": "high",
+    "title": "Metric or target deviation needs procedure coverage: Physical asset exposure in high-risk zones (\u20b9 Cr).",
+    "detail": "The source row records a material deviation for Physical asset exposure in high-risk zones (\u20b9 Cr): target: Annual review; TCFD scenario-aligned; actual: \u20b9 2,840 Cr; status: Open; owner: Credit Risk / CRO.",
+    "proposed_text": "Update the procedure to define how deviations for Physical asset exposure in high-risk zones (\u20b9 Cr) are identified, thresholded, escalated, remediated, and evidenced, including the owner and timeframe.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "accepted",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "2f140545-058c-494e-bcc9-649222cdc829",
+        "filename": "esg_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "ESG Risk & Controls Matrix",
+        "row_index": 2,
+        "row_number": 2,
+        "column_name": "Current Value (FY24)",
+        "excerpt": "Risk ID: ER-001; ESG Pillar: E; Risk Category: Climate Physical Risk; Risk Description: Flood and extreme heat events damaging bank-owned or financed physical assets in climate-vulnerable geographies, causing balance sheet losses and operational disruption"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": true,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "349a5788-4604-447a-a646-0d3243f121c9",
+    "suggestion_type": "process_improvement",
+    "severity": "critical",
+    "title": "Metric or target deviation needs procedure coverage: Financed Scope 3 emissions (tCO2e / \u20b9 Cr lent).",
+    "detail": "The source row records a material deviation for Financed Scope 3 emissions (tCO2e / \u20b9 Cr lent): target: Reduce 15% by FY27 vs FY24 baseline; actual: Baseline FY24: 48 tCO2e/\u20b9Cr; status: Open; owner: Credit Risk / Sustainability.",
+    "proposed_text": "Update the procedure to define how deviations for Financed Scope 3 emissions (tCO2e / \u20b9 Cr lent) are identified, thresholded, escalated, remediated, and evidenced, including the owner and timeframe.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "accepted",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "2f140545-058c-494e-bcc9-649222cdc829",
+        "filename": "esg_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "ESG Risk & Controls Matrix",
+        "row_index": 3,
+        "row_number": 3,
+        "column_name": "Current Value (FY24)",
+        "excerpt": "Risk ID: ER-002; ESG Pillar: E; Risk Category: Transition Risk \u2013 Carbon Pricing; Risk Description: Regulatory imposition of carbon taxes or cap-and-trade mechanisms increasing operating costs for bank and high-emission borrowers in loan book, leading to credit deterioration"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": true,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "72dc7b38-fba6-4c5d-af83-f1475afdc609",
+    "suggestion_type": "process_improvement",
+    "severity": "high",
+    "title": "Metric or target deviation needs procedure coverage: Scope 1 Emissions (tCO2e).",
+    "detail": "The source row records a material deviation for Scope 1 Emissions (tCO2e): target: \u2264 1,200 tCO2e by FY25; actual: 1,387 tCO2e; status: Open; owner: Facilities / Sustainability Head.",
+    "proposed_text": "Update the procedure to define how deviations for Scope 1 Emissions (tCO2e) are identified, thresholded, escalated, remediated, and evidenced, including the owner and timeframe.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "accepted",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "2f140545-058c-494e-bcc9-649222cdc829",
+        "filename": "esg_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "ESG Risk & Controls Matrix",
+        "row_index": 4,
+        "row_number": 4,
+        "column_name": "Current Value (FY24)",
+        "excerpt": "Risk ID: ER-003; ESG Pillar: E; Risk Category: Scope 1 GHG Emissions; Risk Description: Direct GHG emissions from bank-owned operations (diesel generators, company fleet) exceeding internal targets and BRSR disclosure thresholds, leading to regulatory and reputational risk"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": true,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "bd143277-0d59-4c52-a5ca-84b6faa8031e",
+    "suggestion_type": "process_improvement",
+    "severity": "critical",
+    "title": "Metric or target deviation needs procedure coverage: Scope 2 Emissions (tCO2e \u2013 market-based).",
+    "detail": "The source row records a material deviation for Scope 2 Emissions (tCO2e \u2013 market-based): target: \u2264 3,800 tCO2e by FY26; actual: 4,220 tCO2e; status: Open; owner: Facilities.",
+    "proposed_text": "Update the procedure to define how deviations for Scope 2 Emissions (tCO2e \u2013 market-based) are identified, thresholded, escalated, remediated, and evidenced, including the owner and timeframe.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "accepted",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "2f140545-058c-494e-bcc9-649222cdc829",
+        "filename": "esg_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "ESG Risk & Controls Matrix",
+        "row_index": 5,
+        "row_number": 5,
+        "column_name": "Current Value (FY24)",
+        "excerpt": "Risk ID: ER-004; ESG Pillar: E; Risk Category: Scope 2 GHG Emissions; Risk Description: Purchased electricity consumption contributing to Scope 2 emissions above target, driven by data centre growth and branch network expansion"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": true,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "72df736a-1a7e-456a-82d7-e0c6baca4c16",
+    "suggestion_type": "process_improvement",
+    "severity": "critical",
+    "title": "Metric or target deviation needs procedure coverage: Water Consumption (KL/year).",
+    "detail": "The source row records a material deviation for Water Consumption (KL/year): target: \u2264 70,000 KL by FY26; actual: 82,400 KL; status: Monitoring; owner: Facilities.",
+    "proposed_text": "Update the procedure to define how deviations for Water Consumption (KL/year) are identified, thresholded, escalated, remediated, and evidenced, including the owner and timeframe.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "accepted",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "2f140545-058c-494e-bcc9-649222cdc829",
+        "filename": "esg_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "ESG Risk & Controls Matrix",
+        "row_index": 6,
+        "row_number": 6,
+        "column_name": "Current Value (FY24)",
+        "excerpt": "Risk ID: ER-005; ESG Pillar: E; Risk Category: Water Consumption; Risk Description: Excessive water usage in corporate offices and data centres in water-stressed regions leading to reputational and regulatory risk under BRSR water disclosure requirements"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": true,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "b7a3ec9f-4018-4b45-a639-58ca171e87a7",
+    "suggestion_type": "process_improvement",
+    "severity": "critical",
+    "title": "Metric or target deviation needs procedure coverage: Projects with incomplete E&S due diligence (% of project finance portfolio).",
+    "detail": "The source row records a material deviation for Projects with incomplete E&S due diligence (% of project finance portfolio): target: 0% \u2013 mandatory IFC PS compliance; actual: 6% of portfolio; status: Open; owner: Project Finance / ESG.",
+    "proposed_text": "Update the procedure to define how deviations for Projects with incomplete E&S due diligence (% of project finance portfolio) are identified, thresholded, escalated, remediated, and evidenced, including the owner and timeframe.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "accepted",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "2f140545-058c-494e-bcc9-649222cdc829",
+        "filename": "esg_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "ESG Risk & Controls Matrix",
+        "row_index": 8,
+        "row_number": 8,
+        "column_name": "Current Value (FY24)",
+        "excerpt": "Risk ID: ER-007; ESG Pillar: E; Risk Category: E&S Risk in Project Finance; Risk Description: Financed infrastructure or industrial projects causing significant environmental or social harm (land acquisition disputes, biodiversity loss) exposing bank to reputational and legal risk"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": true,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "b9967d8d-0463-412e-b1c0-6a7e53dbc44d",
+    "suggestion_type": "process_improvement",
+    "severity": "critical",
+    "title": "Metric or target deviation needs procedure coverage: Women in Senior Leadership (%).",
+    "detail": "The source row records a material deviation for Women in Senior Leadership (%): target: \u2265 25% by FY26 (BRSR target); actual: 18%; status: Open; owner: CHRO / D&I Lead.",
+    "proposed_text": "Update the procedure to define how deviations for Women in Senior Leadership (%) are identified, thresholded, escalated, remediated, and evidenced, including the owner and timeframe.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "accepted",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "2f140545-058c-494e-bcc9-649222cdc829",
+        "filename": "esg_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "ESG Risk & Controls Matrix",
+        "row_index": 9,
+        "row_number": 9,
+        "column_name": "Current Value (FY24)",
+        "excerpt": "Risk ID: ES-001; ESG Pillar: S; Risk Category: Employee Diversity \u2013 Gender; Risk Description: Failure to meet gender diversity targets in leadership roles leading to SEBI BRSR disclosure gap, talent attrition, and reputational risk with ESG-conscious investors"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": true,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "92e5b695-b14e-41f0-9197-8b852f226f9d",
+    "suggestion_type": "process_improvement",
+    "severity": "critical",
+    "title": "Metric or target deviation needs procedure coverage: Lost Time Injury Frequency Rate (LTIFR).",
+    "detail": "The source row records a material deviation for Lost Time Injury Frequency Rate (LTIFR): target: \u2264 0.10 per million hrs; actual: 0.18 per million hrs; status: Monitoring; owner: CHRO / Admin.",
+    "proposed_text": "Update the procedure to define how deviations for Lost Time Injury Frequency Rate (LTIFR) are identified, thresholded, escalated, remediated, and evidenced, including the owner and timeframe.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "accepted",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "2f140545-058c-494e-bcc9-649222cdc829",
+        "filename": "esg_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "ESG Risk & Controls Matrix",
+        "row_index": 10,
+        "row_number": 10,
+        "column_name": "Current Value (FY24)",
+        "excerpt": "Risk ID: ES-002; ESG Pillar: S; Risk Category: Employee Health, Safety & Wellbeing; Risk Description: Workplace accidents or mental health incidents causing employee harm, reputational damage, and BRSR occupational health disclosure non-compliance"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": true,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "37a8c605-979e-48b2-b299-4bd5c572cf80",
+    "suggestion_type": "process_improvement",
+    "severity": "critical",
+    "title": "Metric or target deviation needs procedure coverage: Number of confirmed data privacy incidents / year.",
+    "detail": "The source row records a material deviation for Number of confirmed data privacy incidents / year: target: Zero material breaches; actual: 2 (FY24); status: Open; owner: DPO / Legal.",
+    "proposed_text": "Update the procedure to define how deviations for Number of confirmed data privacy incidents / year are identified, thresholded, escalated, remediated, and evidenced, including the owner and timeframe.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "accepted",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "2f140545-058c-494e-bcc9-649222cdc829",
+        "filename": "esg_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "ESG Risk & Controls Matrix",
+        "row_index": 11,
+        "row_number": 11,
+        "column_name": "Current Value (FY24)",
+        "excerpt": "Risk ID: ES-003; ESG Pillar: S; Risk Category: Customer Data Privacy & Protection; Risk Description: Inadequate data privacy controls leading to breach of customer financial data, regulatory penalties under DPDP Act 2023, and erosion of customer trust"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": true,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "d59f3568-d21d-4d05-b192-592e95122890",
+    "suggestion_type": "process_improvement",
+    "severity": "high",
+    "title": "Metric or target deviation needs procedure coverage: PSL Achievement (% of ANBC).",
+    "detail": "The source row records a material deviation for PSL Achievement (% of ANBC): target: \u2265 40% ANBC (RBI mandate); actual: 38% of ANBC; status: Open; owner: Credit Policy.",
+    "proposed_text": "Update the procedure to define how deviations for PSL Achievement (% of ANBC) are identified, thresholded, escalated, remediated, and evidenced, including the owner and timeframe.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "accepted",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "2f140545-058c-494e-bcc9-649222cdc829",
+        "filename": "esg_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "ESG Risk & Controls Matrix",
+        "row_index": 12,
+        "row_number": 12,
+        "column_name": "Current Value (FY24)",
+        "excerpt": "Risk ID: ES-004; ESG Pillar: S; Risk Category: Financial Inclusion \u2013 Priority Sector Lending; Risk Description: Failure to meet RBI-mandated Priority Sector Lending (PSL) targets leading to regulatory penalty and reputational impact on social mandate"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": true,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "d19a3936-08aa-4e79-9e6d-6df7a481393e",
+    "suggestion_type": "process_improvement",
+    "severity": "critical",
+    "title": "Metric or target deviation needs procedure coverage: Suppliers assessed for ESG/labour standards (% of critical suppliers).",
+    "detail": "The source row records a material deviation for Suppliers assessed for ESG/labour standards (% of critical suppliers): target: 100% critical suppliers assessed by FY26; actual: 42% assessed (FY24); status: Open; owner: Procurement / ESG.",
+    "proposed_text": "Update the procedure to define how deviations for Suppliers assessed for ESG/labour standards (% of critical suppliers) are identified, thresholded, escalated, remediated, and evidenced, including the owner and timeframe.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "accepted",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "2f140545-058c-494e-bcc9-649222cdc829",
+        "filename": "esg_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "ESG Risk & Controls Matrix",
+        "row_index": 13,
+        "row_number": 13,
+        "column_name": "Current Value (FY24)",
+        "excerpt": "Risk ID: ES-005; ESG Pillar: S; Risk Category: Supply Chain Labour Standards; Risk Description: Suppliers failing to meet minimum labour standards (fair wages, no forced labour) leading to ESG score downgrades and reputational damage under BRSR value chain disclosure"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": true,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "81b76dd6-4903-4400-bbb0-ac24b5fdb718",
+    "suggestion_type": "process_improvement",
+    "severity": "critical",
+    "title": "Metric or target deviation needs procedure coverage: % of senior management variable pay linked to ESG KPIs.",
+    "detail": "The source row records a material deviation for % of senior management variable pay linked to ESG KPIs: target: \u2265 30% by FY26; actual: 20% (FY24); status: Open; owner: Remuneration Committee.",
+    "proposed_text": "Update the procedure to define how deviations for % of senior management variable pay linked to ESG KPIs are identified, thresholded, escalated, remediated, and evidenced, including the owner and timeframe.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "accepted",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "2f140545-058c-494e-bcc9-649222cdc829",
+        "filename": "esg_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "ESG Risk & Controls Matrix",
+        "row_index": 15,
+        "row_number": 15,
+        "column_name": "Current Value (FY24)",
+        "excerpt": "Risk ID: EG-002; ESG Pillar: G; Risk Category: Executive Remuneration & ESG Linkage; Risk Description: Executive compensation not linked to ESG KPIs leading to misalignment of incentives and investor governance concerns"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": true,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "a606ffe3-8cbb-494b-9acb-998c914f9d69",
+    "suggestion_type": "process_improvement",
+    "severity": "medium",
+    "title": "Open issue should be reflected in the procedure: Complete loan book physical risk heatmap by FY25; integrate climate VaR into ICAAP.",
+    "detail": "The source row is open or unresolved and describes: Key Gap Identified: Scenario analysis not yet integrated into ICAAP capital planning; physical risk heatmap covers only 42% of loan book by value; Recommended Action: Complete loan book physical risk heatmap by FY25; integrate climate VaR into ICAAP.",
+    "proposed_text": "Update the procedure to address the open issue for Complete loan book physical risk heatmap by FY25; integrate climate VaR into ICAAP, including owner, resolution criteria, escalation path, due date or review cadence, and retained evidence.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "2f140545-058c-494e-bcc9-649222cdc829",
+        "filename": "esg_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Control Assessment",
+        "row_index": 2,
+        "row_number": 2,
+        "column_name": "Key Gap Identified",
+        "excerpt": "Control Ref: EC-001; ESG Pillar: E; Control / Programme Name: Climate Risk Stress Testing; Control Type: Detective"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": false,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "6be91f65-b74b-4862-8fcf-8aeee579db53",
+    "suggestion_type": "process_improvement",
+    "severity": "medium",
+    "title": "Open issue should be reflected in the procedure: Implement ESG data management platform; automate utility bill ingestion.",
+    "detail": "The source row is open or unresolved and describes: Key Gap Identified: Emissions data collected via manual spreadsheets from 18 regional offices; reconciliation errors found in FY23 data; Recommended Action: Implement ESG data management platform; automate utility bill ingestion.",
+    "proposed_text": "Update the procedure to address the open issue for Implement ESG data management platform; automate utility bill ingestion, including owner, resolution criteria, escalation path, due date or review cadence, and retained evidence.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "2f140545-058c-494e-bcc9-649222cdc829",
+        "filename": "esg_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Control Assessment",
+        "row_index": 3,
+        "row_number": 3,
+        "column_name": "Key Gap Identified",
+        "excerpt": "Control Ref: EC-002; ESG Pillar: E; Control / Programme Name: Scope 1/2 Emissions Monitoring; Control Type: Preventive"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": false,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "6a75e61b-092a-4159-ae3f-fd423cd9c5a2",
+    "suggestion_type": "process_improvement",
+    "severity": "medium",
+    "title": "Open issue should be reflected in the procedure: Establish automated impact data collection for next green bond.",
+    "detail": "The source row is open or unresolved and describes: Key Gap Identified: Framework and SPO in place; minor gap: post-issuance impact reporting delayed by 3 months in FY24; Recommended Action: Establish automated impact data collection for next green bond.",
+    "proposed_text": "Update the procedure to address the open issue for Establish automated impact data collection for next green bond, including owner, resolution criteria, escalation path, due date or review cadence, and retained evidence.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "2f140545-058c-494e-bcc9-649222cdc829",
+        "filename": "esg_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Control Assessment",
+        "row_index": 4,
+        "row_number": 4,
+        "column_name": "Key Gap Identified",
+        "excerpt": "Control Ref: EC-003; ESG Pillar: E; Control / Programme Name: Green Bond Framework & SPO; Control Type: Preventive"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": false,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "6d08e78c-5e02-423e-848b-2ff84a1932ed",
+    "suggestion_type": "process_improvement",
+    "severity": "medium",
+    "title": "Open issue should be reflected in the procedure: Hire ESG analyst for project finance; implement mandatory E&S gate in credit approval workflow.",
+    "detail": "The source row is open or unresolved and describes: Key Gap Identified: 6% of project finance portfolio lacks completed E&S assessment; no dedicated E&S specialist on credit team; Recommended Action: Hire ESG analyst for project finance; implement mandatory E&S gate in credit approval workflow.",
+    "proposed_text": "Update the procedure to address the open issue for Hire ESG analyst for project finance; implement mandatory E&S gate in credit approval workflow, including owner, resolution criteria, escalation path, due date or review cadence, and retained evidence.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "2f140545-058c-494e-bcc9-649222cdc829",
+        "filename": "esg_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Control Assessment",
+        "row_index": 5,
+        "row_number": 5,
+        "column_name": "Key Gap Identified",
+        "excerpt": "Control Ref: EC-004; ESG Pillar: E; Control / Programme Name: Equator Principles E&S Due Diligence; Control Type: Preventive"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": false,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "14da8f36-4e21-444e-ad49-408442cee7cc",
+    "suggestion_type": "process_improvement",
+    "severity": "medium",
+    "title": "Open issue should be reflected in the procedure: Set business unit-level diversity targets; link 10% of BU head bonus to D&I KPIs.",
+    "detail": "The source row is open or unresolved and describes: Key Gap Identified: Leadership development programme exists but no measurable targets or accountability at business unit head level; Recommended Action: Set business unit-level diversity targets; link 10% of BU head bonus to D&I KPIs.",
+    "proposed_text": "Update the procedure to address the open issue for Set business unit-level diversity targets; link 10% of BU head bonus to D&I KPIs, including owner, resolution criteria, escalation path, due date or review cadence, and retained evidence.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "2f140545-058c-494e-bcc9-649222cdc829",
+        "filename": "esg_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Control Assessment",
+        "row_index": 6,
+        "row_number": 6,
+        "column_name": "Key Gap Identified",
+        "excerpt": "Control Ref: ES-001; ESG Pillar: S; Control / Programme Name: Gender D&I Programme; Control Type: Preventive"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": false,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "86c9f264-a113-4c50-a217-a147361bddf7",
+    "suggestion_type": "process_improvement",
+    "severity": "high",
+    "title": "Open issue should be reflected in the procedure: Complete data inventory and retention schedule update by Q1 2025; conduct DPO-led audit.",
+    "detail": "The source row is open or unresolved and describes: Key Gap Identified: Consent management system deployed but data inventory not fully complete; data retention schedule outdated (last reviewed 2021); Recommended Action: Complete data inventory and retention schedule update by Q1 2025; conduct DPO-led audit.",
+    "proposed_text": "Update the procedure to address the open issue for Complete data inventory and retention schedule update by Q1 2025; conduct DPO-led audit, including owner, resolution criteria, escalation path, due date or review cadence, and retained evidence.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "2f140545-058c-494e-bcc9-649222cdc829",
+        "filename": "esg_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Control Assessment",
+        "row_index": 7,
+        "row_number": 7,
+        "column_name": "Key Gap Identified",
+        "excerpt": "Control Ref: ES-002; ESG Pillar: S; Control / Programme Name: DPDP Act Compliance Programme; Control Type: Preventive"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": true,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "2ae9b5b8-88d2-4424-b867-b5512b6cca57",
+    "suggestion_type": "process_improvement",
+    "severity": "medium",
+    "title": "Open issue should be reflected in the procedure: Add 6-month forward PSL projection; engage PFRDA/NABARD partnership for agri-PSL pipeline.",
+    "detail": "The source row is open or unresolved and describes: Key Gap Identified: PSL monitoring dashboard provides weekly data but Q4 FY24 gap (38% vs 40%) addressed only in last 3 weeks of year \u2014 insufficient lead time; Recommended Action: Add 6-month forward PSL projection; engage PFRDA/NABARD partnership for agri-PSL pipeline.",
+    "proposed_text": "Update the procedure to address the open issue for Add 6-month forward PSL projection; engage PFRDA/NABARD partnership for agri-PSL pipeline, including owner, resolution criteria, escalation path, due date or review cadence, and retained evidence.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "2f140545-058c-494e-bcc9-649222cdc829",
+        "filename": "esg_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Control Assessment",
+        "row_index": 8,
+        "row_number": 8,
+        "column_name": "Key Gap Identified",
+        "excerpt": "Control Ref: ES-003; ESG Pillar: S; Control / Programme Name: PSL Monitoring & Targeting; Control Type: Detective"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": false,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "e3b38589-c32f-499c-984c-4c68be3fc9f6",
+    "suggestion_type": "process_improvement",
+    "severity": "medium",
+    "title": "Open issue should be reflected in the procedure: Align supplier questionnaire to BRSR Core; complete 100% critical supplier assessment by FY26.",
+    "detail": "The source row is open or unresolved and describes: Key Gap Identified: Only 42% of critical suppliers assessed; questionnaire not validated against BRSR value chain disclosure requirements; Recommended Action: Align supplier questionnaire to BRSR Core; complete 100% critical supplier assessment by FY26.",
+    "proposed_text": "Update the procedure to address the open issue for Align supplier questionnaire to BRSR Core; complete 100% critical supplier assessment by FY26, including owner, resolution criteria, escalation path, due date or review cadence, and retained evidence.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "2f140545-058c-494e-bcc9-649222cdc829",
+        "filename": "esg_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Control Assessment",
+        "row_index": 9,
+        "row_number": 9,
+        "column_name": "Key Gap Identified",
+        "excerpt": "Control Ref: ES-004; ESG Pillar: S; Control / Programme Name: Supplier ESG Assessment; Control Type: Preventive"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": false,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "59e65edb-12ba-4920-85a2-179995f75d73",
+    "suggestion_type": "process_improvement",
+    "severity": "high",
+    "title": "Open issue should be reflected in the procedure: Define quantitative ESG KPI thresholds; add clawback clause to remuneration policy.",
+    "detail": "The source row is open or unresolved and describes: Key Gap Identified: ESG KPIs in MD/CEO scorecard are qualitative and not objectively measurable; no clawback provision for ESG target failure; Recommended Action: Define quantitative ESG KPI thresholds; add clawback clause to remuneration policy.",
+    "proposed_text": "Update the procedure to address the open issue for Define quantitative ESG KPI thresholds; add clawback clause to remuneration policy, including owner, resolution criteria, escalation path, due date or review cadence, and retained evidence.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "2f140545-058c-494e-bcc9-649222cdc829",
+        "filename": "esg_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Control Assessment",
+        "row_index": 10,
+        "row_number": 10,
+        "column_name": "Key Gap Identified",
+        "excerpt": "Control Ref: EG-001; ESG Pillar: G; Control / Programme Name: ESG-Linked Executive Remuneration; Control Type: Preventive"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": true,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "6e4b442c-92a1-4d1c-a849-2f263e6a168f",
+    "suggestion_type": "process_improvement",
+    "severity": "medium",
+    "title": "Open issue should be reflected in the procedure: Implement mandatory completion deadline with manager escalation; add role-specific ABC module.",
+    "detail": "The source row is open or unresolved and describes: Key Gap Identified: 87% completion \u2014 13% overdue including 3 branch managers; no refresher for high-risk roles (procurement, treasury); Recommended Action: Implement mandatory completion deadline with manager escalation; add role-specific ABC module.",
+    "proposed_text": "Update the procedure to address the open issue for Implement mandatory completion deadline with manager escalation; add role-specific ABC module, including owner, resolution criteria, escalation path, due date or review cadence, and retained evidence.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "2f140545-058c-494e-bcc9-649222cdc829",
+        "filename": "esg_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Control Assessment",
+        "row_index": 11,
+        "row_number": 11,
+        "column_name": "Key Gap Identified",
+        "excerpt": "Control Ref: EG-002; ESG Pillar: G; Control / Programme Name: ABC Training Programme; Control Type: Preventive"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": false,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "ff041447-1faa-403b-a37a-a19ca3962437",
+    "suggestion_type": "process_improvement",
+    "severity": "medium",
+    "title": "Open issue should be reflected in the procedure: Extend assurance scope to 100% BRSR Core including Scope 3 and supply chain by FY25 filing.",
+    "detail": "The source row is open or unresolved and describes: Key Gap Identified: Limited assurance covers 60% of BRSR Core metrics; Scope 3 emissions and supply chain data excluded from assurance scope; Recommended Action: Extend assurance scope to 100% BRSR Core including Scope 3 and supply chain by FY25 filing.",
+    "proposed_text": "Update the procedure to address the open issue for Extend assurance scope to 100% BRSR Core including Scope 3 and supply chain by FY25 filing, including owner, resolution criteria, escalation path, due date or review cadence, and retained evidence.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "2f140545-058c-494e-bcc9-649222cdc829",
+        "filename": "esg_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Control Assessment",
+        "row_index": 12,
+        "row_number": 12,
+        "column_name": "Key Gap Identified",
+        "excerpt": "Control Ref: EG-003; ESG Pillar: G; Control / Programme Name: BRSR Data Assurance; Control Type: Detective"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": false,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "9aeba612-9cc5-485b-8c99-6937af4acfc6",
+    "suggestion_type": "process_improvement",
+    "severity": "high",
+    "title": "Open issue should be reflected in the procedure: Add 2 FTEs to compliance investigation team; implement workflow tool for complaint tracking.",
+    "detail": "The source row is open or unresolved and describes: Key Gap Identified: 22% of complaints not resolved within 60-day SLA; root cause: insufficient investigator capacity in compliance team; Recommended Action: Add 2 FTEs to compliance investigation team; implement workflow tool for complaint tracking.",
+    "proposed_text": "Update the procedure to address the open issue for Add 2 FTEs to compliance investigation team; implement workflow tool for complaint tracking, including owner, resolution criteria, escalation path, due date or review cadence, and retained evidence.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "2f140545-058c-494e-bcc9-649222cdc829",
+        "filename": "esg_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Control Assessment",
+        "row_index": 13,
+        "row_number": 13,
+        "column_name": "Key Gap Identified",
+        "excerpt": "Control Ref: EG-004; ESG Pillar: G; Control / Programme Name: Whistleblower Mechanism; Control Type: Preventive"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": true,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "24793d24-78dd-4ca5-9019-6fc63d20fc0c",
+    "suggestion_type": "process_improvement",
+    "severity": "critical",
+    "title": "Metric or target deviation needs procedure coverage: ABC Training Completion (%).",
+    "detail": "The source row records a material deviation for ABC Training Completion (%): target: 100%; actual: 74%; deviation: -26.0%; status: Closed.",
+    "proposed_text": "Update the procedure to define how deviations for ABC Training Completion (%) are identified, thresholded, escalated, remediated, and evidenced, including the owner and timeframe.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "accepted",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "7cc0d17c-66a9-4adb-b939-9229cf209c82",
+        "filename": "esg_metric_deviation_log.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Metric Deviation Log",
+        "row_index": 4,
+        "row_number": 4,
+        "column_name": "Deviation (%)",
+        "excerpt": "Event ID: ED-003; Date: 2022-09-30; Quarter / FY: Q2 FY23; ESG Pillar: G"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": true,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "9dbfc59d-c534-4b07-b75d-145494f04b60",
+    "suggestion_type": "process_improvement",
+    "severity": "critical",
+    "title": "Metric or target deviation needs procedure coverage: Financed Emissions \u2013 Oil & Gas Sector (tCO2e / \u20b9 Cr).",
+    "detail": "The source row records a material deviation for Financed Emissions \u2013 Oil & Gas Sector (tCO2e / \u20b9 Cr): target: \u2264 48.0; actual: 62.4; deviation: 30.0%; status: Closed.",
+    "proposed_text": "Update the procedure to define how deviations for Financed Emissions \u2013 Oil & Gas Sector (tCO2e / \u20b9 Cr) are identified, thresholded, escalated, remediated, and evidenced, including the owner and timeframe.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "accepted",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "7cc0d17c-66a9-4adb-b939-9229cf209c82",
+        "filename": "esg_metric_deviation_log.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Metric Deviation Log",
+        "row_index": 5,
+        "row_number": 5,
+        "column_name": "Deviation (%)",
+        "excerpt": "Event ID: ED-004; Date: 2022-12-15; Quarter / FY: Q3 FY23; ESG Pillar: E"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": true,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "728f33e2-c4db-4e19-a489-c4e674488b48",
+    "suggestion_type": "process_improvement",
+    "severity": "critical",
+    "title": "Metric or target deviation needs procedure coverage: Customer Complaint Resolution \u2264 30 days (%).",
+    "detail": "The source row records a material deviation for Customer Complaint Resolution \u2264 30 days (%): target: \u2265 90%; actual: 71%; deviation: -21.1%; status: Closed.",
+    "proposed_text": "Update the procedure to define how deviations for Customer Complaint Resolution \u2264 30 days (%) are identified, thresholded, escalated, remediated, and evidenced, including the owner and timeframe.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "accepted",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "7cc0d17c-66a9-4adb-b939-9229cf209c82",
+        "filename": "esg_metric_deviation_log.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Metric Deviation Log",
+        "row_index": 6,
+        "row_number": 6,
+        "column_name": "Deviation (%)",
+        "excerpt": "Event ID: ED-005; Date: 2023-01-20; Quarter / FY: Q3 FY23; ESG Pillar: S"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": true,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "86b63003-6900-4c1c-80fe-0e073259fbb9",
+    "suggestion_type": "process_improvement",
+    "severity": "critical",
+    "title": "Metric or target deviation needs procedure coverage: Water Consumption (KL).",
+    "detail": "The source row records a material deviation for Water Consumption (KL): target: \u2264 17,500 per quarter; actual: 22,100 (Q1 alone); deviation: +26.3%; status: Closed.",
+    "proposed_text": "Update the procedure to define how deviations for Water Consumption (KL) are identified, thresholded, escalated, remediated, and evidenced, including the owner and timeframe.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "accepted",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "7cc0d17c-66a9-4adb-b939-9229cf209c82",
+        "filename": "esg_metric_deviation_log.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Metric Deviation Log",
+        "row_index": 8,
+        "row_number": 8,
+        "column_name": "Deviation (%)",
+        "excerpt": "Event ID: ED-007; Date: 2023-04-14; Quarter / FY: Q1 FY24; ESG Pillar: E"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": true,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "5d273d82-0366-454c-b346-4b1ce6f63bcd",
+    "suggestion_type": "process_improvement",
+    "severity": "critical",
+    "title": "Metric or target deviation needs procedure coverage: Whistleblower SLA \u2264 60 days (%).",
+    "detail": "The source row records a material deviation for Whistleblower SLA \u2264 60 days (%): target: \u2265 95%; actual: 64%; deviation: -32.6%; status: Closed.",
+    "proposed_text": "Update the procedure to define how deviations for Whistleblower SLA \u2264 60 days (%) are identified, thresholded, escalated, remediated, and evidenced, including the owner and timeframe.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "accepted",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "7cc0d17c-66a9-4adb-b939-9229cf209c82",
+        "filename": "esg_metric_deviation_log.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Metric Deviation Log",
+        "row_index": 9,
+        "row_number": 9,
+        "column_name": "Deviation (%)",
+        "excerpt": "Event ID: ED-008; Date: 2023-05-31; Quarter / FY: Q1 FY24; ESG Pillar: G"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": true,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "4eca9a08-68d3-4111-ad0c-7281ab35369c",
+    "suggestion_type": "process_improvement",
+    "severity": "critical",
+    "title": "Metric or target deviation needs procedure coverage: LTIFR (per million hrs worked).",
+    "detail": "The source row records a material deviation for LTIFR (per million hrs worked): target: \u2264 0.10; actual: 0.32; deviation: +220%; status: Closed.",
+    "proposed_text": "Update the procedure to define how deviations for LTIFR (per million hrs worked) are identified, thresholded, escalated, remediated, and evidenced, including the owner and timeframe.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "accepted",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "7cc0d17c-66a9-4adb-b939-9229cf209c82",
+        "filename": "esg_metric_deviation_log.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Metric Deviation Log",
+        "row_index": 10,
+        "row_number": 10,
+        "column_name": "Deviation (%)",
+        "excerpt": "Event ID: ED-009; Date: 2023-07-22; Quarter / FY: Q2 FY24; ESG Pillar: S"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": true,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "0c4b8ab3-46f7-47c9-bac9-88a85f105d0c",
+    "suggestion_type": "process_improvement",
+    "severity": "critical",
+    "title": "Metric or target deviation needs procedure coverage: BRSR Scope 3 Emissions \u2013 Business Travel (tCO2e).",
+    "detail": "The source row records a material deviation for BRSR Scope 3 Emissions \u2013 Business Travel (tCO2e): target: Required for BRSR Core; actual: Data unavailable; deviation: N/A \u2013 Data Gap; status: Closed.",
+    "proposed_text": "Update the procedure to define how deviations for BRSR Scope 3 Emissions \u2013 Business Travel (tCO2e) are identified, thresholded, escalated, remediated, and evidenced, including the owner and timeframe.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "accepted",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "7cc0d17c-66a9-4adb-b939-9229cf209c82",
+        "filename": "esg_metric_deviation_log.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Metric Deviation Log",
+        "row_index": 11,
+        "row_number": 11,
+        "column_name": "Deviation (%)",
+        "excerpt": "Event ID: ED-010; Date: 2023-08-10; Quarter / FY: Q2 FY24; ESG Pillar: E"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": true,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "5d0e0047-2ce4-4dd9-99fc-8351116339b6",
+    "suggestion_type": "process_improvement",
+    "severity": "critical",
+    "title": "Metric or target deviation needs procedure coverage: Independent Directors (% of Board).",
+    "detail": "The source row records a material deviation for Independent Directors (% of Board): target: \u2265 50% (SEBI LODR); actual: 47%; deviation: -6.0%; status: Closed.",
+    "proposed_text": "Update the procedure to define how deviations for Independent Directors (% of Board) are identified, thresholded, escalated, remediated, and evidenced, including the owner and timeframe.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "accepted",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "7cc0d17c-66a9-4adb-b939-9229cf209c82",
+        "filename": "esg_metric_deviation_log.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Metric Deviation Log",
+        "row_index": 12,
+        "row_number": 12,
+        "column_name": "Deviation (%)",
+        "excerpt": "Event ID: ED-011; Date: 2023-09-30; Quarter / FY: Q2 FY24; ESG Pillar: G"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": true,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "6078a297-f6cf-4266-a39a-00dcfc42e148",
+    "suggestion_type": "process_improvement",
+    "severity": "high",
+    "title": "Define Significance and Materiality Thresholds",
+    "detail": "The SOP relies on 'judgement' to determine if a deviation is significant (Step 1, Section 5.2) or material for escalation (Step 3, Section 5.2). This lacks the precision required for consistent auditing and reporting.",
+    "proposed_text": "Define significance as any variance greater than 10% from the target or prior year figure; define material deviations requiring escalation as those impacting regulatory compliance, public commitments, or exceeding a 20% variance threshold.",
+    "original_text": "Use judgement to determine significance. ... The ESG team will use judgement to determine when escalation is required.",
+    "target_anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a2",
+    "review_status": "accepted",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a",
+        "filename": "esg_reporting_sop.docx",
+        "document_role": null,
+        "anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a2",
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": false,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "21f2e763-5f91-4cff-abd7-79edd3e3add3",
+    "suggestion_type": "evidence_requirement",
+    "severity": "medium",
+    "title": "Establish a Centralized Deviation Log",
+    "detail": "Section 5.2 Step 4 mentions documenting the deviation but does not specify where. For auditability, a centralized log is necessary to track all identified deviations, their causes, and the status of corrective actions.",
+    "proposed_text": "Record all identified deviations in a Centralized ESG Deviation Log, capturing the metric ID, date of identification, variance percentage, root cause category, assigned owner for corrective action, and current resolution status.",
+    "original_text": "Document the deviation, root cause, and corrective action. Include in the next ESG report.",
+    "target_anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a2",
+    "review_status": "accepted",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a",
+        "filename": "esg_reporting_sop.docx",
+        "document_role": null,
+        "anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a2",
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": false,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "69de0e3f-c3dc-40a4-83fd-1cddbef19675",
+    "suggestion_type": "ownership_clarification",
+    "severity": "medium",
+    "title": "Specify Escalation Path",
+    "detail": "Section 5.2 Step 3 uses vague language ('appropriate level of management') which creates ambiguity regarding who is ultimately responsible for deciding on corrective actions for material issues.",
+    "proposed_text": "Escalate material deviations to the CFO and the Sustainability Committee for review and decision on corrective actions.",
+    "original_text": "If the deviation is material, escalate to the appropriate level of management.",
+    "target_anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a2",
+    "review_status": "accepted",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a",
+        "filename": "esg_reporting_sop.docx",
+        "document_role": null,
+        "anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a2",
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": false,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "0d8c70c8-e21d-4a7a-98d2-d9513120f8ee",
+    "suggestion_type": "missing_process_step",
+    "severity": "medium",
+    "title": "Add Verification Step for Consolidated Data",
+    "detail": "Section 4.2 describes consolidation but lacks a verification or 'four-eyes' check before the data is used for reporting or deviation analysis.",
+    "proposed_text": "After consolidation, a second member of the ESG team or the ESG Head must perform a spot-check verification of the consolidated data against the source submissions to ensure transcription accuracy.",
+    "original_text": "The ESG team will consolidate the data into the ESG reporting template",
+    "target_anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a2",
+    "review_status": "accepted",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a",
+        "filename": "esg_reporting_sop.docx",
+        "document_role": null,
+        "anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a2",
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": false,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "d6880457-81db-49d8-bf3b-408bd56770a2",
+    "suggestion_type": "terminology_inconsistency",
+    "severity": "low",
+    "title": "Align Deviation Definition with Document Terminology",
+    "detail": "The terminology section defines deviation relative to the 'prior year figure', but Section 5.2 Step 1 refers to the 'prior period'.",
+    "proposed_text": "Identify any metrics that are significantly different from the target or the prior year figure, in accordance with the document definitions.",
+    "original_text": "identify any metrics that are significantly different from the target or prior period.",
+    "target_anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a2",
+    "review_status": "accepted",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a",
+        "filename": "esg_reporting_sop.docx",
+        "document_role": null,
+        "anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a2",
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": false,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "bdfed0e6-cbc6-4718-8369-761f18dd9643",
+    "suggestion_type": "process_improvement",
+    "severity": "high",
+    "title": "Add an accountability matrix for multi-role activities",
+    "detail": "The procedure involves multiple roles and hand-offs but does not define Responsible, Accountable, Consulted, and Informed ownership.",
+    "proposed_text": "Add an accountability matrix for material activities:\n\n| Activity / decision | Responsible | Accountable | Consulted | Informed |\n| --- | --- | --- | --- | --- |\n| Key process activity | Performing team or role | Outcome owner | Specialist contributors | Oversight or impacted stakeholders |\n\nPopulate the matrix from the uploaded procedure and supporting evidence. Where the responsible owner is not explicit, mark it for reviewer confirmation instead of assigning it to an oversight role.",
+    "original_text": null,
+    "target_anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a5",
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a",
+        "filename": "esg_reporting_sop.docx",
+        "document_role": null,
+        "anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a5",
+        "section_id": null,
+        "section_heading": "4.1 Roles and Responsibilities for Data Collection",
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [
+      {
+        "target_id": "bdfed0e6-cbc6-4718-8369-761f18dd9643:structure",
+        "target_type": "raci_matrix",
+        "title": "Add an accountability matrix for multi-role activities",
+        "detail": "The procedure involves multiple roles and hand-offs but does not define Responsible, Accountable, Consulted, and Informed ownership.",
+        "proposed_text": "Add an accountability matrix for material activities:\n\n| Activity / decision | Responsible | Accountable | Consulted | Informed |\n| --- | --- | --- | --- | --- |\n| Key process activity | Performing team or role | Outcome owner | Specialist contributors | Oversight or impacted stakeholders |\n\nPopulate the matrix from the uploaded procedure and supporting evidence. Where the responsible owner is not explicit, mark it for reviewer confirmation instead of assigning it to an oversight role.",
+        "original_text": null,
+        "target_anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a5",
+        "target_text": "ESG data collection is the responsibility of the relevant teams across the organisation. Each team should provide accurate data to the ESG team on a timely basis.",
+        "target_heading": null,
+        "review_status": null,
+        "edited_proposed_text": null,
+        "source_references": [
+          {
+            "document_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a",
+            "filename": "esg_reporting_sop.docx",
+            "document_role": null,
+            "anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a5",
+            "section_id": null,
+            "section_heading": "4.1 Roles and Responsibilities for Data Collection",
+            "page": null,
+            "sheet_name": null,
+            "row_index": null,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          }
+        ]
+      }
+    ],
+    "queue_finding": true,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "eae71ef9-ac3d-4f46-9d47-5f0582f79112",
+    "suggestion_type": "process_improvement",
+    "severity": "high",
+    "title": "Define classification criteria for referenced levels",
+    "detail": "The documents reference levels or categories, but the procedure does not define the objective criteria used to classify them.",
+    "proposed_text": "Add a classification criteria matrix:\n\n| Level / category | Criteria | Required response | Escalation trigger | Evidence retained |\n| --- | --- | --- | --- | --- |\n| Level to be defined | Objective threshold or indicator | Required action | Time or severity trigger | Decision and action evidence |\n\nUse the level names already present in the uploaded documents and define objective criteria for each level.",
+    "original_text": null,
+    "target_anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a10",
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a",
+        "filename": "esg_reporting_sop.docx",
+        "document_role": null,
+        "anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a10",
+        "section_id": null,
+        "section_heading": "5.2 Deviation Management Process",
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [
+      {
+        "target_id": "eae71ef9-ac3d-4f46-9d47-5f0582f79112:structure",
+        "target_type": "monitoring_reporting",
+        "title": "Define classification criteria for referenced levels",
+        "detail": "The documents reference levels or categories, but the procedure does not define the objective criteria used to classify them.",
+        "proposed_text": "Add a classification criteria matrix:\n\n| Level / category | Criteria | Required response | Escalation trigger | Evidence retained |\n| --- | --- | --- | --- | --- |\n| Level to be defined | Objective threshold or indicator | Required action | Time or severity trigger | Decision and action evidence |\n\nUse the level names already present in the uploaded documents and define objective criteria for each level.",
+        "original_text": null,
+        "target_anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a10",
+        "target_text": "When a deviation is identified, the following steps should be followed:\n\n| Step | Action | Details |\n| --- | --- | --- |\n| 1 | Identify Deviation | During data collection or reporting, identify any metrics that are significantly different from the target or prior period. Use judgement to determine significance. |\n| 2 | Investigate Root Cause | Work with the relevant team to understand why the deviation has occurred. This may be due to data quality issues, operational changes, or external factors. |\n| 3 | Escalate if Needed | If the deviation is material, escalate to the appropriate level of management. The ESG team will use judgement to determine when escalation is required. |\n| 4 | Document and Report | Document the deviation, root cause, and corrective action. Include in the next ESG report. |\n| 5 | Corrective Action | Work with the relevant team to implement corrective actions to address the deviation. Monitor progress. |",
+        "target_heading": null,
+        "review_status": null,
+        "edited_proposed_text": null,
+        "source_references": [
+          {
+            "document_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a",
+            "filename": "esg_reporting_sop.docx",
+            "document_role": null,
+            "anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a10",
+            "section_id": null,
+            "section_heading": "5.2 Deviation Management Process",
+            "page": null,
+            "sheet_name": null,
+            "row_index": null,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          }
+        ]
+      }
+    ],
+    "queue_finding": true,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "891fd92d-283f-49ce-874b-9e126b2c4380",
+    "suggestion_type": "process_improvement",
+    "severity": "high",
+    "title": "Define escalation triggers and timeframes",
+    "detail": "The procedure uses escalation or notification language with vague timing, which makes execution and testing inconsistent.",
+    "proposed_text": "Add an escalation matrix:\n\n| Trigger | Responsible owner | Escalation recipient | Timeframe | Evidence retained |\n| --- | --- | --- | --- | --- |\n| Trigger to be defined | Performing role | Accountable or oversight role | Defined SLA | Notification and decision record |\n\nReplace vague timing terms with measurable thresholds and timeframes.",
+    "original_text": null,
+    "target_anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a10",
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a",
+        "filename": "esg_reporting_sop.docx",
+        "document_role": null,
+        "anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a10",
+        "section_id": null,
+        "section_heading": "5.2 Deviation Management Process",
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [
+      {
+        "target_id": "891fd92d-283f-49ce-874b-9e126b2c4380:structure",
+        "target_type": "monitoring_reporting",
+        "title": "Define escalation triggers and timeframes",
+        "detail": "The procedure uses escalation or notification language with vague timing, which makes execution and testing inconsistent.",
+        "proposed_text": "Add an escalation matrix:\n\n| Trigger | Responsible owner | Escalation recipient | Timeframe | Evidence retained |\n| --- | --- | --- | --- | --- |\n| Trigger to be defined | Performing role | Accountable or oversight role | Defined SLA | Notification and decision record |\n\nReplace vague timing terms with measurable thresholds and timeframes.",
+        "original_text": null,
+        "target_anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a10",
+        "target_text": "When a deviation is identified, the following steps should be followed:\n\n| Step | Action | Details |\n| --- | --- | --- |\n| 1 | Identify Deviation | During data collection or reporting, identify any metrics that are significantly different from the target or prior period. Use judgement to determine significance. |\n| 2 | Investigate Root Cause | Work with the relevant team to understand why the deviation has occurred. This may be due to data quality issues, operational changes, or external factors. |\n| 3 | Escalate if Needed | If the deviation is material, escalate to the appropriate level of management. The ESG team will use judgement to determine when escalation is required. |\n| 4 | Document and Report | Document the deviation, root cause, and corrective action. Include in the next ESG report. |\n| 5 | Corrective Action | Work with the relevant team to implement corrective actions to address the deviation. Monitor progress. |",
+        "target_heading": null,
+        "review_status": null,
+        "edited_proposed_text": null,
+        "source_references": [
+          {
+            "document_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a",
+            "filename": "esg_reporting_sop.docx",
+            "document_role": null,
+            "anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a10",
+            "section_id": null,
+            "section_heading": "5.2 Deviation Management Process",
+            "page": null,
+            "sheet_name": null,
+            "row_index": null,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          }
+        ]
+      }
+    ],
+    "queue_finding": true,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "a1dfdda1-5bd4-4e46-8925-9a3d785fecab",
+    "suggestion_type": "process_improvement",
+    "severity": "medium",
+    "title": "Add a post-event review and closure control",
+    "detail": "The procedure describes events or remediation but does not define a structured closure review to confirm root cause, lessons learned, and action completion.",
+    "proposed_text": "Add a post-event review / closure section covering trigger, required participants, timeline, root-cause review, corrective actions, evidence retained, and sign-off before closure.",
+    "original_text": null,
+    "target_anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a10",
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a",
+        "filename": "esg_reporting_sop.docx",
+        "document_role": null,
+        "anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a10",
+        "section_id": null,
+        "section_heading": "5.2 Deviation Management Process",
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [
+      {
+        "target_id": "a1dfdda1-5bd4-4e46-8925-9a3d785fecab:structure",
+        "target_type": "procedure_step",
+        "title": "Add a post-event review and closure control",
+        "detail": "The procedure describes events or remediation but does not define a structured closure review to confirm root cause, lessons learned, and action completion.",
+        "proposed_text": "Add a post-event review / closure section covering trigger, required participants, timeline, root-cause review, corrective actions, evidence retained, and sign-off before closure.",
+        "original_text": null,
+        "target_anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a10",
+        "target_text": "When a deviation is identified, the following steps should be followed:\n\n| Step | Action | Details |\n| --- | --- | --- |\n| 1 | Identify Deviation | During data collection or reporting, identify any metrics that are significantly different from the target or prior period. Use judgement to determine significance. |\n| 2 | Investigate Root Cause | Work with the relevant team to understand why the deviation has occurred. This may be due to data quality issues, operational changes, or external factors. |\n| 3 | Escalate if Needed | If the deviation is material, escalate to the appropriate level of management. The ESG team will use judgement to determine when escalation is required. |\n| 4 | Document and Report | Document the deviation, root cause, and corrective action. Include in the next ESG report. |\n| 5 | Corrective Action | Work with the relevant team to implement corrective actions to address the deviation. Monitor progress. |",
+        "target_heading": null,
+        "review_status": null,
+        "edited_proposed_text": null,
+        "source_references": [
+          {
+            "document_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a",
+            "filename": "esg_reporting_sop.docx",
+            "document_role": null,
+            "anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a10",
+            "section_id": null,
+            "section_heading": "5.2 Deviation Management Process",
+            "page": null,
+            "sheet_name": null,
+            "row_index": null,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          }
+        ]
+      }
+    ],
+    "queue_finding": false,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "d98cdc9a-8167-4ff9-aeea-ba6628ff4412",
+    "suggestion_type": "process_improvement",
+    "severity": "high",
+    "title": "Define evidence preservation and chain-of-custody requirements",
+    "detail": "The documents refer to collecting or retaining evidence, but the procedure does not define preservation, custody, integrity, retention location, and transfer records.",
+    "proposed_text": "Define evidence preservation and chain-of-custody requirements:\n\n| Evidence type | Preservation action | Custodian | Integrity control | Retention location | Review / transfer record |\n| --- | --- | --- | --- | --- | --- |\n| Evidence from source documents | How it is captured and protected | Responsible role | Integrity control such as access restriction, timestamp, or validation | Repository or record location | Chain-of-custody or hand-off evidence |\n\nApply these requirements to evidence used for investigation, exception handling, remediation, validation, or oversight review.",
+    "original_text": null,
+    "target_anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a4",
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a",
+        "filename": "esg_reporting_sop.docx",
+        "document_role": null,
+        "anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a4",
+        "section_id": null,
+        "section_heading": "3. ESG Metric Framework",
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [
+      {
+        "target_id": "d98cdc9a-8167-4ff9-aeea-ba6628ff4412:structure",
+        "target_type": "evidence_requirement",
+        "title": "Define evidence preservation and chain-of-custody requirements",
+        "detail": "The documents refer to collecting or retaining evidence, but the procedure does not define preservation, custody, integrity, retention location, and transfer records.",
+        "proposed_text": "Define evidence preservation and chain-of-custody requirements:\n\n| Evidence type | Preservation action | Custodian | Integrity control | Retention location | Review / transfer record |\n| --- | --- | --- | --- | --- | --- |\n| Evidence from source documents | How it is captured and protected | Responsible role | Integrity control such as access restriction, timestamp, or validation | Repository or record location | Chain-of-custody or hand-off evidence |\n\nApply these requirements to evidence used for investigation, exception handling, remediation, validation, or oversight review.",
+        "original_text": null,
+        "target_anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a4",
+        "target_text": "The bank tracks a range of ESG metrics across Environmental, Social, and Governance pillars. The table below lists the key metrics, their data sources, and reporting frequency.\n\n| Pillar | Metric | Data Source | Reporting Frequency |\n| --- | --- | --- | --- |\n| E | Scope 1 GHG Emissions (tCO2e) | Utility / DG fuel records | Annual (BRSR) |\n| E | Scope 2 GHG Emissions (tCO2e) | Electricity bills | Annual (BRSR) |\n| E | Scope 3 Emissions (tCO2e) \u2013 selected categories | Travel management system, financed portfolio | Annual (BRSR Core) |\n| E | Water Consumption (KL) | Water utility records | Quarterly / Annual |\n| E | Renewable Energy % | REC certificates, solar metering | Annual |\n| S | Women in Senior Leadership (%) | HR System | Annual (BRSR) |\n| S | LTIFR (per million hrs) | Admin / Safety records | Quarterly / Annual |\n| S | PSL Achievement (% ANBC) | CBS / Credit system | Quarterly (RBI) |\n| G | Independent Directors (%) | Company Secretariat | Annual (SEBI LODR) |\n| G | ABC Training Completion (%) | LMS / Compliance system | Annual (BRSR) |\n| G | BRSR Core Assurance Coverage (%) | External auditor | Annual (BRSR Core) |",
+        "target_heading": null,
+        "review_status": null,
+        "edited_proposed_text": null,
+        "source_references": [
+          {
+            "document_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a",
+            "filename": "esg_reporting_sop.docx",
+            "document_role": null,
+            "anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a4",
+            "section_id": null,
+            "section_heading": "3. ESG Metric Framework",
+            "page": null,
+            "sheet_name": null,
+            "row_index": null,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          }
+        ]
+      }
+    ],
+    "queue_finding": true,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "f695dc20-bc15-4a69-b19e-f38309342767",
+    "suggestion_type": "process_improvement",
+    "severity": "high",
+    "title": "Add an oversight reporting matrix",
+    "detail": "The procedure references reporting to oversight forums, but it does not define the recipient, cadence or trigger, minimum content, owner, and retained evidence.",
+    "proposed_text": "Add an oversight reporting matrix:\n\n| Recipient / forum | Reported matter | Owner | Cadence / trigger | Minimum content | Evidence retained |\n| --- | --- | --- | --- | --- | --- |\n| Oversight forum from source documents | Metric, exception, decision, or status item | Reporting owner | Defined frequency or trigger | Required data points and decisions | Pack, minutes, submission, or approval evidence |\n\nUse the matrix to replace vague references to reporting as appropriate with specific recipients, timing, content, and evidence.",
+    "original_text": null,
+    "target_anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a1",
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a",
+        "filename": "esg_reporting_sop.docx",
+        "document_role": null,
+        "anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a1",
+        "section_id": null,
+        "section_heading": "Document",
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [
+      {
+        "target_id": "f695dc20-bc15-4a69-b19e-f38309342767:structure",
+        "target_type": "monitoring_reporting",
+        "title": "Add an oversight reporting matrix",
+        "detail": "The procedure references reporting to oversight forums, but it does not define the recipient, cadence or trigger, minimum content, owner, and retained evidence.",
+        "proposed_text": "Add an oversight reporting matrix:\n\n| Recipient / forum | Reported matter | Owner | Cadence / trigger | Minimum content | Evidence retained |\n| --- | --- | --- | --- | --- | --- |\n| Oversight forum from source documents | Metric, exception, decision, or status item | Reporting owner | Defined frequency or trigger | Required data points and decisions | Pack, minutes, submission, or approval evidence |\n\nUse the matrix to replace vague references to reporting as appropriate with specific recipients, timing, content, and evidence.",
+        "original_text": null,
+        "target_anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a1",
+        "target_text": "ESG RISK MONITORING AND REPORTING\n\nStandard Operating Procedure\n\n| Document Title | ESG Risk Monitoring and Reporting Standard Operating Procedure |\n| --- | --- |\n| Document ID | SOP-ESG-002 |\n| Version | 1.1 |\n| Prepared By | Sustainability / ESG Team |\n| Reviewed By | CFO |\n| Date | April 2024 |\n| Status | Active |",
+        "target_heading": null,
+        "review_status": null,
+        "edited_proposed_text": null,
+        "source_references": [
+          {
+            "document_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a",
+            "filename": "esg_reporting_sop.docx",
+            "document_role": null,
+            "anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a1",
+            "section_id": null,
+            "section_heading": "Document",
+            "page": null,
+            "sheet_name": null,
+            "row_index": null,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          }
+        ]
+      }
+    ],
+    "queue_finding": true,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "461c5049-9cc6-46af-b220-345b72350756",
+    "suggestion_type": "process_improvement",
+    "severity": "medium",
+    "title": "Add document control metadata",
+    "detail": "The procedure does not clearly define document ownership, versioning, and review cadence.",
+    "proposed_text": "Add document control information including document owner, version, effective date, last review date, next review date, approver, and change summary.",
+    "original_text": null,
+    "target_anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a10",
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a",
+        "filename": "esg_reporting_sop.docx",
+        "document_role": null,
+        "anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a10",
+        "section_id": null,
+        "section_heading": "5.2 Deviation Management Process",
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [
+      {
+        "target_id": "461c5049-9cc6-46af-b220-345b72350756:structure",
+        "target_type": "document_metadata",
+        "title": "Add document control metadata",
+        "detail": "The procedure does not clearly define document ownership, versioning, and review cadence.",
+        "proposed_text": "Add document control information including document owner, version, effective date, last review date, next review date, approver, and change summary.",
+        "original_text": null,
+        "target_anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a10",
+        "target_text": "When a deviation is identified, the following steps should be followed:\n\n| Step | Action | Details |\n| --- | --- | --- |\n| 1 | Identify Deviation | During data collection or reporting, identify any metrics that are significantly different from the target or prior period. Use judgement to determine significance. |\n| 2 | Investigate Root Cause | Work with the relevant team to understand why the deviation has occurred. This may be due to data quality issues, operational changes, or external factors. |\n| 3 | Escalate if Needed | If the deviation is material, escalate to the appropriate level of management. The ESG team will use judgement to determine when escalation is required. |\n| 4 | Document and Report | Document the deviation, root cause, and corrective action. Include in the next ESG report. |\n| 5 | Corrective Action | Work with the relevant team to implement corrective actions to address the deviation. Monitor progress. |",
+        "target_heading": null,
+        "review_status": null,
+        "edited_proposed_text": null,
+        "source_references": [
+          {
+            "document_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a",
+            "filename": "esg_reporting_sop.docx",
+            "document_role": null,
+            "anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a10",
+            "section_id": null,
+            "section_heading": "5.2 Deviation Management Process",
+            "page": null,
+            "sheet_name": null,
+            "row_index": null,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          }
+        ]
+      }
+    ],
+    "queue_finding": false,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "02c1b7ca-698b-4187-96db-042e2914df14",
+    "suggestion_type": "process_improvement",
+    "severity": "high",
+    "title": "Add an obligation calendar for external or internal requirements",
+    "detail": "Supporting documents reference obligations or frameworks, but the procedure does not define a structured calendar of triggers, owners, deadlines, and evidence.",
+    "proposed_text": "Add an obligation calendar:\n\n| Obligation / reference | Trigger | Owner | Deadline / timeframe | Submission or notification evidence |\n| --- | --- | --- | --- | --- |\n| Reference from supporting documents | Trigger condition | Responsible owner | Defined date or elapsed time | Filing, notification, or approval record |\n\nPopulate the table from the regulatory, framework, standard, or contractual references present in the uploaded source documents.",
+    "original_text": null,
+    "target_anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a10",
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a",
+        "filename": "esg_reporting_sop.docx",
+        "document_role": null,
+        "anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a10",
+        "section_id": null,
+        "section_heading": "5.2 Deviation Management Process",
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [
+      {
+        "target_id": "02c1b7ca-698b-4187-96db-042e2914df14:structure",
+        "target_type": "monitoring_reporting",
+        "title": "Add an obligation calendar for external or internal requirements",
+        "detail": "Supporting documents reference obligations or frameworks, but the procedure does not define a structured calendar of triggers, owners, deadlines, and evidence.",
+        "proposed_text": "Add an obligation calendar:\n\n| Obligation / reference | Trigger | Owner | Deadline / timeframe | Submission or notification evidence |\n| --- | --- | --- | --- | --- |\n| Reference from supporting documents | Trigger condition | Responsible owner | Defined date or elapsed time | Filing, notification, or approval record |\n\nPopulate the table from the regulatory, framework, standard, or contractual references present in the uploaded source documents.",
+        "original_text": null,
+        "target_anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a10",
+        "target_text": "When a deviation is identified, the following steps should be followed:\n\n| Step | Action | Details |\n| --- | --- | --- |\n| 1 | Identify Deviation | During data collection or reporting, identify any metrics that are significantly different from the target or prior period. Use judgement to determine significance. |\n| 2 | Investigate Root Cause | Work with the relevant team to understand why the deviation has occurred. This may be due to data quality issues, operational changes, or external factors. |\n| 3 | Escalate if Needed | If the deviation is material, escalate to the appropriate level of management. The ESG team will use judgement to determine when escalation is required. |\n| 4 | Document and Report | Document the deviation, root cause, and corrective action. Include in the next ESG report. |\n| 5 | Corrective Action | Work with the relevant team to implement corrective actions to address the deviation. Monitor progress. |",
+        "target_heading": null,
+        "review_status": null,
+        "edited_proposed_text": null,
+        "source_references": [
+          {
+            "document_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a",
+            "filename": "esg_reporting_sop.docx",
+            "document_role": null,
+            "anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a10",
+            "section_id": null,
+            "section_heading": "5.2 Deviation Management Process",
+            "page": null,
+            "sheet_name": null,
+            "row_index": null,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          }
+        ]
+      }
+    ],
+    "queue_finding": true,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "b1aac946-75fe-4eba-98aa-729c12905b02",
+    "suggestion_type": "process_improvement",
+    "severity": "high",
+    "title": "Add a metric ownership and validation matrix",
+    "detail": "Supporting documents contain metrics, targets, or thresholds, but the procedure does not define owners, source systems, validation, deadlines, and retained evidence for each data element.",
+    "proposed_text": "Add a metric ownership and validation matrix:\n\n| Metric / data element | Data owner | Source system | Submission frequency | Validator / approver | Deadline | Evidence retained |\n| --- | --- | --- | --- | --- | --- | --- |\n| Metric from source documents | Accountable data provider | System or record source | Cadence | Independent validator | Due date | Submission and sign-off evidence |",
+    "original_text": null,
+    "target_anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a10",
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a",
+        "filename": "esg_reporting_sop.docx",
+        "document_role": null,
+        "anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a10",
+        "section_id": null,
+        "section_heading": "5.2 Deviation Management Process",
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [
+      {
+        "target_id": "b1aac946-75fe-4eba-98aa-729c12905b02:structure",
+        "target_type": "monitoring_reporting",
+        "title": "Add a metric ownership and validation matrix",
+        "detail": "Supporting documents contain metrics, targets, or thresholds, but the procedure does not define owners, source systems, validation, deadlines, and retained evidence for each data element.",
+        "proposed_text": "Add a metric ownership and validation matrix:\n\n| Metric / data element | Data owner | Source system | Submission frequency | Validator / approver | Deadline | Evidence retained |\n| --- | --- | --- | --- | --- | --- | --- |\n| Metric from source documents | Accountable data provider | System or record source | Cadence | Independent validator | Due date | Submission and sign-off evidence |",
+        "original_text": null,
+        "target_anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a10",
+        "target_text": "When a deviation is identified, the following steps should be followed:\n\n| Step | Action | Details |\n| --- | --- | --- |\n| 1 | Identify Deviation | During data collection or reporting, identify any metrics that are significantly different from the target or prior period. Use judgement to determine significance. |\n| 2 | Investigate Root Cause | Work with the relevant team to understand why the deviation has occurred. This may be due to data quality issues, operational changes, or external factors. |\n| 3 | Escalate if Needed | If the deviation is material, escalate to the appropriate level of management. The ESG team will use judgement to determine when escalation is required. |\n| 4 | Document and Report | Document the deviation, root cause, and corrective action. Include in the next ESG report. |\n| 5 | Corrective Action | Work with the relevant team to implement corrective actions to address the deviation. Monitor progress. |",
+        "target_heading": null,
+        "review_status": null,
+        "edited_proposed_text": null,
+        "source_references": [
+          {
+            "document_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a",
+            "filename": "esg_reporting_sop.docx",
+            "document_role": null,
+            "anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a10",
+            "section_id": null,
+            "section_heading": "5.2 Deviation Management Process",
+            "page": null,
+            "sheet_name": null,
+            "row_index": null,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          }
+        ]
+      }
+    ],
+    "queue_finding": true,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "c2122975-0387-49a5-96ef-321133427211",
+    "suggestion_type": "process_improvement",
+    "severity": "medium",
+    "title": "Link thresholds and exceptions to risk appetite",
+    "detail": "The documents contain risk and threshold signals, but the procedure does not explain how breaches map to appetite, tolerance, or management action.",
+    "proposed_text": "Link material metrics, thresholds, or control exceptions to the applicable risk appetite or tolerance statement, including breach triggers, escalation owner, and evidence retained.",
+    "original_text": null,
+    "target_anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a10",
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a",
+        "filename": "esg_reporting_sop.docx",
+        "document_role": null,
+        "anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a10",
+        "section_id": null,
+        "section_heading": "5.2 Deviation Management Process",
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [
+      {
+        "target_id": "c2122975-0387-49a5-96ef-321133427211:structure",
+        "target_type": "monitoring_reporting",
+        "title": "Link thresholds and exceptions to risk appetite",
+        "detail": "The documents contain risk and threshold signals, but the procedure does not explain how breaches map to appetite, tolerance, or management action.",
+        "proposed_text": "Link material metrics, thresholds, or control exceptions to the applicable risk appetite or tolerance statement, including breach triggers, escalation owner, and evidence retained.",
+        "original_text": null,
+        "target_anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a10",
+        "target_text": "When a deviation is identified, the following steps should be followed:\n\n| Step | Action | Details |\n| --- | --- | --- |\n| 1 | Identify Deviation | During data collection or reporting, identify any metrics that are significantly different from the target or prior period. Use judgement to determine significance. |\n| 2 | Investigate Root Cause | Work with the relevant team to understand why the deviation has occurred. This may be due to data quality issues, operational changes, or external factors. |\n| 3 | Escalate if Needed | If the deviation is material, escalate to the appropriate level of management. The ESG team will use judgement to determine when escalation is required. |\n| 4 | Document and Report | Document the deviation, root cause, and corrective action. Include in the next ESG report. |\n| 5 | Corrective Action | Work with the relevant team to implement corrective actions to address the deviation. Monitor progress. |",
+        "target_heading": null,
+        "review_status": null,
+        "edited_proposed_text": null,
+        "source_references": [
+          {
+            "document_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a",
+            "filename": "esg_reporting_sop.docx",
+            "document_role": null,
+            "anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a10",
+            "section_id": null,
+            "section_heading": "5.2 Deviation Management Process",
+            "page": null,
+            "sheet_name": null,
+            "row_index": null,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          }
+        ]
+      }
+    ],
+    "queue_finding": false,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "ddf0fa3a-5b42-4f97-bd0d-ef27ffcecdce",
+    "suggestion_type": "process_improvement",
+    "severity": "medium",
+    "title": "Add a category coverage matrix",
+    "detail": "The source documents reference categories, populations, or scopes, but the procedure does not reconcile the full coverage universe with inclusion decisions, owners, requirements, and evidence.",
+    "proposed_text": "Add a category coverage matrix:\n\n| Category / population | Inclusion decision | Source document or system | Owner | Reporting / control requirement | Evidence retained |\n| --- | --- | --- | --- | --- | --- |\n| Category from source documents | Included, excluded, or not applicable | Authoritative source | Accountable owner | Required treatment or reporting obligation | Evidence supporting the decision |\n\nUse the matrix to reconcile the full category or population universe from supporting documents with what the procedure says is in scope.",
+    "original_text": null,
+    "target_anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a1",
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a",
+        "filename": "esg_reporting_sop.docx",
+        "document_role": null,
+        "anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a1",
+        "section_id": null,
+        "section_heading": "Document",
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [
+      {
+        "target_id": "ddf0fa3a-5b42-4f97-bd0d-ef27ffcecdce:structure",
+        "target_type": "monitoring_reporting",
+        "title": "Add a category coverage matrix",
+        "detail": "The source documents reference categories, populations, or scopes, but the procedure does not reconcile the full coverage universe with inclusion decisions, owners, requirements, and evidence.",
+        "proposed_text": "Add a category coverage matrix:\n\n| Category / population | Inclusion decision | Source document or system | Owner | Reporting / control requirement | Evidence retained |\n| --- | --- | --- | --- | --- | --- |\n| Category from source documents | Included, excluded, or not applicable | Authoritative source | Accountable owner | Required treatment or reporting obligation | Evidence supporting the decision |\n\nUse the matrix to reconcile the full category or population universe from supporting documents with what the procedure says is in scope.",
+        "original_text": null,
+        "target_anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a1",
+        "target_text": "ESG RISK MONITORING AND REPORTING\n\nStandard Operating Procedure\n\n| Document Title | ESG Risk Monitoring and Reporting Standard Operating Procedure |\n| --- | --- |\n| Document ID | SOP-ESG-002 |\n| Version | 1.1 |\n| Prepared By | Sustainability / ESG Team |\n| Reviewed By | CFO |\n| Date | April 2024 |\n| Status | Active |",
+        "target_heading": null,
+        "review_status": null,
+        "edited_proposed_text": null,
+        "source_references": [
+          {
+            "document_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a",
+            "filename": "esg_reporting_sop.docx",
+            "document_role": null,
+            "anchor_id": "ba2ffe08-ad3f-402b-aba1-029107becb9a-a1",
+            "section_id": null,
+            "section_heading": "Document",
+            "page": null,
+            "sheet_name": null,
+            "row_index": null,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          }
+        ]
+      }
+    ],
+    "queue_finding": false,
+    "requires_explicit_review": true
+  }
+]

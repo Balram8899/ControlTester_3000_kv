@@ -40,6 +40,7 @@ def call_llm(
     response_schema: dict,
     pipeline_id: str,
     budget_remaining: int,
+    temperature: float = 0.2,
 ) -> LLMResult:
     if budget_remaining <= 0:
         return LLMResult(
@@ -52,7 +53,7 @@ def call_llm(
     start = time.perf_counter()
     raw_output = ""
     try:
-        llm = get_llm()
+        llm = get_llm(temperature=temperature)
         for attempt in range(2):
             response = llm.invoke(prompt_with_schema)
             raw_output = _response_to_text(response)

@@ -5,6 +5,7 @@ from typing import Any
 
 from utils.services.generic_findings import (
     detect_seed_findings,
+    detect_document_issue_signals,
     facts_from_sheet_result,
     findings_to_suggestions,
 )
@@ -120,6 +121,9 @@ def process_excel(
                     document_role="control_inventory" if corpus_map and corpus_map.risk_to_control_map else "evidence_test_result",
                 )
                 facts.extend(sheet_facts)
+                suggestions.extend(
+                    findings_to_suggestions(detect_document_issue_signals(sheet_facts))
+                )
                 if not (corpus_map and corpus_map.risk_to_control_map):
                     suggestions.extend(findings_to_suggestions(detect_seed_findings(sheet_facts)))
         except Exception as exc:

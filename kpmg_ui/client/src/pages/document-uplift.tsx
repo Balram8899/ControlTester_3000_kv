@@ -42,6 +42,14 @@ type CaseStage =
 type DocumentTag = "procedure" | "rcm" | "policy" | "process_doc" | "risk_data" | "evidence";
 type SuggestionStatus = "pending" | "accepted" | "rejected" | "edited";
 type SuggestionSeverity = "critical" | "high" | "medium" | "low" | "informational";
+type SuggestionTargetType =
+  | "procedure_step"
+  | "role_responsibility"
+  | "raci_matrix"
+  | "evidence_requirement"
+  | "monitoring_reporting"
+  | "document_metadata"
+  | "other";
 
 interface CostSummary {
   provider?: string;
@@ -70,9 +78,25 @@ interface DocumentTagEntry {
 
 interface SourceReference {
   document_id: string;
+  filename?: string | null;
   anchor_id?: string | null;
   sheet_name?: string | null;
   row_index?: number | null;
+}
+
+interface SuggestionEditTarget {
+  target_id: string;
+  target_type: SuggestionTargetType;
+  title?: string | null;
+  detail?: string | null;
+  proposed_text: string;
+  original_text?: string | null;
+  target_anchor_id?: string | null;
+  target_text?: string | null;
+  target_heading?: string | null;
+  review_status?: SuggestionStatus | null;
+  edited_proposed_text?: string | null;
+  source_references?: SourceReference[];
 }
 
 interface Suggestion {
@@ -87,6 +111,7 @@ interface Suggestion {
   edited_proposed_text?: string | null;
   reviewer_notes?: string | null;
   source_references: SourceReference[];
+  edit_targets?: SuggestionEditTarget[];
 }
 
 interface OutputItem {
@@ -211,10 +236,9 @@ function formatCost(cost?: CostSummary | null): string {
 }
 
 function sourceLabel(source: SourceReference): string {
-  const parts = [source.document_id];
+  const parts = [source.filename || source.document_id];
   if (source.sheet_name) parts.push(source.sheet_name);
   if (source.row_index !== undefined && source.row_index !== null) parts.push(`row ${source.row_index}`);
-  if (source.anchor_id) parts.push(source.anchor_id);
   return parts.join(" - ");
 }
 
@@ -332,6 +356,7 @@ export default function DocumentUpliftPage() {
   const suggestions = suggestionsQuery.data?.suggestions ?? selectedCase?.suggestions ?? [];
   const sortedSuggestions = useMemo(() => sortSuggestions(suggestions), [suggestions]);
   const selectedSuggestion = sortedSuggestions.find((item) => item.suggestion_id === selectedSuggestionId) ?? sortedSuggestions[0] ?? null;
+  const selectedEditTargets = selectedSuggestion?.edit_targets ?? [];
 
   useEffect(() => {
     if (selectedSuggestion) {
@@ -842,21 +867,48 @@ export default function DocumentUpliftPage() {
                     <p className="mt-2 text-[13px] leading-relaxed text-[#5A6478]">{selectedSuggestion.detail}</p>
                   </div>
 
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <div className="rounded-xl border border-[#F7E7A8] bg-[#FFFBEB] p-4">
-                      <div className="mb-2 text-[11px] font-bold uppercase tracking-wide text-[#7A5400]">Original Text</div>
-                      <p className="text-[13px] leading-relaxed text-[#0C233C]">{selectedSuggestion.original_text || "No original text anchor supplied."}</p>
+                  {selectedEditTargets.length ? (
+                    <div className="space-y-3">
+                      <div className="text-[11px] font-bold uppercase tracking-wide text-[#00338D]">Uplift Targets</div>
+                      <div className="grid gap-3 md:grid-cols-2">
+                        {selectedEditTargets.map((target) => (
+                          <div key={target.target_id} className="rounded-xl border border-[#BFD0E6] bg-[#F8FAFD] p-4">
+                            <div className="mb-2 flex flex-wrap items-center gap-2">
+                              <span className="rounded-full border border-[#D8E0ED] bg-white px-3 py-1 text-[11px] font-bold text-[#00338D]">
+                                {formatStage(target.target_type)}
+                              </span>
+                              {target.review_status ? (
+                                <span className="text-[11px] text-[#8492A6]">{formatStage(target.review_status)}</span>
+                              ) : null}
+                            </div>
+                            <div className="text-[13px] font-bold text-[#0C233C]">{target.title || "Document target"}</div>
+                            {target.detail ? <p className="mt-2 text-[12px] leading-relaxed text-[#5A6478]">{target.detail}</p> : null}
+                            <p className="mt-3 text-[13px] leading-relaxed text-[#0C233C]">
+                              {target.edited_proposed_text || target.proposed_text}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div className="rounded-xl border border-[#BFD0E6] bg-[#F8FAFD] p-4">
-                      <div className="mb-2 text-[11px] font-bold uppercase tracking-wide text-[#00338D]">Proposed Text</div>
-                      <p className="text-[13px] leading-relaxed text-[#0C233C]">{selectedSuggestion.edited_proposed_text || selectedSuggestion.proposed_text || "No proposed text supplied."}</p>
-                    </div>
-                  </div>
+                  ) : (
+                    <>
+                      <div className="grid gap-3 md:grid-cols-2">
+                        <div className="rounded-xl border border-[#F7E7A8] bg-[#FFFBEB] p-4">
+                          <div className="mb-2 text-[11px] font-bold uppercase tracking-wide text-[#7A5400]">Original Text</div>
+                          <p className="text-[13px] leading-relaxed text-[#0C233C]">{selectedSuggestion.original_text || "No original text anchor supplied."}</p>
+                        </div>
+                        <div className="rounded-xl border border-[#BFD0E6] bg-[#F8FAFD] p-4">
+                          <div className="mb-2 text-[11px] font-bold uppercase tracking-wide text-[#00338D]">Proposed Text</div>
+                          <p className="text-[13px] leading-relaxed text-[#0C233C]">{selectedSuggestion.edited_proposed_text || selectedSuggestion.proposed_text || "No proposed text supplied."}</p>
+                        </div>
+                      </div>
 
-                  <div>
-                    <label className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-[#8492A6]">Edit Suggestion</label>
-                    <Textarea value={editedText} onChange={(event) => setEditedText(event.target.value)} />
-                  </div>
+                      <div>
+                        <label className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-[#8492A6]">Edit Suggestion</label>
+                        <Textarea value={editedText} onChange={(event) => setEditedText(event.target.value)} />
+                      </div>
+                    </>
+                  )}
                   <div>
                     <label className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-[#8492A6]">Reviewer Notes</label>
                     <Textarea value={reviewerNotes} onChange={(event) => setReviewerNotes(event.target.value)} />
@@ -873,7 +925,7 @@ export default function DocumentUpliftPage() {
                       label="Edit"
                       tone="secondary"
                       onClick={() => updateSuggestion.mutate({ suggestionId: selectedSuggestion.suggestion_id, reviewStatus: "edited", editedProposedText: editedText, notes: reviewerNotes })}
-                      disabled={updateSuggestion.isPending || !editedText.trim()}
+                      disabled={updateSuggestion.isPending || !editedText.trim() || selectedEditTargets.length > 0}
                     />
                     <ActionButton
                       label="Reject"
@@ -936,7 +988,14 @@ export default function DocumentUpliftPage() {
                         <span className="text-[11px] text-[#8492A6]">{formatStage(suggestion.review_status)}</span>
                       </div>
                       <div className="text-[13px] font-bold text-[#0C233C]">{suggestion.title}</div>
-                      <div className="mt-2 text-[11px] text-[#5A6478]">{formatStage(suggestion.suggestion_type)}</div>
+                      <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-[#5A6478]">
+                        <span>{formatStage(suggestion.suggestion_type)}</span>
+                        {suggestion.edit_targets?.length ? (
+                          <span className="rounded-full border border-[#D8E0ED] bg-[#F8FAFD] px-2 py-0.5 text-[#00338D]">
+                            {suggestion.edit_targets.length} targets
+                          </span>
+                        ) : null}
+                      </div>
                     </button>
                   ))
                 ) : (

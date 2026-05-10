@@ -1,0 +1,78 @@
+<h2>How should users move through the pipeline?</h2>
+<p class="subtitle">The current page dumps all 5 stages onto one view. Which navigation model should replace it?</p>
+
+<div class="options">
+
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Linear Wizard / Stepper</h3>
+      <p>Each stage is a discrete page. A top stepper bar shows progress. Users click "Next" to advance — the system can also auto-advance when a stage completes. Breadcrumb: <strong>Setup → Upload → Review → Export</strong></p>
+      <div style="margin-top:10px;padding:10px;background:#f0f4ff;border-radius:8px;font-size:12px;">
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+          <span style="background:#00338D;color:#fff;padding:3px 10px;border-radius:20px;font-size:11px;">① Setup</span>
+          <span style="color:#aaa">──</span>
+          <span style="background:#00338D;color:#fff;padding:3px 10px;border-radius:20px;font-size:11px;">② Upload & Tag</span>
+          <span style="color:#aaa">──</span>
+          <span style="background:#ccc;color:#666;padding:3px 10px;border-radius:20px;font-size:11px;">③ Review</span>
+          <span style="color:#aaa">──</span>
+          <span style="background:#ccc;color:#666;padding:3px 10px;border-radius:20px;font-size:11px;">④ Export</span>
+        </div>
+      </div>
+      <div class="pros-cons" style="margin-top:10px;">
+        <div class="pros"><ul><li>Clear sense of progress</li><li>Each stage is focused, uncluttered</li><li>Matches pipeline linearity</li></ul></div>
+        <div class="cons"><ul><li>Users can't glance at later stages</li><li>Back-navigation needs careful handling</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Tabbed Stages (same page)</h3>
+      <p>A horizontal tab bar at the top of the case detail. Tabs are enabled/disabled based on pipeline stage. Users can freely jump to any unlocked tab.</p>
+      <div style="margin-top:10px;padding:10px;background:#f0f4ff;border-radius:8px;font-size:12px;">
+        <div style="display:flex;gap:0;border-bottom:2px solid #00338D;">
+          <span style="padding:6px 14px;background:#00338D;color:#fff;border-radius:6px 6px 0 0;font-size:11px;">Documents</span>
+          <span style="padding:6px 14px;color:#999;font-size:11px;">Processing</span>
+          <span style="padding:6px 14px;color:#00338D;border-bottom:2px solid #00338D;font-size:11px;font-weight:bold;">Review (12)</span>
+          <span style="padding:6px 14px;color:#999;font-size:11px;">Export</span>
+        </div>
+        <div style="padding:8px;background:white;border:1px solid #e2e6ef;border-top:none;border-radius:0 0 6px 6px;font-size:11px;color:#555;">Tab content here…</div>
+      </div>
+      <div class="pros-cons" style="margin-top:10px;">
+        <div class="pros"><ul><li>Easy to jump back and re-check</li><li>Familiar pattern</li><li>Stays on one URL/case</li></ul></div>
+        <div class="cons"><ul><li>Doesn't feel like a workflow</li><li>Less obvious what to do next</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Case Dashboard + Drill-Down Pages</h3>
+      <p>A case summary card shows status at a glance. Each stage (Documents, Review, Export) is a separate sub-page you navigate into. The case list stays persistent in a left sidebar.</p>
+      <div style="margin-top:10px;padding:10px;background:#f0f4ff;border-radius:8px;font-size:12px;display:flex;gap:8px;">
+        <div style="background:#e8edf7;padding:6px 8px;border-radius:6px;min-width:90px;font-size:11px;">
+          <div style="font-weight:bold;color:#00338D;margin-bottom:4px;">Cases</div>
+          <div style="background:#00338D;color:#fff;padding:2px 6px;border-radius:4px;margin-bottom:2px;">Payroll SOP ✓</div>
+          <div style="padding:2px 6px;color:#555;">Access Control</div>
+          <div style="padding:2px 6px;color:#555;">+ New Case</div>
+        </div>
+        <div style="flex:1;background:white;border:1px solid #e2e6ef;border-radius:6px;padding:6px;font-size:11px;">
+          <div style="font-weight:bold;color:#00338D;margin-bottom:4px;">Payroll SOP — Review Ready</div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;">
+            <span style="background:#e8f4e8;color:#1a7a1a;padding:2px 8px;border-radius:4px;">✓ 3 docs</span>
+            <span style="background:#fff7e6;color:#7a5400;padding:2px 8px;border-radius:4px;">⚠ 12 suggestions</span>
+            <span style="background:#f0f4ff;color:#00338D;padding:2px 8px;border-radius:4px;cursor:pointer;">→ Review</span>
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons" style="margin-top:10px;">
+        <div class="pros"><ul><li>Best for multi-case workflows</li><li>Stage pages are fully focused</li><li>Dashboard gives auditor a quick status</li></ul></div>
+        <div class="cons"><ul><li>More navigation hops</li><li>More pages to build</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+</div>

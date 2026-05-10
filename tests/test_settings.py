@@ -70,7 +70,8 @@ def test_temperature_kwargs_omit_for_models_that_reject_non_default_temperature(
     assert llm_temperature_kwargs("openai", "gpt-5.5", 0.2) == {}
     assert llm_temperature_kwargs("gemini", "gemini-3-flash-preview", 0.2) == {}
     assert llm_temperature_kwargs("deepseek", "deepseek-reasoner", 0.2) == {}
-    assert llm_temperature_kwargs("anthropic", "claude-opus-4-7", 0.2) == {"temperature": 0.2}
+    assert llm_temperature_kwargs("anthropic", "claude-opus-4-7", 0.2) == {}
+    assert llm_temperature_kwargs("anthropic", "claude-sonnet-4-6", 0.2) == {}
     assert llm_temperature_kwargs("ollama", "llama3:latest", 0.2) == {"temperature": 0.2}
 
 
@@ -84,6 +85,25 @@ def test_save_llm_config_upserts_document():
         {"$set": {"provider": "openai", "model": "gpt-5.5"}},
         upsert=True,
     )
+
+
+def test_get_collection_uses_existing_case_conflicting_mongo_database():
+    import utils.llm_config_store as store
+
+    mock_collection = MagicMock()
+    mock_db = MagicMock()
+    mock_db.__getitem__.return_value = mock_collection
+    mock_client = MagicMock()
+    mock_client.list_database_names.return_value = ["Trace_db", "admin", "config"]
+    mock_client.__getitem__.return_value = mock_db
+
+    with patch.object(store, "_client", None):
+        with patch("utils.llm_config_store.pymongo.MongoClient", return_value=mock_client):
+            collection = store._get_collection()
+
+    assert collection is mock_collection
+    mock_client.__getitem__.assert_called_once_with("Trace_db")
+    mock_db.__getitem__.assert_called_once_with("settings")
 
 
 def test_get_document_uplift_config_reads_db_budget() -> None:

@@ -1,0 +1,1914 @@
+﻿{
+    "suggestions":  [
+                        {
+                            "suggestion_id":  "3fee8631-9e4f-4a28-8705-36c29393ddd9",
+                            "suggestion_type":  "process_improvement",
+                            "severity":  "high",
+                            "title":  "Incorporate Emergency Patching SLAs",
+                            "detail":  "The SOP mentions applying patches in Section 6.3 but lacks the specific timeframe defined in Risk Control CC-007 (Monthly cycle vs 72 hours for CVSS â¥ 9.0).",
+                            "proposed_text":  "Applying security patches to address the vulnerability exploited. For vulnerabilities with a CVSS score â¥ 9.0, emergency patching must be completed within 72 hours as per CC-007.",
+                            "original_text":  "Applying security patches to address the vulnerability exploited",
+                            "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a2",
+                            "review_status":  "pending",
+                            "edited_proposed_text":  null,
+                            "reviewer_notes":  null,
+                            "source_references":  [
+                                                      {
+                                                          "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                          "filename":  null,
+                                                          "document_role":  null,
+                                                          "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a2",
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  null,
+                                                          "row_index":  null,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      }
+                                                  ],
+                            "edit_targets":  [
+
+                                             ],
+                            "queue_finding":  false
+                        },
+                        {
+                            "suggestion_id":  "31d93bac-3642-4cee-8e7c-af5dc33152de",
+                            "suggestion_type":  "process_improvement",
+                            "severity":  "critical",
+                            "title":  "Add Mandatory Regulatory Reporting Timelines",
+                            "detail":  "The SOP lacks specific reporting windows required by Indian regulators (RBI/CERT-In) as implied by CC-014.",
+                            "proposed_text":  "The Legal/Compliance team will coordinate mandatory reporting. Note: Cybersecurity incidents must be reported to CERT-In within 6 hours of detection as per the 2022 Directions. Significant incidents must be reported to RBI within the timeframes specified in the Cyber Security Framework.",
+                            "original_text":  "The Legal team will advise if law enforcement involvement is required",
+                            "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a2",
+                            "review_status":  "pending",
+                            "edited_proposed_text":  null,
+                            "reviewer_notes":  null,
+                            "source_references":  [
+                                                      {
+                                                          "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                          "filename":  null,
+                                                          "document_role":  null,
+                                                          "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a2",
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  null,
+                                                          "row_index":  null,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      }
+                                                  ],
+                            "edit_targets":  [
+
+                                             ],
+                            "queue_finding":  false
+                        },
+                        {
+                            "suggestion_id":  "fe7cffc0-2516-4cbe-9f4c-ce01eee6a5de",
+                            "suggestion_type":  "process_improvement",
+                            "severity":  "medium",
+                            "title":  "Reference Incident-Specific Playbooks",
+                            "detail":  "Section 6.2 provides generic containment steps. Risk Control CC-013 explicitly mentions defined incident response playbooks which should be utilised here.",
+                            "proposed_text":  "Containment actions should be executed according to the specific Incident Response Playbook (e.g., Ransomware, Phishing, DDoS) as defined in CC-013. General actions include:",
+                            "original_text":  "Containment actions may include:",
+                            "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a2",
+                            "review_status":  "pending",
+                            "edited_proposed_text":  null,
+                            "reviewer_notes":  null,
+                            "source_references":  [
+                                                      {
+                                                          "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                          "filename":  null,
+                                                          "document_role":  null,
+                                                          "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a2",
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  null,
+                                                          "row_index":  null,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      }
+                                                  ],
+                            "edit_targets":  [
+
+                                             ],
+                            "queue_finding":  false
+                        },
+                        {
+                            "suggestion_id":  "0d97f23b-128a-434d-8f94-f435e0d1dbf9",
+                            "suggestion_type":  "process_improvement",
+                            "severity":  "medium",
+                            "title":  "Formalise Post-Incident Review (PIR)",
+                            "detail":  "The SOP ends at documentation but lacks a \u0027Lessons Learned\u0027 phase, which is critical for the \u0027continual improvement\u0027 noted in the document notes.",
+                            "proposed_text":  "Documentation should be completed as soon as practicable. Within 5 business days of incident closure, the Incident Response Manager shall convene a Post-Incident Review (PIR) to identify lessons learned and update the SOP or playbooks accordingly.",
+                            "original_text":  "Documentation should be completed as soon as practicable after the incident is resolved.",
+                            "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a2",
+                            "review_status":  "pending",
+                            "edited_proposed_text":  null,
+                            "reviewer_notes":  null,
+                            "source_references":  [
+                                                      {
+                                                          "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                          "filename":  null,
+                                                          "document_role":  null,
+                                                          "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a2",
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  null,
+                                                          "row_index":  null,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      }
+                                                  ],
+                            "edit_targets":  [
+
+                                             ],
+                            "queue_finding":  false
+                        },
+                        {
+                            "suggestion_id":  "2f7332d5-f43b-4da5-9e3c-29c40c218540",
+                            "suggestion_type":  "process_improvement",
+                            "severity":  "medium",
+                            "title":  "Define IR Drill Frequency",
+                            "detail":  "Section 9 uses the vague term \u0027periodically\u0027 for exercises, while Risk Control CC-013 specifies a semi-annual frequency.",
+                            "proposed_text":  "Tabletop exercises and BCP/DR simulations shall be conducted semi-annually to test and validate the bank\u0027s incident response readiness, in alignment with CC-013.",
+                            "original_text":  "Tabletop exercises and simulations may be conducted periodically to test the bank\u0027s incident response readiness.",
+                            "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a2",
+                            "review_status":  "pending",
+                            "edited_proposed_text":  null,
+                            "reviewer_notes":  null,
+                            "source_references":  [
+                                                      {
+                                                          "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                          "filename":  null,
+                                                          "document_role":  null,
+                                                          "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a2",
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  null,
+                                                          "row_index":  null,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      }
+                                                  ],
+                            "edit_targets":  [
+
+                                             ],
+                            "queue_finding":  false
+                        },
+                        {
+                            "suggestion_id":  "3288f42a-7f3f-4d5d-9079-5fbb20b16af8",
+                            "suggestion_type":  "process_improvement",
+                            "severity":  "medium",
+                            "title":  "Process Improvement",
+                            "detail":  "",
+                            "proposed_text":  null,
+                            "original_text":  null,
+                            "target_anchor_id":  null,
+                            "review_status":  "pending",
+                            "edited_proposed_text":  null,
+                            "reviewer_notes":  null,
+                            "source_references":  [
+
+                                                  ],
+                            "edit_targets":  [
+
+                                             ],
+                            "queue_finding":  false
+                        },
+                        {
+                            "suggestion_id":  "b8f67668-68b9-4e1b-af82-5489ffdda524",
+                            "suggestion_type":  "ownership_conflict",
+                            "severity":  "high",
+                            "title":  "Resolve owner conflict for CC-013",
+                            "detail":  "The SOP step assigns ownership to IT Operations, while the RCM lists IT / BCP Team for control CC-013. This is suggested because SOP and RCM ownership must align before the control can be tested consistently.",
+                            "proposed_text":  "Clarify the accountable owner for control CC-013. If the RCM is correct, state that IT / BCP Team owns the control and describe the hand-off from IT Operations; otherwise update the RCM owner and keep the SOP wording aligned.",
+                            "original_text":  "Restore systems from backups and verify integrity",
+                            "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a2",
+                            "review_status":  "pending",
+                            "edited_proposed_text":  null,
+                            "reviewer_notes":  null,
+                            "source_references":  [
+                                                      {
+                                                          "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                          "filename":  "cyber_ir_sop.docx",
+                                                          "document_role":  null,
+                                                          "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a2",
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  null,
+                                                          "row_index":  null,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      },
+                                                      {
+                                                          "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                          "filename":  "cyber_rcm.xlsx",
+                                                          "document_role":  null,
+                                                          "anchor_id":  null,
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                          "row_index":  14,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      }
+                                                  ],
+                            "edit_targets":  [
+
+                                             ],
+                            "queue_finding":  true
+                        },
+                        {
+                            "suggestion_id":  "5cb98f29-bb7e-42f3-a325-60163be7cbe7",
+                            "suggestion_type":  "ownership_conflict",
+                            "severity":  "high",
+                            "title":  "Resolve owner conflict for CC-002",
+                            "detail":  "The SOP step assigns ownership to Incident Response Manager, while the RCM lists IAM Team for control CC-002. This is suggested because SOP and RCM ownership must align before the control can be tested consistently.",
+                            "proposed_text":  "Clarify the accountable owner for control CC-002. If the RCM is correct, state that IAM Team owns the control and describe the hand-off from Incident Response Manager; otherwise update the RCM owner and keep the SOP wording aligned.",
+                            "original_text":  "Notify internal and external stakeholders",
+                            "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a2",
+                            "review_status":  "pending",
+                            "edited_proposed_text":  null,
+                            "reviewer_notes":  null,
+                            "source_references":  [
+                                                      {
+                                                          "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                          "filename":  "cyber_ir_sop.docx",
+                                                          "document_role":  null,
+                                                          "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a2",
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  null,
+                                                          "row_index":  null,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      },
+                                                      {
+                                                          "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                          "filename":  "cyber_rcm.xlsx",
+                                                          "document_role":  null,
+                                                          "anchor_id":  null,
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                          "row_index":  3,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      }
+                                                  ],
+                            "edit_targets":  [
+
+                                             ],
+                            "queue_finding":  true
+                        },
+                        {
+                            "suggestion_id":  "83e8c4df-39ba-4229-94f8-aa3870f9c7aa",
+                            "suggestion_type":  "ownership_conflict",
+                            "severity":  "high",
+                            "title":  "Resolve owner conflict for CC-017",
+                            "detail":  "The SOP step assigns ownership to Incident Response Manager, while the RCM lists Security Architecture for control CC-017. This is suggested because SOP and RCM ownership must align before the control can be tested consistently.",
+                            "proposed_text":  "Clarify the accountable owner for control CC-017. If the RCM is correct, state that Security Architecture owns the control and describe the hand-off from Incident Response Manager; otherwise update the RCM owner and keep the SOP wording aligned.",
+                            "original_text":  "Notify internal and external stakeholders",
+                            "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a2",
+                            "review_status":  "pending",
+                            "edited_proposed_text":  null,
+                            "reviewer_notes":  null,
+                            "source_references":  [
+                                                      {
+                                                          "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                          "filename":  "cyber_ir_sop.docx",
+                                                          "document_role":  null,
+                                                          "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a2",
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  null,
+                                                          "row_index":  null,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      },
+                                                      {
+                                                          "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                          "filename":  "cyber_rcm.xlsx",
+                                                          "document_role":  null,
+                                                          "anchor_id":  null,
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                          "row_index":  18,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      }
+                                                  ],
+                            "edit_targets":  [
+
+                                             ],
+                            "queue_finding":  true
+                        },
+                        {
+                            "suggestion_id":  "7c78ba39-bbc5-4a41-8ef3-f8fdf0b625c7",
+                            "suggestion_type":  "mapping_gap",
+                            "severity":  "high",
+                            "title":  "Add SOP coverage for CC-001",
+                            "detail":  "The RCM contains control CC-001, but no matching process step was found in the primary SOP. This is suggested because the SOP should describe the control procedure that auditors will test against the RCM.",
+                            "proposed_text":  "Add a procedure step for control CC-001 owned by IT Security. The step should describe Endpoint Detection \u0026 Response (EDR) deployed across all managed endpoints with real-time alerting to SOC and identify retained evidence: the relevant control evidence.",
+                            "original_text":  null,
+                            "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                            "review_status":  "pending",
+                            "edited_proposed_text":  null,
+                            "reviewer_notes":  null,
+                            "source_references":  [
+                                                      {
+                                                          "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                          "filename":  "cyber_ir_sop.docx",
+                                                          "document_role":  null,
+                                                          "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  null,
+                                                          "row_index":  null,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      },
+                                                      {
+                                                          "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                          "filename":  "cyber_rcm.xlsx",
+                                                          "document_role":  null,
+                                                          "anchor_id":  null,
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                          "row_index":  2,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      }
+                                                  ],
+                            "edit_targets":  [
+                                                 {
+                                                     "target_id":  "7c78ba39-bbc5-4a41-8ef3-f8fdf0b625c7:procedure",
+                                                     "target_type":  "procedure_step",
+                                                     "title":  "Procedure update",
+                                                     "detail":  "Add the missing activity to the process narrative.",
+                                                     "proposed_text":  "The IT Security performs endpoint Detection \u0026 Response (EDR) deployed across all managed endpoints with real-time alerting to SOC. Retained evidence includes the relevant evidence.",
+                                                     "original_text":  null,
+                                                     "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                     "target_text":  "Not all security events are incidents. When an alert is received, the SOC analyst should assess whether it represents a genuine incident or a false positive.\n\nIncidents should be classified based on their potential impact to the organisation. Higher impact incidents should be escalated to senior management and the CISO as appropriate.\n\nNote: No formal severity classification schema (e.g., P1âP4) with defined criteria, escalation timeframes, or SLAs is included in this version of the SOP.\n\nFactors to consider when assessing impact include:\n\nNumber of systems or users affected\n\nSensitivity of data involved\n\nWhether services have been disrupted\n\nLikelihood of financial loss or reputational damage",
+                                                     "target_heading":  null,
+                                                     "review_status":  null,
+                                                     "edited_proposed_text":  null,
+                                                     "source_references":  [
+                                                                               {
+                                                                                   "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                                                   "filename":  "cyber_ir_sop.docx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  null,
+                                                                                   "row_index":  null,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               },
+                                                                               {
+                                                                                   "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                                                   "filename":  "cyber_rcm.xlsx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  null,
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                                                   "row_index":  2,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               }
+                                                                           ]
+                                                 },
+                                                 {
+                                                     "target_id":  "7c78ba39-bbc5-4a41-8ef3-f8fdf0b625c7:responsibility",
+                                                     "target_type":  "role_responsibility",
+                                                     "title":  "Responsibility update",
+                                                     "detail":  "Reflect the accountable role in the responsibilities area.",
+                                                     "proposed_text":  "The IT Security performs endpoint Detection \u0026 Response (EDR) deployed across all managed endpoints with real-time alerting to SOC. Retained evidence includes the relevant evidence.",
+                                                     "original_text":  null,
+                                                     "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a5",
+                                                     "target_text":  "The following roles are involved in the incident response process. Each team should be aware of their responsibilities and be ready to act when an incident occurs.\n\nNote: A formal RACI matrix has not been defined. Ownership may be unclear during multi-team incidents.\n\n| Role | Responsibilities |\n| --- | --- |\n| CISO | Overall accountability for cybersecurity. Should be informed of significant incidents. |\n| IT Security Team / SOC | Monitors security alerts, conducts triage, coordinates response activities. |\n| Incident Response Manager | Manages the response process and communication during an incident. Usually the IT Security Head. |\n| IT Operations | Supports containment and recovery activities as directed by the security team. |\n| Legal / Compliance | Advises on regulatory and legal obligations. Involved when required. |\n| Senior Management | Should be kept informed of major incidents that affect the business. |\n| HR Department | Involved in cases where an employee is suspected of wrongdoing. |",
+                                                     "target_heading":  null,
+                                                     "review_status":  null,
+                                                     "edited_proposed_text":  null,
+                                                     "source_references":  [
+                                                                               {
+                                                                                   "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                                                   "filename":  "cyber_ir_sop.docx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a5",
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  null,
+                                                                                   "row_index":  null,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               },
+                                                                               {
+                                                                                   "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                                                   "filename":  "cyber_rcm.xlsx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  null,
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                                                   "row_index":  2,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               }
+                                                                           ]
+                                                 }
+                                             ],
+                            "queue_finding":  true
+                        },
+                        {
+                            "suggestion_id":  "39784b4c-fb15-47fd-818f-b8e1a08fb0ce",
+                            "suggestion_type":  "mapping_gap",
+                            "severity":  "high",
+                            "title":  "Add SOP coverage for CC-003",
+                            "detail":  "The RCM contains control CC-003, but no matching process step was found in the primary SOP. This is suggested because the SOP should describe the control procedure that auditors will test against the RCM.",
+                            "proposed_text":  "Add a procedure step for control CC-003 owned by IAM Team. The step should describe Quarterly Privileged Access Review (PAR) conducted by IAM and business unit owners; separation of duties enforced in core banking and identify retained evidence: the relevant control evidence.",
+                            "original_text":  null,
+                            "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                            "review_status":  "pending",
+                            "edited_proposed_text":  null,
+                            "reviewer_notes":  null,
+                            "source_references":  [
+                                                      {
+                                                          "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                          "filename":  "cyber_ir_sop.docx",
+                                                          "document_role":  null,
+                                                          "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  null,
+                                                          "row_index":  null,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      },
+                                                      {
+                                                          "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                          "filename":  "cyber_rcm.xlsx",
+                                                          "document_role":  null,
+                                                          "anchor_id":  null,
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                          "row_index":  4,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      }
+                                                  ],
+                            "edit_targets":  [
+                                                 {
+                                                     "target_id":  "39784b4c-fb15-47fd-818f-b8e1a08fb0ce:procedure",
+                                                     "target_type":  "procedure_step",
+                                                     "title":  "Procedure update",
+                                                     "detail":  "Add the missing activity to the process narrative.",
+                                                     "proposed_text":  "The IAM Team performs quarterly Privileged Access Review (PAR) conducted by IAM and business unit owners; separation of duties enforced in core banking. Retained evidence includes the relevant evidence.",
+                                                     "original_text":  null,
+                                                     "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                     "target_text":  "Not all security events are incidents. When an alert is received, the SOC analyst should assess whether it represents a genuine incident or a false positive.\n\nIncidents should be classified based on their potential impact to the organisation. Higher impact incidents should be escalated to senior management and the CISO as appropriate.\n\nNote: No formal severity classification schema (e.g., P1âP4) with defined criteria, escalation timeframes, or SLAs is included in this version of the SOP.\n\nFactors to consider when assessing impact include:\n\nNumber of systems or users affected\n\nSensitivity of data involved\n\nWhether services have been disrupted\n\nLikelihood of financial loss or reputational damage",
+                                                     "target_heading":  null,
+                                                     "review_status":  null,
+                                                     "edited_proposed_text":  null,
+                                                     "source_references":  [
+                                                                               {
+                                                                                   "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                                                   "filename":  "cyber_ir_sop.docx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  null,
+                                                                                   "row_index":  null,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               },
+                                                                               {
+                                                                                   "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                                                   "filename":  "cyber_rcm.xlsx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  null,
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                                                   "row_index":  4,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               }
+                                                                           ]
+                                                 },
+                                                 {
+                                                     "target_id":  "39784b4c-fb15-47fd-818f-b8e1a08fb0ce:responsibility",
+                                                     "target_type":  "role_responsibility",
+                                                     "title":  "Responsibility update",
+                                                     "detail":  "Reflect the accountable role in the responsibilities area.",
+                                                     "proposed_text":  "The IAM Team performs quarterly Privileged Access Review (PAR) conducted by IAM and business unit owners; separation of duties enforced in core banking. Retained evidence includes the relevant evidence.",
+                                                     "original_text":  null,
+                                                     "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a5",
+                                                     "target_text":  "The following roles are involved in the incident response process. Each team should be aware of their responsibilities and be ready to act when an incident occurs.\n\nNote: A formal RACI matrix has not been defined. Ownership may be unclear during multi-team incidents.\n\n| Role | Responsibilities |\n| --- | --- |\n| CISO | Overall accountability for cybersecurity. Should be informed of significant incidents. |\n| IT Security Team / SOC | Monitors security alerts, conducts triage, coordinates response activities. |\n| Incident Response Manager | Manages the response process and communication during an incident. Usually the IT Security Head. |\n| IT Operations | Supports containment and recovery activities as directed by the security team. |\n| Legal / Compliance | Advises on regulatory and legal obligations. Involved when required. |\n| Senior Management | Should be kept informed of major incidents that affect the business. |\n| HR Department | Involved in cases where an employee is suspected of wrongdoing. |",
+                                                     "target_heading":  null,
+                                                     "review_status":  null,
+                                                     "edited_proposed_text":  null,
+                                                     "source_references":  [
+                                                                               {
+                                                                                   "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                                                   "filename":  "cyber_ir_sop.docx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a5",
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  null,
+                                                                                   "row_index":  null,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               },
+                                                                               {
+                                                                                   "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                                                   "filename":  "cyber_rcm.xlsx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  null,
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                                                   "row_index":  4,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               }
+                                                                           ]
+                                                 }
+                                             ],
+                            "queue_finding":  true
+                        },
+                        {
+                            "suggestion_id":  "55603d4e-3bb4-46d2-9830-9bfbb2cfa550",
+                            "suggestion_type":  "mapping_gap",
+                            "severity":  "high",
+                            "title":  "Add SOP coverage for CC-004",
+                            "detail":  "The RCM contains control CC-004, but no matching process step was found in the primary SOP. This is suggested because the SOP should describe the control procedure that auditors will test against the RCM.",
+                            "proposed_text":  "Add a procedure step for control CC-004 owned by Vendor Risk. The step should describe Vendor risk assessment and third-party penetration testing conducted prior to onboarding and annually thereafter and identify retained evidence: the relevant control evidence.",
+                            "original_text":  null,
+                            "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                            "review_status":  "pending",
+                            "edited_proposed_text":  null,
+                            "reviewer_notes":  null,
+                            "source_references":  [
+                                                      {
+                                                          "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                          "filename":  "cyber_ir_sop.docx",
+                                                          "document_role":  null,
+                                                          "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  null,
+                                                          "row_index":  null,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      },
+                                                      {
+                                                          "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                          "filename":  "cyber_rcm.xlsx",
+                                                          "document_role":  null,
+                                                          "anchor_id":  null,
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                          "row_index":  5,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      }
+                                                  ],
+                            "edit_targets":  [
+                                                 {
+                                                     "target_id":  "55603d4e-3bb4-46d2-9830-9bfbb2cfa550:procedure",
+                                                     "target_type":  "procedure_step",
+                                                     "title":  "Procedure update",
+                                                     "detail":  "Add the missing activity to the process narrative.",
+                                                     "proposed_text":  "The Vendor Risk performs vendor risk assessment and third-party penetration testing conducted prior to onboarding and annually thereafter. Retained evidence includes the relevant evidence.",
+                                                     "original_text":  null,
+                                                     "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                     "target_text":  "Not all security events are incidents. When an alert is received, the SOC analyst should assess whether it represents a genuine incident or a false positive.\n\nIncidents should be classified based on their potential impact to the organisation. Higher impact incidents should be escalated to senior management and the CISO as appropriate.\n\nNote: No formal severity classification schema (e.g., P1âP4) with defined criteria, escalation timeframes, or SLAs is included in this version of the SOP.\n\nFactors to consider when assessing impact include:\n\nNumber of systems or users affected\n\nSensitivity of data involved\n\nWhether services have been disrupted\n\nLikelihood of financial loss or reputational damage",
+                                                     "target_heading":  null,
+                                                     "review_status":  null,
+                                                     "edited_proposed_text":  null,
+                                                     "source_references":  [
+                                                                               {
+                                                                                   "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                                                   "filename":  "cyber_ir_sop.docx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  null,
+                                                                                   "row_index":  null,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               },
+                                                                               {
+                                                                                   "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                                                   "filename":  "cyber_rcm.xlsx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  null,
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                                                   "row_index":  5,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               }
+                                                                           ]
+                                                 },
+                                                 {
+                                                     "target_id":  "55603d4e-3bb4-46d2-9830-9bfbb2cfa550:responsibility",
+                                                     "target_type":  "role_responsibility",
+                                                     "title":  "Responsibility update",
+                                                     "detail":  "Reflect the accountable role in the responsibilities area.",
+                                                     "proposed_text":  "The Vendor Risk performs vendor risk assessment and third-party penetration testing conducted prior to onboarding and annually thereafter. Retained evidence includes the relevant evidence.",
+                                                     "original_text":  null,
+                                                     "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a5",
+                                                     "target_text":  "The following roles are involved in the incident response process. Each team should be aware of their responsibilities and be ready to act when an incident occurs.\n\nNote: A formal RACI matrix has not been defined. Ownership may be unclear during multi-team incidents.\n\n| Role | Responsibilities |\n| --- | --- |\n| CISO | Overall accountability for cybersecurity. Should be informed of significant incidents. |\n| IT Security Team / SOC | Monitors security alerts, conducts triage, coordinates response activities. |\n| Incident Response Manager | Manages the response process and communication during an incident. Usually the IT Security Head. |\n| IT Operations | Supports containment and recovery activities as directed by the security team. |\n| Legal / Compliance | Advises on regulatory and legal obligations. Involved when required. |\n| Senior Management | Should be kept informed of major incidents that affect the business. |\n| HR Department | Involved in cases where an employee is suspected of wrongdoing. |",
+                                                     "target_heading":  null,
+                                                     "review_status":  null,
+                                                     "edited_proposed_text":  null,
+                                                     "source_references":  [
+                                                                               {
+                                                                                   "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                                                   "filename":  "cyber_ir_sop.docx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a5",
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  null,
+                                                                                   "row_index":  null,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               },
+                                                                               {
+                                                                                   "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                                                   "filename":  "cyber_rcm.xlsx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  null,
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                                                   "row_index":  5,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               }
+                                                                           ]
+                                                 }
+                                             ],
+                            "queue_finding":  true
+                        },
+                        {
+                            "suggestion_id":  "2fde909d-0ee0-4c3d-a619-5a86ff2be49f",
+                            "suggestion_type":  "mapping_gap",
+                            "severity":  "high",
+                            "title":  "Add SOP coverage for CC-005",
+                            "detail":  "The RCM contains control CC-005, but no matching process step was found in the primary SOP. This is suggested because the SOP should describe the control procedure that auditors will test against the RCM.",
+                            "proposed_text":  "Add a procedure step for control CC-005 owned by Network Ops. The step should describe DDoS mitigation service (scrubbing centre) contracted with ISP; rate limiting and WAF rules configured and identify retained evidence: the relevant control evidence.",
+                            "original_text":  null,
+                            "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                            "review_status":  "pending",
+                            "edited_proposed_text":  null,
+                            "reviewer_notes":  null,
+                            "source_references":  [
+                                                      {
+                                                          "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                          "filename":  "cyber_ir_sop.docx",
+                                                          "document_role":  null,
+                                                          "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  null,
+                                                          "row_index":  null,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      },
+                                                      {
+                                                          "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                          "filename":  "cyber_rcm.xlsx",
+                                                          "document_role":  null,
+                                                          "anchor_id":  null,
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                          "row_index":  6,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      }
+                                                  ],
+                            "edit_targets":  [
+                                                 {
+                                                     "target_id":  "2fde909d-0ee0-4c3d-a619-5a86ff2be49f:procedure",
+                                                     "target_type":  "procedure_step",
+                                                     "title":  "Procedure update",
+                                                     "detail":  "Add the missing activity to the process narrative.",
+                                                     "proposed_text":  "The Network Ops performs dDoS mitigation service (scrubbing centre) contracted with ISP; rate limiting and WAF rules configured. Retained evidence includes the relevant evidence.",
+                                                     "original_text":  null,
+                                                     "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                     "target_text":  "Not all security events are incidents. When an alert is received, the SOC analyst should assess whether it represents a genuine incident or a false positive.\n\nIncidents should be classified based on their potential impact to the organisation. Higher impact incidents should be escalated to senior management and the CISO as appropriate.\n\nNote: No formal severity classification schema (e.g., P1âP4) with defined criteria, escalation timeframes, or SLAs is included in this version of the SOP.\n\nFactors to consider when assessing impact include:\n\nNumber of systems or users affected\n\nSensitivity of data involved\n\nWhether services have been disrupted\n\nLikelihood of financial loss or reputational damage",
+                                                     "target_heading":  null,
+                                                     "review_status":  null,
+                                                     "edited_proposed_text":  null,
+                                                     "source_references":  [
+                                                                               {
+                                                                                   "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                                                   "filename":  "cyber_ir_sop.docx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  null,
+                                                                                   "row_index":  null,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               },
+                                                                               {
+                                                                                   "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                                                   "filename":  "cyber_rcm.xlsx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  null,
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                                                   "row_index":  6,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               }
+                                                                           ]
+                                                 },
+                                                 {
+                                                     "target_id":  "2fde909d-0ee0-4c3d-a619-5a86ff2be49f:responsibility",
+                                                     "target_type":  "role_responsibility",
+                                                     "title":  "Responsibility update",
+                                                     "detail":  "Reflect the accountable role in the responsibilities area.",
+                                                     "proposed_text":  "The Network Ops performs dDoS mitigation service (scrubbing centre) contracted with ISP; rate limiting and WAF rules configured. Retained evidence includes the relevant evidence.",
+                                                     "original_text":  null,
+                                                     "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a5",
+                                                     "target_text":  "The following roles are involved in the incident response process. Each team should be aware of their responsibilities and be ready to act when an incident occurs.\n\nNote: A formal RACI matrix has not been defined. Ownership may be unclear during multi-team incidents.\n\n| Role | Responsibilities |\n| --- | --- |\n| CISO | Overall accountability for cybersecurity. Should be informed of significant incidents. |\n| IT Security Team / SOC | Monitors security alerts, conducts triage, coordinates response activities. |\n| Incident Response Manager | Manages the response process and communication during an incident. Usually the IT Security Head. |\n| IT Operations | Supports containment and recovery activities as directed by the security team. |\n| Legal / Compliance | Advises on regulatory and legal obligations. Involved when required. |\n| Senior Management | Should be kept informed of major incidents that affect the business. |\n| HR Department | Involved in cases where an employee is suspected of wrongdoing. |",
+                                                     "target_heading":  null,
+                                                     "review_status":  null,
+                                                     "edited_proposed_text":  null,
+                                                     "source_references":  [
+                                                                               {
+                                                                                   "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                                                   "filename":  "cyber_ir_sop.docx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a5",
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  null,
+                                                                                   "row_index":  null,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               },
+                                                                               {
+                                                                                   "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                                                   "filename":  "cyber_rcm.xlsx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  null,
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                                                   "row_index":  6,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               }
+                                                                           ]
+                                                 }
+                                             ],
+                            "queue_finding":  true
+                        },
+                        {
+                            "suggestion_id":  "25e27a8b-a277-414e-ae09-cc548d9fb5f7",
+                            "suggestion_type":  "mapping_gap",
+                            "severity":  "high",
+                            "title":  "Add SOP coverage for CC-006",
+                            "detail":  "The RCM contains control CC-006, but no matching process step was found in the primary SOP. This is suggested because the SOP should describe the control procedure that auditors will test against the RCM.",
+                            "proposed_text":  "Add a procedure step for control CC-006 owned by Data Security. The step should describe Data Loss Prevention (DLP) solution deployed on email and web gateways; USB storage ports disabled on employee workstations and identify retained evidence: the relevant control evidence.",
+                            "original_text":  null,
+                            "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                            "review_status":  "pending",
+                            "edited_proposed_text":  null,
+                            "reviewer_notes":  null,
+                            "source_references":  [
+                                                      {
+                                                          "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                          "filename":  "cyber_ir_sop.docx",
+                                                          "document_role":  null,
+                                                          "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  null,
+                                                          "row_index":  null,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      },
+                                                      {
+                                                          "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                          "filename":  "cyber_rcm.xlsx",
+                                                          "document_role":  null,
+                                                          "anchor_id":  null,
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                          "row_index":  7,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      }
+                                                  ],
+                            "edit_targets":  [
+                                                 {
+                                                     "target_id":  "25e27a8b-a277-414e-ae09-cc548d9fb5f7:procedure",
+                                                     "target_type":  "procedure_step",
+                                                     "title":  "Procedure update",
+                                                     "detail":  "Add the missing activity to the process narrative.",
+                                                     "proposed_text":  "The Data Security performs data Loss Prevention (DLP) solution deployed on email and web gateways; USB storage ports disabled on employee workstations. Retained evidence includes the relevant evidence.",
+                                                     "original_text":  null,
+                                                     "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                     "target_text":  "Not all security events are incidents. When an alert is received, the SOC analyst should assess whether it represents a genuine incident or a false positive.\n\nIncidents should be classified based on their potential impact to the organisation. Higher impact incidents should be escalated to senior management and the CISO as appropriate.\n\nNote: No formal severity classification schema (e.g., P1âP4) with defined criteria, escalation timeframes, or SLAs is included in this version of the SOP.\n\nFactors to consider when assessing impact include:\n\nNumber of systems or users affected\n\nSensitivity of data involved\n\nWhether services have been disrupted\n\nLikelihood of financial loss or reputational damage",
+                                                     "target_heading":  null,
+                                                     "review_status":  null,
+                                                     "edited_proposed_text":  null,
+                                                     "source_references":  [
+                                                                               {
+                                                                                   "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                                                   "filename":  "cyber_ir_sop.docx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  null,
+                                                                                   "row_index":  null,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               },
+                                                                               {
+                                                                                   "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                                                   "filename":  "cyber_rcm.xlsx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  null,
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                                                   "row_index":  7,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               }
+                                                                           ]
+                                                 },
+                                                 {
+                                                     "target_id":  "25e27a8b-a277-414e-ae09-cc548d9fb5f7:responsibility",
+                                                     "target_type":  "role_responsibility",
+                                                     "title":  "Responsibility update",
+                                                     "detail":  "Reflect the accountable role in the responsibilities area.",
+                                                     "proposed_text":  "The Data Security performs data Loss Prevention (DLP) solution deployed on email and web gateways; USB storage ports disabled on employee workstations. Retained evidence includes the relevant evidence.",
+                                                     "original_text":  null,
+                                                     "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a5",
+                                                     "target_text":  "The following roles are involved in the incident response process. Each team should be aware of their responsibilities and be ready to act when an incident occurs.\n\nNote: A formal RACI matrix has not been defined. Ownership may be unclear during multi-team incidents.\n\n| Role | Responsibilities |\n| --- | --- |\n| CISO | Overall accountability for cybersecurity. Should be informed of significant incidents. |\n| IT Security Team / SOC | Monitors security alerts, conducts triage, coordinates response activities. |\n| Incident Response Manager | Manages the response process and communication during an incident. Usually the IT Security Head. |\n| IT Operations | Supports containment and recovery activities as directed by the security team. |\n| Legal / Compliance | Advises on regulatory and legal obligations. Involved when required. |\n| Senior Management | Should be kept informed of major incidents that affect the business. |\n| HR Department | Involved in cases where an employee is suspected of wrongdoing. |",
+                                                     "target_heading":  null,
+                                                     "review_status":  null,
+                                                     "edited_proposed_text":  null,
+                                                     "source_references":  [
+                                                                               {
+                                                                                   "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                                                   "filename":  "cyber_ir_sop.docx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a5",
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  null,
+                                                                                   "row_index":  null,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               },
+                                                                               {
+                                                                                   "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                                                   "filename":  "cyber_rcm.xlsx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  null,
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                                                   "row_index":  7,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               }
+                                                                           ]
+                                                 }
+                                             ],
+                            "queue_finding":  true
+                        },
+                        {
+                            "suggestion_id":  "bfa22ceb-f8ab-4904-bff5-e29c2f2f02d4",
+                            "suggestion_type":  "mapping_gap",
+                            "severity":  "high",
+                            "title":  "Add SOP coverage for CC-007",
+                            "detail":  "The RCM contains control CC-007, but no matching process step was found in the primary SOP. This is suggested because the SOP should describe the control procedure that auditors will test against the RCM.",
+                            "proposed_text":  "Add a procedure step for control CC-007 owned by IT Ops. The step should describe Monthly patch cycle for standard systems; emergency patching within 72 hours for CVSS â¥ 9.0 vulnerabilities and identify retained evidence: the relevant control evidence.",
+                            "original_text":  null,
+                            "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                            "review_status":  "pending",
+                            "edited_proposed_text":  null,
+                            "reviewer_notes":  null,
+                            "source_references":  [
+                                                      {
+                                                          "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                          "filename":  "cyber_ir_sop.docx",
+                                                          "document_role":  null,
+                                                          "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  null,
+                                                          "row_index":  null,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      },
+                                                      {
+                                                          "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                          "filename":  "cyber_rcm.xlsx",
+                                                          "document_role":  null,
+                                                          "anchor_id":  null,
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                          "row_index":  8,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      }
+                                                  ],
+                            "edit_targets":  [
+                                                 {
+                                                     "target_id":  "bfa22ceb-f8ab-4904-bff5-e29c2f2f02d4:procedure",
+                                                     "target_type":  "procedure_step",
+                                                     "title":  "Procedure update",
+                                                     "detail":  "Add the missing activity to the process narrative.",
+                                                     "proposed_text":  "The IT Ops performs monthly patch cycle for standard systems; emergency patching within 72 hours for CVSS â¥ 9.0 vulnerabilities. Retained evidence includes the relevant evidence.",
+                                                     "original_text":  null,
+                                                     "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                     "target_text":  "Not all security events are incidents. When an alert is received, the SOC analyst should assess whether it represents a genuine incident or a false positive.\n\nIncidents should be classified based on their potential impact to the organisation. Higher impact incidents should be escalated to senior management and the CISO as appropriate.\n\nNote: No formal severity classification schema (e.g., P1âP4) with defined criteria, escalation timeframes, or SLAs is included in this version of the SOP.\n\nFactors to consider when assessing impact include:\n\nNumber of systems or users affected\n\nSensitivity of data involved\n\nWhether services have been disrupted\n\nLikelihood of financial loss or reputational damage",
+                                                     "target_heading":  null,
+                                                     "review_status":  null,
+                                                     "edited_proposed_text":  null,
+                                                     "source_references":  [
+                                                                               {
+                                                                                   "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                                                   "filename":  "cyber_ir_sop.docx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  null,
+                                                                                   "row_index":  null,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               },
+                                                                               {
+                                                                                   "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                                                   "filename":  "cyber_rcm.xlsx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  null,
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                                                   "row_index":  8,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               }
+                                                                           ]
+                                                 },
+                                                 {
+                                                     "target_id":  "bfa22ceb-f8ab-4904-bff5-e29c2f2f02d4:responsibility",
+                                                     "target_type":  "role_responsibility",
+                                                     "title":  "Responsibility update",
+                                                     "detail":  "Reflect the accountable role in the responsibilities area.",
+                                                     "proposed_text":  "The IT Ops performs monthly patch cycle for standard systems; emergency patching within 72 hours for CVSS â¥ 9.0 vulnerabilities. Retained evidence includes the relevant evidence.",
+                                                     "original_text":  null,
+                                                     "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a5",
+                                                     "target_text":  "The following roles are involved in the incident response process. Each team should be aware of their responsibilities and be ready to act when an incident occurs.\n\nNote: A formal RACI matrix has not been defined. Ownership may be unclear during multi-team incidents.\n\n| Role | Responsibilities |\n| --- | --- |\n| CISO | Overall accountability for cybersecurity. Should be informed of significant incidents. |\n| IT Security Team / SOC | Monitors security alerts, conducts triage, coordinates response activities. |\n| Incident Response Manager | Manages the response process and communication during an incident. Usually the IT Security Head. |\n| IT Operations | Supports containment and recovery activities as directed by the security team. |\n| Legal / Compliance | Advises on regulatory and legal obligations. Involved when required. |\n| Senior Management | Should be kept informed of major incidents that affect the business. |\n| HR Department | Involved in cases where an employee is suspected of wrongdoing. |",
+                                                     "target_heading":  null,
+                                                     "review_status":  null,
+                                                     "edited_proposed_text":  null,
+                                                     "source_references":  [
+                                                                               {
+                                                                                   "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                                                   "filename":  "cyber_ir_sop.docx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a5",
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  null,
+                                                                                   "row_index":  null,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               },
+                                                                               {
+                                                                                   "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                                                   "filename":  "cyber_rcm.xlsx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  null,
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                                                   "row_index":  8,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               }
+                                                                           ]
+                                                 }
+                                             ],
+                            "queue_finding":  true
+                        },
+                        {
+                            "suggestion_id":  "ce2c5c30-d4ec-4564-ab56-c5f217ac565a",
+                            "suggestion_type":  "mapping_gap",
+                            "severity":  "high",
+                            "title":  "Add SOP coverage for CC-009",
+                            "detail":  "The RCM contains control CC-009, but no matching process step was found in the primary SOP. This is suggested because the SOP should describe the control procedure that auditors will test against the RCM.",
+                            "proposed_text":  "Add a procedure step for control CC-009 owned by AppSec. The step should describe Annual VAPT by approved third-party vendor; SAST/DAST integrated into SDLC pipeline; WAF rules updated quarterly and identify retained evidence: the relevant control evidence.",
+                            "original_text":  null,
+                            "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                            "review_status":  "pending",
+                            "edited_proposed_text":  null,
+                            "reviewer_notes":  null,
+                            "source_references":  [
+                                                      {
+                                                          "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                          "filename":  "cyber_ir_sop.docx",
+                                                          "document_role":  null,
+                                                          "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  null,
+                                                          "row_index":  null,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      },
+                                                      {
+                                                          "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                          "filename":  "cyber_rcm.xlsx",
+                                                          "document_role":  null,
+                                                          "anchor_id":  null,
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                          "row_index":  10,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      }
+                                                  ],
+                            "edit_targets":  [
+                                                 {
+                                                     "target_id":  "ce2c5c30-d4ec-4564-ab56-c5f217ac565a:procedure",
+                                                     "target_type":  "procedure_step",
+                                                     "title":  "Procedure update",
+                                                     "detail":  "Add the missing activity to the process narrative.",
+                                                     "proposed_text":  "The AppSec performs annual VAPT by approved third-party vendor; SAST/DAST integrated into SDLC pipeline; WAF rules updated quarterly. Retained evidence includes the relevant evidence.",
+                                                     "original_text":  null,
+                                                     "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                     "target_text":  "Not all security events are incidents. When an alert is received, the SOC analyst should assess whether it represents a genuine incident or a false positive.\n\nIncidents should be classified based on their potential impact to the organisation. Higher impact incidents should be escalated to senior management and the CISO as appropriate.\n\nNote: No formal severity classification schema (e.g., P1âP4) with defined criteria, escalation timeframes, or SLAs is included in this version of the SOP.\n\nFactors to consider when assessing impact include:\n\nNumber of systems or users affected\n\nSensitivity of data involved\n\nWhether services have been disrupted\n\nLikelihood of financial loss or reputational damage",
+                                                     "target_heading":  null,
+                                                     "review_status":  null,
+                                                     "edited_proposed_text":  null,
+                                                     "source_references":  [
+                                                                               {
+                                                                                   "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                                                   "filename":  "cyber_ir_sop.docx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  null,
+                                                                                   "row_index":  null,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               },
+                                                                               {
+                                                                                   "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                                                   "filename":  "cyber_rcm.xlsx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  null,
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                                                   "row_index":  10,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               }
+                                                                           ]
+                                                 },
+                                                 {
+                                                     "target_id":  "ce2c5c30-d4ec-4564-ab56-c5f217ac565a:responsibility",
+                                                     "target_type":  "role_responsibility",
+                                                     "title":  "Responsibility update",
+                                                     "detail":  "Reflect the accountable role in the responsibilities area.",
+                                                     "proposed_text":  "The AppSec performs annual VAPT by approved third-party vendor; SAST/DAST integrated into SDLC pipeline; WAF rules updated quarterly. Retained evidence includes the relevant evidence.",
+                                                     "original_text":  null,
+                                                     "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a5",
+                                                     "target_text":  "The following roles are involved in the incident response process. Each team should be aware of their responsibilities and be ready to act when an incident occurs.\n\nNote: A formal RACI matrix has not been defined. Ownership may be unclear during multi-team incidents.\n\n| Role | Responsibilities |\n| --- | --- |\n| CISO | Overall accountability for cybersecurity. Should be informed of significant incidents. |\n| IT Security Team / SOC | Monitors security alerts, conducts triage, coordinates response activities. |\n| Incident Response Manager | Manages the response process and communication during an incident. Usually the IT Security Head. |\n| IT Operations | Supports containment and recovery activities as directed by the security team. |\n| Legal / Compliance | Advises on regulatory and legal obligations. Involved when required. |\n| Senior Management | Should be kept informed of major incidents that affect the business. |\n| HR Department | Involved in cases where an employee is suspected of wrongdoing. |",
+                                                     "target_heading":  null,
+                                                     "review_status":  null,
+                                                     "edited_proposed_text":  null,
+                                                     "source_references":  [
+                                                                               {
+                                                                                   "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                                                   "filename":  "cyber_ir_sop.docx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a5",
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  null,
+                                                                                   "row_index":  null,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               },
+                                                                               {
+                                                                                   "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                                                   "filename":  "cyber_rcm.xlsx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  null,
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                                                   "row_index":  10,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               }
+                                                                           ]
+                                                 }
+                                             ],
+                            "queue_finding":  true
+                        },
+                        {
+                            "suggestion_id":  "1536e978-518e-47ec-a72b-7381ae1f3684",
+                            "suggestion_type":  "mapping_gap",
+                            "severity":  "high",
+                            "title":  "Add SOP coverage for CC-011",
+                            "detail":  "The RCM contains control CC-011, but no matching process step was found in the primary SOP. This is suggested because the SOP should describe the control procedure that auditors will test against the RCM.",
+                            "proposed_text":  "Add a procedure step for control CC-011 owned by Mobile AppSec. The step should describe Mobile application obfuscation and certificate pinning implemented; RASP (Runtime Application Self-Protection) enabled and identify retained evidence: the relevant control evidence.",
+                            "original_text":  null,
+                            "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                            "review_status":  "pending",
+                            "edited_proposed_text":  null,
+                            "reviewer_notes":  null,
+                            "source_references":  [
+                                                      {
+                                                          "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                          "filename":  "cyber_ir_sop.docx",
+                                                          "document_role":  null,
+                                                          "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  null,
+                                                          "row_index":  null,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      },
+                                                      {
+                                                          "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                          "filename":  "cyber_rcm.xlsx",
+                                                          "document_role":  null,
+                                                          "anchor_id":  null,
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                          "row_index":  12,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      }
+                                                  ],
+                            "edit_targets":  [
+                                                 {
+                                                     "target_id":  "1536e978-518e-47ec-a72b-7381ae1f3684:procedure",
+                                                     "target_type":  "procedure_step",
+                                                     "title":  "Procedure update",
+                                                     "detail":  "Add the missing activity to the process narrative.",
+                                                     "proposed_text":  "The Mobile AppSec performs mobile application obfuscation and certificate pinning implemented; RASP (Runtime Application Self-Protection) enabled. Retained evidence includes the relevant evidence.",
+                                                     "original_text":  null,
+                                                     "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                     "target_text":  "Not all security events are incidents. When an alert is received, the SOC analyst should assess whether it represents a genuine incident or a false positive.\n\nIncidents should be classified based on their potential impact to the organisation. Higher impact incidents should be escalated to senior management and the CISO as appropriate.\n\nNote: No formal severity classification schema (e.g., P1âP4) with defined criteria, escalation timeframes, or SLAs is included in this version of the SOP.\n\nFactors to consider when assessing impact include:\n\nNumber of systems or users affected\n\nSensitivity of data involved\n\nWhether services have been disrupted\n\nLikelihood of financial loss or reputational damage",
+                                                     "target_heading":  null,
+                                                     "review_status":  null,
+                                                     "edited_proposed_text":  null,
+                                                     "source_references":  [
+                                                                               {
+                                                                                   "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                                                   "filename":  "cyber_ir_sop.docx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  null,
+                                                                                   "row_index":  null,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               },
+                                                                               {
+                                                                                   "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                                                   "filename":  "cyber_rcm.xlsx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  null,
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                                                   "row_index":  12,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               }
+                                                                           ]
+                                                 },
+                                                 {
+                                                     "target_id":  "1536e978-518e-47ec-a72b-7381ae1f3684:responsibility",
+                                                     "target_type":  "role_responsibility",
+                                                     "title":  "Responsibility update",
+                                                     "detail":  "Reflect the accountable role in the responsibilities area.",
+                                                     "proposed_text":  "The Mobile AppSec performs mobile application obfuscation and certificate pinning implemented; RASP (Runtime Application Self-Protection) enabled. Retained evidence includes the relevant evidence.",
+                                                     "original_text":  null,
+                                                     "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a5",
+                                                     "target_text":  "The following roles are involved in the incident response process. Each team should be aware of their responsibilities and be ready to act when an incident occurs.\n\nNote: A formal RACI matrix has not been defined. Ownership may be unclear during multi-team incidents.\n\n| Role | Responsibilities |\n| --- | --- |\n| CISO | Overall accountability for cybersecurity. Should be informed of significant incidents. |\n| IT Security Team / SOC | Monitors security alerts, conducts triage, coordinates response activities. |\n| Incident Response Manager | Manages the response process and communication during an incident. Usually the IT Security Head. |\n| IT Operations | Supports containment and recovery activities as directed by the security team. |\n| Legal / Compliance | Advises on regulatory and legal obligations. Involved when required. |\n| Senior Management | Should be kept informed of major incidents that affect the business. |\n| HR Department | Involved in cases where an employee is suspected of wrongdoing. |",
+                                                     "target_heading":  null,
+                                                     "review_status":  null,
+                                                     "edited_proposed_text":  null,
+                                                     "source_references":  [
+                                                                               {
+                                                                                   "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                                                   "filename":  "cyber_ir_sop.docx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a5",
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  null,
+                                                                                   "row_index":  null,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               },
+                                                                               {
+                                                                                   "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                                                   "filename":  "cyber_rcm.xlsx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  null,
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                                                   "row_index":  12,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               }
+                                                                           ]
+                                                 }
+                                             ],
+                            "queue_finding":  true
+                        },
+                        {
+                            "suggestion_id":  "630b157d-e12b-440f-b0b0-19cdfbbbcc69",
+                            "suggestion_type":  "mapping_gap",
+                            "severity":  "high",
+                            "title":  "Add SOP coverage for CC-012",
+                            "detail":  "The RCM contains control CC-012, but no matching process step was found in the primary SOP. This is suggested because the SOP should describe the control procedure that auditors will test against the RCM.",
+                            "proposed_text":  "Add a procedure step for control CC-012 owned by Treasury IT. The step should describe SWIFT Customer Security Programme (CSP) controls implemented; dual-operator authorisation for all outgoing SWIFT messages and identify retained evidence: the relevant control evidence.",
+                            "original_text":  null,
+                            "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                            "review_status":  "pending",
+                            "edited_proposed_text":  null,
+                            "reviewer_notes":  null,
+                            "source_references":  [
+                                                      {
+                                                          "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                          "filename":  "cyber_ir_sop.docx",
+                                                          "document_role":  null,
+                                                          "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  null,
+                                                          "row_index":  null,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      },
+                                                      {
+                                                          "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                          "filename":  "cyber_rcm.xlsx",
+                                                          "document_role":  null,
+                                                          "anchor_id":  null,
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                          "row_index":  13,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      }
+                                                  ],
+                            "edit_targets":  [
+                                                 {
+                                                     "target_id":  "630b157d-e12b-440f-b0b0-19cdfbbbcc69:procedure",
+                                                     "target_type":  "procedure_step",
+                                                     "title":  "Procedure update",
+                                                     "detail":  "Add the missing activity to the process narrative.",
+                                                     "proposed_text":  "The Treasury IT performs sWIFT Customer Security Programme (CSP) controls implemented; dual-operator authorisation for all outgoing SWIFT messages. Retained evidence includes the relevant evidence.",
+                                                     "original_text":  null,
+                                                     "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                     "target_text":  "Not all security events are incidents. When an alert is received, the SOC analyst should assess whether it represents a genuine incident or a false positive.\n\nIncidents should be classified based on their potential impact to the organisation. Higher impact incidents should be escalated to senior management and the CISO as appropriate.\n\nNote: No formal severity classification schema (e.g., P1âP4) with defined criteria, escalation timeframes, or SLAs is included in this version of the SOP.\n\nFactors to consider when assessing impact include:\n\nNumber of systems or users affected\n\nSensitivity of data involved\n\nWhether services have been disrupted\n\nLikelihood of financial loss or reputational damage",
+                                                     "target_heading":  null,
+                                                     "review_status":  null,
+                                                     "edited_proposed_text":  null,
+                                                     "source_references":  [
+                                                                               {
+                                                                                   "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                                                   "filename":  "cyber_ir_sop.docx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  null,
+                                                                                   "row_index":  null,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               },
+                                                                               {
+                                                                                   "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                                                   "filename":  "cyber_rcm.xlsx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  null,
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                                                   "row_index":  13,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               }
+                                                                           ]
+                                                 },
+                                                 {
+                                                     "target_id":  "630b157d-e12b-440f-b0b0-19cdfbbbcc69:responsibility",
+                                                     "target_type":  "role_responsibility",
+                                                     "title":  "Responsibility update",
+                                                     "detail":  "Reflect the accountable role in the responsibilities area.",
+                                                     "proposed_text":  "The Treasury IT performs sWIFT Customer Security Programme (CSP) controls implemented; dual-operator authorisation for all outgoing SWIFT messages. Retained evidence includes the relevant evidence.",
+                                                     "original_text":  null,
+                                                     "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a5",
+                                                     "target_text":  "The following roles are involved in the incident response process. Each team should be aware of their responsibilities and be ready to act when an incident occurs.\n\nNote: A formal RACI matrix has not been defined. Ownership may be unclear during multi-team incidents.\n\n| Role | Responsibilities |\n| --- | --- |\n| CISO | Overall accountability for cybersecurity. Should be informed of significant incidents. |\n| IT Security Team / SOC | Monitors security alerts, conducts triage, coordinates response activities. |\n| Incident Response Manager | Manages the response process and communication during an incident. Usually the IT Security Head. |\n| IT Operations | Supports containment and recovery activities as directed by the security team. |\n| Legal / Compliance | Advises on regulatory and legal obligations. Involved when required. |\n| Senior Management | Should be kept informed of major incidents that affect the business. |\n| HR Department | Involved in cases where an employee is suspected of wrongdoing. |",
+                                                     "target_heading":  null,
+                                                     "review_status":  null,
+                                                     "edited_proposed_text":  null,
+                                                     "source_references":  [
+                                                                               {
+                                                                                   "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                                                   "filename":  "cyber_ir_sop.docx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a5",
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  null,
+                                                                                   "row_index":  null,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               },
+                                                                               {
+                                                                                   "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                                                   "filename":  "cyber_rcm.xlsx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  null,
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                                                   "row_index":  13,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               }
+                                                                           ]
+                                                 }
+                                             ],
+                            "queue_finding":  true
+                        },
+                        {
+                            "suggestion_id":  "91f1647f-4ec0-4254-aeb0-76f8edfbe7ea",
+                            "suggestion_type":  "mapping_gap",
+                            "severity":  "high",
+                            "title":  "Add SOP coverage for CC-014",
+                            "detail":  "The RCM contains control CC-014, but no matching process step was found in the primary SOP. This is suggested because the SOP should describe the control procedure that auditors will test against the RCM.",
+                            "proposed_text":  "Add a procedure step for control CC-014 owned by Compliance. The step should describe Quarterly compliance review against regulatory requirements; RBI CSF self-assessment submitted annually and identify retained evidence: the relevant control evidence.",
+                            "original_text":  null,
+                            "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                            "review_status":  "pending",
+                            "edited_proposed_text":  null,
+                            "reviewer_notes":  null,
+                            "source_references":  [
+                                                      {
+                                                          "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                          "filename":  "cyber_ir_sop.docx",
+                                                          "document_role":  null,
+                                                          "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  null,
+                                                          "row_index":  null,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      },
+                                                      {
+                                                          "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                          "filename":  "cyber_rcm.xlsx",
+                                                          "document_role":  null,
+                                                          "anchor_id":  null,
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                          "row_index":  15,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      }
+                                                  ],
+                            "edit_targets":  [
+                                                 {
+                                                     "target_id":  "91f1647f-4ec0-4254-aeb0-76f8edfbe7ea:procedure",
+                                                     "target_type":  "procedure_step",
+                                                     "title":  "Procedure update",
+                                                     "detail":  "Add the missing activity to the process narrative.",
+                                                     "proposed_text":  "The Compliance performs quarterly compliance review against regulatory requirements; RBI CSF self-assessment submitted annually. Retained evidence includes the relevant evidence.",
+                                                     "original_text":  null,
+                                                     "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                     "target_text":  "Not all security events are incidents. When an alert is received, the SOC analyst should assess whether it represents a genuine incident or a false positive.\n\nIncidents should be classified based on their potential impact to the organisation. Higher impact incidents should be escalated to senior management and the CISO as appropriate.\n\nNote: No formal severity classification schema (e.g., P1âP4) with defined criteria, escalation timeframes, or SLAs is included in this version of the SOP.\n\nFactors to consider when assessing impact include:\n\nNumber of systems or users affected\n\nSensitivity of data involved\n\nWhether services have been disrupted\n\nLikelihood of financial loss or reputational damage",
+                                                     "target_heading":  null,
+                                                     "review_status":  null,
+                                                     "edited_proposed_text":  null,
+                                                     "source_references":  [
+                                                                               {
+                                                                                   "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                                                   "filename":  "cyber_ir_sop.docx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  null,
+                                                                                   "row_index":  null,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               },
+                                                                               {
+                                                                                   "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                                                   "filename":  "cyber_rcm.xlsx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  null,
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                                                   "row_index":  15,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               }
+                                                                           ]
+                                                 },
+                                                 {
+                                                     "target_id":  "91f1647f-4ec0-4254-aeb0-76f8edfbe7ea:responsibility",
+                                                     "target_type":  "role_responsibility",
+                                                     "title":  "Responsibility update",
+                                                     "detail":  "Reflect the accountable role in the responsibilities area.",
+                                                     "proposed_text":  "The Compliance performs quarterly compliance review against regulatory requirements; RBI CSF self-assessment submitted annually. Retained evidence includes the relevant evidence.",
+                                                     "original_text":  null,
+                                                     "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a5",
+                                                     "target_text":  "The following roles are involved in the incident response process. Each team should be aware of their responsibilities and be ready to act when an incident occurs.\n\nNote: A formal RACI matrix has not been defined. Ownership may be unclear during multi-team incidents.\n\n| Role | Responsibilities |\n| --- | --- |\n| CISO | Overall accountability for cybersecurity. Should be informed of significant incidents. |\n| IT Security Team / SOC | Monitors security alerts, conducts triage, coordinates response activities. |\n| Incident Response Manager | Manages the response process and communication during an incident. Usually the IT Security Head. |\n| IT Operations | Supports containment and recovery activities as directed by the security team. |\n| Legal / Compliance | Advises on regulatory and legal obligations. Involved when required. |\n| Senior Management | Should be kept informed of major incidents that affect the business. |\n| HR Department | Involved in cases where an employee is suspected of wrongdoing. |",
+                                                     "target_heading":  null,
+                                                     "review_status":  null,
+                                                     "edited_proposed_text":  null,
+                                                     "source_references":  [
+                                                                               {
+                                                                                   "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                                                   "filename":  "cyber_ir_sop.docx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a5",
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  null,
+                                                                                   "row_index":  null,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               },
+                                                                               {
+                                                                                   "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                                                   "filename":  "cyber_rcm.xlsx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  null,
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                                                   "row_index":  15,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               }
+                                                                           ]
+                                                 }
+                                             ],
+                            "queue_finding":  true
+                        },
+                        {
+                            "suggestion_id":  "632a3c58-d65c-4439-ab52-6be78f6bddad",
+                            "suggestion_type":  "mapping_gap",
+                            "severity":  "high",
+                            "title":  "Add SOP coverage for CC-015",
+                            "detail":  "The RCM contains control CC-015, but no matching process step was found in the primary SOP. This is suggested because the SOP should describe the control procedure that auditors will test against the RCM.",
+                            "proposed_text":  "Add a procedure step for control CC-015 owned by Fraud Risk. The step should describe Transaction monitoring rules with ML-based anomaly detection; customer-level transaction limits enforced; 2FA for high-value transactions and identify retained evidence: the relevant control evidence.",
+                            "original_text":  null,
+                            "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                            "review_status":  "pending",
+                            "edited_proposed_text":  null,
+                            "reviewer_notes":  null,
+                            "source_references":  [
+                                                      {
+                                                          "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                          "filename":  "cyber_ir_sop.docx",
+                                                          "document_role":  null,
+                                                          "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  null,
+                                                          "row_index":  null,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      },
+                                                      {
+                                                          "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                          "filename":  "cyber_rcm.xlsx",
+                                                          "document_role":  null,
+                                                          "anchor_id":  null,
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                          "row_index":  16,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      }
+                                                  ],
+                            "edit_targets":  [
+                                                 {
+                                                     "target_id":  "632a3c58-d65c-4439-ab52-6be78f6bddad:procedure",
+                                                     "target_type":  "procedure_step",
+                                                     "title":  "Procedure update",
+                                                     "detail":  "Add the missing activity to the process narrative.",
+                                                     "proposed_text":  "The Fraud Risk performs transaction monitoring rules with ML-based anomaly detection; customer-level transaction limits enforced; 2FA for high-value transactions. Retained evidence includes the relevant evidence.",
+                                                     "original_text":  null,
+                                                     "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                     "target_text":  "Not all security events are incidents. When an alert is received, the SOC analyst should assess whether it represents a genuine incident or a false positive.\n\nIncidents should be classified based on their potential impact to the organisation. Higher impact incidents should be escalated to senior management and the CISO as appropriate.\n\nNote: No formal severity classification schema (e.g., P1âP4) with defined criteria, escalation timeframes, or SLAs is included in this version of the SOP.\n\nFactors to consider when assessing impact include:\n\nNumber of systems or users affected\n\nSensitivity of data involved\n\nWhether services have been disrupted\n\nLikelihood of financial loss or reputational damage",
+                                                     "target_heading":  null,
+                                                     "review_status":  null,
+                                                     "edited_proposed_text":  null,
+                                                     "source_references":  [
+                                                                               {
+                                                                                   "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                                                   "filename":  "cyber_ir_sop.docx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  null,
+                                                                                   "row_index":  null,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               },
+                                                                               {
+                                                                                   "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                                                   "filename":  "cyber_rcm.xlsx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  null,
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                                                   "row_index":  16,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               }
+                                                                           ]
+                                                 },
+                                                 {
+                                                     "target_id":  "632a3c58-d65c-4439-ab52-6be78f6bddad:responsibility",
+                                                     "target_type":  "role_responsibility",
+                                                     "title":  "Responsibility update",
+                                                     "detail":  "Reflect the accountable role in the responsibilities area.",
+                                                     "proposed_text":  "The Fraud Risk performs transaction monitoring rules with ML-based anomaly detection; customer-level transaction limits enforced; 2FA for high-value transactions. Retained evidence includes the relevant evidence.",
+                                                     "original_text":  null,
+                                                     "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a5",
+                                                     "target_text":  "The following roles are involved in the incident response process. Each team should be aware of their responsibilities and be ready to act when an incident occurs.\n\nNote: A formal RACI matrix has not been defined. Ownership may be unclear during multi-team incidents.\n\n| Role | Responsibilities |\n| --- | --- |\n| CISO | Overall accountability for cybersecurity. Should be informed of significant incidents. |\n| IT Security Team / SOC | Monitors security alerts, conducts triage, coordinates response activities. |\n| Incident Response Manager | Manages the response process and communication during an incident. Usually the IT Security Head. |\n| IT Operations | Supports containment and recovery activities as directed by the security team. |\n| Legal / Compliance | Advises on regulatory and legal obligations. Involved when required. |\n| Senior Management | Should be kept informed of major incidents that affect the business. |\n| HR Department | Involved in cases where an employee is suspected of wrongdoing. |",
+                                                     "target_heading":  null,
+                                                     "review_status":  null,
+                                                     "edited_proposed_text":  null,
+                                                     "source_references":  [
+                                                                               {
+                                                                                   "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                                                   "filename":  "cyber_ir_sop.docx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a5",
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  null,
+                                                                                   "row_index":  null,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               },
+                                                                               {
+                                                                                   "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                                                   "filename":  "cyber_rcm.xlsx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  null,
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                                                   "row_index":  16,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               }
+                                                                           ]
+                                                 }
+                                             ],
+                            "queue_finding":  true
+                        },
+                        {
+                            "suggestion_id":  "4fdd9b82-3eae-4647-b745-f66b756b8dd2",
+                            "suggestion_type":  "mapping_gap",
+                            "severity":  "high",
+                            "title":  "Add SOP coverage for CC-016",
+                            "detail":  "The RCM contains control CC-016, but no matching process step was found in the primary SOP. This is suggested because the SOP should describe the control procedure that auditors will test against the RCM.",
+                            "proposed_text":  "Add a procedure step for control CC-016 owned by Physical Security. The step should describe Biometric access control and CCTV surveillance at all data centre entry points; visitor escort policy enforced and identify retained evidence: the relevant control evidence.",
+                            "original_text":  null,
+                            "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                            "review_status":  "pending",
+                            "edited_proposed_text":  null,
+                            "reviewer_notes":  null,
+                            "source_references":  [
+                                                      {
+                                                          "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                          "filename":  "cyber_ir_sop.docx",
+                                                          "document_role":  null,
+                                                          "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  null,
+                                                          "row_index":  null,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      },
+                                                      {
+                                                          "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                          "filename":  "cyber_rcm.xlsx",
+                                                          "document_role":  null,
+                                                          "anchor_id":  null,
+                                                          "section_id":  null,
+                                                          "section_heading":  null,
+                                                          "page":  null,
+                                                          "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                          "row_index":  17,
+                                                          "row_number":  null,
+                                                          "column_name":  null,
+                                                          "excerpt":  null
+                                                      }
+                                                  ],
+                            "edit_targets":  [
+                                                 {
+                                                     "target_id":  "4fdd9b82-3eae-4647-b745-f66b756b8dd2:procedure",
+                                                     "target_type":  "procedure_step",
+                                                     "title":  "Procedure update",
+                                                     "detail":  "Add the missing activity to the process narrative.",
+                                                     "proposed_text":  "The Physical Security performs biometric access control and CCTV surveillance at all data centre entry points; visitor escort policy enforced. Retained evidence includes the relevant evidence.",
+                                                     "original_text":  null,
+                                                     "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                     "target_text":  "Not all security events are incidents. When an alert is received, the SOC analyst should assess whether it represents a genuine incident or a false positive.\n\nIncidents should be classified based on their potential impact to the organisation. Higher impact incidents should be escalated to senior management and the CISO as appropriate.\n\nNote: No formal severity classification schema (e.g., P1âP4) with defined criteria, escalation timeframes, or SLAs is included in this version of the SOP.\n\nFactors to consider when assessing impact include:\n\nNumber of systems or users affected\n\nSensitivity of data involved\n\nWhether services have been disrupted\n\nLikelihood of financial loss or reputational damage",
+                                                     "target_heading":  null,
+                                                     "review_status":  null,
+                                                     "edited_proposed_text":  null,
+                                                     "source_references":  [
+                                                                               {
+                                                                                   "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                                                   "filename":  "cyber_ir_sop.docx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a6",
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  null,
+                                                                                   "row_index":  null,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               },
+                                                                               {
+                                                                                   "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                                                   "filename":  "cyber_rcm.xlsx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  null,
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                                                   "row_index":  17,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               }
+                                                                           ]
+                                                 },
+                                                 {
+                                                     "target_id":  "4fdd9b82-3eae-4647-b745-f66b756b8dd2:responsibility",
+                                                     "target_type":  "role_responsibility",
+                                                     "title":  "Responsibility update",
+                                                     "detail":  "Reflect the accountable role in the responsibilities area.",
+                                                     "proposed_text":  "The Physical Security performs biometric access control and CCTV surveillance at all data centre entry points; visitor escort policy enforced. Retained evidence includes the relevant evidence.",
+                                                     "original_text":  null,
+                                                     "target_anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a5",
+                                                     "target_text":  "The following roles are involved in the incident response process. Each team should be aware of their responsibilities and be ready to act when an incident occurs.\n\nNote: A formal RACI matrix has not been defined. Ownership may be unclear during multi-team incidents.\n\n| Role | Responsibilities |\n| --- | --- |\n| CISO | Overall accountability for cybersecurity. Should be informed of significant incidents. |\n| IT Security Team / SOC | Monitors security alerts, conducts triage, coordinates response activities. |\n| Incident Response Manager | Manages the response process and communication during an incident. Usually the IT Security Head. |\n| IT Operations | Supports containment and recovery activities as directed by the security team. |\n| Legal / Compliance | Advises on regulatory and legal obligations. Involved when required. |\n| Senior Management | Should be kept informed of major incidents that affect the business. |\n| HR Department | Involved in cases where an employee is suspected of wrongdoing. |",
+                                                     "target_heading":  null,
+                                                     "review_status":  null,
+                                                     "edited_proposed_text":  null,
+                                                     "source_references":  [
+                                                                               {
+                                                                                   "document_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf",
+                                                                                   "filename":  "cyber_ir_sop.docx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  "d25fe822-ae00-434f-95ff-b2e8efe25bbf-a5",
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  null,
+                                                                                   "row_index":  null,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               },
+                                                                               {
+                                                                                   "document_id":  "f1099886-c504-4191-95fc-a9343292df67",
+                                                                                   "filename":  "cyber_rcm.xlsx",
+                                                                                   "document_role":  null,
+                                                                                   "anchor_id":  null,
+                                                                                   "section_id":  null,
+                                                                                   "section_heading":  null,
+                                                                                   "page":  null,
+                                                                                   "sheet_name":  "Risk \u0026 Controls Matrix",
+                                                                                   "row_index":  17,
+                                                                                   "row_number":  null,
+                                                                                   "column_name":  null,
+                                                                                   "excerpt":  null
+                                                                               }
+                                                                           ]
+                                                 }
+                                             ],
+                            "queue_finding":  true
+                        }
+                    ]
+}

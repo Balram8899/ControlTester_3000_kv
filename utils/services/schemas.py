@@ -309,6 +309,31 @@ class ExtractedItem(BaseModel):
 
 SuggestionReviewStatus = Literal["pending", "accepted", "rejected", "edited"]
 
+SuggestionTargetType = Literal[
+    "procedure_step",
+    "role_responsibility",
+    "raci_matrix",
+    "evidence_requirement",
+    "monitoring_reporting",
+    "document_metadata",
+    "other",
+]
+
+
+class SuggestionEditTarget(BaseModel):
+    target_id: str
+    target_type: SuggestionTargetType
+    title: Optional[str] = None
+    detail: Optional[str] = None
+    proposed_text: str
+    original_text: Optional[str] = None
+    target_anchor_id: Optional[str] = None
+    target_text: Optional[str] = None
+    target_heading: Optional[str] = None
+    review_status: Optional[SuggestionReviewStatus] = None
+    edited_proposed_text: Optional[str] = None
+    source_references: list[SourceReference] = Field(default_factory=list)
+
 
 class Suggestion(BaseModel):
     suggestion_id: str
@@ -338,7 +363,9 @@ class Suggestion(BaseModel):
     edited_proposed_text: Optional[str] = None
     reviewer_notes: Optional[str] = None
     source_references: list[SourceReference]
+    edit_targets: list[SuggestionEditTarget] = Field(default_factory=list)
     queue_finding: bool = False
+    requires_explicit_review: bool = False
 
 
 class CaseStatus(BaseModel):
@@ -392,6 +419,8 @@ class SwimlaneSpec(BaseModel):
     """Structured representation of the swimlane, produced by LLM, rendered by Python."""
 
     title: str
+    process_owner: str = ""
+    document_name: str = ""
     lanes: list[SwimlaneLane]
     steps: list[SwimlaneStep]
 

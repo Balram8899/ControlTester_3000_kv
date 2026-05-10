@@ -315,3 +315,13 @@
 [113166107ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:5000/api/settings/system-status:0
 [117456156ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:5000/api/settings/system-status:0
 [119226170ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:5000/api/settings/system-status:0
+[172743827ms] [ERROR] Failed to load resource: the server responded with a status of 502 (Bad Gateway) @ http://localhost:5000/api/settings/system-status:0
+[187145703ms] [ERROR] Failed to load resource: the server responded with a status of 502 (Bad Gateway) @ http://localhost:5000/api/settings/system-status:0
+[195755583ms] [ERROR] Failed to load resource: the server responded with a status of 502 (Bad Gateway) @ http://localhost:5000/api/settings/system-status:0
+[198665599ms] [ERROR] Failed to load resource: the server responded with a status of 502 (Bad Gateway) @ http://localhost:5000/api/settings/system-status:0
+[200497931ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:5000/api/settings/system-status:0
+[201127385ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://localhost:5000/api/settings/system-status:0
+[201967390ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://localhost:5000/api/settings/system-status:0
+[202595601ms] [ERROR] Failed to load resource: the server responded with a status of 502 (Bad Gateway) @ http://localhost:5000/api/settings/system-status:0
+[204305584ms] [ERROR] Failed to load resource: the server responded with a status of 502 (Bad Gateway) @ http://localhost:5000/api/settings/system-status:0
+[207665581ms] [ERROR] Failed to load resource: the server responded with a status of 502 (Bad Gateway) @ http://localhost:5000/api/settings/system-status:0

@@ -1,0 +1,66 @@
+{
+  "cyber-scopegate-final2": {
+    "case_id": "00555b2b-1e3c-4738-9228-b3414463258d",
+    "stage": "complete",
+    "outputs": [
+      {
+        "filename": "cyber-scopegate-final2-00555b2b-1e3c-4738-9228-b3414463258d-uplifted-sop.docx",
+        "bytes": 14907,
+        "content_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      },
+      {
+        "filename": "cyber-scopegate-final2-00555b2b-1e3c-4738-9228-b3414463258d-swimlane.png",
+        "bytes": 553578,
+        "content_type": "image/png"
+      },
+      {
+        "filename": "cyber-scopegate-final2-00555b2b-1e3c-4738-9228-b3414463258d-swimlane.pdf",
+        "bytes": 35994,
+        "content_type": "application/pdf"
+      }
+    ],
+    "final_cost": {
+      "provider": "gemini",
+      "model": "gemini-3-flash-preview",
+      "call_count": 23,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "total_tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "is_local_provider": false,
+      "call_records": []
+    }
+  },
+  "esg-scopegate-final2": {
+    "case_id": "b8805497-244f-4b98-9305-31f1b1f68ac3",
+    "stage": "complete",
+    "outputs": [
+      {
+        "filename": "esg-scopegate-final2-b8805497-244f-4b98-9305-31f1b1f68ac3-uplifted-sop.docx",
+        "bytes": 22905,
+        "content_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      },
+      {
+        "filename": "esg-scopegate-final2-b8805497-244f-4b98-9305-31f1b1f68ac3-swimlane.png",
+        "bytes": 320530,
+        "content_type": "image/png"
+      },
+      {
+        "filename": "esg-scopegate-final2-b8805497-244f-4b98-9305-31f1b1f68ac3-swimlane.pdf",
+        "bytes": 31873,
+        "content_type": "application/pdf"
+      }
+    ],
+    "final_cost": {
+      "provider": "gemini",
+      "model": "gemini-3-flash-preview",
+      "call_count": 34,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "total_tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "is_local_provider": false,
+      "call_records": []
+    }
+  }
+}

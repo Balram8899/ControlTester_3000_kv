@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Document Uplift — Landing Dashboard</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #F0F2F7; color: #0C233C; min-height: 100vh; }
+
+  /* Hero */
+  .hero {
+    position: relative; overflow: hidden;
+    background: #0C233C;
+    padding: 52px 0 56px;
+  }
+  .orb1 {
+    position: absolute; border-radius: 50%; pointer-events: none;
+    width: 460px; height: 460px;
+    background: radial-gradient(circle, rgba(114,19,234,0.3) 0%, transparent 70%);
+    filter: blur(80px); top: -140px; right: -80px;
+  }
+  .orb2 {
+    position: absolute; border-radius: 50%; pointer-events: none;
+    width: 320px; height: 320px;
+    background: radial-gradient(circle, rgba(0,184,245,0.18) 0%, transparent 70%);
+    filter: blur(80px); bottom: -100px; left: 5%;
+  }
+  .hero-inner { position: relative; max-width: 1100px; margin: 0 auto; padding: 0 48px; }
+  .hero-label-row { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+  .hero-label-bar { width: 16px; height: 2px; border-radius: 2px; background: #00338D; }
+  .hero-label { font-size: 11px; font-weight: 700; color: #00338D; letter-spacing: 2px; text-transform: uppercase; }
+  .hero-h1 { font-weight: 700; color: white; line-height: 1.1; margin-bottom: 16px; font-size: clamp(32px, 5vw, 52px); letter-spacing: -2px; }
+  .hero-lede { font-size: 16px; color: rgba(255,255,255,0.6); max-width: 640px; line-height: 1.75; }
+  .hero-actions { display: flex; gap: 12px; margin-top: 28px; align-items: center; flex-wrap: wrap; }
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-weight: 700; font-size: 16px; color: white;
+    border-radius: 12px; padding: 14px 28px; border: none; cursor: pointer;
+    background: #7213EA;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(114,19,234,0.35); }
+  .btn-primary svg { flex-shrink: 0; }
+
+  /* Main */
+  main { max-width: 1200px; margin: 0 auto; padding: 48px 48px 96px; }
+
+  /* Section header */
+  .section-label { font-size: 11px; font-weight: 700; color: #00338D; letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 4px; }
+  .section-title { font-size: 20px; font-weight: 700; color: #0C233C; letter-spacing: -0.5px; }
+  .section-header { margin-bottom: 20px; }
+  .section-divider { border: none; border-top: 2px solid #E2E6EF; margin: 16px 0 20px; }
+
+  /* Cards */
+  .card { background: white; border-radius: 16px; border: 1px solid #E2E6EF; box-shadow: 0 1px 3px rgba(0,0,0,0.06); padding: 24px; }
+  .card-sm { background: white; border-radius: 12px; border: 1px solid #E2E6EF; box-shadow: 0 1px 3px rgba(0,0,0,0.06); padding: 16px 20px; }
+
+  /* How it works steps */
+  .hiw-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+  .step-card { background: white; border-radius: 16px; border: 1px solid #E2E6EF; box-shadow: 0 1px 3px rgba(0,0,0,0.06); padding: 24px; display: flex; flex-direction: column; gap: 12px; }
+  .step-num { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+  .step-title { font-weight: 700; font-size: 15px; color: #0C233C; }
+  .step-desc { font-size: 13px; color: #5A6478; line-height: 1.6; }
+
+  /* Cases section */
+  .cases-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .cases-search { display: flex; align-items: center; gap: 8px; background: white; border: 1px solid #E2E6EF; border-radius: 10px; padding: 8px 14px; font-size: 13px; color: #8492A6; width: 260px; }
+  .btn-new-case {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #7213EA; color: white; border: none; border-radius: 10px;
+    padding: 10px 20px; font-size: 13px; font-weight: 700; cursor: pointer;
+    transition: transform 0.15s ease;
+  }
+  .btn-new-case:hover { transform: translateY(-1px); }
+
+  /* Case card */
+  .case-card {
+    background: white; border-radius: 16px; border: 1px solid #E2E6EF;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    padding: 20px 24px; margin-bottom: 10px;
+    display: flex; align-items: center; gap: 16px;
+    cursor: pointer; transition: box-shadow 0.15s ease, transform 0.15s ease;
+    border-left: 4px solid transparent;
+  }
+  .case-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.1); transform: translateY(-1px); }
+  .case-card.status-review { border-left-color: #EAAA00; }
+  .case-card.status-complete { border-left-color: #009A44; }
+  .case-card.status-analyzing { border-left-color: #1E49E2; }
+  .case-card.status-uploading { border-left-color: #8492A6; }
+  .case-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .case-body { flex: 1; min-width: 0; }
+  .case-title { font-weight: 700; font-size: 15px; color: #0C233C; margin-bottom: 4px; }
+  .case-meta { font-size: 12px; color: #8492A6; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .case-meta-dot { width: 3px; height: 3px; border-radius: 50%; background: #CAD7E8; }
+  .case-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .btn-open {
+    display: inline-flex; align-items: center; gap-6px; gap: 6px;
+    font-size: 13px; font-weight: 600; color: #00338D;
+    background: #EEF2FF; border: 1px solid #C5D0E8; border-radius: 8px;
+    padding: 7px 14px; cursor: pointer; transition: background 0.1s;
+  }
+  .btn-open:hover { background: #dce6ff; }
+  .btn-delete {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 13px; font-weight: 600; color: #E5001B;
+    background: #FEEBED; border: 1px solid #fcc; border-radius: 8px;
+    padding: 7px 12px; cursor: pointer; transition: background 0.1s;
+  }
+  .btn-delete:hover { background: #fdd; }
+
+  /* Status badges */
+  .badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; border: 1px solid; white-space: nowrap; }
+  .badge-amber { background: #FFFBEB; color: #7A5400; border-color: #F7E7A8; }
+  .badge-green { background: #EDFBF5; color: #005B2A; border-color: #A8D5B5; }
+  .badge-blue { background: #EEF2FF; color: #1E49E2; border-color: #C5D0E8; }
+  .badge-grey { background: #F0F2F7; color: #5A6478; border-color: #CAD7E8; }
+  .badge-red { background: #FEEBED; color: #B00020; border-color: #fcc; }
+
+  /* Pending count callout */
+  .pending-callout { font-size: 12px; font-weight: 700; color: #7A5400; }
+
+  /* Progress bar */
+  .progress-bar { height: 4px; border-radius: 2px; background: #EEF2FF; overflow: hidden; width: 120px; }
+  .progress-fill { height: 100%; border-radius: 2px; background: #1E49E2; }
+
+  /* Empty state */
+  .empty-state { text-align: center; padding: 48px 24px; color: #8492A6; }
+
+  /* Delete modal overlay */
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(12,35,60,0.45);
+    display: flex; align-items: center; justify-content: center; z-index: 100;
+  }
+  .modal {
+    background: white; border-radius: 20px; border: 1px solid #E2E6EF;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2); padding: 32px; max-width: 420px; width: 90%;
+  }
+  .modal-icon { width: 52px; height: 52px; border-radius: 14px; background: #FEEBED; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+  .modal-title { font-size: 18px; font-weight: 700; color: #0C233C; margin-bottom: 8px; }
+  .modal-body { font-size: 14px; color: #5A6478; line-height: 1.6; margin-bottom: 24px; }
+  .modal-actions { display: flex; gap: 10px; }
+  .btn-modal-danger { flex: 1; background: #E5001B; color: white; border: none; border-radius: 10px; padding: 11px; font-size: 14px; font-weight: 700; cursor: pointer; }
+  .btn-modal-cancel { flex: 1; background: white; color: #5A6478; border: 1px solid #E2E6EF; border-radius: 10px; padding: 11px; font-size: 14px; font-weight: 600; cursor: pointer; }
+
+  /* Screen label for mockup context */
+  .screen-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+    color: #7213EA; background: #F3F0FF; border: 1px solid #e0d4ff;
+    display: inline-block; padding: 4px 12px; border-radius: 20px; margin-bottom: 12px;
+  }
+
+  /* Footer */
+  footer {
+    background: white; border-top: 1px solid #E2E6EF;
+    padding: 16px 48px; font-size: 11px; color: #8492A6;
+    max-width: 100%;
+  }
+</style>
+</head>
+<body>
+
+<div class="screen-label" style="position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:200;">Screen 1 of 4 — Landing Dashboard</div>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="orb1"></div>
+  <div class="orb2"></div>
+  <div class="hero-inner">
+    <div class="hero-label-row">
+      <div class="hero-label-bar"></div>
+      <span class="hero-label">Document Intelligence</span>
+    </div>
+    <h1 class="hero-h1">Document Uplift</h1>
+    <p class="hero-lede">Review, improve, and export procedure documents with cross-document control evidence.</p>
+    <div class="hero-actions">
+      <button class="btn-primary" onclick="document.getElementById('new-case-modal').style.display='flex'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Case
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- Main -->
+<main>
+
+  <!-- How It Works -->
+  <div style="margin-bottom:36px;">
+    <button style="width:100%;display:flex;align-items:center;justify-content:space-between;background:none;border:none;cursor:pointer;padding-bottom:16px;border-bottom:2px solid #E2E6EF;margin-bottom:20px;" onclick="toggleSection('hiw','chevron-hiw')">
+      <div style="text-align:left;">
+        <div class="section-label">Process</div>
+        <div class="section-title">How It Works</div>
+      </div>
+      <svg id="chevron-hiw" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8492A6" stroke-width="2" style="transition:transform 0.2s;flex-shrink:0;"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div id="hiw">
+      <div class="hiw-grid">
+        <div class="step-card">
+          <div class="step-num" style="background:#7213EA;">1</div>
+          <div class="step-title">Create a Case</div>
+          <p class="step-desc">Name your uplift and describe the business process in scope.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num" style="background:#1E49E2;">2</div>
+          <div class="step-title">Upload Documents</div>
+          <p class="step-desc">Tag your SOP, RCM, policy, risk register, and evidence files.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num" style="background:#00B8F5;">3</div>
+          <div class="step-title">Run the Pipeline</div>
+          <p class="step-desc">AI extracts, analyzes, and maps cross-document control gaps.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num" style="background:#098E7E;">4</div>
+          <div class="step-title">Review Suggestions</div>
+          <p class="step-desc">Accept, edit, or reject each suggestion inline — like Word's comments pane.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num" style="background:#009A44;">5</div>
+          <div class="step-title">Export</div>
+          <p class="step-desc">Download your uplifted Word document and any generated diagrams.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cases -->
+  <div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:16px;border-bottom:2px solid #E2E6EF;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+      <div>
+        <div class="section-label">Workspace</div>
+        <div class="section-title">Your Cases</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <div class="cases-search">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8492A6" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Search cases…
+        </div>
+        <button class="btn-new-case" onclick="document.getElementById('new-case-modal').style.display='flex'">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Case
+        </button>
+      </div>
+    </div>
+
+    <!-- Case: Review Ready -->
+    <div class="case-card status-review">
+      <div class="case-icon" style="background:#FFFBEB;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#EAAA00" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      </div>
+      <div class="case-body">
+        <div class="case-title">Access Control Review</div>
+        <div class="case-meta">
+          <span>IT Security</span>
+          <span class="case-meta-dot"></span>
+          <span>4 documents</span>
+          <span class="case-meta-dot"></span>
+          <span class="pending-callout">12 suggestions pending review</span>
+          <span class="case-meta-dot"></span>
+          <span>Updated 30 min ago</span>
+        </div>
+      </div>
+      <div class="case-actions">
+        <span class="badge badge-amber">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Review Ready
+        </span>
+        <button class="btn-open" onclick="window.location.href='trace-mockup-case-detail.html'">
+          Open
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <button class="btn-delete" onclick="document.getElementById('delete-modal').style.display='flex'">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Case: Analyzing -->
+    <div class="case-card status-analyzing">
+      <div class="case-icon" style="background:#EEF2FF;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1E49E2" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      </div>
+      <div class="case-body">
+        <div class="case-title">Vendor Onboarding Process</div>
+        <div class="case-meta">
+          <span>Procurement</span>
+          <span class="case-meta-dot"></span>
+          <span>5 documents</span>
+          <span class="case-meta-dot"></span>
+          <span style="color:#1E49E2;font-weight:600;">Pipeline running… 3 of 5 docs</span>
+        </div>
+        <div style="margin-top:8px;">
+          <div class="progress-bar"><div class="progress-fill" style="width:60%;"></div></div>
+        </div>
+      </div>
+      <div class="case-actions">
+        <span class="badge badge-blue">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin 1s linear infinite;"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          Analyzing
+        </span>
+        <button class="btn-open" style="opacity:0.5;cursor:default;">
+          Open
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <button class="btn-delete">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Case: Complete -->
+    <div class="case-card status-complete">
+      <div class="case-icon" style="background:#EDFBF5;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#009A44" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 11 17 15 13"/></svg>
+      </div>
+      <div class="case-body">
+        <div class="case-title">Payroll Processing SOP</div>
+        <div class="case-meta">
+          <span>Finance / Payroll</span>
+          <span class="case-meta-dot"></span>
+          <span>3 documents</span>
+          <span class="case-meta-dot"></span>
+          <span>6 suggestions accepted</span>
+          <span class="case-meta-dot"></span>
+          <span>Completed 2 days ago</span>
+        </div>
+      </div>
+      <div class="case-actions">
+        <span class="badge badge-green">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Complete
+        </span>
+        <button class="btn-open">
+          Open
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <button class="btn-delete">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Case: New/Uploading -->
+    <div class="case-card status-uploading">
+      <div class="case-icon" style="background:#F0F2F7;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8492A6" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      </div>
+      <div class="case-body">
+        <div class="case-title">Employee Offboarding Checklist</div>
+        <div class="case-meta">
+          <span>HR</span>
+          <span class="case-meta-dot"></span>
+          <span style="color:#5A6478;">No documents uploaded yet</span>
+          <span class="case-meta-dot"></span>
+          <span>Created today</span>
+        </div>
+      </div>
+      <div class="case-actions">
+        <span class="badge badge-grey">Setup</span>
+        <button class="btn-open">
+          Open
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <button class="btn-delete">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- Footer -->
+<footer>© 2026 KPMG Assurance and Consulting Services LLP. All rights reserved. &nbsp;&nbsp;CONFIDENTIAL</footer>
+
+<!-- Delete Confirmation Modal -->
+<div id="delete-modal" style="display:none;" class="modal-backdrop" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal">
+    <div class="modal-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E5001B" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+    </div>
+    <div class="modal-title">Delete This Case?</div>
+    <div class="modal-body">
+      <strong>Access Control Review</strong> and all its uploaded documents, pipeline results, and suggestions will be permanently deleted. This cannot be undone.
+    </div>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="document.getElementById('delete-modal').style.display='none'">Cancel</button>
+      <button class="btn-modal-danger">Delete Case</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Case Modal -->
+<div id="new-case-modal" style="display:none;" class="modal-backdrop" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal" style="max-width:480px;">
+    <div style="margin-bottom:20px;">
+      <div class="section-label" style="margin-bottom:4px;">Document Uplift</div>
+      <div style="font-size:20px;font-weight:700;color:#0C233C;letter-spacing:-0.5px;">Create New Case</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:24px;">
+      <div>
+        <label style="font-size:12px;font-weight:700;color:#00338D;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:6px;">Case Title *</label>
+        <input style="width:100%;border:1.5px solid #E2E6EF;border-radius:10px;padding:10px 14px;font-size:14px;font-family:Arial;color:#0C233C;outline:none;" placeholder="e.g. Payroll Processing SOP Uplift" onfocus="this.style.borderColor='#7213EA'" onblur="this.style.borderColor='#E2E6EF'">
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:700;color:#00338D;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:6px;">Process Name</label>
+        <input style="width:100%;border:1.5px solid #E2E6EF;border-radius:10px;padding:10px 14px;font-size:14px;font-family:Arial;color:#0C233C;outline:none;" placeholder="e.g. Payroll" onfocus="this.style.borderColor='#7213EA'" onblur="this.style.borderColor='#E2E6EF'">
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:700;color:#00338D;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:6px;">Domain / Notes</label>
+        <textarea style="width:100%;border:1.5px solid #E2E6EF;border-radius:10px;padding:10px 14px;font-size:14px;font-family:Arial;color:#0C233C;outline:none;resize:vertical;min-height:72px;" placeholder="Optional context for the AI analysis…" onfocus="this.style.borderColor='#7213EA'" onblur="this.style.borderColor='#E2E6EF'"></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="document.getElementById('new-case-modal').style.display='none'">Cancel</button>
+      <button style="flex:2;background:#7213EA;color:white;border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;" onclick="window.location.href='trace-mockup-case-detail.html'">
+        Create Case
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+</style>
+<script>
+function toggleSection(id, chevronId) {
+  const el = document.getElementById(id);
+  const ch = document.getElementById(chevronId);
+  const hidden = el.style.display === 'none';
+  el.style.display = hidden ? '' : 'none';
+  ch.style.transform = hidden ? '' : 'rotate(-90deg)';
+}
+</script>
+</body>
+</html>

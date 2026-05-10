@@ -5,6 +5,16 @@
 
 ---
 
+## 2026-05-08 Update - Control Testing Workpaper Template Path Fix
+
+- Scope: fixed the legacy `/audit/generate-workpaper` path used by `kpmg_ui/client/src/pages/control-testing.tsx` during the Generate Workpaper step.
+- Root cause: `api/main.py` resolved the Excel template as `api/utils/Consolidated_WP_Template.xlsx`, but the packaged template lives at `utils/Consolidated_WP_Template.xlsx`. In Docker this surfaced as `FileNotFoundError: /app/api/utils/Consolidated_WP_Template.xlsx`.
+- Added `_workpaper_template_path()` in `api/main.py` so the route resolves the repo/package-level `utils` directory from `api/main.py` reliably in local and container runtimes.
+- Added regression coverage in `tests/test_control_testing_api.py` to assert the resolved template path points to an existing packaged template.
+- Verification: watched the new focused test fail before the fix, then pass; full `python -m pytest tests/test_control_testing_api.py -q` passed with 10 tests. Rebuilt/recreated `fastapi_api`; container check confirmed `/app/utils/Consolidated_WP_Template.xlsx` exists and both `http://localhost:8000/health` and `http://localhost:5000/api/health` return OK.
+
+---
+
 ## 2026-05-07 Update - Document Uplift Domain-Agnostic Analysis Addendum
 
 - Scope: implemented the Checkpoint C addendum to broaden Document Uplift analysis beyond RCM-shaped evidence while preserving the original service architecture and keeping Document Uplift independent from `utils/sop_uplift/`.
@@ -705,3 +715,573 @@ Remaining gates:
 - Manual Word 365 review of the downloaded DOCX is still required. The live DOCX has insertions and rationale comments; it has no `w:del` because the live accepted suggestions are additive mapping-gap insertions. Replacement/deletion markup is covered by `tests/sop_processing/test_output_generator.py`.
 - T8 human usefulness review is still required: randomly sample 3 suggestions and rate at least 2 as useful before permanently enabling the feature flag.
 - After those gates, next implementation item is Item 32: Celery + Redis Docker Compose wiring.
+
+---
+
+## 22. Document Uplift Word 365 Review Remediation - 2026-05-07
+
+Addressed Word review feedback on the generated DOCX for case `fa7cd113-19d0-4505-b565-cd88ea1835c2`.
+
+Key changes:
+- DOCX changes are no longer appended with `Suggested addition:` fallback text.
+- Output placement now uses explicit `target_anchor_id`, best matching extracted process step, fuzzy matching against actual SOP paragraphs, and only then weak source-anchor fallback.
+- Tiny header/table fragments such as `Date` are no longer accepted as edit anchors.
+- LLM rewrite output is cleaned so Markdown headings and label blocks do not leak into Word.
+- Comments no longer expose internal anchor IDs.
+- Comments resolve uploaded source filenames from case document tags, so older saved suggestions show source documents such as `WM_Client_Onboarding_KYC_SOP_v3.1.docx` and `WM_Risk_Controls_Matrix.xlsx - Risk Control Matrix row 13` instead of UUID-like file IDs.
+- Non-RCM/non-control placement is covered by regression tests using incident/evidence-style source examples.
+
+Verification:
+- `python -m pytest tests\sop_processing\test_output_generator.py -q` passed: 11 passed.
+- `python -m pytest tests\test_document_uplift_api.py tests\test_document_uplift_pipeline.py tests\test_document_uplift_infrastructure.py -q` passed: 29 passed.
+- FastAPI was rebuilt and recreated with `DOCUMENT_UPLIFT_ENABLED=true` and `TASK_BACKEND=asyncio`.
+- Stage 2 was regenerated for live case `fa7cd113-19d0-4505-b565-cd88ea1835c2`.
+- Downloaded DOCX inspection found 5 comments, 5 insertions, 1 deletion, no anchor wording, no internal file UUIDs, no `Suggested addition`, and no Markdown `###` headings.
+
+Current checkpoint:
+- The technical remediation for the Word review feedback is implemented and live in the local FastAPI container.
+- Human Word 365 visual review is still required for final acceptance.
+- T8 and T9 human usefulness gates remain pending before the original Document Uplift plan can be considered fully complete.
+
+Known unrelated test note:
+- A full-suite `python -m pytest tests/ -q` run earlier reported 353 passed and 4 unrelated failures in legacy regulatory comparison/settings tests that were not touched by this remediation.
+
+---
+
+## 23. Document Uplift Holistic Edit Targets - 2026-05-07
+
+Implemented the generic fix for coordinated uplift suggestions after Word 365 review showed that a source/control statement could be inserted into a role cell as if every finding were a single paragraph edit.
+
+Key changes:
+- Added `SuggestionEditTarget` and `Suggestion.edit_targets` to the Document Uplift schema.
+- A single suggestion can now carry multiple target edits, such as `procedure_step` and `role_responsibility`.
+- Cross-document mapping-gap fallback emits procedure and responsibility targets when the uploaded SOP has a responsibility/RACI-like area.
+- Output generation flattens accepted targets into separate tracked Word changes with separate comments and target anchors/text.
+- Target prose is generated as SOP-native role/activity language; source/control IDs stay in suggestion title, rationale, and source references.
+- Document Uplift UI renders bundled suggestions under `Uplift Targets` and hides internal anchors from source labels.
+
+Verification:
+- `python -m pytest tests/services/test_schemas.py tests/services/test_analysis.py tests/sop_processing/test_output_generator.py -q` passed: 32 passed.
+- `python -m pytest tests/sop_processing/test_output_generator.py -q` passed: 12 passed.
+- `node --import tsx .\client\src\document-uplift.item29.test.ts` passed after elevated rerun for sandbox `tsx` spawn permissions.
+- `node --import tsx .\client\src\document-uplift.severity.test.ts` passed.
+- `npm run check` passed.
+- `docker compose build fastapi_api web_ui_agent` passed with existing Vite/PostCSS/chunk warnings.
+- `DOCUMENT_UPLIFT_ENABLED=true TASK_BACKEND=asyncio docker compose up -d --force-recreate fastapi_api web_ui_agent` completed; both containers are healthy.
+- `GET http://localhost:5000/api/document-uplift/cases` returned cases, confirming the local feature flag is enabled.
+
+Current checkpoint:
+- New analysis runs can create holistic edit bundles.
+- Existing Mongo suggestions created before this change do not contain `edit_targets`; rerun analysis is needed before the sample case will demonstrate coordinated procedure/responsibility output.
+- Target-level editing is not implemented yet; bundled suggestions are accepted/rejected as a whole for now.
+
+Remaining gates:
+- Rerun a live sample case and manually review the fresh DOCX in Word 365.
+- Complete T8 human usefulness review and T9 cross-domain usefulness review.
+
+---
+
+## 24. Document Uplift Document-Aware Output Compiler - 2026-05-07
+
+Implemented the generic document-aware Word output remediation after review showed that responsibility updates could land in the wrong structural location or read like copied control text.
+
+Key changes:
+- Stage 2 output now treats `role_responsibility` targets as document-aware edits.
+- Existing role/responsibility tables are detected by semantic header labels, and insertions go into the responsibility column instead of the role-name column.
+- Bullet/prose responsibility areas such as `Role: responsibility` are also supported, so the implementation is not table-only.
+- Fallback paragraph matching now skips role-name cells to avoid corrupting RACI/role tables.
+- Responsibility text is condensed into active-voice, document-native language and strips retained-evidence material from role responsibility cells.
+- Numbered headings pasted into proposed text, including colon headings such as `5.2 Access Review Process: ...`, are stripped before insertion.
+- Comments use the parent suggestion title and human-readable source document labels, without internal anchor IDs.
+- A domain-neutral design addendum was added at `docs/superpowers/specs/2026-05-07-document-uplift-document-aware-output-compiler-design.md`.
+
+Verification:
+- `python -m pytest tests\sop_processing\test_document_aware_output_compiler.py -q` passed: 7 passed.
+- `python -m pytest tests\services\test_schemas.py tests\services\test_analysis.py tests\sop_processing\test_output_generator.py tests\sop_processing\test_document_aware_output_compiler.py -q` passed: 39 passed.
+- `docker compose build fastapi_api` passed.
+- FastAPI was recreated with `DOCUMENT_UPLIFT_ENABLED=true` and `TASK_BACKEND=asyncio`.
+- Live Stage 2 generation for case `fa7cd113-19d0-4505-b565-cd88ea1835c2` completed with Gemini `gemini-3-flash-preview`, final `call_count=36`.
+- Final generated DOCX downloaded to `output/doc/fa7cd113-19d0-4505-b565-cd88ea1835c2-uplifted-sop-document-aware-v4.docx`.
+- DOCX package inspection found: 22 tracked insertions, 0 role-name-cell insertions, 6 responsibility-cell insertions, no retained-evidence blobs in role responsibilities, no generic comment prefixes, no `anchor` wording in comments, and no duplicate numbered-heading insertions.
+
+Current checkpoint:
+- Technical remediation is implemented and live in the local FastAPI container.
+- The final review artifact is `output/doc/fa7cd113-19d0-4505-b565-cd88ea1835c2-uplifted-sop-document-aware-v4.docx`.
+- LibreOffice/Poppler render tools were not available in the shell, so visual pagination/layout still needs Word 365 review.
+
+Remaining gates:
+- Human Word 365 visual review of the final DOCX.
+- T8 usefulness review.
+- T9 cross-domain usefulness review.
+
+---
+
+## 25. Document Uplift Reference Placement + Orthogonal Flowcharts - 2026-05-07
+
+Addressed a Word review issue where a procedure update anchored inside a reference document table, and replaced the simple swimlane renderer with a more standard orthogonal swimlane output.
+
+Key changes:
+- Non-metadata procedure updates no longer anchor inside reference/catalog/library tables.
+- Diagram generation now uses the current reviewed SOP state: accepted/edited suggestions are included in the generated SOP text; rejected/pending suggestions are excluded; if zero suggestions are accepted, the diagram is generated from the as-is SOP.
+- The swimlane prompt explicitly states that rejected/pending suggestions must not be inferred.
+- Flowchart connectors are routed as Manhattan paths with only horizontal/vertical segments.
+- The renderer now includes KPMG/TRACE-style header, dark lane labels, standard shape legend, footer panels, and lane colour summary.
+- No swimlane names or process steps are hardcoded; lanes and nodes still come from the extracted `SwimlaneSpec`.
+
+Verification:
+- `python -m pytest tests\sop_processing\test_document_aware_output_compiler.py -q` passed: 8 passed.
+- `python -m pytest tests\services\test_diagram_renderer.py -q` passed: 7 passed.
+- `python -m pytest tests\test_prompts.py tests\services\test_diagram_renderer.py tests\services\test_schemas.py tests\services\test_analysis.py tests\sop_processing\test_output_generator.py tests\sop_processing\test_document_aware_output_compiler.py -q` passed: 53 passed.
+- `docker compose build fastapi_api` passed.
+- FastAPI was recreated with `DOCUMENT_UPLIFT_ENABLED=true` and `TASK_BACKEND=asyncio`.
+- Live Stage 2 generation for case `fa7cd113-19d0-4505-b565-cd88ea1835c2` completed with final `call_count=36`.
+- Final review artifacts:
+  - `output/doc/fa7cd113-19d0-4505-b565-cd88ea1835c2-uplifted-sop-document-aware-v7.docx`
+  - `output/doc/fa7cd113-19d0-4505-b565-cd88ea1835c2-swimlane-v7.png`
+  - `output/doc/fa7cd113-19d0-4505-b565-cd88ea1835c2-swimlane-v7.pdf`
+- Final DOCX XML inspection found 22 tracked insertions, 0 reference-table insertions, 0 role-name-cell insertions, no generic comment prefixes, and no `anchor` wording in comments.
+- Flowchart artifact checks found a valid PNG at 6368 x 2729 and a valid PDF signature.
+
+Remaining gates:
+- Human review of the v7 DOCX and flowchart artifacts.
+- T8 usefulness review.
+- T9 cross-domain usefulness review, including the planned Cyber and ESG document packs.
+
+---
+
+## 26. Document Uplift Flowchart Styling + Metadata - 2026-05-08
+
+Tightened the generic swimlane renderer after visual review feedback on standard flowchart appearance, line routing, and missing document filename.
+
+Key changes:
+- `SwimlaneSpec` now supports optional `process_owner` and `document_name` metadata.
+- Swimlane extraction asks for owner/document metadata when it is explicitly present.
+- Stage 2 fills missing diagram document metadata from the primary uploaded procedure/process/policy filename in the case document tags.
+- Stage 2 fills a missing process owner from the first extracted swimlane when the LLM omits owner metadata.
+- Renderer shape styling now uses navy process boxes, teal decision diamonds, oval start/end terminals, stronger lane dividers, wrapped lane footer labels, and standard shape legend symbols.
+- Connector routing uses shape-specific edge anchors, decision branches exit from different vertices, and stored connector points are asserted to be only horizontal/vertical.
+- No swimlanes, process steps, KYC labels, RCM labels, or source-specific control names are hardcoded.
+
+Verification:
+- `python -m pytest tests\services\test_diagram_renderer.py -q` passed: 13 passed.
+- `python -m pytest tests\sop_processing\test_output_generator.py::test_generate_outputs_uses_primary_procedure_filename_in_swimlane_metadata -q` passed.
+- `python -m pytest tests\test_prompts.py tests\services\test_diagram_renderer.py tests\services\test_schemas.py tests\services\test_analysis.py tests\sop_processing\test_output_generator.py tests\sop_processing\test_document_aware_output_compiler.py -q` passed: 60 passed.
+- `git diff --check` passed for the modified files.
+- `docker compose build fastapi_api` passed.
+- FastAPI was recreated with `DOCUMENT_UPLIFT_ENABLED=true` and `TASK_BACKEND=asyncio`.
+- Live Stage 2 generation for case `fa7cd113-19d0-4505-b565-cd88ea1835c2` completed.
+- Final DOCX inspection found 30 tracked insertions, 12 tracked deletions, 22 comments, no `anchor` wording, no UUID-like source IDs in comments, and source document labels present.
+- PNG/PDF checks passed: valid PNG at 7364 x 3120 and valid PDF signature.
+
+Current review artifacts:
+- `output/doc/fa7cd113-19d0-4505-b565-cd88ea1835c2-uplifted-sop-document-aware-v9.docx`
+- `output/doc/fa7cd113-19d0-4505-b565-cd88ea1835c2-swimlane-v9.png`
+- `output/doc/fa7cd113-19d0-4505-b565-cd88ea1835c2-swimlane-v9.pdf`
+
+Remaining gates:
+- Human Word 365 visual review of v9 DOCX.
+- Human flowchart design review of v9 PNG/PDF.
+- T8 usefulness review.
+- T9 cross-domain usefulness review with Cyber and ESG document packs.
+
+---
+
+## 27. Document Uplift T9 Cyber/ESG Validation - 2026-05-08
+
+Ran the Cyber and ESG validation packs through the live Document Uplift pipeline.
+
+Validation cases:
+- Cybersecurity: `cd10c25f-66a9-4628-99a2-7003949e2c9c`
+- ESG / Sustainability: `fa6e0b67-22e8-410c-a4f4-7e7ac191f454`
+
+Generated artifacts:
+- `output/doc/cyber-t9-docx.docx`
+- `output/doc/cyber-t9-png_diagram.png`
+- `output/doc/cyber-t9-pdf_diagram.pdf`
+- `output/doc/esg-t9-docx.docx`
+- `output/doc/esg-t9-png_diagram.png`
+- `output/doc/esg-t9-pdf_diagram.pdf`
+- `output/doc/cyber-esg-t9-validation-comparison.md`
+
+Validation result:
+- Cyber generated 21 suggestions and is a partial cross-domain pass.
+- ESG generated 5 suggestions and does not yet pass the cross-domain usefulness gate.
+- Cyber gaps: severity taxonomy, evidence chain-of-custody, internal escalation SLA, external contact list, formal review cycle, and event-log-derived issues were not detected strongly enough.
+- ESG gaps: the RCM and metric deviation log were not mined into specific uplift suggestions; the engine mostly produced broad SOP-quality suggestions.
+- One blank Cyber suggestion was persisted and needs a quality filter.
+- Several LLM-generated process suggestions lack source document labels, while deterministic mapping-gap suggestions do cite uploaded source filenames.
+
+Recommended next implementation slice:
+- Add a generic `DocumentIssueSignal` extraction pass across every uploaded document role and format.
+- Use it for event logs, deviation logs, control assessments, issue/action trackers, and unstructured text.
+- Group extracted signals into domain-neutral finding patterns before generating SOP-targeted suggestions.
+- Add regression tests for Cyber event-log recurrence/SLA findings, Cyber chain-of-custody gaps, ESG metric deviations, ESG RCM control-assessment exceptions, no blank persisted suggestions, and mandatory human-readable source document labels.
+
+Remaining gates:
+- T9 Cyber/ESG regression fixes and tests.
+- Human review of the Cyber/ESG generated DOCX and flowchart artifacts.
+
+---
+
+## 28. Document Uplift T9 Fresh Cyber/ESG Rerun - 2026-05-08
+
+Implemented the generic supporting-document signal pass and reran the fresh Cyber/ESG files from `output/doc/Cyber and ESG files`.
+
+Key changes:
+- Generic `DocumentIssueSignal` extraction now runs across complete structured sheets, not only RCM-like sheets.
+- Metric-deviation routing now requires measurement context, preventing control assessment action rows from being mislabeled as metric deviations.
+- Open issue dependencies are generated from generic gap/action/status rows across domains.
+- Blank/material-less LLM suggestions are filtered before persistence.
+- Stage 2 output generation now respects `DOCUMENT_UPLIFT_STAGE2_REWRITE_LIMIT` (default `12`) so large accepted suggestion batches complete predictably.
+
+Final validation cases:
+- Cybersecurity: `79a2fe76-b8cb-4c1f-912a-28194b6d4650`
+- ESG / Sustainability: `7f32586e-3c3f-4ecd-ba36-973121213d5d`
+
+Generated artifacts:
+- `output/doc/cyber-fresh-final-t9-docx.docx`
+- `output/doc/cyber-fresh-final-t9-swimlane.png`
+- `output/doc/cyber-fresh-final-t9-swimlane.pdf`
+- `output/doc/cyber-fresh-final-t9-suggestions.json`
+- `output/doc/cyber-fresh-final-t9-case.json`
+- `output/doc/esg-fresh-final-t9-docx.docx`
+- `output/doc/esg-fresh-final-t9-swimlane.png`
+- `output/doc/esg-fresh-final-t9-swimlane.pdf`
+- `output/doc/esg-fresh-final-t9-suggestions.json`
+- `output/doc/esg-fresh-final-t9-case.json`
+- `output/doc/cyber-esg-fresh-final-t9-validation-comparison.md`
+
+Validation result:
+- Cyber generated 39 suggestions: 23 process improvements, 12 mapping gaps, 4 ownership conflicts.
+- ESG generated 35 process improvement suggestions.
+- Cyber sources include `cyber_rcm.xlsx`, `cyber_risk_event_log.xlsx`, and `cyber_ir_sop.docx`.
+- ESG sources include `esg_rcm.xlsx`, `esg_metric_deviation_log.xlsx`, and `esg_reporting_sop.docx`.
+- Cyber DOCX sanity check: 51 comments, 51 tracked insertions, 6 tracked deletions; swimlane PNG 5460 x 2985.
+- ESG DOCX sanity check: 35 comments, 35 tracked insertions, 3 tracked deletions; swimlane PNG 5910 x 2580.
+
+Verification:
+- `python -m pytest tests\services\test_generic_findings.py tests\services\test_excel_pipeline.py tests\services\test_analysis.py -q` passed: 34 passed.
+- `python -m pytest tests\services\test_generic_findings.py tests\services\test_excel_pipeline.py tests\services\test_analysis.py tests\sop_processing\test_output_generator.py tests\sop_processing\test_document_aware_output_compiler.py -q` passed: 56 passed.
+- `docker compose build fastapi_api` passed.
+- FastAPI was recreated with `DOCUMENT_UPLIFT_ENABLED=true` and `TASK_BACKEND=asyncio`.
+
+Current checkpoint:
+- T9 behavior is materially improved for Cyber and ESG supporting documents.
+- The suggestion queue is prioritized/deduped by design; it is not a full issue-register export.
+- The local API is running with Document Uplift enabled.
+
+Remaining gates:
+- Human review of final Cyber/ESG Word outputs and swimlane diagrams.
+- Later UI restructure for Document Uplift review flow.
+- Optional future issue-register extraction mode if every evidence row must be exported.
+
+---
+
+## 29. Document Uplift Structural Completeness + Role/RACI Guard - 2026-05-08
+
+Completed the follow-up slice for missing SOP structures and senior-role responsibility quality.
+
+Key changes:
+- Added a generic structural completeness pass in `utils/services/structural_completeness.py`.
+- Added a generic role assignment guard in `utils/services/role_assignment_guard.py`.
+- Integrated both into `utils/services/analysis.py`.
+- Added regression tests in `tests/services/test_analysis.py`.
+- Changed local Docker Compose defaults so `DOCUMENT_UPLIFT_ENABLED` defaults to `true` for FastAPI/Celery services, while preserving explicit `DOCUMENT_UPLIFT_ENABLED=false` override support.
+
+What the structural pass detects generically:
+- Missing accountability/RACI matrix when multi-role activity or handoff signals exist.
+- Referenced levels/categories without classification criteria.
+- Escalation/notification language with vague timing.
+- Event/remediation processes without post-event review or closure control.
+- Missing document owner/version/review metadata in substantive process documents.
+- Supporting obligations/frameworks without an obligation calendar.
+- Metrics/targets without a metric owner/source/validator/deadline matrix.
+- Risk/threshold signals without risk appetite or tolerance linkage.
+
+Role/RACI guard:
+- Prevents senior oversight roles such as CISO, chief roles, board, committees, and executive roles from being turned into hands-on operational owners when the proposed activity is operational.
+- Keeps the procedure update operational-role oriented and routes responsibility-area changes to `raci_matrix`.
+- This is role-signal and action-signal based, not Cyber/KYC/ESG specific.
+
+Validation cases:
+- Cyber: `cfe2acd7-e656-41cc-be05-80dca0565b74`, 44 suggestions, Stage 2 complete.
+- ESG: `96d0e5a1-4722-4ab6-bc81-48df8d761334`, 44 suggestions, Stage 2 complete.
+
+Generated review artifacts:
+- `output/doc/cyber-structural-completeness-docx.docx`
+- `output/doc/cyber-structural-completeness-swimlane.png`
+- `output/doc/cyber-structural-completeness-swimlane.pdf`
+- `output/doc/esg-structural-completeness-docx.docx`
+- `output/doc/esg-structural-completeness-swimlane.png`
+- `output/doc/esg-structural-completeness-swimlane.pdf`
+- `output/doc/cyber-esg-structural-completeness-validation-comparison.md`
+
+Verification:
+- Targeted paused tests passed: 3 passed.
+- `python -m pytest tests\services\test_analysis.py tests\services\test_generic_findings.py tests\services\test_excel_pipeline.py -q` passed: 37 passed.
+- `python -m pytest tests\services\test_analysis.py tests\services\test_generic_findings.py tests\services\test_excel_pipeline.py tests\sop_processing\test_output_generator.py tests\sop_processing\test_document_aware_output_compiler.py -q` passed: 59 passed.
+- `docker compose build fastapi_api` passed.
+- `docker compose config --quiet` passed.
+- FastAPI was recreated and is healthy with Document Uplift enabled.
+- DOCX/PNG sanity checks passed:
+  - Cyber: 56 comments, 66 tracked insertions, 8 tracked deletions, PNG 7710 x 2175.
+  - ESG: 44 comments, 54 tracked insertions, 8 tracked deletions, PNG 9060 x 2580.
+- Unsafe senior-role text scan found no `CISO performs`, `Chief ... performs`, `Chief ... investigate`, or `performs investigate` matches in the generated suggestion JSON.
+
+Ground-truth comparison:
+- Cyber now covers RACI/accountability, severity/classification criteria, escalation timing, regulatory obligation calendar, post-event review, document control, and diagram output.
+- ESG now covers deviation thresholds, regulatory calendar, metric/data owner matrix, escalation timeframes, cadence, assurance interaction, risk appetite linkage, and data-quality validation.
+- Remaining partial gaps are intentionally logged in `output/doc/cyber-esg-structural-completeness-validation-comparison.md`: specialized playbook matrices, evidence preservation/chain-of-custody, oversight committee reporting cadence, and category-universe coverage such as all Scope 3 categories.
+
+Remaining gates:
+- Human review of the new Cyber/ESG DOCX and swimlane artifacts.
+- Next implementation slice, if approved: add the four remaining generic structural patterns without hardcoding Cyber, ESG, KYC, RCM, or any specific domain.
+
+---
+
+## 30. Document Uplift Structural Output Formatting Guard - 2026-05-08
+
+Implemented the generic formatting guard for structural suggestions after review showed that RACI-style recommendations could be inserted into Word as raw markdown.
+
+Key changes:
+- Added `requires_explicit_review` on structural suggestions.
+- Auto-accept and bulk accept now leave those structural suggestions pending unless a reviewer explicitly accepts them.
+- Accepted markdown-table suggestions now render as native Word tables in the DOCX output instead of pipe-delimited markdown text.
+- The behavior is structure-based and domain-neutral; it is not tied to RACI, Cyber, ESG, KYC, RCM, or a specific document type.
+
+Verification:
+- `python -m pytest tests\test_document_uplift_api.py::test_auto_accept_skips_structural_suggestions_requiring_explicit_review tests\test_document_uplift_api.py::test_bulk_review_accept_all_skips_structural_suggestions_requiring_explicit_review tests\sop_processing\test_output_generator.py::test_generate_outputs_formats_markdown_table_targets_as_word_tables -q` passed: 3 passed.
+
+Current behavior:
+- Broad structural suggestions remain review-only by default.
+- If a reviewer explicitly accepts a table-style structural suggestion, the Word output uses an actual table.
+- Older generated DOCX files are unchanged; regenerate outputs to pick up this behavior.
+
+Remaining gates:
+- Fresh Cyber/ESG rerun after selecting which structural suggestions should be accepted.
+- Later Document Uplift UI restructure so review, source evidence, outputs, and diagrams are not crowded onto one page.
+
+---
+
+## 31. Document Uplift Anchor Distribution + Merge Guard - 2026-05-08
+
+Implemented the next output-quality slice after review identified remaining anchor pile-up and rewrite-budget issues.
+
+Key changes:
+- Deterministic mapping-gap fallback now selects the best matching SOP anchor for each missing source/control row instead of sending every procedure update to the first procedural anchor.
+- Stage 2 merges same-anchor additive procedure/evidence/monitoring updates before DOCX write, reducing stacked Word Review insertions.
+- Markdown-table structural suggestions are excluded from the merge path and still render as native Word tables when explicitly accepted.
+- Local review rewrite budget default is now `50`; `DOCUMENT_UPLIFT_STAGE2_REWRITE_LIMIT=-1` remains the unlimited option.
+- `docker-compose.yml` passes the rewrite budget to FastAPI and Celery with `DOCUMENT_UPLIFT_STAGE2_REWRITE_LIMIT=${DOCUMENT_UPLIFT_STAGE2_REWRITE_LIMIT:-50}`.
+
+Verification:
+- Red tests first reproduced first-anchor routing and same-anchor stacked insertions.
+- `python -m pytest tests\services\test_analysis.py::test_mapping_gap_targets_best_matching_procedure_anchor_not_first_anchor tests\sop_processing\test_output_generator.py::test_generate_outputs_merges_same_anchor_procedure_additions -q` passed: 2 passed.
+- `python -m pytest tests\services\test_analysis.py tests\services\test_generic_findings.py tests\services\test_excel_pipeline.py tests\sop_processing\test_output_generator.py tests\sop_processing\test_document_aware_output_compiler.py -q` passed: 62 passed.
+- `docker compose config --quiet` passed.
+- `docker compose build fastapi_api` passed.
+- FastAPI was recreated with Document Uplift enabled and is healthy.
+
+Current checkpoint:
+- The live local FastAPI container has the anchor distribution, merge guard, and rewrite-budget changes.
+- A fresh Cyber/ESG rerun has not yet been captured after this slice.
+
+Remaining gates:
+- Rerun Cyber/ESG after confirming reviewer selections.
+- Word 365 visual review of the regenerated DOCX files.
+- Later Document Uplift UI restructure.
+
+---
+
+## 32. Localhost Port Binding Fix - 2026-05-08
+
+Fixed the local Docker access issue where `http://localhost:5000/` hung while `http://127.0.0.1:5000/` worked.
+
+Root cause:
+- Windows resolved `localhost` to IPv6 `::1` first.
+- Docker's IPv6 published port path accepted the connection but did not return HTTP data.
+- The web UI itself was healthy and responsive on IPv4.
+
+Change:
+- Updated `docker-compose.yml` to bind FastAPI and the web UI to IPv4 loopback:
+  - `127.0.0.1:8000:8000`
+  - `127.0.0.1:5000:5000`
+- Recreated `fastapi_api` and `web_ui_agent`.
+
+Verification:
+- `docker compose config --quiet` passed.
+- `curl.exe -I --max-time 10 http://localhost:5000/` returned `200 OK`.
+- `Invoke-WebRequest -UseBasicParsing -Uri http://localhost:5000/` returned `200 OK`.
+- `Invoke-WebRequest -UseBasicParsing -Uri http://localhost:5000/api/health` returned `200 OK`.
+- `Invoke-WebRequest -UseBasicParsing -Uri http://localhost:8000/health` returned `200 OK`.
+
+Current status:
+- `http://localhost:5000/` is working again.
+- FastAPI is reachable at `http://localhost:8000/health`.
+
+---
+
+## 33. Document Uplift Remaining Structural Patterns - 2026-05-11
+
+Picked up from `docs/document-uplift-build-log.md` and completed the four generic structural patterns left from the T9 hardening slice.
+
+Key changes:
+- Added a response/playbook matrix recommendation when a procedure references multiple event, scenario, case, or exception types without type-specific response steps.
+- Added evidence preservation and chain-of-custody recommendations when source material describes collecting or retaining evidence without custody, integrity, retention-location, or transfer controls.
+- Added oversight reporting matrix recommendations when board, committee, steering, forum, or oversight reporting is referenced without structured recipient/cadence/content/evidence requirements.
+- Added category coverage matrix recommendations when source documents reference category, population, scope, or coverage-universe signals that are not reconciled in the procedure.
+
+Files changed:
+- `utils/services/structural_completeness.py`
+- `tests/services/test_analysis.py`
+- `docs/document-uplift-build-log.md`
+- `docs/HANDOFF.md`
+
+Verification:
+- Red tests first failed with 4 missing structural suggestions.
+- Targeted tests passed: 4 passed.
+- Focused regression passed: `python -m pytest tests\services\test_analysis.py tests\services\test_generic_findings.py tests\services\test_excel_pipeline.py tests\sop_processing\test_output_generator.py tests\sop_processing\test_document_aware_output_compiler.py -q` passed: 66 passed.
+- `docker compose config --quiet` passed.
+- `docker compose build fastapi_api` passed.
+- FastAPI was recreated and is healthy at `127.0.0.1:8000`; `/health` returned `200`.
+
+Current status:
+- The local FastAPI container is running the expanded structural completeness checks.
+- Suggestions remain reviewer-gated through the existing `requires_explicit_review` path.
+- The implementation remains generic and does not hardcode Cyber, ESG, KYC, RCM, or specific process names.
+
+Remaining gates:
+- Fresh Cyber/ESG rerun with the expanded structural pattern set.
+- Human Word 365 review of regenerated DOCX/swimlane outputs.
+- T8 and T9 human usefulness review.
+- Later Document Uplift UI restructure for a less crowded review flow.
+
+---
+
+## 34. Gemini Default + Fresh Cyber/ESG Prompt-Hardening Validation - 2026-05-11
+
+Picked up after Claude Code's prompt-hardening changes and completed the fresh Cyber/ESG validation run using Gemini as the persisted active LLM.
+
+Key changes:
+- Preserved runtime LLM provider switching while explicitly setting MongoDB `settings.llm_config` to Gemini:
+  - `provider = gemini`
+  - `model = gemini-3-flash-preview`
+- Fixed provider-temperature compatibility for Anthropic Claude 4 models by omitting the `temperature` kwarg for `claude-opus-4*` and `claude-sonnet-4*`.
+- Added a small MongoDB database-name resolver in `utils/llm_config_store.py` so provider switching persists against the existing `Trace_db` database even when the code default remains lowercase `trace_db`.
+
+Files changed by this checkpoint:
+- `utils/llm_config_store.py`
+- `tests/test_settings.py`
+- `docs/document-uplift-build-log.md`
+- `docs/HANDOFF.md`
+
+Verification:
+- `python -m pytest tests\test_settings.py -q` passed: 25 passed.
+- Focused regression passed: `python -m pytest tests\test_settings.py tests\test_prompts.py tests\services\test_llm_orchestrator.py tests\services\test_analysis.py tests\services\test_generic_findings.py tests\services\test_excel_pipeline.py tests\sop_processing\test_output_generator.py tests\sop_processing\test_document_aware_output_compiler.py -q` passed: 103 passed.
+- Rebuilt and recreated `fastapi_api`; Docker reported it healthy.
+- `http://localhost:8000/health` returned `ok`.
+- `http://localhost:5000/api/health` returned `ok`.
+- `GET /settings/system-status` and `GET /settings/llm-status` both confirmed active Gemini.
+
+Fresh validation cases:
+- Cyber: `6e3c4dd2-6981-4072-b267-64ca581de8cd`
+  - Stage 1: `review_ready`, 49 suggestions, 11 Gemini calls, no warnings.
+  - Stage 2: `complete`, 56 total Gemini calls, 3 outputs.
+  - Artifacts:
+    - `output/doc/cyber-gemini-uplifted-sop.docx`
+    - `output/doc/cyber-gemini-swimlane.png`
+    - `output/doc/cyber-gemini-swimlane.pdf`
+    - `output/doc/cyber-gemini-case-final.json`
+    - `output/doc/cyber-gemini-suggestions-final.json`
+  - Artifact sanity: 54 tracked insertions, 10 tracked deletions, 44 comments; PNG 9510 x 2175; PDF header valid.
+- ESG: `56f2c0e8-9f06-4a2b-8478-15d85ad13103`
+  - Stage 1: `review_ready`, 49 suggestions, 7 Gemini calls, no warnings.
+  - Stage 2: `complete`, 46 total Gemini calls, 3 outputs.
+  - Artifacts:
+    - `output/doc/esg-gemini-uplifted-sop.docx`
+    - `output/doc/esg-gemini-swimlane.png`
+    - `output/doc/esg-gemini-swimlane.pdf`
+    - `output/doc/esg-gemini-case-final.json`
+    - `output/doc/esg-gemini-suggestions-final.json`
+  - Artifact sanity: 48 tracked insertions, 10 tracked deletions, 38 comments; PNG 7710 x 2175; PDF header valid.
+
+Important quality finding:
+- The fresh runs completed technically, but the suggestion quality is not yet acceptable.
+- Cyber has 18 generic `Open issue should be reflected in the procedure` suggestions; ESG has 12.
+- ESG has 32 Excel-only suggestions with no SOP anchor or edit target; Cyber has 18 unanchored/no-target suggestions.
+- The immediate source is deterministic, not only LLM prompt drift:
+  - `utils/services/generic_findings.py::_open_issue_findings()` creates the open-issue template.
+  - `utils/services/structural_completeness.py` still includes placeholder matrix rows such as `Metric from source documents` and `Category from source documents`.
+
+Recommended next slice:
+- Add a suggestion-quality gate for generic deterministic findings before another rerun.
+- Keep Excel-only open issues as review queue findings/evidence notes unless they can be mapped to a concrete SOP anchor and rewritten as a specific SOP edit.
+- Replace placeholder structural matrix rows with source-derived rows, or keep those structural suggestions pending until reviewer selection.
+
+Open gates:
+- Human usefulness review for Cyber/ESG suggestions.
+- Word 365 visual review of the generated DOCX outputs.
+- Decide the next quality policy for deterministic generic findings before another validation run.
+
+---
+
+## 35. Mapping-Gap Scope Gate + Granularity Guard - 2026-05-11
+
+Implemented the approved mapping-gap relevance filter and output-shape guard for the Document Uplift Cyber/ESG quality issue.
+
+Key changes:
+- Deterministic `mapping_gap` suggestions now pass through a domain-neutral SOP scope responsibility gate in `_cross_document_mapping_gap_suggestions`.
+- SOP scope is extracted from classified `purpose_scope` anchors and sent into the LLM `cross_document_synthesis_prompt`.
+- No-scope cases are fail-soft: suggestions are still emitted, but marked `requires_explicit_review=True`.
+- Inferred coverage no longer treats matching owner/team as enough; activity/evidence overlap is required unless a control ID is explicit.
+- Cross-cutting audit-trail style controls are allowed through the relevance filter.
+- Final filter calibration uses same-anchor responsibility overlap, not domain blacklists. A production grep found no Cyber/ESG/SWIFT/DLP/fraud/RBI/mobile/CSPM/vendor-management/control-ID exclusions in the changed production files.
+- Deterministic `open_issue_dependency` suggestions from `generic_findings.py` are reviewer-gated.
+- Stage 2 additive insertions now compact copied numbered sub-procedures into one SOP-appropriate sentence when rewrite is unavailable or unsafe.
+
+Files changed:
+- `utils/services/analysis.py`
+- `utils/sop_processing/prompts.py`
+- `utils/services/generic_findings.py`
+- `utils/sop_processing/output_generator.py`
+- `tests/services/test_analysis.py`
+- `tests/services/test_generic_findings.py`
+- `tests/sop_processing/test_output_generator.py`
+- `docs/superpowers/plans/mapping-gap-relevance-filter.md`
+- `docs/document-uplift-build-log.md`
+- `docs/HANDOFF.md`
+
+Verification:
+- Domain-focused tests passed, including Cyber, ESG, Vendor Management, no-scope, and cross-cutting audit-trail cases.
+- Focused regression passed after final calibration: `python -m pytest tests\services\test_analysis.py tests\services\test_generic_findings.py tests\services\test_excel_pipeline.py tests\sop_processing\test_output_generator.py tests\sop_processing\test_document_aware_output_compiler.py tests\test_prompts.py -q` passed: 81 passed.
+- FastAPI was rebuilt/recreated and is healthy at `127.0.0.1:8000`; `/health` returned `200`.
+
+Current status:
+- Code and tests are green locally.
+- FastAPI is running the latest rebuilt code.
+- An intermediate Cyber rerun before the final same-anchor calibration reached `review_ready` with 39 suggestions and 7 mapping gaps; mapping gaps had zero SWIFT/DLP/mobile/fraud/RBI/CSPM hits.
+- Final Cyber/ESG Gemini reruns still need to be repeated on the latest rebuilt container.
+
+Next recommended step:
+- Rerun the Cyber and ESG cases. Check that Cyber drops SWIFT/DLP/mobile/fraud/RBI self-assessment mapping gaps and ESG retains LTIFR/board metric references only at SOP-step granularity.
+
+Final validation update:
+- Cyber final case `00555b2b-1e3c-4738-9228-b3414463258d`
+  - Stage 1 `review_ready`: 39 suggestions, 2 mapping gaps, 18 open-issue notes, 28 reviewer-gated.
+  - Cyber mapping gaps had zero bad-domain hits for SWIFT, DLP, mobile, fraud, transaction monitoring, RBI/self-assessment, CSPM, payments, and Data Loss Prevention.
+  - Stage 2 `complete`: 3 outputs, 23 total Gemini calls.
+  - Downloaded artifacts under `output/doc/cyber-scopegate-final2-*`.
+  - DOCX sanity: 22 insertions, 12 deletions, 12 comments; no numbered sub-procedure markers.
+- ESG final case `b8805497-244f-4b98-9305-31f1b1f68ac3`
+  - Stage 1 `review_ready`: 48 suggestions, 0 mapping gaps, 12 open-issue notes, 23 reviewer-gated.
+  - ESG sub-procedure marker check had zero hits for `4.2.1`, `4.2.2`, `4.2.3`, `Escalation Protocol`, `Remediation and Evidencing`, `Management of Lost Time Injury`, and `Independent Director Composition`.
+  - Stage 2 `complete`: 3 outputs, 34 total Gemini calls.
+  - Downloaded artifacts under `output/doc/esg-scopegate-final2-*`.
+  - DOCX sanity: 35 insertions, 8 deletions, 25 comments; no numbered sub-procedure markers.
+- Timing from stored case timestamps:
+  - Cyber Stage 1 wall-clock from case creation to `review_ready`: about 1 min 58 sec.
+  - ESG Stage 1 wall-clock from case creation to `review_ready`: about 2 min 02 sec.
+
+Remaining follow-up:
+- Human review the generated DOCX files in Word 365.
+- Later cleanup: reviewer-gated open-issue notes still contain cross-domain source facts. They are not auto-applied, but the review UI may need a separate evidence-note treatment.

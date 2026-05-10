@@ -386,3 +386,43 @@ def test_generic_structured_records_do_not_require_risk_or_control_columns(
         or "incompatible" in suggestion.detail.lower()
         for suggestion in result.suggestions
     )
+
+
+def test_deviation_log_rows_emit_generic_issue_signal_suggestions(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    excel_pipeline = load_excel_pipeline()
+    install_schema_detector(monkeypatch, excel_pipeline)
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "Metric Deviations"
+    headers = ["Metric", "Target", "Actual", "Deviation", "Status", "Root Cause", "Recommended Action", "Owner"]
+    for column, header in enumerate(headers, start=1):
+        sheet.cell(row=1, column=column, value=header)
+    for row in range(2, 7):
+        sheet.cell(row=row, column=1, value="Supplier assessments completed")
+        sheet.cell(row=row, column=2, value="100%")
+        sheet.cell(row=row, column=3, value="42%")
+        sheet.cell(row=row, column=4, value="-58%")
+        sheet.cell(row=row, column=5, value="Open")
+        sheet.cell(row=row, column=6, value="Questionnaire not aligned to reporting requirements")
+        sheet.cell(row=row, column=7, value="Update questionnaire and track remediation")
+        sheet.cell(row=row, column=8, value="Procurement")
+
+    result = excel_pipeline.process_excel(
+        workbook_bytes(workbook),
+        "metric_deviation_log.xlsx",
+        "file-dev",
+        "pipe-1",
+        budget_remaining=1,
+    )
+
+    assert result.status == "success"
+    issue_suggestions = [
+        suggestion
+        for suggestion in result.suggestions
+        if "deviation" in suggestion.title.lower()
+    ]
+    assert issue_suggestions
+    assert issue_suggestions[0].source_references[0].filename == "metric_deviation_log.xlsx"
+    assert issue_suggestions[0].source_references[0].sheet_name == "Metric Deviations"

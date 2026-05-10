@@ -1,0 +1,97 @@
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list
+  - generic [ref=e3]:
+    - complementary [ref=e4]:
+      - button "Expand sidebar" [ref=e6] [cursor=pointer]:
+        - img [ref=e7]
+      - navigation [ref=e9]:
+        - generic [ref=e10]:
+          - button [ref=e11] [cursor=pointer]:
+            - img [ref=e12]
+          - button [ref=e17] [cursor=pointer]:
+            - img [ref=e18]
+          - button [ref=e20] [cursor=pointer]:
+            - img [ref=e21]
+          - button [ref=e24] [cursor=pointer]:
+            - img [ref=e25]
+          - button [ref=e27] [cursor=pointer]:
+            - img [ref=e28]
+          - button [ref=e32] [cursor=pointer]:
+            - img [ref=e33]
+          - button [ref=e36] [cursor=pointer]:
+            - img [ref=e37]
+          - button [ref=e42] [cursor=pointer]:
+            - img [ref=e43]
+          - button [ref=e48] [cursor=pointer]:
+            - img [ref=e49]
+          - button [ref=e51] [cursor=pointer]:
+            - img [ref=e52]
+          - button [ref=e55] [cursor=pointer]:
+            - img [ref=e56]
+          - button [ref=e61] [cursor=pointer]:
+            - img [ref=e62]
+          - button [ref=e64] [cursor=pointer]:
+            - img [ref=e65]
+          - button [ref=e67] [cursor=pointer]:
+            - img [ref=e68]
+      - generic [ref=e74]: A
+    - generic [ref=e75]:
+      - main [ref=e76]:
+        - generic [ref=e78]:
+          - generic [ref=e79]:
+            - generic [ref=e81]:
+              - generic [ref=e82]:
+                - button "KPMG | TRACE" [ref=e83] [cursor=pointer]:
+                  - generic [ref=e84]: KPMG
+                  - generic [ref=e85]: "|"
+                  - generic [ref=e86]: TRACE
+                - generic [ref=e87]:
+                  - generic [ref=e88]: /
+                  - generic [ref=e89]: Control Testing
+              - button "Sign Out" [ref=e91] [cursor=pointer]:
+                - img
+                - text: Sign Out
+            - generic [ref=e93]:
+              - img [ref=e95]
+              - generic [ref=e97]:
+                - heading "Control Testing" [level=1] [ref=e98]
+                - paragraph [ref=e99]: Upload a test script, validate evidence against required controls, and generate an audit workpaper
+          - generic [ref=e101]:
+            - button "Process How It Works" [ref=e103] [cursor=pointer]:
+              - generic [ref=e104]:
+                - generic [ref=e105]: Process
+                - generic [ref=e106]: How It Works
+              - img [ref=e107]
+            - generic [ref=e109]:
+              - generic [ref=e110]:
+                - generic [ref=e111]:
+                  - generic [ref=e112]: "1"
+                  - generic [ref=e113]: Upload Script
+                - img [ref=e114]
+              - generic [ref=e116]:
+                - generic [ref=e117]:
+                  - generic [ref=e118]: "2"
+                  - generic [ref=e119]: Validate Evidence
+                - img [ref=e120]
+              - generic [ref=e123]:
+                - generic [ref=e124]: "3"
+                - generic [ref=e125]: Generate Workpaper
+            - generic [ref=e126]:
+              - generic [ref=e127]:
+                - generic [ref=e128]:
+                  - img [ref=e129]
+                  - text: Upload Test Script
+                - generic [ref=e132]: Upload the Excel test script that defines the controls, test steps, and expected evidence.
+              - generic [ref=e133]:
+                - generic [ref=e134] [cursor=pointer]:
+                  - button "Choose File" [ref=e135]
+                  - img [ref=e136]
+                  - paragraph [ref=e139]: Drag and drop the Excel test script here
+                  - paragraph [ref=e140]: "or click to browse (`.xlsx`, `.xlsm`)"
+                - button "Parse Test Script" [disabled]:
+                  - img
+                  - text: Parse Test Script
+      - contentinfo [ref=e141]:
+        - generic [ref=e142]: © 2026 KPMG Assurance and Consulting Services LLP, an Indian Limited Liability Partnership and a member firm of the KPMG global organization of independent member firms affiliated with KPMG International Limited, a private English company limited by guarantee. All rights reserved.
+        - generic [ref=e143]: Confidential

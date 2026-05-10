@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TRACE — Access Control Review</title>
+<link rel="stylesheet" href="shell.css">
+<style>
+/* Tab bar */
+.case-tab-bar {
+  background: white; border-bottom: 2px solid #E2E6EF;
+  display: flex; align-items: stretch; padding: 0 32px; gap: 0; flex-shrink: 0;
+}
+.case-tab {
+  padding: 14px 20px; font-size: 13px; font-weight: 600; color: #8492A6;
+  border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent;
+  margin-bottom: -2px; display: flex; align-items: center; gap: 6px;
+  transition: color 0.15s; white-space: nowrap; font-family: Arial;
+}
+.case-tab:hover { color: #0C233C; }
+.case-tab.active { color: #00338D; border-bottom-color: #00B8F5; font-weight: 700; }
+.case-tab.locked { color: #CAD7E8; cursor: default; }
+.tab-back { border-right: 1px solid #E2E6EF; margin-right: 8px; padding-right: 20px; color: #5A6478; }
+.tab-back:hover { color: #00338D; }
+.tab-count { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; background: #FFFBEB; color: #7A5400; border: 1px solid #F7E7A8; }
+
+/* Upload area */
+.upload-zone { border: 2px dashed #C5D0E8; border-radius: 14px; background: #F8FAFD; padding: 28px; text-align: center; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+.upload-zone:hover { border-color: #7213EA; background: #F3F0FF; }
+
+/* Tag selector */
+.tag-btn { padding: 6px 14px; border-radius: 20px; border: 1.5px solid #E2E6EF; font-size: 12px; font-weight: 600; cursor: pointer; background: white; color: #5A6478; font-family: Arial; transition: all 0.1s; }
+.tag-btn.active { background: #EEF2FF; border-color: #1E49E2; color: #1E49E2; }
+
+/* Doc row */
+.doc-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; border: 1px solid #E2E6EF; background: white; margin-bottom: 8px; }
+.doc-tag { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+
+/* Processing steps */
+.proc-step { display: flex; align-items: flex-start; gap: 14px; padding: 14px 0; border-bottom: 1px solid #F0F2F7; }
+.proc-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+/* Review layout */
+.review-layout { display: grid; grid-template-columns: 1fr 320px; gap: 16px; height: calc(100vh - 360px); min-height: 480px; }
+.doc-viewer-pane { overflow-y: auto; background: white; border-radius: 14px; border: 1px solid #E2E6EF; padding: 24px; font-size: 13px; line-height: 1.7; color: #0C233C; }
+.doc-viewer-pane h2 { font-size: 16px; font-weight: 700; margin-bottom: 12px; color: #0C233C; }
+.doc-viewer-pane h3 { font-size: 14px; font-weight: 700; margin: 16px 0 8px; color: #0C233C; }
+.doc-viewer-pane p { margin-bottom: 10px; }
+.highlight { background: #FFF3CD; border-bottom: 2px solid #EAAA00; cursor: pointer; padding: 0 2px; transition: background 0.1s; }
+.highlight:hover { background: #FFE69C; }
+.highlight.active { background: #FFE69C; border-bottom-color: #7213EA; }
+.suggestion-pane { overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+.suggestion-card { border-radius: 12px; border: 1px solid #E2E6EF; background: white; overflow: hidden; cursor: pointer; transition: box-shadow 0.15s; }
+.suggestion-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.09); }
+.suggestion-card.active { border-color: #7213EA; box-shadow: 0 0 0 2px rgba(114,19,234,0.15); }
+.suggestion-card.accepted { border-color: #A8D5B5; background: #EDFBF5; }
+.suggestion-card.rejected { border-color: #fcc; background: #FEEBED; opacity: 0.7; }
+.sug-header { padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.sug-body { padding: 0 14px 12px; }
+.sug-proposed { font-size: 12px; color: #5A6478; line-height: 1.5; }
+.sug-actions { display: flex; gap: 6px; }
+.sug-btn-accept { padding: 4px 10px; font-size: 11px; font-weight: 700; border: none; border-radius: 6px; cursor: pointer; background: #009A44; color: white; font-family: Arial; }
+.sug-btn-reject { padding: 4px 10px; font-size: 11px; font-weight: 700; border: none; border-radius: 6px; cursor: pointer; background: #E5001B; color: white; font-family: Arial; }
+.severity-crit { background: #FEEBED; color: #B00020; border: 1px solid #fcc; }
+.severity-high { background: #fff0f2; color: #E5001B; border: 1px solid #fdd; }
+.severity-med  { background: #FFFBEB; color: #7A5400; border: 1px solid #F7E7A8; }
+.severity-low  { background: #EDFBF5; color: #005B2A; border: 1px solid #A8D5B5; }
+.severity-info { background: #EEF2FF; color: #1E49E2; border: 1px solid #C5D0E8; }
+
+/* Export */
+.output-card { display: flex; align-items: center; gap: 14px; background: white; border-radius: 14px; border: 1px solid #E2E6EF; padding: 16px 20px; margin-bottom: 10px; }
+.output-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+</style>
+</head>
+<body>
+<div class="trace-shell">
+
+  <!-- Sidebar (same as landing) -->
+  <aside class="trace-sidebar expanded">
+    <div class="sidebar-logo">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00B8F5" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <span class="logo-text">TRACE</span>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="sidebar-item" onclick="location.href='p1-dashboard.html'" title="Dashboard"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span class="sidebar-item-label">Dashboard</span></button>
+      <button class="sidebar-item" title="Controls Library"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span class="sidebar-item-label">Controls Library</span></button>
+      <button class="sidebar-item" title="Risk Assessment"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="sidebar-item-label">Risk Assessment</span></button>
+      <button class="sidebar-item active" title="Document Uplift" onclick="location.href='p1-dashboard.html'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="6" height="18" rx="1"/><rect x="9" y="3" width="6" height="18" rx="1"/><rect x="16" y="3" width="6" height="18" rx="1"/></svg><span class="sidebar-item-label">Document Uplift</span><span class="sidebar-badge">NEW</span></button>
+      <button class="sidebar-item" title="Issue Management"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span class="sidebar-item-label">Issue Management</span></button>
+    </nav>
+    <div class="sidebar-footer"><div style="display:flex;align-items:center;gap:8px;padding:8px 6px;border-radius:10px;background:rgba(255,255,255,0.06)"><div class="sidebar-avatar">KV</div><div style="overflow:hidden"><div style="font-size:12px;font-weight:600;color:#E4EEFB;white-space:nowrap">K Varma</div><div style="font-size:10px;color:#A6BCD9;white-space:nowrap">kvarma9@gmail.com</div></div></div></div>
+  </aside>
+
+  <!-- Main -->
+  <div class="trace-main">
+    <!-- Top Nav -->
+    <nav class="trace-topnav">
+      <div style="display:flex;align-items:center">
+        <span class="topnav-brand-kpmg">KPMG</span>
+        <span class="topnav-divider" style="margin:0 8px">|</span>
+        <span class="topnav-brand-trace">TRACE</span>
+        <div class="topnav-breadcrumb">
+          <span class="topnav-breadcrumb-sep">/</span>
+          <span class="topnav-breadcrumb-text" style="cursor:pointer" onclick="location.href='p1-dashboard.html'">Document Uplift</span>
+          <span class="topnav-breadcrumb-sep">/</span>
+          <span class="topnav-breadcrumb-active">Access Control Review</span>
+        </div>
+      </div>
+      <div class="topnav-actions">
+        <button class="topnav-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out</button>
+      </div>
+    </nav>
+
+    <!-- Canvas — no scroll on outer, inner tabs scroll independently -->
+    <div class="trace-canvas" style="overflow:hidden;display:flex;flex-direction:column">
+
+      <!-- Case hero sub-header -->
+      <div style="background:linear-gradient(135deg,#0C233C 0%,#1a3660 100%);padding:20px 32px;flex-shrink:0">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+          <div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+              <span style="font-size:20px;font-weight:700;color:white;letter-spacing:-0.5px">Access Control Review</span>
+              <span class="badge badge-amber" style="font-size:11px">⚠ Review Ready</span>
+            </div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.5);display:flex;align-items:center;gap:10px">
+              <span>IT Security</span><span>·</span><span>4 documents</span><span>·</span><span>Created 2026-05-06</span>
+            </div>
+          </div>
+          <button onclick="location.href='p1-dashboard.html'" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.18);border-radius:8px;padding:8px 16px;color:rgba(255,255,255,0.8);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:Arial">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+            All Cases
+          </button>
+        </div>
+      </div>
+
+      <!-- Tab bar -->
+      <div class="case-tab-bar" style="flex-shrink:0">
+        <button class="case-tab" id="tab-docs" onclick="showTab('docs')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+          Documents
+        </button>
+        <button class="case-tab" id="tab-proc" onclick="showTab('proc')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 2s linear infinite" id="proc-spin"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+          Processing
+        </button>
+        <button class="case-tab active" id="tab-review" onclick="showTab('review')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Review Suggestions
+          <span class="tab-count">12</span>
+        </button>
+        <button class="case-tab locked" id="tab-export">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
+          Export
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </button>
+      </div>
+
+      <!-- Tab content area -->
+      <div style="flex:1;overflow:hidden;position:relative">
+
+        <!-- TAB: Documents -->
+        <div id="content-docs" style="display:none;height:100%;overflow-y:auto;padding:28px 32px">
+          <div class="section-label" style="margin-bottom:4px">Case Setup</div>
+          <div class="section-title" style="margin-bottom:20px">Documents & Pipeline</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+            <div>
+              <div style="font-size:12px;font-weight:700;color:#00338D;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">Uploaded Documents</div>
+              <div class="doc-row">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E49E2" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:#0C233C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Access_Control_Policy_v2.docx</div><div style="font-size:11px;color:#8492A6">Word · 42 KB · 18 pages</div></div>
+                <span class="doc-tag" style="background:#EEF2FF;color:#1E49E2;border:1px solid #C5D0E8">Procedure SOP</span>
+                <span class="badge badge-green" style="font-size:10px">✓</span>
+              </div>
+              <div class="doc-row">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#009A44" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:#0C233C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">ESG_Risk_Controls_Matrix.xlsx</div><div style="font-size:11px;color:#8492A6">Excel · 118 KB · 3 sheets</div></div>
+                <span class="doc-tag" style="background:#EDFBF5;color:#005B2A;border:1px solid #A8D5B5">RCM / Controls</span>
+                <span class="badge badge-green" style="font-size:10px">✓</span>
+              </div>
+              <div class="doc-row">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EAAA00" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:#0C233C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">IT_Security_Policy.pdf</div><div style="font-size:11px;color:#8492A6">PDF · 2.1 MB · 31 pages</div></div>
+                <span class="doc-tag" style="background:#FFFBEB;color:#7A5400;border:1px solid #F7E7A8">Policy</span>
+                <span class="badge badge-green" style="font-size:10px">✓</span>
+              </div>
+              <div class="doc-row">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8492A6" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:#0C233C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Access_Review_Evidence_Q1.xlsx</div><div style="font-size:11px;color:#8492A6">Excel · 55 KB</div></div>
+                <span class="doc-tag" style="background:#F0F2F7;color:#5A6478;border:1px solid #CAD7E8">Evidence</span>
+                <span class="badge badge-green" style="font-size:10px">✓</span>
+              </div>
+              <div class="upload-zone" style="margin-top:12px">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8492A6" stroke-width="1.5" style="margin:0 auto 10px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <div style="font-size:13px;font-weight:600;color:#5A6478">Drop files here or <span style="color:#7213EA;text-decoration:underline;cursor:pointer">browse</span></div>
+                <div style="font-size:12px;color:#8492A6;margin-top:4px">PDF, Word, Excel supported</div>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:12px;font-weight:700;color:#00338D;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">Tag Selection</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
+                <button class="tag-btn active">Procedure SOP</button>
+                <button class="tag-btn">RCM / Controls</button>
+                <button class="tag-btn">Policy</button>
+                <button class="tag-btn">Risk Register</button>
+                <button class="tag-btn">Evidence</button>
+              </div>
+              <div class="card" style="padding:20px;background:#F8FAFD;border:1px solid #E2E6EF">
+                <div style="font-size:13px;font-weight:700;color:#0C233C;margin-bottom:8px">Pipeline Status</div>
+                <div style="font-size:12px;color:#5A6478;margin-bottom:14px">All 4 documents processed. 12 suggestions generated and ready for review.</div>
+                <button class="btn-primary" style="font-size:13px;padding:8px 18px" onclick="showTab('review')">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                  Go to Review →
+                </button>
+              </div>
+              <div style="margin-top:14px;padding:14px 16px;background:white;border-radius:12px;border:1px solid #E2E6EF">
+                <div style="font-size:12px;font-weight:700;color:#8492A6;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">Re-run Options</div>
+                <button class="btn-secondary" style="font-size:12px;width:100%;justify-content:center;margin-bottom:6px" onclick="showTab('proc')">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+                  Re-run Pipeline on All Docs
+                </button>
+              </div>
+            </div>
+          </div>
+          <footer class="trace-footer" style="margin:32px -32px -28px;padding:14px 32px">© 2026 KPMG Assurance and Consulting Services LLP. All rights reserved. &nbsp;CONFIDENTIAL</footer>
+        </div>
+
+        <!-- TAB: Processing -->
+        <div id="content-proc" style="display:none;height:100%;overflow-y:auto;padding:28px 32px">
+          <div class="section-label" style="margin-bottom:4px">Pipeline</div>
+          <div class="section-title" style="margin-bottom:6px">Processing Status</div>
+          <div style="font-size:13px;color:#5A6478;margin-bottom:24px">AI pipeline completed on 2026-05-07 at 14:32. All 4 documents converted and analyzed.</div>
+          <div style="background:white;border-radius:14px;border:1px solid #E2E6EF;overflow:hidden;margin-bottom:20px">
+            <div class="proc-step" style="padding:16px 20px">
+              <div class="proc-icon" style="background:#EDFBF5"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#009A44" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div><div style="font-size:13px;font-weight:700;color:#0C233C">Document Conversion</div><div style="font-size:12px;color:#8492A6;margin-top:2px">4 / 4 documents converted to searchable text</div></div>
+              <span class="badge badge-green" style="margin-left:auto">Complete</span>
+            </div>
+            <div class="proc-step" style="padding:16px 20px">
+              <div class="proc-icon" style="background:#EDFBF5"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#009A44" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div><div style="font-size:13px;font-weight:700;color:#0C233C">Corpus Analysis</div><div style="font-size:12px;color:#8492A6;margin-top:2px">Cross-document mapping complete — 847 chunks indexed</div></div>
+              <span class="badge badge-green" style="margin-left:auto">Complete</span>
+            </div>
+            <div class="proc-step" style="padding:16px 20px;border-bottom:none">
+              <div class="proc-icon" style="background:#EDFBF5"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#009A44" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div><div style="font-size:13px;font-weight:700;color:#0C233C">Suggestion Generation</div><div style="font-size:12px;color:#8492A6;margin-top:2px">12 suggestions generated across 3 documents</div></div>
+              <span class="badge badge-green" style="margin-left:auto">Complete</span>
+            </div>
+          </div>
+          <button class="btn-primary" onclick="showTab('review')">Review Suggestions →</button>
+          <footer class="trace-footer" style="margin:32px -32px -28px;padding:14px 32px">© 2026 KPMG Assurance and Consulting Services LLP. All rights reserved. &nbsp;CONFIDENTIAL</footer>
+        </div>
+
+        <!-- TAB: Review Suggestions -->
+        <div id="content-review" style="height:100%;overflow:hidden;display:flex;flex-direction:column;padding:0">
+          <!-- Mass action toolbar -->
+          <div style="padding:14px 32px;background:white;border-bottom:1px solid #E2E6EF;display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex-shrink:0">
+            <div>
+              <span style="font-size:13px;font-weight:700;color:#0C233C">12 suggestions</span>
+              <span style="font-size:13px;color:#8492A6"> across 3 documents</span>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+              <button class="btn-teal" style="font-size:12px;padding:6px 14px">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                Accept All
+              </button>
+              <button class="btn-red-solid" style="font-size:12px;padding:6px 14px">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                Reject All
+              </button>
+              <select style="border:1px solid #E2E6EF;border-radius:8px;padding:6px 10px;font-size:12px;color:#5A6478;font-family:Arial;background:white;cursor:pointer">
+                <option>All documents</option>
+                <option>Access_Control_Policy_v2.docx</option>
+                <option>IT_Security_Policy.pdf</option>
+              </select>
+              <select style="border:1px solid #E2E6EF;border-radius:8px;padding:6px 10px;font-size:12px;color:#5A6478;font-family:Arial;background:white;cursor:pointer">
+                <option>All severities</option>
+                <option>Critical</option>
+                <option>High</option>
+                <option>Medium</option>
+              </select>
+            </div>
+            <button onclick="document.getElementById('continue-modal').style.display='flex'" style="margin-left:auto;background:#7213EA;color:white;border:none;border-radius:10px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;font-family:Arial">
+              Move to Export
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+
+          <!-- Split layout -->
+          <div style="flex:1;overflow:hidden;display:grid;grid-template-columns:1fr 320px;gap:0">
+
+            <!-- Document viewer -->
+            <div style="overflow-y:auto;padding:24px 28px;background:#F0F2F7">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+                <div class="section-label" style="margin:0">Document Viewer</div>
+                <select style="border:1px solid #E2E6EF;border-radius:8px;padding:5px 10px;font-size:12px;color:#0C233C;font-family:Arial;background:white;font-weight:600">
+                  <option>Access_Control_Policy_v2.docx</option>
+                  <option>IT_Security_Policy.pdf</option>
+                  <option>ESG_Risk_Controls_Matrix.xlsx</option>
+                </select>
+                <span style="font-size:11px;color:#8492A6;margin-left:4px">3 suggestions in this doc</span>
+              </div>
+              <div class="doc-viewer-pane">
+                <h2>Access Control Policy</h2>
+                <p style="font-size:11px;color:#8492A6;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #F0F2F7">Version 2.1 &nbsp;·&nbsp; Last revised: 2026-03-10 &nbsp;·&nbsp; Owner: IT Security</p>
+                <h3>1. Purpose</h3>
+                <p>This policy establishes the requirements for <span class="highlight active" onclick="highlightSug(this,'sug1')" data-sug="sug1">granting and revoking access</span> to company systems and data assets. It applies to all permanent and contract staff.</p>
+                <h3>2. Scope</h3>
+                <p>Applies to all employees, contractors, and <span class="highlight" onclick="highlightSug(this,'sug2')" data-sug="sug2">third-party vendors with system access</span>. Temporary access is subject to a 90-day review cycle.</p>
+                <h3>3. Responsibilities</h3>
+                <p>The IT Security team is responsible for conducting <span class="highlight" onclick="highlightSug(this,'sug3')" data-sug="sug3">quarterly access reviews</span> of all privileged accounts.</p>
+                <p>Access rights must be revoked within 24 hours of employment termination. The HR department notifies IT Security via the offboarding checklist.</p>
+                <h3>4. Evidence Retention</h3>
+                <p>Records of access provisioning and deprovisioning must be retained for a period of <span class="highlight" onclick="highlightSug(this,'sug4')" data-sug="sug4">3 years</span> in accordance with company record-keeping requirements.</p>
+              </div>
+            </div>
+
+            <!-- Suggestion pane -->
+            <div style="overflow-y:auto;padding:16px;background:white;border-left:2px solid #E2E6EF">
+              <div style="font-size:11px;font-weight:700;color:#00338D;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px">Suggestions (3)</div>
+
+              <div class="suggestion-card active" id="sug1-card">
+                <div class="sug-header">
+                  <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px" class="severity-high">HIGH</span>
+                  <div class="sug-actions">
+                    <button class="sug-btn-accept" onclick="acceptSug('sug1-card')">✓ Accept</button>
+                    <button class="sug-btn-reject" onclick="rejectSug('sug1-card')">✕ Reject</button>
+                  </div>
+                </div>
+                <div class="sug-body">
+                  <div style="font-size:13px;font-weight:700;color:#0C233C;margin-bottom:4px">Strengthen Access Revocation Wording</div>
+                  <div class="sug-proposed">Proposed: <em>"Granting, modifying and revoking access requires written approval from the data owner and must be logged in the ITSM system."</em></div>
+                  <div style="font-size:11px;color:#8492A6;margin-top:6px;padding-top:6px;border-top:1px dashed #F0F2F7">Source: ESG RCM row 4 · IT Security Policy §7.2</div>
+                </div>
+              </div>
+
+              <div class="suggestion-card" id="sug2-card" onclick="activateSug('sug2')">
+                <div class="sug-header">
+                  <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px" class="severity-med">MEDIUM</span>
+                  <div class="sug-actions">
+                    <button class="sug-btn-accept" onclick="event.stopPropagation();acceptSug('sug2-card')">✓</button>
+                    <button class="sug-btn-reject" onclick="event.stopPropagation();rejectSug('sug2-card')">✕</button>
+                  </div>
+                </div>
+                <div class="sug-body">
+                  <div style="font-size:13px;font-weight:700;color:#0C233C;margin-bottom:4px">Extend Vendor Access Controls</div>
+                  <div class="sug-proposed">Add clause: third-party vendors require multi-factor authentication and are subject to the same quarterly review cycle as internal staff.</div>
+                  <div style="font-size:11px;color:#8492A6;margin-top:6px;padding-top:6px;border-top:1px dashed #F0F2F7">Source: ESG RCM row 3</div>
+                </div>
+              </div>
+
+              <div class="suggestion-card" id="sug3-card" onclick="activateSug('sug3')">
+                <div class="sug-header">
+                  <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px" class="severity-high">HIGH</span>
+                  <div class="sug-actions">
+                    <button class="sug-btn-accept" onclick="event.stopPropagation();acceptSug('sug3-card')">✓</button>
+                    <button class="sug-btn-reject" onclick="event.stopPropagation();rejectSug('sug3-card')">✕</button>
+                  </div>
+                </div>
+                <div class="sug-body">
+                  <div style="font-size:13px;font-weight:700;color:#0C233C;margin-bottom:4px">Increase Review Frequency to Monthly</div>
+                  <div class="sug-proposed">Change "quarterly" to "monthly" — cross-referenced with RCM row 3 which mandates monthly privileged access reviews.</div>
+                  <div style="font-size:11px;color:#8492A6;margin-top:6px;padding-top:6px;border-top:1px dashed #F0F2F7">Source: ESG RCM row 3</div>
+                </div>
+              </div>
+
+              <div class="suggestion-card accepted" id="sug4-card">
+                <div class="sug-header">
+                  <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;background:#EDFBF5;color:#005B2A;border:1px solid #A8D5B5">LOW · Accepted ✓</span>
+                </div>
+                <div class="sug-body">
+                  <div style="font-size:13px;font-weight:700;color:#0C233C;margin-bottom:4px">Extend Retention Period to 7 Years</div>
+                  <div class="sug-proposed">Change retention from 3 years to 7 years per IT Security Policy §12 and regulatory requirements.</div>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- end split -->
+        </div><!-- end review tab -->
+
+        <!-- TAB: Export (locked by default, shown when modal confirmed) -->
+        <div id="content-export" style="display:none;height:100%;overflow-y:auto;padding:28px 32px">
+          <div style="background:linear-gradient(135deg,#005B2A 0%,#009A44 100%);border-radius:16px;padding:24px 28px;display:flex;align-items:center;gap:16px;margin-bottom:28px">
+            <div style="width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div>
+              <div style="font-size:18px;font-weight:700;color:white">Uplift Complete</div>
+              <div style="font-size:13px;color:rgba(255,255,255,0.75);margin-top:3px">4 suggestions applied · 2 files ready for download</div>
+            </div>
+          </div>
+          <div class="section-label" style="margin-bottom:4px">Downloads</div>
+          <div class="section-title" style="margin-bottom:20px">Export Files</div>
+          <div class="output-card">
+            <div class="output-icon" style="background:#EEF2FF">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1E49E2" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <div style="flex:1">
+              <div style="font-size:14px;font-weight:700;color:#0C233C">Access_Control_Policy_uplifted.docx</div>
+              <div style="font-size:12px;color:#8492A6">Word document · 4 suggestions applied · 47 KB</div>
+            </div>
+            <button class="btn-primary" style="font-size:13px;padding:8px 18px">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download
+            </button>
+          </div>
+          <div class="output-card">
+            <div class="output-icon" style="background:#F3F0FF">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7213EA" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+            </div>
+            <div style="flex:1">
+              <div style="font-size:14px;font-weight:700;color:#0C233C">Process_Flow_Diagram.png</div>
+              <div style="font-size:12px;color:#8492A6">Process diagram · 142 KB</div>
+            </div>
+            <button class="btn-primary" style="font-size:13px;padding:8px 18px">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download
+            </button>
+          </div>
+          <div style="margin-top:14px">
+            <button class="btn-secondary">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download All as ZIP
+            </button>
+          </div>
+          <footer class="trace-footer" style="margin:32px -32px -28px;padding:14px 32px">© 2026 KPMG Assurance and Consulting Services LLP. All rights reserved. &nbsp;CONFIDENTIAL</footer>
+        </div>
+
+      </div><!-- end tab content area -->
+    </div><!-- end canvas -->
+  </div><!-- end main -->
+</div><!-- end shell -->
+
+<!-- Continue to Export modal -->
+<div id="continue-modal" style="display:none" class="modal-backdrop" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal">
+    <div style="width:48px;height:48px;border-radius:12px;background:#FFFBEB;display:flex;align-items:center;justify-content:center;margin-bottom:16px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#EAAA00" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </div>
+    <div class="modal-title">Move to Export?</div>
+    <div class="modal-body">
+      <strong>8 suggestions are still pending review.</strong> Unreviewed suggestions will be excluded from the uplifted document.<br><br>
+      You can always come back to the Review tab and re-run the export.
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" style="flex:1" onclick="document.getElementById('continue-modal').style.display='none'">Go Back and Review</button>
+      <button style="flex:1;background:#7213EA;color:white;border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;font-family:Arial" onclick="document.getElementById('continue-modal').style.display='none';unlockExport()">Continue to Export →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const TABS = ['docs','proc','review','export'];
+function showTab(name) {
+  TABS.forEach(t => {
+    document.getElementById('content-'+t).style.display = 'none';
+    const btn = document.getElementById('tab-'+t);
+    if (btn) btn.classList.remove('active');
+  });
+  document.getElementById('content-'+name).style.display = 'flex';
+  document.getElementById('content-'+name).style.flexDirection = 'column';
+  const btn = document.getElementById('tab-'+name);
+  if (btn) btn.classList.add('active');
+  // Stop spin when not on proc tab
+  const spin = document.getElementById('proc-spin');
+  if (spin) spin.style.animation = name === 'proc' ? 'spin 2s linear infinite' : 'none';
+}
+function unlockExport() {
+  const btn = document.getElementById('tab-export');
+  btn.classList.remove('locked');
+  btn.onclick = () => showTab('export');
+  showTab('export');
+}
+function acceptSug(cardId) {
+  const card = document.getElementById(cardId);
+  card.classList.remove('active'); card.classList.add('accepted');
+}
+function rejectSug(cardId) {
+  const card = document.getElementById(cardId);
+  card.classList.remove('active'); card.classList.add('rejected');
+}
+function activateSug(sugId) {
+  document.querySelectorAll('.suggestion-card').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.highlight').forEach(h => h.classList.remove('active'));
+  document.getElementById(sugId+'-card').classList.add('active');
+  document.querySelector('[data-sug="'+sugId+'"]')?.classList.add('active');
+}
+function highlightSug(el, sugId) {
+  document.querySelectorAll('.highlight').forEach(h => h.classList.remove('active'));
+  document.querySelectorAll('.suggestion-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(sugId+'-card').classList.add('active');
+}
+// Start on review tab
+showTab('review');
+</script>
+</body></html>

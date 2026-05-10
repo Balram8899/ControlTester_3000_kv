@@ -1,0 +1,46 @@
+{
+  "cyber-scopegate-final2-00555b2b-1e3c-4738-9228-b3414463258d-uplifted-sop.docx": {
+    "bytes": 14907,
+    "insertions": 22,
+    "deletions": 12,
+    "comments": 12,
+    "has_docx_content_types": true,
+    "numbered_subprocedure_markers": {
+      "4.2.1": 0,
+      "4.2.2": 0,
+      "4.2.3": 0,
+      "Escalation Protocol": 0,
+      "Remediation and Evidencing": 0
+    }
+  },
+  "esg-scopegate-final2-b8805497-244f-4b98-9305-31f1b1f68ac3-uplifted-sop.docx": {
+    "bytes": 22905,
+    "insertions": 35,
+    "deletions": 8,
+    "comments": 25,
+    "has_docx_content_types": true,
+    "numbered_subprocedure_markers": {
+      "4.2.1": 0,
+      "4.2.2": 0,
+      "4.2.3": 0,
+      "Escalation Protocol": 0,
+      "Remediation and Evidencing": 0
+    }
+  },
+  "cyber-scopegate-final2-00555b2b-1e3c-4738-9228-b3414463258d-swimlane.png": {
+    "bytes": 553578,
+    "png_signature_ok": true
+  },
+  "esg-scopegate-final2-b8805497-244f-4b98-9305-31f1b1f68ac3-swimlane.png": {
+    "bytes": 320530,
+    "png_signature_ok": true
+  },
+  "cyber-scopegate-final2-00555b2b-1e3c-4738-9228-b3414463258d-swimlane.pdf": {
+    "bytes": 35994,
+    "pdf_header_ok": true
+  },
+  "esg-scopegate-final2-b8805497-244f-4b98-9305-31f1b1f68ac3-swimlane.pdf": {
+    "bytes": 31873,
+    "pdf_header_ok": true
+  }
+}

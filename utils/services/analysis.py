@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+import re
 from typing import Any
 from uuid import uuid4
 
@@ -17,6 +18,7 @@ from utils.services.schemas import (
     SectionType,
     SourceReference,
     Suggestion,
+    SuggestionEditTarget,
 )
 from utils.sop_processing.content_sanitizer import sanitize_chunk
 from utils.sop_processing.prompts import (
@@ -26,6 +28,8 @@ from utils.sop_processing.prompts import (
     section_classification_prompt,
     terminology_extraction_prompt,
 )
+from utils.services.role_assignment_guard import apply_role_assignment_guard
+from utils.services.structural_completeness import structural_completeness_suggestions
 
 
 SECTION_CLASSIFICATION_SCHEMA: dict[str, Any] = {
@@ -111,6 +115,117 @@ ALLOWED_SUGGESTION_TYPES = {
     "process_improvement",
 }
 ALLOWED_SEVERITIES = {"critical", "high", "medium", "low", "informational"}
+SCOPE_RELEVANCE_THRESHOLD = 0.12
+SCOPE_GENERIC_TERMS = {
+    "about",
+    "access",
+    "accountable",
+    "account",
+    "accounts",
+    "activity",
+    "activities",
+    "against",
+    "also",
+    "all",
+    "and",
+    "any",
+    "application",
+    "applications",
+    "are",
+    "been",
+    "being",
+    "bank",
+    "banks",
+    "based",
+    "business",
+    "customer",
+    "customers",
+    "data",
+    "control",
+    "controls",
+    "describe",
+    "document",
+    "documents",
+    "evidence",
+    "ensure",
+    "ensures",
+    "external",
+    "for",
+    "factor",
+    "from",
+    "has",
+    "have",
+    "high",
+    "includes",
+    "includ",
+    "into",
+    "its",
+    "information",
+    "maintain",
+    "management",
+    "must",
+    "network",
+    "networks",
+    "owner",
+    "party",
+    "parties",
+    "performed",
+    "policy",
+    "procedure",
+    "process",
+    "record",
+    "records",
+    "requirement",
+    "requir",
+    "retained",
+    "review",
+    "rule",
+    "rules",
+    "security",
+    "service",
+    "services",
+    "shall",
+    "should",
+    "standard",
+    "standards",
+    "system",
+    "systems",
+    "team",
+    "that",
+    "the",
+    "their",
+    "third",
+    "this",
+    "through",
+    "under",
+    "using",
+    "value",
+    "when",
+    "where",
+    "with",
+    "tool",
+    "tools",
+    "user",
+    "users",
+}
+
+_RCM_VERB_PREFIX = re.compile(
+    r"^(?:performs?|reviews?|maintains?|monitors?|manages?|conducts?|executes?|"
+    r"approves?|validates?|verifies?|tests?|checks?|ensures?|documents?|records?|"
+    r"identifies?|escalates?|reports?|coordinates?|implements?|deploys?|"
+    r"investigates?|assesses?|submits?|screens?)\s+",
+    re.IGNORECASE,
+)
+
+_EVIDENCE_PLACEHOLDER = {
+    "the relevant evidence",
+    "the relevant control evidence",
+    "n/a",
+    "na",
+    "none",
+    "not applicable",
+    "-",
+}
 
 
 def analyze_documents(
@@ -156,6 +271,7 @@ def analyze_documents(
                 pipeline_id=pipeline_id,
                 budget_remaining=budget_remaining,
                 llm_calls_used=llm_calls_used,
+                temperature=0.0,
             )
             if classification_result.status == "budget_exceeded":
                 return _partial_budget_result(
@@ -257,12 +373,20 @@ def analyze_documents(
                     )
                 batch_output = batch_result["output"]
                 process_steps.extend(_process_steps_from_output(batch_output))
-                suggestions.extend(_suggestions_from_output(batch_output, batch))
+                suggestions.extend(
+                    _suggestions_from_output(
+                        batch_output,
+                        batch,
+                        filenames_by_file_id=_filenames_by_file_id(conversions),
+                    )
+                )
 
         if corpus_context and process_steps and budget_remaining - llm_calls_used > 0:
+            procedure_file_ids = _procedure_file_ids(conversions)
             synthesis = _run_cross_document_synthesis(
                 process_steps=process_steps,
                 excel_results=excel_results,
+                sop_scope_text=_sop_scope_text(anchor_index, procedure_file_ids),
                 pipeline_id=pipeline_id,
                 budget_remaining=budget_remaining,
                 llm_calls_used=llm_calls_used,
@@ -276,7 +400,13 @@ def analyze_documents(
                     llm_calls_used=llm_calls_used,
                     extracted_items=extracted_items,
                 )
-            suggestions.extend(_suggestions_from_output(synthesis["output"], []))
+            suggestions.extend(
+                _suggestions_from_output(
+                    synthesis["output"],
+                    [],
+                    filenames_by_file_id=_filenames_by_file_id(conversions),
+                )
+            )
             suggestions.extend(
                 _cross_document_fallback_suggestions(
                     process_steps=process_steps,
@@ -286,10 +416,22 @@ def analyze_documents(
                 )
             )
 
+        suggestions.extend(
+            structural_completeness_suggestions(
+                conversions=conversions,
+                anchor_index=anchor_index,
+                process_steps=process_steps,
+                excel_results=excel_results,
+            )
+        )
+
         return AnalysisResult(
             status="success",
             process_steps=_dedupe_steps(process_steps),
-            suggestions=_dedupe_suggestions(suggestions),
+            suggestions=_normalise_suggestions(
+                apply_role_assignment_guard(suggestions),
+                conversions,
+            ),
             terminology=_dedupe_terms(terminology),
             extracted_controls=extracted_items,
             corpus_map=_analysis_corpus_map(process_steps, anchor_index, excel_results),
@@ -337,6 +479,7 @@ def _call_budgeted(
     pipeline_id: str,
     budget_remaining: int,
     llm_calls_used: int,
+    temperature: float = 0.2,
 ) -> LLMResult:
     return call_llm(
         prompt=prompt,
@@ -344,6 +487,7 @@ def _call_budgeted(
         response_schema=response_schema,
         pipeline_id=pipeline_id,
         budget_remaining=budget_remaining - llm_calls_used,
+        temperature=temperature,
     )
 
 
@@ -355,9 +499,9 @@ def _apply_section_classification(
     section_by_id: dict[str, SectionType] = {}
     for section in sections:
         anchor_id = str(section.get("anchor_id") or "")
-        section_type = str(section.get("section_type") or "procedural")
+        section_type = str(section.get("section_type") or "appendix")
         section_by_id[anchor_id] = (
-            section_type if section_type in SECTION_TYPES else "procedural"
+            section_type if section_type in SECTION_TYPES else "appendix"
         )  # type: ignore[assignment]
 
     classified: list[Anchor] = []
@@ -377,6 +521,7 @@ def _run_single_anchor_prompt(
     pipeline_id: str,
     budget_remaining: int,
     llm_calls_used: int,
+    temperature: float = 0.0,
 ) -> dict[str, Any]:
     result = _call_budgeted(
         prompt=prompt_builder(anchor),
@@ -385,6 +530,7 @@ def _run_single_anchor_prompt(
         pipeline_id=pipeline_id,
         budget_remaining=budget_remaining,
         llm_calls_used=llm_calls_used,
+        temperature=temperature,
     )
     used = llm_calls_used + (0 if result.status == "budget_exceeded" else 1)
     return {
@@ -424,6 +570,7 @@ def _run_procedural_batch(
         pipeline_id=pipeline_id,
         budget_remaining=budget_remaining,
         llm_calls_used=llm_calls_used,
+        temperature=0.3,
     )
     used = llm_calls_used + (0 if result.status == "budget_exceeded" else 1)
     return {
@@ -436,6 +583,7 @@ def _run_procedural_batch(
 def _run_cross_document_synthesis(
     process_steps: list[dict],
     excel_results: list[ExcelPipelineResult],
+    sop_scope_text: str,
     pipeline_id: str,
     budget_remaining: int,
     llm_calls_used: int,
@@ -444,6 +592,7 @@ def _run_cross_document_synthesis(
         sop_steps=process_steps,
         rcm_controls=_risk_to_control_rows(excel_results),
         risk_items=_risk_rows(excel_results),
+        sop_scope_text=sop_scope_text,
     )
     result = _call_budgeted(
         prompt=prompt,
@@ -452,6 +601,7 @@ def _run_cross_document_synthesis(
         pipeline_id=pipeline_id,
         budget_remaining=budget_remaining,
         llm_calls_used=llm_calls_used,
+        temperature=0.2,
     )
     used = llm_calls_used + (0 if result.status == "budget_exceeded" else 1)
     return {
@@ -495,12 +645,13 @@ def _process_steps_from_output(output: dict[str, Any] | None) -> list[dict]:
 def _suggestions_from_output(
     output: dict[str, Any] | None,
     anchors: list[Anchor],
+    filenames_by_file_id: dict[str, str] | None = None,
 ) -> list[Suggestion]:
     anchor_by_id = {anchor.anchor_id: anchor for anchor in anchors}
     return [
         suggestion
         for suggestion in (
-            _suggestion_from_raw(item, anchor_by_id)
+            _suggestion_from_raw(item, anchor_by_id, filenames_by_file_id or {})
             for item in _array_output(output, "suggestions")
         )
         if suggestion is not None
@@ -510,27 +661,52 @@ def _suggestions_from_output(
 def _suggestion_from_raw(
     raw: dict[str, Any],
     anchor_by_id: dict[str, Anchor],
+    filenames_by_file_id: dict[str, str],
 ) -> Suggestion | None:
     suggestion_type = _normalize_suggestion_type(raw.get("suggestion_type"))
     severity = _normalize_severity(raw.get("severity"))
     anchor_id = str(raw.get("anchor_id") or "")
     anchor = anchor_by_id.get(anchor_id)
-    source_refs = _source_references(raw.get("source_references"))
+    title_raw = str(raw.get("title") or "").strip()
+    detail = str(raw.get("detail") or raw.get("summary") or "").strip()
+    proposed_text = _optional_text(raw.get("proposed_text"))
+    if not _has_material_raw_suggestion(
+        suggestion_type=suggestion_type,
+        title=title_raw,
+        detail=detail,
+        proposed_text=proposed_text,
+    ):
+        return None
+    source_refs = _source_references(raw.get("source_references"), filenames_by_file_id)
+    if not source_refs:
+        source_file = str(raw.get("source_file") or "").strip()
+        if source_file:
+            file_id = next(
+                (fid for fid, fname in filenames_by_file_id.items() if fname == source_file),
+                "",
+            )
+            source_refs = [SourceReference(document_id=file_id, filename=source_file or None)]
     if not source_refs and anchor:
         source_refs = [
-            SourceReference(document_id=anchor.file_id, anchor_id=anchor.anchor_id)
+            SourceReference(
+                document_id=anchor.file_id,
+                filename=filenames_by_file_id.get(anchor.file_id),
+                anchor_id=anchor.anchor_id,
+            )
         ]
     if not source_refs and anchor_id:
         source_refs = [SourceReference(document_id="", anchor_id=anchor_id)]
+    if not source_refs:
+        return None
     try:
         return Suggestion(
             suggestion_id=str(raw.get("suggestion_id") or uuid4()),
             suggestion_type=suggestion_type,  # type: ignore[arg-type]
             severity=severity,  # type: ignore[arg-type]
-            title=str(raw.get("title") or suggestion_type.replace("_", " ").title()),
-            detail=str(raw.get("detail") or raw.get("summary") or ""),
-            proposed_text=raw.get("proposed_text"),
-            original_text=raw.get("original_text"),
+            title=title_raw or suggestion_type.replace("_", " ").title(),
+            detail=detail,
+            proposed_text=proposed_text,
+            original_text=_optional_text(raw.get("original_text")),
             target_anchor_id=str(raw.get("target_anchor_id") or anchor_id or "") or None,
             review_status="pending",
             source_references=source_refs,
@@ -550,17 +726,22 @@ def _normalize_severity(value: Any) -> str:
     return severity if severity in ALLOWED_SEVERITIES else "medium"
 
 
-def _source_references(value: Any) -> list[SourceReference]:
+def _source_references(
+    value: Any,
+    filenames_by_file_id: dict[str, str] | None = None,
+) -> list[SourceReference]:
     if not isinstance(value, list):
         return []
     refs: list[SourceReference] = []
+    filenames = filenames_by_file_id or {}
     for item in value:
         if not isinstance(item, dict):
             continue
+        document_id = str(item.get("document_id") or item.get("file_id") or "")
         refs.append(
             SourceReference(
-                document_id=str(item.get("document_id") or item.get("file_id") or ""),
-                filename=item.get("filename"),
+                document_id=document_id,
+                filename=item.get("filename") or filenames.get(document_id),
                 document_role=item.get("document_role"),
                 anchor_id=item.get("anchor_id"),
                 section_id=item.get("section_id"),
@@ -574,6 +755,23 @@ def _source_references(value: Any) -> list[SourceReference]:
             )
         )
     return refs
+
+
+def _optional_text(value: Any) -> str | None:
+    text = str(value or "").strip()
+    return text or None
+
+
+def _has_material_raw_suggestion(
+    suggestion_type: str,
+    title: str,
+    detail: str,
+    proposed_text: str | None,
+) -> bool:
+    if detail or proposed_text:
+        return True
+    default_title = suggestion_type.replace("_", " ").title().casefold()
+    return bool(title and title.casefold() != default_title and len(title) > 8)
 
 
 def _staleness_suggestion(anchor: Anchor, output: dict[str, Any] | None) -> Suggestion | None:
@@ -791,6 +989,181 @@ def _cross_document_fallback_suggestions(
     return suggestions
 
 
+def _procedure_file_ids(conversions: list[ConversionResult]) -> set[str]:
+    return {
+        str(conversion.file_id)
+        for conversion in conversions
+        if conversion.file_id and conversion.tag == "procedure"
+    }
+
+
+def _sop_scope_text(anchor_index: dict[str, Anchor], file_ids: set[str]) -> str:
+    selected = _sop_scope_anchors(anchor_index, file_ids)
+    return "\n".join(
+        " ".join(part for part in (anchor.heading, anchor.content) if part).strip()
+        for anchor in selected
+        if str(anchor.content or "").strip()
+    )
+
+
+def _sop_scope_term_sets(anchor_index: dict[str, Anchor], file_ids: set[str]) -> list[set[str]]:
+    return [
+        _scope_terms(" ".join(part for part in (anchor.heading, anchor.content) if part))
+        for anchor in _sop_scope_anchors(anchor_index, file_ids)
+    ]
+
+
+def _sop_scope_anchors(anchor_index: dict[str, Anchor], file_ids: set[str]) -> list[Anchor]:
+    anchors = [
+        anchor
+        for anchor in anchor_index.values()
+        if anchor.file_id in file_ids
+    ]
+    purpose_anchors = [
+        anchor
+        for anchor in anchors
+        if _anchor_heading_matches(anchor, r"\b(purpose|objective)\b")
+        or (
+            anchor.section_type == "purpose_scope"
+            and not _anchor_heading_matches(anchor, r"\bscope\b")
+        )
+    ]
+    scope_anchors = [
+        anchor
+        for anchor in anchors
+        if anchor.section_type == "purpose_scope"
+        and _anchor_heading_matches(anchor, r"\bscope\b")
+    ]
+    selected = purpose_anchors or scope_anchors
+    if not selected:
+        selected = [
+            anchor
+            for anchor in anchors
+            if _anchor_heading_matches(anchor, r"\b(purpose|scope|objective|overview)\b")
+        ]
+    if not selected:
+        return []
+    selected.extend(_process_responsibility_anchors(anchors, selected))
+    return selected
+
+
+def _anchor_heading_matches(anchor: Anchor, pattern: str) -> bool:
+    return bool(
+        re.search(
+            pattern,
+            f"{anchor.heading} {anchor.section_path}",
+            flags=re.IGNORECASE,
+        )
+    )
+
+
+def _process_responsibility_anchors(
+    anchors: list[Anchor],
+    selected_scope_anchors: list[Anchor],
+) -> list[Anchor]:
+    selected_ids = {anchor.anchor_id for anchor in selected_scope_anchors}
+    excluded_heading = re.compile(
+        r"\b(appendix|contact|definitions?|document|history|references|roles?|responsibilities|training)\b",
+        flags=re.IGNORECASE,
+    )
+    process_anchors: list[Anchor] = []
+    for anchor in anchors:
+        if anchor.anchor_id in selected_ids:
+            continue
+        if anchor.section_type not in {"procedural", "purpose_scope", "unknown"}:
+            continue
+        if _anchor_heading_matches(anchor, r"\b(purpose|scope|objective|overview)\b"):
+            continue
+        if excluded_heading.search(f"{anchor.heading} {anchor.section_path}"):
+            continue
+        process_anchors.append(anchor)
+        if len(process_anchors) >= 8:
+            break
+    return process_anchors
+
+
+def _has_assessable_scope(sop_scope_text: str) -> bool:
+    return len(_scope_terms(sop_scope_text)) >= 4
+
+
+def _is_control_in_scope(
+    control: dict[str, Any],
+    sop_scope_text: str,
+    threshold: float = SCOPE_RELEVANCE_THRESHOLD,
+    scope_term_sets: list[set[str]] | None = None,
+) -> bool:
+    control_text = _control_scope_text(control)
+    if _looks_cross_cutting_control(control_text):
+        return True
+    scope_terms = _scope_terms(sop_scope_text)
+    if len(scope_terms) < 4:
+        return True
+    control_terms = _scope_terms(control_text)
+    if not control_terms:
+        return False
+    anchor_term_sets = [terms for terms in (scope_term_sets or []) if terms]
+    if anchor_term_sets:
+        max_overlap = max(len(terms.intersection(control_terms)) for terms in anchor_term_sets)
+        max_ratio = max(
+            len(terms.intersection(control_terms)) / max(1, len(control_terms))
+            for terms in anchor_term_sets
+        )
+        return max_overlap >= 2 and max_ratio >= threshold
+    overlap = scope_terms.intersection(control_terms)
+    return len(overlap) >= 2 and len(overlap) / max(1, len(control_terms)) >= threshold
+
+
+def _control_scope_text(control: dict[str, Any]) -> str:
+    keys = (
+        "control_name",
+        "description",
+        "activity",
+        "owner",
+        "metric",
+        "target",
+        "status",
+        "key_gap",
+        "recommended_action",
+        "recommendation",
+    )
+    return " ".join(str(control.get(key) or "") for key in keys)
+
+
+def _looks_cross_cutting_control(text: str) -> bool:
+    lowered = str(text or "").casefold()
+    cross_cutting_patterns = (
+        r"\baudit\s+trail\b",
+        r"\bregulated\s+activit",
+        r"\brecord\s+retention\b",
+        r"\bevidence\s+retention\b",
+    )
+    return any(re.search(pattern, lowered) for pattern in cross_cutting_patterns)
+
+
+def _scope_terms(text: str) -> set[str]:
+    terms: set[str] = set()
+    for raw in re.findall(r"[a-zA-Z0-9]+", str(text or "").casefold()):
+        token = _scope_token(raw)
+        if token and len(token) > 2 and token not in SCOPE_GENERIC_TERMS:
+            terms.add(token)
+    return terms
+
+
+def _scope_token(token: str) -> str:
+    cleaned = str(token or "").strip().casefold()
+    if not cleaned:
+        return ""
+    if cleaned.endswith("ies") and len(cleaned) > 5:
+        return f"{cleaned[:-3]}y"
+    if cleaned.endswith("ing") and len(cleaned) > 6:
+        return cleaned[:-3]
+    if cleaned.endswith("ed") and len(cleaned) > 5:
+        return cleaned[:-2]
+    if cleaned.endswith("s") and len(cleaned) > 4 and not cleaned.endswith(("ss", "us")):
+        return cleaned[:-1]
+    return cleaned
+
+
 def _cross_document_mapping_gap_suggestions(
     process_steps: list[dict],
     anchor_index: dict[str, Anchor],
@@ -798,16 +1171,16 @@ def _cross_document_mapping_gap_suggestions(
     conversions: list[ConversionResult],
 ) -> list[Suggestion]:
     filenames_by_file_id = _filenames_by_file_id(conversions)
-    procedure_file_ids = {
-        str(conversion.file_id)
-        for conversion in conversions
-        if conversion.file_id and conversion.tag == "procedure"
-    }
+    procedure_file_ids = _procedure_file_ids(conversions)
     if not procedure_file_ids:
         return []
     primary_anchor = _first_anchor_for_files(anchor_index, procedure_file_ids)
     if not primary_anchor:
         return []
+    responsibility_anchor = _first_responsibility_anchor_for_files(
+        anchor_index,
+        procedure_file_ids,
+    )
 
     covered_control_ids = _covered_control_ids_for_files(
         process_steps=process_steps,
@@ -815,20 +1188,83 @@ def _cross_document_mapping_gap_suggestions(
         excel_results=excel_results,
         file_ids=procedure_file_ids,
     )
+    sop_scope_text = _sop_scope_text(anchor_index, procedure_file_ids)
+    sop_scope_term_sets = _sop_scope_term_sets(anchor_index, procedure_file_ids)
+    has_assessable_scope = _has_assessable_scope(sop_scope_text)
     suggestions: list[Suggestion] = []
     for candidate in _excel_control_candidates(excel_results):
         control_id = str(candidate.get("control_id") or "")
         if not control_id or control_id in covered_control_ids:
             continue
+        if has_assessable_scope and not _is_control_in_scope(
+            candidate,
+            sop_scope_text,
+            scope_term_sets=sop_scope_term_sets,
+        ):
+            continue
+        procedure_anchor = _best_anchor_for_control_candidate(
+            candidate,
+            anchor_index=anchor_index,
+            file_ids=procedure_file_ids,
+            fallback_anchor=primary_anchor,
+        )
         matrix_ref = SourceReference(
             document_id=str(candidate.get("file_id") or ""),
             filename=candidate.get("filename"),
             sheet_name=candidate.get("sheet"),
             row_index=_as_int(candidate.get("row") or candidate.get("row_index")),
         )
+        owner = str(candidate.get("owner") or "the accountable owner").strip()
+        activity = _sentence_fragment(
+            str(candidate.get("description") or "the source activity").strip()
+        )
+        evidence = _sentence_fragment(
+            str(candidate.get("evidence_ref") or "the relevant evidence").strip()
+        )
+        suggestion_id = str(uuid4())
+        edit_targets = [
+            SuggestionEditTarget(
+                target_id=f"{suggestion_id}:procedure",
+                target_type="procedure_step",
+                title="Procedure update",
+                detail="Add the missing activity to the process narrative.",
+                proposed_text=_role_activity_sentence(owner, activity, evidence),
+                target_anchor_id=procedure_anchor.anchor_id,
+                target_text=procedure_anchor.content,
+                source_references=[
+                    SourceReference(
+                        document_id=procedure_anchor.file_id,
+                        filename=filenames_by_file_id.get(procedure_anchor.file_id),
+                        anchor_id=procedure_anchor.anchor_id,
+                    ),
+                    matrix_ref,
+                ],
+            )
+        ]
+        if responsibility_anchor:
+            edit_targets.append(
+                SuggestionEditTarget(
+                    target_id=f"{suggestion_id}:responsibility",
+                    target_type="role_responsibility",
+                    title="Responsibility update",
+                    detail="Reflect the accountable role in the responsibilities area.",
+                    proposed_text=_role_activity_sentence(owner, activity, evidence),
+                    target_anchor_id=responsibility_anchor.anchor_id,
+                    target_text=responsibility_anchor.content,
+                    source_references=[
+                        SourceReference(
+                            document_id=responsibility_anchor.file_id,
+                            filename=filenames_by_file_id.get(responsibility_anchor.file_id),
+                            anchor_id=responsibility_anchor.anchor_id,
+                        ),
+                        matrix_ref,
+                    ],
+                )
+            )
+        requires_explicit_review = not has_assessable_scope
         suggestions.append(
             Suggestion(
-                suggestion_id=str(uuid4()),
+                suggestion_id=suggestion_id,
                 suggestion_type="mapping_gap",
                 severity="high",
                 title=f"Add SOP coverage for {control_id}",
@@ -836,30 +1272,80 @@ def _cross_document_mapping_gap_suggestions(
                     f"The RCM contains control {control_id}, but no matching process step was found "
                     "in the primary SOP. This is suggested because the SOP should describe the control "
                     "procedure that auditors will test against the RCM."
+                    + (
+                        " The SOP scope could not be assessed confidently, so this mapping gap requires "
+                        "explicit reviewer confirmation before it is applied."
+                        if requires_explicit_review
+                        else ""
+                    )
                 ),
                 original_text=None,
-                proposed_text=(
-                    f"Add a procedure step for control {control_id} owned by "
-                    f"{candidate.get('owner') or 'the accountable control owner'}. The step should describe "
-                    f"{candidate.get('description') or 'the control activity'} and identify retained evidence: "
-                    f"{candidate.get('evidence_ref') or 'the relevant control evidence'}."
-                ),
-                target_anchor_id=primary_anchor.anchor_id,
+                proposed_text=_role_activity_sentence(owner, activity, evidence),
+                target_anchor_id=procedure_anchor.anchor_id,
+                edit_targets=edit_targets,
                 review_status="pending",
                 source_references=[
                     SourceReference(
-                        document_id=primary_anchor.file_id,
-                        filename=filenames_by_file_id.get(primary_anchor.file_id),
-                        anchor_id=primary_anchor.anchor_id,
+                        document_id=procedure_anchor.file_id,
+                        filename=filenames_by_file_id.get(procedure_anchor.file_id),
+                        anchor_id=procedure_anchor.anchor_id,
                     ),
                     matrix_ref,
                 ],
                 queue_finding=True,
+                requires_explicit_review=requires_explicit_review,
             )
         )
         if len(suggestions) >= 12:
             break
     return suggestions
+
+
+def _best_anchor_for_control_candidate(
+    candidate: dict,
+    *,
+    anchor_index: dict[str, Anchor],
+    file_ids: set[str],
+    fallback_anchor: Anchor,
+) -> Anchor:
+    query_tokens = _text_tokens(
+        " ".join(
+            str(candidate.get(key) or "")
+            for key in (
+                "control_id",
+                "description",
+                "owner",
+                "frequency",
+                "evidence_ref",
+                "risk_description",
+                "risk",
+            )
+        )
+    )
+    if len(query_tokens) < 2:
+        return fallback_anchor
+    best_anchor = fallback_anchor
+    best_score = 0
+    for anchor in anchor_index.values():
+        if anchor.file_id not in file_ids:
+            continue
+        if anchor.section_type not in {"procedural", "purpose_scope", "unknown"}:
+            continue
+        if _anchor_looks_like_responsibility_area(anchor):
+            continue
+        anchor_tokens = _text_tokens(
+            f"{anchor.heading} {anchor.section_path} {anchor.content}"
+        )
+        if not anchor_tokens:
+            continue
+        overlap = query_tokens.intersection(anchor_tokens)
+        score = len(overlap)
+        if anchor.anchor_id == fallback_anchor.anchor_id:
+            score += 1
+        if score > best_score:
+            best_score = score
+            best_anchor = anchor
+    return best_anchor if best_score >= 2 else fallback_anchor
 
 
 def _filenames_by_file_id(conversions: list[ConversionResult]) -> dict[str, str]:
@@ -875,9 +1361,85 @@ def _first_anchor_for_files(
     file_ids: set[str],
 ) -> Anchor | None:
     for anchor in anchor_index.values():
+        if (
+            anchor.file_id in file_ids
+            and anchor.section_type == "procedural"
+            and not _anchor_looks_like_responsibility_area(anchor)
+        ):
+            return anchor
+    for anchor in anchor_index.values():
+        if anchor.file_id in file_ids and anchor.section_type == "procedural":
+            return anchor
+    for anchor in anchor_index.values():
         if anchor.file_id in file_ids:
             return anchor
     return None
+
+
+def _first_responsibility_anchor_for_files(
+    anchor_index: dict[str, Anchor],
+    file_ids: set[str],
+) -> Anchor | None:
+    for anchor in anchor_index.values():
+        if anchor.file_id in file_ids and _anchor_looks_like_responsibility_area(anchor):
+            return anchor
+    return None
+
+
+def _anchor_looks_like_responsibility_area(anchor: Anchor) -> bool:
+    tokens = _text_tokens(f"{anchor.heading} {anchor.section_path} {anchor.content}")
+    responsibility_tokens = {
+        "accountability",
+        "accountable",
+        "activity",
+        "matrix",
+        "owner",
+        "ownership",
+        "raci",
+        "responsibilities",
+        "responsibility",
+        "role",
+        "roles",
+    }
+    return bool(tokens.intersection(responsibility_tokens))
+
+
+def _sentence_fragment(value: str) -> str:
+    return " ".join(str(value or "").strip().rstrip(".").split())
+
+
+def _role_activity_sentence(owner: str, activity: str, evidence: str) -> str:
+    subject = _role_subject(owner)
+    raw = _sentence_fragment(activity) or "the source activity"
+    stripped = _RCM_VERB_PREFIX.sub("", raw).strip()
+    activity_text = _lower_first(stripped or raw)
+    if _contains_obligation_or_state(activity_text):
+        action_sentence = f"{subject} is responsible for ensuring that {activity_text}."
+    else:
+        action_sentence = f"{subject} performs {activity_text}."
+    evidence_clean = _sentence_fragment(evidence)
+    if evidence_clean and evidence_clean.casefold() not in _EVIDENCE_PLACEHOLDER:
+        return f"{action_sentence} Retained evidence includes {evidence_clean}."
+    return action_sentence
+
+
+def _role_subject(owner: str) -> str:
+    cleaned = _sentence_fragment(owner) or "accountable owner"
+    if cleaned.casefold().startswith(("the ", "a ", "an ")):
+        return cleaned[0].upper() + cleaned[1:]
+    return f"The {cleaned}"
+
+
+def _contains_obligation_or_state(text: str) -> bool:
+    tokens = {
+        token.strip(".,;:()[]{}").casefold()
+        for token in str(text or "").replace("/", " ").replace("-", " ").split()
+    }
+    return bool(tokens.intersection({"are", "completed", "is", "must", "shall", "should", "will"}))
+
+
+def _lower_first(text: str) -> str:
+    return text[:1].lower() + text[1:] if text else text
 
 
 def _covered_control_ids_for_files(
@@ -924,7 +1486,7 @@ def _infer_control_ids_from_step(
     scored = [
         (_control_match_score(step, candidate), str(candidate.get("control_id") or ""))
         for candidate in candidates
-        if candidate.get("control_id")
+        if candidate.get("control_id") and _has_control_coverage_signal(step, candidate)
     ]
     scored = [(score, control_id) for score, control_id in scored if score >= 3]
     if not scored:
@@ -935,6 +1497,18 @@ def _infer_control_ids_from_step(
         for score, control_id in scored
         if score == best_score
     ][:2]
+
+
+def _has_control_coverage_signal(step: dict, candidate: dict) -> bool:
+    action_tokens = _text_tokens(str(step.get("action") or ""))
+    evidence_tokens = _text_tokens(str(step.get("evidence") or ""))
+    description_tokens = _text_tokens(str(candidate.get("description") or ""))
+    evidence_ref_tokens = _text_tokens(str(candidate.get("evidence_ref") or ""))
+    frequency_tokens = _text_tokens(str(candidate.get("frequency") or ""))
+    activity_overlap = (action_tokens | evidence_tokens).intersection(
+        description_tokens | evidence_ref_tokens | frequency_tokens
+    )
+    return len(activity_overlap) >= 2
 
 
 def _excel_control_candidates(excel_results: list[ExcelPipelineResult]) -> list[dict]:
@@ -1069,6 +1643,65 @@ def _dedupe_suggestions(suggestions: list[Suggestion]) -> list[Suggestion]:
         seen.add(key)
         deduped.append(suggestion)
     return deduped
+
+
+def _normalise_suggestions(
+    suggestions: list[Suggestion],
+    conversions: list[ConversionResult],
+) -> list[Suggestion]:
+    filenames_by_file_id = _filenames_by_file_id(conversions)
+    normalised: list[Suggestion] = []
+    for suggestion in suggestions:
+        if not _suggestion_has_material_content(suggestion):
+            continue
+        source_references = [
+            _source_reference_with_filename(ref, filenames_by_file_id)
+            for ref in suggestion.source_references
+        ]
+        if not source_references:
+            continue
+        edit_targets = [
+            target.model_copy(
+                update={
+                    "source_references": [
+                        _source_reference_with_filename(ref, filenames_by_file_id)
+                        for ref in target.source_references
+                    ]
+                }
+            )
+            for target in suggestion.edit_targets
+        ]
+        normalised.append(
+            suggestion.model_copy(
+                update={
+                    "source_references": source_references,
+                    "edit_targets": edit_targets,
+                }
+            )
+        )
+    return _dedupe_suggestions(normalised)
+
+
+def _source_reference_with_filename(
+    ref: SourceReference,
+    filenames_by_file_id: dict[str, str],
+) -> SourceReference:
+    if ref.filename:
+        return ref
+    filename = filenames_by_file_id.get(ref.document_id)
+    if not filename:
+        return ref
+    return ref.model_copy(update={"filename": filename})
+
+
+def _suggestion_has_material_content(suggestion: Suggestion) -> bool:
+    title = str(suggestion.title or "").strip()
+    detail = str(suggestion.detail or "").strip()
+    proposed_text = str(suggestion.proposed_text or "").strip()
+    if detail or proposed_text:
+        return True
+    default_title = suggestion.suggestion_type.replace("_", " ").title().casefold()
+    return bool(title and title.casefold() != default_title and len(title) > 8)
 
 
 def _partial_budget_result(

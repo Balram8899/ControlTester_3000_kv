@@ -83,6 +83,15 @@ def test_generate_report_400_no_controls():
     assert r.status_code == 400
 
 
+def test_workpaper_template_path_points_to_packaged_template():
+    from api import main
+
+    template_path = main._workpaper_template_path()
+
+    assert template_path.name == "Consolidated_WP_Template.xlsx"
+    assert template_path.is_file()
+
+
 def test_get_report_404_no_report():
     with patch("api.routers.control_testing.get_store") as gs:
         gs.return_value.get.return_value = _make_session()

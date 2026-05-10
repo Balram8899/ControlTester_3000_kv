@@ -1,0 +1,32 @@
+{
+  "cyber-scopegate-final2": {
+    "case_id": "00555b2b-1e3c-4738-9228-b3414463258d",
+    "stage": "review_ready",
+    "total": 39,
+    "mapping_gap": 2,
+    "open_issue": 18,
+    "review_gated": 28,
+    "mapping_titles": [
+      "Add SOP coverage for CC-001",
+      "Add SOP coverage for CC-019"
+    ],
+    "bad_mapping": {},
+    "bad_all": {
+      "swift": 1,
+      "dlp": 1,
+      "fraud": 2,
+      "cspm": 1
+    }
+  },
+  "esg-scopegate-final2": {
+    "case_id": "b8805497-244f-4b98-9305-31f1b1f68ac3",
+    "stage": "review_ready",
+    "total": 48,
+    "mapping_gap": 0,
+    "open_issue": 12,
+    "review_gated": 23,
+    "mapping_titles": [],
+    "subprocedure_mapping": {},
+    "subprocedure_all": {}
+  }
+}

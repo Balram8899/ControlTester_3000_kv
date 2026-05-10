@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TRACE — Document Uplift</title>
+<link rel="stylesheet" href="shell.css">
+<style>
+.hiw-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 16px; }
+.step-card { background: white; border-radius: 16px; border: 1px solid #E2E6EF; box-shadow: 0 1px 3px rgba(0,0,0,0.06); padding: 22px; display: flex; flex-direction: column; gap: 10px; }
+.step-num { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+.case-row {
+  background: white; border-radius: 14px; border: 1px solid #E2E6EF; border-left: 4px solid #E2E6EF;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05); padding: 16px 20px;
+  display: flex; align-items: center; gap: 14px; margin-bottom: 10px;
+  cursor: pointer; transition: box-shadow 0.15s, transform 0.15s;
+}
+.case-row:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.09); transform: translateY(-1px); }
+.case-row.amber { border-left-color: #EAAA00; }
+.case-row.blue  { border-left-color: #1E49E2; }
+.case-row.green { border-left-color: #009A44; }
+.case-row.grey  { border-left-color: #CAD7E8; }
+.case-icon { width: 42px; height: 42px; border-radius: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.case-body { flex: 1; min-width: 0; }
+.case-title { font-weight: 700; font-size: 14px; color: #0C233C; margin-bottom: 3px; }
+.case-meta { font-size: 12px; color: #8492A6; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.search-bar { display: flex; align-items: center; gap: 8px; background: white; border: 1px solid #E2E6EF; border-radius: 10px; padding: 8px 14px; font-size: 13px; color: #8492A6; }
+.progress-track { height: 4px; border-radius: 2px; background: #EEF2FF; width: 100px; overflow: hidden; margin-top: 6px; }
+.progress-fill { height: 100%; border-radius: 2px; background: #1E49E2; }
+</style>
+</head>
+<body>
+<div class="trace-shell">
+
+  <!-- Sidebar -->
+  <aside class="trace-sidebar expanded" id="sidebar">
+    <div class="sidebar-logo">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00B8F5" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <span class="logo-text">TRACE</span>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="sidebar-item" onclick="location.href='p1-dashboard.html'" title="Dashboard">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        <span class="sidebar-item-label">Dashboard</span>
+      </button>
+      <button class="sidebar-item" title="Controls Library">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span class="sidebar-item-label">Controls Library</span>
+      </button>
+      <button class="sidebar-item" title="Risk Assessment">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span class="sidebar-item-label">Risk Assessment</span>
+      </button>
+      <button class="sidebar-item" title="Control Testing">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        <span class="sidebar-item-label">Control Testing</span>
+      </button>
+      <button class="sidebar-item active" title="Document Uplift" onclick="location.href='p1-dashboard.html'">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="6" height="18" rx="1"/><rect x="9" y="3" width="6" height="18" rx="1"/><rect x="16" y="3" width="6" height="18" rx="1"/></svg>
+        <span class="sidebar-item-label">Document Uplift</span>
+        <span class="sidebar-badge">NEW</span>
+      </button>
+      <button class="sidebar-item" title="Issue Management">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span class="sidebar-item-label">Issue Management</span>
+      </button>
+      <button class="sidebar-item" title="Chat">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span class="sidebar-item-label">Chat</span>
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 6px;border-radius:10px;background:rgba(255,255,255,0.06);">
+        <div class="sidebar-avatar">KV</div>
+        <div style="display:flex;flex-direction:column;overflow:hidden;">
+          <span style="font-size:12px;font-weight:600;color:#E4EEFB;white-space:nowrap;">K Varma</span>
+          <span style="font-size:10px;color:#A6BCD9;white-space:nowrap;">kvarma9@gmail.com</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="trace-main">
+    <!-- Top Nav -->
+    <nav class="trace-topnav">
+      <div style="display:flex;align-items:center;gap:0;">
+        <span class="topnav-brand-kpmg">KPMG</span>
+        <span class="topnav-divider" style="margin:0 8px;">|</span>
+        <span class="topnav-brand-trace">TRACE</span>
+        <div class="topnav-breadcrumb">
+          <span class="topnav-breadcrumb-sep">/</span>
+          <span class="topnav-breadcrumb-active">Document Uplift</span>
+        </div>
+      </div>
+      <div class="topnav-actions">
+        <button class="topnav-btn-primary" onclick="document.getElementById('new-case-modal').style.display='flex'">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Case
+        </button>
+        <button class="topnav-btn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Sign Out
+        </button>
+      </div>
+    </nav>
+
+    <!-- Canvas -->
+    <div class="trace-canvas">
+      <!-- Hero -->
+      <section class="hero">
+        <div class="hero-orb1"></div><div class="hero-orb2"></div>
+        <div class="hero-inner">
+          <div class="hero-label-row"><div class="hero-label-bar"></div><span class="hero-label">Document Intelligence</span></div>
+          <h1 class="hero-h1">Document Uplift</h1>
+          <p class="hero-lede">Review, improve, and export procedure documents enriched with cross-document control evidence.</p>
+        </div>
+      </section>
+
+      <!-- Page Body -->
+      <main class="page-main">
+
+        <!-- How It Works (collapsible) -->
+        <div style="margin-bottom:36px;">
+          <button class="section-head-btn" onclick="toggleSection('hiw','ch-hiw')">
+            <div><div class="section-label">Process</div><div class="section-title">How It Works</div></div>
+            <svg id="ch-hiw" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8492A6" stroke-width="2" style="transition:transform 0.2s;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div id="hiw" class="hiw-grid fade-up">
+            <div class="step-card"><div class="step-num" style="background:#7213EA">1</div><div style="font-weight:700;font-size:14px;color:#0C233C">Create a Case</div><p class="text-secondary">Name your uplift and describe the business process in scope.</p></div>
+            <div class="step-card"><div class="step-num" style="background:#1E49E2">2</div><div style="font-weight:700;font-size:14px;color:#0C233C">Upload Documents</div><p class="text-secondary">Tag your SOP, RCM, policy, risk register, and evidence files.</p></div>
+            <div class="step-card"><div class="step-num" style="background:#00B8F5">3</div><div style="font-weight:700;font-size:14px;color:#0C233C">Run the Pipeline</div><p class="text-secondary">AI extracts, cross-references, and identifies control gaps.</p></div>
+            <div class="step-card"><div class="step-num" style="background:#098E7E">4</div><div style="font-weight:700;font-size:14px;color:#0C233C">Review Suggestions</div><p class="text-secondary">Accept, edit, or reject each suggestion — like Word's comment pane.</p></div>
+            <div class="step-card"><div class="step-num" style="background:#009A44">5</div><div style="font-weight:700;font-size:14px;color:#0C233C">Export</div><p class="text-secondary">Download your uplifted Word document and generated diagrams.</p></div>
+          </div>
+        </div>
+
+        <!-- Cases -->
+        <div>
+          <div class="section-head">
+            <div><div class="section-label">Workspace</div><div class="section-title">Your Cases <span style="font-size:16px;font-weight:400;color:#8492A6">(4)</span></div></div>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+              <div class="search-bar">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8492A6" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                Search cases…
+              </div>
+              <button class="btn-primary" onclick="document.getElementById('new-case-modal').style.display='flex'">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                New Case
+              </button>
+            </div>
+          </div>
+
+          <!-- Case 1: Review Ready -->
+          <div class="case-row amber" onclick="location.href='p2-case-detail.html'">
+            <div class="case-icon" style="background:#FFFBEB">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EAAA00" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            </div>
+            <div class="case-body">
+              <div class="case-title">Access Control Review</div>
+              <div class="case-meta">
+                <span>IT Security</span><span class="dot"></span>
+                <span>4 documents</span><span class="dot"></span>
+                <span style="color:#7A5400;font-weight:700">12 suggestions pending review</span><span class="dot"></span>
+                <span>Updated 30 min ago</span>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+              <span class="badge badge-amber">⚠ Review Ready</span>
+              <button class="btn-cobalt" onclick="location.href='p2-case-detail.html'">Open →</button>
+              <button class="btn-danger" onclick="event.stopPropagation();document.getElementById('delete-modal').style.display='flex'">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Case 2: Analyzing -->
+          <div class="case-row blue">
+            <div class="case-icon" style="background:#EEF2FF">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1E49E2" stroke-width="1.8" style="animation:spin 2s linear infinite"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+            </div>
+            <div class="case-body">
+              <div class="case-title">Vendor Onboarding Process</div>
+              <div class="case-meta">
+                <span>Procurement</span><span class="dot"></span>
+                <span>5 documents</span><span class="dot"></span>
+                <span style="color:#1E49E2;font-weight:600">Pipeline running…</span>
+              </div>
+              <div class="progress-track"><div class="progress-fill" style="width:60%"></div></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+              <span class="badge badge-blue">↻ Analyzing</span>
+              <button class="btn-secondary" style="opacity:0.5;cursor:not-allowed">Open</button>
+              <button class="btn-danger">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Case 3: Complete -->
+          <div class="case-row green">
+            <div class="case-icon" style="background:#EDFBF5">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#009A44" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 11 17 15 13"/></svg>
+            </div>
+            <div class="case-body">
+              <div class="case-title">Payroll Processing SOP</div>
+              <div class="case-meta"><span>Finance</span><span class="dot"></span><span>3 documents</span><span class="dot"></span><span>6 suggestions accepted</span><span class="dot"></span><span>Completed 2 days ago</span></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+              <span class="badge badge-green">✓ Complete</span>
+              <button class="btn-cobalt">Open →</button>
+              <button class="btn-danger"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+            </div>
+          </div>
+
+          <!-- Case 4: Setup -->
+          <div class="case-row grey">
+            <div class="case-icon" style="background:#F0F2F7">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8492A6" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <div class="case-body">
+              <div class="case-title">Employee Offboarding Checklist</div>
+              <div class="case-meta"><span>HR</span><span class="dot"></span><span style="color:#8492A6">No documents yet</span><span class="dot"></span><span>Created today</span></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+              <span class="badge badge-grey">Setup</span>
+              <button class="btn-cobalt">Open →</button>
+              <button class="btn-danger"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- Footer -->
+      <footer class="trace-footer">© 2026 KPMG Assurance and Consulting Services LLP, an Indian Limited Liability Partnership. All rights reserved. &nbsp;&nbsp;&nbsp;CONFIDENTIAL</footer>
+    </div><!-- end canvas -->
+  </div><!-- end main -->
+</div><!-- end shell -->
+
+<!-- Delete Modal -->
+<div id="delete-modal" style="display:none" class="modal-backdrop" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal">
+    <div style="width:48px;height:48px;border-radius:12px;background:#FEEBED;display:flex;align-items:center;justify-content:center;margin-bottom:16px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E5001B" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+    </div>
+    <div class="modal-title">Delete This Case?</div>
+    <div class="modal-body"><strong>Access Control Review</strong> and all its documents, pipeline results, and suggestions will be permanently deleted. This cannot be undone.</div>
+    <div class="modal-actions">
+      <button class="btn-secondary" style="flex:1" onclick="document.getElementById('delete-modal').style.display='none'">Cancel</button>
+      <button class="btn-red-solid" style="flex:1">Delete Case</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Case Modal -->
+<div id="new-case-modal" style="display:none" class="modal-backdrop" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal" style="max-width:460px">
+    <div style="margin-bottom:20px">
+      <div class="section-label" style="margin-bottom:4px">Document Uplift</div>
+      <div style="font-size:20px;font-weight:700;color:#0C233C;letter-spacing:-0.5px">Create New Case</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:24px">
+      <div>
+        <label style="font-size:11px;font-weight:700;color:#00338D;letter-spacing:2px;text-transform:uppercase;display:block;margin-bottom:6px">Case Title *</label>
+        <input id="case-title-input" style="width:100%;border:1.5px solid #E2E6EF;border-radius:10px;padding:10px 14px;font-size:14px;font-family:Arial;color:#0C233C;outline:none" placeholder="e.g. Payroll Processing SOP Uplift" onfocus="this.style.borderColor='#7213EA'" onblur="this.style.borderColor='#E2E6EF'">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:#00338D;letter-spacing:2px;text-transform:uppercase;display:block;margin-bottom:6px">Process Name</label>
+        <input style="width:100%;border:1.5px solid #E2E6EF;border-radius:10px;padding:10px 14px;font-size:14px;font-family:Arial;color:#0C233C;outline:none" placeholder="e.g. Payroll" onfocus="this.style.borderColor='#7213EA'" onblur="this.style.borderColor='#E2E6EF'">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:#00338D;letter-spacing:2px;text-transform:uppercase;display:block;margin-bottom:6px">Domain / Notes</label>
+        <textarea style="width:100%;border:1.5px solid #E2E6EF;border-radius:10px;padding:10px 14px;font-size:14px;font-family:Arial;color:#0C233C;outline:none;resize:vertical;min-height:68px" placeholder="Optional context for the AI…" onfocus="this.style.borderColor='#7213EA'" onblur="this.style.borderColor='#E2E6EF'"></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" style="flex:1" onclick="document.getElementById('new-case-modal').style.display='none'">Cancel</button>
+      <button style="flex:2;background:#7213EA;color:white;border:none;border-radius:10px;padding:11px 16px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-family:Arial" onclick="location.href='p2-case-detail.html'">
+        Create Case
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleSection(id, chId) {
+  const el = document.getElementById(id);
+  const ch = document.getElementById(chId);
+  const hidden = el.style.display === 'none';
+  el.style.display = hidden ? '' : 'none';
+  ch.style.transform = hidden ? '' : 'rotate(-90deg)';
+}
+</script>
+</body></html>

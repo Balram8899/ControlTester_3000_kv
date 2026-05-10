@@ -128,3 +128,129 @@ def test_tc22_low_confidence_discovery_routes_to_follow_up_question() -> None:
 
     assert findings == []
     assert questions == ["Who owns the backlog after triage?"]
+
+
+def test_document_issue_signal_detects_metric_deviation_without_domain_terms() -> None:
+    from utils.services.generic_findings import (
+        detect_document_issue_signals,
+        facts_from_sheet_result,
+        findings_to_suggestions,
+    )
+
+    sheet = sheet_result(
+        [
+            {
+                "_raw_attributes": {
+                    "Metric": "Supplier assessments completed",
+                    "Target": "100%",
+                    "Actual": "42%",
+                    "Deviation": "-58%",
+                    "Status": "Open",
+                    "Root Cause": "Questionnaire not aligned to reporting requirements",
+                    "Recommended Action": "Update the questionnaire and track remediation",
+                    "Owner": "Procurement",
+                },
+                "_source": {"row_index": 12},
+            }
+        ]
+    )
+
+    facts = facts_from_sheet_result("file-1", "metric_deviation_log.xlsx", sheet, "risk_data")
+    findings = detect_document_issue_signals(facts)
+
+    metric_finding = next(finding for finding in findings if finding.pattern == "metric_deviation")
+    assert metric_finding.severity in {"high", "critical"}
+    assert metric_finding.source_references[0].filename == "metric_deviation_log.xlsx"
+    assert metric_finding.source_references[0].row_index == 12
+    assert "Supplier assessments completed" in metric_finding.summary
+    suggestion = findings_to_suggestions([metric_finding])[0]
+    assert suggestion.source_references[0].filename == "metric_deviation_log.xlsx"
+    assert "threshold" in (suggestion.proposed_text or "").lower()
+
+
+def test_document_issue_signal_detects_recurring_exceptions_across_event_rows() -> None:
+    from utils.services.generic_findings import detect_document_issue_signals, facts_from_sheet_result
+
+    sheet = sheet_result(
+        [
+            {
+                "_raw_attributes": {
+                    "Event ID": f"EV-{index}",
+                    "Event Type": "Credential failure",
+                    "Status": "Open",
+                    "Root Cause": "Weak joiner-mover-leaver control",
+                    "Owner": "IAM",
+                },
+                "_source": {"row_index": index + 1},
+            }
+            for index in range(1, 4)
+        ]
+    )
+
+    findings = detect_document_issue_signals(
+        facts_from_sheet_result("file-1", "risk_event_log.xlsx", sheet, "risk_data")
+    )
+
+    recurring = next(finding for finding in findings if finding.pattern == "recurring_exception")
+    assert recurring.confidence >= 0.8
+    assert recurring.severity in {"high", "critical"}
+    assert len(recurring.source_references) == 3
+    assert "Credential failure" in recurring.summary
+
+
+def test_control_gap_action_rows_are_not_metric_deviations() -> None:
+    from utils.services.generic_findings import detect_document_issue_signals, facts_from_sheet_result
+
+    sheet = sheet_result(
+        [
+            {
+                "_raw_attributes": {
+                    "Control ID": "CC-001",
+                    "Control Name": "Endpoint Detection & Response",
+                    "Overall Rating": "Needs Improvement",
+                    "Key Gap Identified": "Tool not deployed to 12% of legacy systems.",
+                    "Recommended Action": "Accelerate legacy endpoint migration.",
+                    "Next Review Date": "2025-03-31",
+                },
+                "_source": {"row_index": 2},
+            }
+        ]
+    )
+
+    findings = detect_document_issue_signals(
+        facts_from_sheet_result("file-1", "control_assessment.xlsx", sheet, "rcm")
+    )
+
+    assert [finding.pattern for finding in findings] == ["open_issue_dependency"]
+    assert "Accelerate legacy endpoint migration" in findings[0].rationale
+
+
+def test_open_issue_dependency_suggestions_are_review_gated() -> None:
+    from utils.services.generic_findings import (
+        detect_document_issue_signals,
+        facts_from_sheet_result,
+        findings_to_suggestions,
+    )
+
+    sheet = sheet_result(
+        [
+            {
+                "_raw_attributes": {
+                    "Control ID": "CC-001",
+                    "Control Name": "Endpoint Detection & Response",
+                    "Overall Rating": "Needs Improvement",
+                    "Key Gap Identified": "Tool not deployed to 12% of legacy systems.",
+                    "Recommended Action": "Accelerate legacy endpoint migration.",
+                },
+                "_source": {"row_index": 2},
+            }
+        ]
+    )
+
+    findings = detect_document_issue_signals(
+        facts_from_sheet_result("file-1", "control_assessment.xlsx", sheet, "rcm")
+    )
+    suggestion = findings_to_suggestions(findings)[0]
+
+    assert suggestion.title.startswith("Open issue should be reflected")
+    assert suggestion.requires_explicit_review is True

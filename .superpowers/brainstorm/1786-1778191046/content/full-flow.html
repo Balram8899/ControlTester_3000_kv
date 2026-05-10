@@ -1,0 +1,229 @@
+<style>
+  .flow-section { margin-bottom: 32px; }
+  .page-label { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #00338D; margin-bottom: 6px; }
+  .wireframe { background: white; border: 1.5px solid #CAD7E8; border-radius: 10px; overflow: hidden; font-size: 12px; }
+  .wf-nav { background: #0C233C; color: white; padding: 8px 14px; display: flex; align-items: center; gap: 12px; font-size: 11px; }
+  .wf-nav-brand { font-weight: 700; color: #4EC3FF; }
+  .wf-hero { background: linear-gradient(135deg, #00338D 0%, #0C233C 100%); color: white; padding: 14px 18px; }
+  .wf-hero h3 { margin: 0 0 4px; font-size: 15px; }
+  .wf-hero p { margin: 0; font-size: 11px; opacity: 0.75; }
+  .wf-body { padding: 14px 18px; background: #F5F7FA; }
+  .wf-card { background: white; border: 1px solid #E2E6EF; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
+  .wf-row { display: flex; gap: 10px; align-items: flex-start; }
+  .wf-col { flex: 1; }
+  .wf-tab-bar { display: flex; border-bottom: 2px solid #E2E6EF; background: white; padding: 0 18px; gap: 2px; }
+  .wf-tab { padding: 8px 14px; font-size: 11px; color: #666; cursor: pointer; }
+  .wf-tab.active { color: #00338D; font-weight: 700; border-bottom: 2px solid #00338D; margin-bottom: -2px; }
+  .wf-tab.locked { color: #bbb; }
+  .tag-badge { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 20px; margin-right: 4px; }
+  .badge-green { background: #E6F4EA; color: #1a7a1a; }
+  .badge-amber { background: #FFF7E6; color: #7A5400; }
+  .badge-blue { background: #E8F0FE; color: #00338D; }
+  .badge-red { background: #FEEBED; color: #B00020; }
+  .how-it-works { display: flex; gap: 10px; margin-top: 8px; }
+  .hiw-step { flex: 1; background: white; border: 1px solid #E2E6EF; border-radius: 8px; padding: 10px; text-align: center; }
+  .hiw-num { width: 24px; height: 24px; border-radius: 50%; background: #00338D; color: white; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin: 0 auto 6px; }
+  .comment-pane { background: #FFFBEB; border-left: 3px solid #F7E7A8; border-radius: 0 6px 6px 0; padding: 8px 10px; margin-bottom: 6px; font-size: 11px; }
+  .doc-viewer { background: white; border: 1px solid #E2E6EF; border-radius: 6px; padding: 12px; font-size: 12px; line-height: 1.6; }
+  .doc-highlight { background: #FFF3CD; border-bottom: 2px solid #FFAA00; cursor: pointer; }
+  .popup-overlay { background: rgba(0,0,0,0.08); border: 1.5px solid #CAD7E8; border-radius: 10px; padding: 16px 18px; margin-top: 10px; }
+  .divider { border: none; border-top: 1.5px dashed #CAD7E8; margin: 20px 0; }
+  .arrow-down { text-align: center; color: #00338D; font-size: 18px; margin: 4px 0; }
+</style>
+
+<h2>Document Uplift — Proposed Page Structure</h2>
+<p class="subtitle">5 distinct views replacing the current single-page dump. Scroll down to see each page.</p>
+
+<!-- PAGE 1: LANDING DASHBOARD -->
+<div class="flow-section">
+  <div class="page-label">Page 1 — Landing Dashboard</div>
+  <div class="wireframe">
+    <div class="wf-nav"><span class="wf-nav-brand">KPMG TRACE</span> <span style="opacity:0.5">/</span> <span>Document Uplift</span></div>
+    <div class="wf-hero">
+      <h3>Document Uplift</h3>
+      <p>Review, improve, and export procedure documents with cross-document control evidence.</p>
+    </div>
+    <div class="wf-body">
+      <!-- How it works -->
+      <div class="wf-card" style="background:#F0F4FF;border-color:#C5D0E8;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:#00338D;margin-bottom:8px;">HOW IT WORKS</div>
+        <div class="how-it-works">
+          <div class="hiw-step"><div class="hiw-num">1</div><strong>Create a Case</strong><br><span style="font-size:10px;color:#666;">Name your uplift and describe the process</span></div>
+          <div class="hiw-step"><div class="hiw-num">2</div><strong>Upload Documents</strong><br><span style="font-size:10px;color:#666;">Tag SOPs, RCMs, policies, and evidence</span></div>
+          <div class="hiw-step"><div class="hiw-num">3</div><strong>Run Pipeline</strong><br><span style="font-size:10px;color:#666;">AI analyzes cross-document gaps</span></div>
+          <div class="hiw-step"><div class="hiw-num">4</div><strong>Review & Accept</strong><br><span style="font-size:10px;color:#666;">Accept, edit or reject each suggestion</span></div>
+          <div class="hiw-step"><div class="hiw-num">5</div><strong>Export</strong><br><span style="font-size:10px;color:#666;">Download uplifted Word / PDF files</span></div>
+        </div>
+      </div>
+      <!-- Case list header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:12px 0 8px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:#00338D;">CASES (3)</div>
+        <button style="background:#00338D;color:white;border:none;border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;">+ New Case</button>
+      </div>
+      <!-- Case cards -->
+      <div class="wf-card" style="cursor:pointer;border-left:3px solid #00338D;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div><strong>Payroll Processing SOP</strong> <span class="tag-badge badge-green">Complete</span></div>
+          <button style="background:none;border:1px solid #FEEBED;color:#B00020;border-radius:5px;font-size:10px;padding:2px 8px;">🗑 Delete</button>
+        </div>
+        <div style="font-size:11px;color:#666;margin-top:2px;">Payroll · Updated 2 hrs ago · 3 docs · 0 pending suggestions</div>
+      </div>
+      <div class="wf-card" style="cursor:pointer;border-left:3px solid #F7A800;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div><strong>Access Control Review</strong> <span class="tag-badge badge-amber">Review Ready</span></div>
+          <button style="background:none;border:1px solid #FEEBED;color:#B00020;border-radius:5px;font-size:10px;padding:2px 8px;">🗑 Delete</button>
+        </div>
+        <div style="font-size:11px;color:#666;margin-top:2px;">IT Security · Updated 30 min ago · 4 docs · <strong style="color:#7A5400;">12 pending suggestions</strong></div>
+      </div>
+      <div class="wf-card" style="cursor:pointer;border-left:3px solid #CAD7E8;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div><strong>Vendor Onboarding Process</strong> <span class="tag-badge" style="background:#E8F0FE;color:#00338D;">Analyzing</span></div>
+          <button style="background:none;border:1px solid #FEEBED;color:#B00020;border-radius:5px;font-size:10px;padding:2px 8px;">🗑 Delete</button>
+        </div>
+        <div style="font-size:11px;color:#666;margin-top:2px;">Procurement · Running pipeline… 2/4 docs</div>
+      </div>
+      <!-- Delete popup note -->
+      <div style="font-size:10px;color:#888;margin-top:6px;font-style:italic;">🗑 Delete raises a confirmation dialog before removing the case.</div>
+    </div>
+  </div>
+</div>
+
+<div class="arrow-down">↓ Click a case or "+ New Case"</div>
+
+<!-- PAGE 2: CASE CREATION -->
+<div class="flow-section" style="margin-top:12px;">
+  <div class="page-label">Page 2 — New Case (modal or inline form)</div>
+  <div class="wireframe">
+    <div class="wf-nav"><span class="wf-nav-brand">KPMG TRACE</span> <span style="opacity:0.5">/</span> <span>Document Uplift</span> <span style="opacity:0.5">/</span> <span>New Case</span></div>
+    <div class="wf-body">
+      <div class="wf-card" style="max-width:520px;margin:auto;">
+        <div style="font-weight:700;font-size:14px;color:#0C233C;margin-bottom:12px;">Create a New Case</div>
+        <div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:600;color:#00338D;">Case Title *</label><div style="border:1px solid #CAD7E8;border-radius:6px;padding:7px 10px;margin-top:3px;color:#999;font-size:12px;">e.g. Payroll Processing SOP Uplift</div></div>
+        <div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:600;color:#00338D;">Process Name</label><div style="border:1px solid #CAD7E8;border-radius:6px;padding:7px 10px;margin-top:3px;color:#999;font-size:12px;">e.g. Payroll</div></div>
+        <div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:600;color:#00338D;">Domain / Notes</label><div style="border:1px solid #CAD7E8;border-radius:6px;padding:7px 10px;margin-top:3px;color:#999;font-size:12px;">Optional context for the AI…</div></div>
+        <div style="display:flex;gap:8px;margin-top:14px;">
+          <button style="flex:1;background:#00338D;color:white;border:none;border-radius:6px;padding:8px;font-size:12px;font-weight:600;">Create Case →</button>
+          <button style="background:white;color:#666;border:1px solid #CAD7E8;border-radius:6px;padding:8px 14px;font-size:12px;">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="arrow-down">↓ Case created → enters Documents tab</div>
+
+<!-- PAGE 3: CASE DETAIL — TABS -->
+<div class="flow-section" style="margin-top:12px;">
+  <div class="page-label">Page 3 — Case Detail (tabbed, persistent across all stages)</div>
+  <div class="wireframe">
+    <div class="wf-nav"><span class="wf-nav-brand">KPMG TRACE</span> <span style="opacity:0.5">/</span> <span>Document Uplift</span> <span style="opacity:0.5">/</span> <span>Access Control Review</span></div>
+    <div class="wf-hero" style="padding:10px 18px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div>
+          <div style="font-size:13px;font-weight:700;">Access Control Review</div>
+          <div style="font-size:10px;opacity:0.7;">IT Security · Created 2026-05-07</div>
+        </div>
+        <span class="tag-badge badge-amber" style="margin-left:auto;">Review Ready</span>
+      </div>
+    </div>
+    <div class="wf-tab-bar">
+      <span class="wf-tab">← Cases</span>
+      <span style="width:1px;background:#E2E6EF;margin:4px 4px;"></span>
+      <span class="wf-tab">① Documents</span>
+      <span class="wf-tab">② Processing</span>
+      <span class="wf-tab active">③ Review Suggestions <span class="tag-badge badge-amber" style="font-size:10px;">12</span></span>
+      <span class="wf-tab locked" style="color:#aaa;">④ Export ⟵ locked</span>
+    </div>
+    <div class="wf-body">
+      <!-- Suggestion Review Tab content preview -->
+      <div style="font-size:11px;color:#888;margin-bottom:8px;">Tab ① — upload/tag docs, re-run pipeline &nbsp;|&nbsp; Tab ② — live pipeline progress &nbsp;|&nbsp; Tab ③ — suggestion review with document viewer (shown below) &nbsp;|&nbsp; Tab ④ — unlocked after review is accepted</div>
+      <!-- Mass actions bar -->
+      <div class="wf-card" style="background:#F0F4FF;border-color:#C5D0E8;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <div style="font-size:11px;font-weight:700;color:#00338D;">12 suggestions across 3 documents</div>
+        <button style="background:#1a7a1a;color:white;border:none;border-radius:5px;padding:4px 12px;font-size:11px;">✓ Accept All</button>
+        <button style="background:#B00020;color:white;border:none;border-radius:5px;padding:4px 12px;font-size:11px;">✕ Reject All</button>
+        <button style="background:white;border:1px solid #CAD7E8;border-radius:5px;padding:4px 12px;font-size:11px;color:#555;">Filter by doc ▾</button>
+        <button style="margin-left:auto;background:#00338D;color:white;border:none;border-radius:5px;padding:6px 16px;font-size:11px;font-weight:700;">Move to Export →</button>
+      </div>
+      <!-- Split: doc viewer + comments -->
+      <div style="display:flex;gap:10px;margin-top:8px;">
+        <!-- Document viewer -->
+        <div style="flex:2;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:#00338D;margin-bottom:4px;">DOCUMENT VIEWER — Access_Control_Policy_v2.docx</div>
+          <div class="doc-viewer">
+            <p style="margin:0 0 6px;font-weight:700;font-size:13px;">Access Control Policy</p>
+            <p style="margin:0 0 6px;font-size:11px;color:#444;">1. Purpose<br>This policy establishes requirements for <span class="doc-highlight">granting and revoking access</span> to company systems and data.</p>
+            <p style="margin:0 0 6px;font-size:11px;color:#444;">2. Scope<br>Applies to all employees, contractors and <span class="doc-highlight">third-party vendors with system access</span>.</p>
+            <p style="margin:0;font-size:11px;color:#444;">3. Responsibilities<br>The IT Security team is responsible for <span class="doc-highlight">quarterly access reviews</span>. [SUGGESTED: change to monthly based on RCM row 3]</p>
+          </div>
+          <div style="font-size:10px;color:#888;margin-top:4px;font-style:italic;">Highlighted text = suggestion anchor · Click to jump to comment pane →</div>
+        </div>
+        <!-- Comments pane -->
+        <div style="flex:1;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:#00338D;margin-bottom:4px;">SUGGESTIONS (3 in this doc)</div>
+          <div class="comment-pane" style="border-color:#E5001B;background:#FFF7F8;">
+            <div style="display:flex;justify-content:space-between;">
+              <span style="font-size:10px;font-weight:700;color:#B00020;">HIGH</span>
+              <div style="display:flex;gap:4px;"><button style="font-size:9px;background:#1a7a1a;color:white;border:none;border-radius:3px;padding:1px 6px;">✓</button><button style="font-size:9px;background:#B00020;color:white;border:none;border-radius:3px;padding:1px 6px;">✕</button></div>
+            </div>
+            <div style="font-size:11px;font-weight:600;margin:3px 0;">Mandate Evidence Retention for Audit Trail</div>
+            <div style="font-size:10px;color:#666;">Proposed: Add clause requiring 7-year retention per RCM row 3 control reference.</div>
+          </div>
+          <div class="comment-pane">
+            <div style="display:flex;justify-content:space-between;">
+              <span style="font-size:10px;font-weight:700;color:#7A5400;">MEDIUM</span>
+              <div style="display:flex;gap:4px;"><button style="font-size:9px;background:#1a7a1a;color:white;border:none;border-radius:3px;padding:1px 6px;">✓</button><button style="font-size:9px;background:#B00020;color:white;border:none;border-radius:3px;padding:1px 6px;">✕</button></div>
+            </div>
+            <div style="font-size:11px;font-weight:600;margin:3px 0;">Change quarterly reviews to monthly</div>
+            <div style="font-size:10px;color:#666;">Cross-referenced with ESG Risk & Controls Matrix row 3.</div>
+          </div>
+          <div class="comment-pane" style="border-color:#4EC3FF;background:#F0F8FF;opacity:0.6;">
+            <div style="font-size:10px;font-weight:700;color:#00338D;">LOW · Accepted ✓</div>
+            <div style="font-size:11px;font-weight:600;margin:3px 0;">Standardize Reporting Timelines</div>
+          </div>
+        </div>
+      </div>
+      <!-- Move to Export popup -->
+      <div class="popup-overlay" style="margin-top:12px;">
+        <div style="font-weight:700;font-size:13px;color:#0C233C;margin-bottom:6px;">⚠ Move to Export?</div>
+        <div style="font-size:12px;color:#555;margin-bottom:10px;">You have <strong>8 suggestions still pending</strong> review. Unreviewed suggestions will be excluded from the uplifted document.</div>
+        <div style="display:flex;gap:8px;">
+          <button style="background:#00338D;color:white;border:none;border-radius:6px;padding:6px 16px;font-size:12px;font-weight:600;">Continue to Export →</button>
+          <button style="background:white;border:1px solid #CAD7E8;color:#555;border-radius:6px;padding:6px 14px;font-size:12px;">Go back and review</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="arrow-down">↓ Confirm → Export tab unlocks</div>
+
+<!-- PAGE 4: EXPORT -->
+<div class="flow-section" style="margin-top:12px;">
+  <div class="page-label">Page 4 — Export Tab (④ unlocked after review)</div>
+  <div class="wireframe">
+    <div class="wf-tab-bar">
+      <span class="wf-tab">← Cases</span>
+      <span style="width:1px;background:#E2E6EF;margin:4px 4px;"></span>
+      <span class="wf-tab">① Documents</span>
+      <span class="wf-tab">② Processing</span>
+      <span class="wf-tab">③ Review Suggestions</span>
+      <span class="wf-tab active">④ Export & Download</span>
+    </div>
+    <div class="wf-body">
+      <div class="wf-card" style="background:#E6F4EA;border-color:#A8D5B0;text-align:center;padding:16px;">
+        <div style="font-size:16px;font-weight:700;color:#1a7a1a;margin-bottom:4px;">✓ Uplift Complete</div>
+        <div style="font-size:12px;color:#555;">4 accepted suggestions applied · 2 outputs ready for download</div>
+      </div>
+      <div class="wf-card" style="display:flex;align-items:center;justify-content:space-between;">
+        <div><div style="font-weight:600;font-size:13px;">Access_Control_Policy_uplifted.docx</div><div style="font-size:11px;color:#888;">Word document · 42 KB</div></div>
+        <button style="background:#00338D;color:white;border:none;border-radius:6px;padding:6px 14px;font-size:12px;">⬇ Download</button>
+      </div>
+      <div class="wf-card" style="display:flex;align-items:center;justify-content:space-between;">
+        <div><div style="font-weight:600;font-size:13px;">Process_Flow_Diagram.png</div><div style="font-size:11px;color:#888;">Diagram · 128 KB</div></div>
+        <button style="background:#00338D;color:white;border:none;border-radius:6px;padding:6px 14px;font-size:12px;">⬇ Download</button>
+      </div>
+      <button style="background:#F0F4FF;border:1px solid #C5D0E8;color:#00338D;border-radius:6px;padding:6px 16px;font-size:12px;margin-top:4px;">⬇ Download All as ZIP</button>
+    </div>
+  </div>
+</div>

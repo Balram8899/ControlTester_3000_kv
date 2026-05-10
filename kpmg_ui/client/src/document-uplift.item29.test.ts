@@ -38,6 +38,7 @@ const pageSource = fs.readFileSync(pagePath, "utf8");
   "Upload and Tag Documents",
   "Suggestion Queue",
   "Document Review",
+  "Uplift Targets",
   "Source References",
   "Generated Outputs",
   "Accept All",

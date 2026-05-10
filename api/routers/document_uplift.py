@@ -415,8 +415,12 @@ def bulk_review_suggestions(
     )
     suggestions = [dict(item) for item in case.get("suggestions", [])]
     updated_count = 0
+    explicit_review_count = 0
     for suggestion in suggestions:
         if suggestion.get("review_status") == target_status:
+            continue
+        if target_status == "accepted" and bool(suggestion.get("requires_explicit_review")):
+            explicit_review_count += 1
             continue
         suggestion["review_status"] = target_status
         updated_count += 1
@@ -426,6 +430,7 @@ def bulk_review_suggestions(
         "case_id": case_id,
         "review_status": target_status,
         "updated_count": updated_count,
+        "explicit_review_count": explicit_review_count,
         "suggestions": suggestions,
     }
 
@@ -434,8 +439,12 @@ def auto_accept_pending_suggestions(case_id: str) -> dict[str, Any]:
     case = _require_case(case_id)
     suggestions = [dict(item) for item in case.get("suggestions", [])]
     auto_accepted_count = 0
+    explicit_review_count = 0
     for suggestion in suggestions:
         if suggestion.get("review_status", "pending") != "pending":
+            continue
+        if bool(suggestion.get("requires_explicit_review")):
+            explicit_review_count += 1
             continue
         suggestion["review_status"] = "accepted"
         auto_accepted_count += 1
@@ -449,9 +458,14 @@ def auto_accept_pending_suggestions(case_id: str) -> dict[str, Any]:
             f"{auto_accepted_count} suggestions were not reviewed and have been automatically accepted. "
             "You can still edit the document after download."
         )
+    if explicit_review_count:
+        warnings.append(
+            f"{explicit_review_count} structural suggestions require manual review and were not automatically accepted."
+        )
     return {
         "case_id": case_id,
         "auto_accepted_count": auto_accepted_count,
+        "explicit_review_count": explicit_review_count,
         "warnings": warnings,
         "suggestions": suggestions,
     }

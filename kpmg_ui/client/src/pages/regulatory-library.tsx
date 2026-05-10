@@ -21,6 +21,7 @@ import { useRegulatoryTesting, LibraryDocument } from "@/contexts/RegulatoryTest
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { TraceMetricCard, TracePanel, TraceSectionHeading, TraceStatusRibbon } from "@/components/TraceAnalysisPrimitives";
+import Footer from "@/components/Footer";
 
 const ENFORCEMENT_COLOR: Record<string, string> = {
   mandatory:    "bg-red-100 text-red-700 border-red-300 dark:bg-red-950 dark:text-red-300",
@@ -65,6 +66,515 @@ function LibraryStatPill({ label, value }: { label: string; value: string }) {
     <div className="rounded-[16px] border border-[#D8E3F2] bg-[#F8FBFF] px-3 py-2">
       <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7E91AE]">{label}</p>
       <p className="mt-1 text-sm font-semibold text-[#0C233C]">{value}</p>
+    </div>
+  );
+}
+
+function formatTraceDomain(domain?: string) {
+  return (domain || "Unclassified")
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, char => char.toUpperCase());
+}
+
+function SectionHeader({
+  label,
+  title,
+  actions,
+}: {
+  label: string;
+  title: string;
+  actions?: ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-4 border-b-2 border-[#E2E6EF] pb-4 md:flex-row md:items-end md:justify-between">
+      <div className="text-left">
+        <div className="mb-1 text-[11px] font-bold uppercase tracking-[2.5px] text-[#00338D]">
+          {label}
+        </div>
+        <div className="text-[20px] font-bold text-[#0C233C]">
+          {title}
+        </div>
+      </div>
+      {actions ? <div className="flex flex-wrap items-center gap-2 md:justify-end">{actions}</div> : null}
+    </div>
+  );
+}
+
+function TraceActionButton({
+  children,
+  onClick,
+  disabled,
+  active = false,
+  title,
+  className = "",
+}: {
+  children: ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+  active?: boolean;
+  title?: string;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      title={title}
+      disabled={disabled}
+      onClick={onClick}
+      className={`inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2 text-[13px] font-bold transition-all duration-200 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-45 ${
+        active
+          ? "border-[#00338D] bg-[#00338D] text-white"
+          : "border-[#E2E6EF] bg-white text-[#0C233C] hover:border-[#1E49E2]"
+      } ${className}`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function TracePill({
+  children,
+  color = "#1E49E2",
+  fill,
+}: {
+  children: ReactNode;
+  color?: string;
+  fill?: string;
+}) {
+  return (
+    <span
+      className="inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold"
+      style={{ borderColor: `${color}55`, color, background: fill ?? `${color}1A` }}
+    >
+      {children}
+    </span>
+  );
+}
+
+function RegulatoryKpiTile({
+  label,
+  value,
+  detail,
+  accent,
+  progress,
+}: {
+  label: string;
+  value: ReactNode;
+  detail: string;
+  accent: string;
+  progress?: number;
+}) {
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-[#E2E6EF] bg-white p-7 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
+      <div className="absolute left-0 right-0 top-0 h-1 rounded-t-2xl" style={{ background: accent }} />
+      <p className="text-[11px] font-bold uppercase tracking-[2px] text-[#8492A6]">{label}</p>
+      <div className="mt-3 text-[34px] font-bold leading-none" style={{ color: accent }}>
+        {value}
+      </div>
+      <p className="mt-3 text-[12px] leading-relaxed text-[#5A6478]">{detail}</p>
+      {typeof progress === "number" ? (
+        <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-[#E2E6EF]">
+          <div
+            className="h-full rounded-full transition-all duration-500"
+            style={{ width: `${Math.max(0, Math.min(100, progress))}%`, background: accent }}
+          />
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function DomainDistributionBars({
+  domains,
+  activeDomain,
+  onSelect,
+}: {
+  domains: [string, number][];
+  activeDomain: string;
+  onSelect: (domain: string) => void;
+}) {
+  const maxCount = domains[0]?.[1] || 1;
+
+  return (
+    <div className="space-y-2">
+      {domains.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-[#E2E6EF] bg-[#F8FAFD] px-5 py-8 text-center">
+          <p className="text-[13px] font-bold text-[#5A6478]">No domains loaded</p>
+          <p className="mt-1 text-[12px] text-[#8492A6]">Upload a regulatory source document to populate domain bands.</p>
+        </div>
+      ) : (
+        domains.map(([domain, count]) => {
+          const active = activeDomain === domain;
+          return (
+            <button
+              key={domain}
+              type="button"
+              className={`grid w-full grid-cols-[170px_1fr_44px] items-center gap-4 rounded-xl px-3 py-2 text-left transition-colors ${
+                active ? "bg-[#EEF2FF]" : "hover:bg-[#F0F2F7]"
+              }`}
+              onClick={() => onSelect(active ? "all" : domain)}
+            >
+              <span className="text-[13px] font-bold text-[#0C233C]">{formatTraceDomain(domain)}</span>
+              <span className="h-4 overflow-hidden rounded-full bg-[#E2E6EF]">
+                <span
+                  className="block h-full rounded-full bg-[#1E49E2] transition-all duration-500"
+                  style={{ width: `${Math.max(8, (count / maxCount) * 100)}%` }}
+                />
+              </span>
+              <span className="text-right text-[13px] font-bold text-[#5A6478]">{count}</span>
+            </button>
+          );
+        })
+      )}
+    </div>
+  );
+}
+
+function RegulatoryDocumentCard({
+  doc,
+  selected,
+  checked,
+  mode,
+  onOpen,
+  onToggle,
+  onDelete,
+}: {
+  doc: LibraryDocument;
+  selected: boolean;
+  checked: boolean;
+  mode: RightPanelView;
+  onOpen: () => void;
+  onToggle: () => void;
+  onDelete: () => void;
+}) {
+  const topDomains = Object.entries(doc.obligations_by_domain ?? {})
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3);
+
+  return (
+    <button
+      type="button"
+      className={`group rounded-2xl border p-4 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
+        selected || checked ? "border-[#1E49E2] bg-[#EEF2FF]" : "border-[#E2E6EF] bg-white"
+      }`}
+      onClick={mode === "gap-analysis" ? onToggle : onOpen}
+    >
+      <div className="flex items-start gap-3">
+        {mode === "gap-analysis" ? (
+          <span
+            className={`mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border ${
+              checked ? "border-[#1E49E2] bg-[#1E49E2] text-white" : "border-[#E2E6EF] bg-white text-transparent"
+            }`}
+          >
+            <Check className="h-3 w-3" />
+          </span>
+        ) : (
+          <FileText className="mt-1 h-5 w-5 shrink-0 text-[#8492A6]" />
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="line-clamp-2 text-[14px] font-bold leading-snug text-[#0C233C]">{doc.framework_name}</p>
+          <p className="mt-1 truncate text-[12px] text-[#8492A6]">{doc.source_filename}</p>
+        </div>
+        {mode !== "gap-analysis" ? (
+          <span
+            role="button"
+            tabIndex={0}
+            className="rounded-lg p-1 text-[#E5001B] opacity-0 transition-opacity hover:bg-[#FEEBED] group-hover:opacity-100"
+            onClick={event => {
+              event.stopPropagation();
+              onDelete();
+            }}
+            onKeyDown={event => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                event.stopPropagation();
+                onDelete();
+              }
+            }}
+            aria-label={`Delete ${doc.source_filename}`}
+          >
+            <Trash2 className="h-4 w-4" />
+          </span>
+        ) : null}
+      </div>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <TracePill color="#1E49E2">{doc.total_obligations} obligations</TracePill>
+        {doc.issuing_authority ? <TracePill color="#8492A6">{doc.issuing_authority}</TracePill> : null}
+        {topDomains.map(([domain, count]) => (
+          <TracePill key={domain} color="#098E7E">
+            {formatTraceDomain(domain)} {count}
+          </TracePill>
+        ))}
+      </div>
+    </button>
+  );
+}
+
+function RegulatoryObligationTable({
+  rows,
+  loading,
+  controlsLoaded,
+  obligationControlMap,
+  onControlClick,
+  emptyCopy,
+}: {
+  rows: any[];
+  loading: boolean;
+  controlsLoaded: boolean;
+  obligationControlMap: Map<string, MappedControlEntry[]>;
+  onControlClick: (id: string) => void;
+  emptyCopy: string;
+}) {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-[#E2E6EF] bg-white shadow-sm">
+      <div className="max-h-[560px] overflow-auto">
+        <table className="w-full min-w-[1120px] text-[12px]">
+          <thead className="sticky top-0 z-10">
+            <tr className="border-b border-[#E2E6EF] bg-[#F8FAFD] text-[#8492A6]">
+              <th className="px-4 py-3 text-left font-bold uppercase tracking-[1.5px]">ID</th>
+              <th className="px-4 py-3 text-left font-bold uppercase tracking-[1.5px]">Domain</th>
+              <th className="px-4 py-3 text-left font-bold uppercase tracking-[1.5px]">Level</th>
+              <th className="px-4 py-3 text-left font-bold uppercase tracking-[1.5px]">Obligation Text</th>
+              <th className="px-4 py-3 text-center font-bold uppercase tracking-[1.5px]">Mapped Controls</th>
+              <th className="px-4 py-3 text-left font-bold uppercase tracking-[1.5px]">Source</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan={6} className="px-4 py-16 text-center">
+                  <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#1E49E2] border-t-transparent" />
+                  <p className="mt-3 text-[13px] font-bold text-[#5A6478]">Loading obligations</p>
+                </td>
+              </tr>
+            ) : rows.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-4 py-16 text-center text-[13px] text-[#8492A6]">
+                  {emptyCopy}
+                </td>
+              </tr>
+            ) : (
+              rows.slice(0, 250).map((obl, index) => {
+                const mappedCtrls = obligationControlMap.get(obl.obligation_id) ?? [];
+                const source = [
+                  obl.framework_name || obl.source_filename,
+                  obl.section_reference ? `§${obl.section_reference}` : "",
+                ].filter(Boolean).join(" ");
+                return (
+                  <tr key={`${obl.obligation_id ?? index}-${obl.source_filename ?? ""}`} className="border-b border-[#E2E6EF] last:border-0 align-top hover:bg-[#F8FAFD]">
+                    <td className="px-4 py-4">
+                      <code className="rounded-md bg-[#0C233C] px-2 py-1 font-mono text-[11px] font-bold text-white">
+                        {obl.obligation_id || "-"}
+                      </code>
+                    </td>
+                    <td className="px-4 py-4">
+                      <TracePill color="#1E49E2">{formatTraceDomain(obl.domain)}</TracePill>
+                    </td>
+                    <td className="px-4 py-4">
+                      <TracePill
+                        color={obl.enforcement_level === "mandatory" ? "#E5001B" : obl.enforcement_level === "recommended" ? "#EAAA00" : "#8492A6"}
+                        fill={obl.enforcement_level === "mandatory" ? "#FEEBED" : obl.enforcement_level === "recommended" ? "#FFFBEB" : "#F0F2F7"}
+                      >
+                        {obl.enforcement_level || "-"}
+                      </TracePill>
+                    </td>
+                    <td className="max-w-[520px] px-4 py-4 text-[#5A6478]">
+                      <p className="line-clamp-3 leading-relaxed">{obl.obligation_text || "-"}</p>
+                      {controlsLoaded && mappedCtrls.length > 0 ? (
+                        <MappedControlsSection controls={mappedCtrls} onControlClick={onControlClick} />
+                      ) : null}
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      {controlsLoaded ? (
+                        <TracePill color={mappedCtrls.length > 0 ? "#009A44" : "#EAAA00"} fill={mappedCtrls.length > 0 ? "#EDFBF5" : "#FFFBEB"}>
+                          {mappedCtrls.length}
+                        </TracePill>
+                      ) : (
+                        <span className="text-[#8492A6]">-</span>
+                      )}
+                    </td>
+                    <td className="max-w-[260px] px-4 py-4 text-[#8492A6]">
+                      <span className="line-clamp-2" title={source}>{source || "-"}</span>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+      {rows.length > 250 ? (
+        <p className="border-t border-[#E2E6EF] py-3 text-center text-[12px] text-[#8492A6]">
+          Showing 250 rows. Use search and filters to narrow the obligation list.
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function MappedControlsPanel({
+  controls,
+  defaultExpanded = false,
+  onControlClick,
+}: {
+  controls: MappedControlEntry[];
+  defaultExpanded?: boolean;
+  onControlClick?: (controlId: string) => void;
+}) {
+  const [expanded, setExpanded] = useState(defaultExpanded);
+  const visibleControls = expanded ? controls.slice().sort((a, b) => b.match_score - a.match_score) : [];
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-[#E2E6EF] border-l-4 border-l-[#1E49E2] bg-[#F8FAFD] shadow-sm">
+      <button
+        type="button"
+        className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-[#EEF2FF]"
+        onClick={() => setExpanded(value => !value)}
+      >
+        <ShieldCheck className="h-4 w-4 shrink-0 text-[#1E49E2]" />
+        <span className="text-[13px] font-bold text-[#0C233C]">Mapped Controls</span>
+        <TracePill color="#009A44" fill="#EDFBF5">{controls.length}</TracePill>
+        <ChevronDown className={`ml-auto h-4 w-4 text-[#8492A6] transition-transform ${expanded ? "" : "-rotate-90"}`} />
+      </button>
+      {expanded ? (
+        <div className="grid gap-3 border-t border-[#E2E6EF] bg-white p-3">
+          {visibleControls.map(ctrl => {
+            const score = Math.round(ctrl.match_score * 100);
+            const accent = score >= 70 ? "#009A44" : score >= 40 ? "#EAAA00" : "#E5001B";
+            return (
+              <div key={`${ctrl.control_id}-${ctrl.control_name}`} className="grid grid-cols-[1fr_150px] gap-4 rounded-xl border border-[#E2E6EF] bg-[#F8FAFD] px-4 py-3">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="truncate text-[13px] font-bold text-[#0C233C]">{ctrl.control_name}</span>
+                    <button
+                      type="button"
+                      title="Open control in Controls Library"
+                      className="inline-flex items-center gap-1 rounded-lg border border-[#1E49E2] bg-white px-2 py-1 font-mono text-[10px] font-bold text-[#1E49E2] hover:bg-[#EEF2FF]"
+                      onClick={() => onControlClick?.(ctrl.control_id)}
+                    >
+                      {ctrl.control_id}
+                      <ArrowRight className="h-3 w-3" />
+                    </button>
+                  </div>
+                  <p className="mt-1 text-[12px] capitalize text-[#5A6478]">
+                    {formatTraceDomain(ctrl.domain)} - {ctrl.control_type || "control"}
+                  </p>
+                </div>
+                <div className="flex items-center justify-end gap-3">
+                  <div className="h-2 w-20 overflow-hidden rounded-full bg-[#E2E6EF]">
+                    <div className="h-full rounded-full" style={{ width: `${Math.max(4, score)}%`, background: accent }} />
+                  </div>
+                  <span className="w-9 text-right font-mono text-[11px] font-bold text-[#5A6478]">{score}%</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function RegulatoryObligationList({
+  rows,
+  loading,
+  controlsLoaded,
+  obligationControlMap,
+  onControlClick,
+  emptyCopy,
+}: {
+  rows: any[];
+  loading: boolean;
+  controlsLoaded: boolean;
+  obligationControlMap: Map<string, MappedControlEntry[]>;
+  onControlClick: (id: string) => void;
+  emptyCopy: string;
+}) {
+  const gridColumns = "grid-cols-[120px_170px_150px_minmax(420px,1fr)_150px_280px]";
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-[#E2E6EF] bg-white shadow-sm">
+      <div className="max-h-[620px] overflow-auto">
+        <div className="min-w-[1290px] text-[12px]">
+          <div className={`sticky top-0 z-10 grid ${gridColumns} border-b border-[#E2E6EF] bg-[#F8FAFD] text-[#8492A6] shadow-sm`}>
+            {["ID", "Domain", "Level", "Obligation", "Mapped Controls", "Source"].map(label => (
+              <div key={label} className="px-5 py-4 text-left font-bold uppercase tracking-[1.5px]">
+                {label}
+              </div>
+            ))}
+          </div>
+
+          {loading ? (
+            <div className="px-4 py-16 text-center">
+              <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#1E49E2] border-t-transparent" />
+              <p className="mt-3 text-[13px] font-bold text-[#5A6478]">Loading obligations</p>
+            </div>
+          ) : rows.length === 0 ? (
+            <div className="px-4 py-16 text-center text-[13px] text-[#8492A6]">{emptyCopy}</div>
+          ) : (
+            rows.slice(0, 250).map((obl, index) => {
+              const mappedCtrls = obligationControlMap.get(obl.obligation_id) ?? [];
+              const source = [
+                obl.framework_name || obl.source_filename,
+                obl.section_reference ? `Section ${obl.section_reference}` : "",
+              ].filter(Boolean).join(" - ");
+              return (
+                <div key={`${obl.obligation_id ?? index}-${obl.source_filename ?? ""}`} className="border-b border-[#E2E6EF] bg-white last:border-0 hover:bg-[#F8FAFD]">
+                  <div className={`grid ${gridColumns} items-start`}>
+                    <div className="px-5 py-5">
+                      <code className="inline-flex min-w-[72px] justify-center rounded-lg bg-[#0C233C] px-2.5 py-1.5 font-mono text-[11px] font-bold text-white">
+                        {obl.obligation_id || "-"}
+                      </code>
+                    </div>
+                    <div className="px-5 py-5">
+                      <TracePill color="#1E49E2">{formatTraceDomain(obl.domain)}</TracePill>
+                    </div>
+                    <div className="px-5 py-5">
+                      <TracePill
+                        color={obl.enforcement_level === "mandatory" ? "#E5001B" : obl.enforcement_level === "recommended" ? "#EAAA00" : "#8492A6"}
+                        fill={obl.enforcement_level === "mandatory" ? "#FEEBED" : obl.enforcement_level === "recommended" ? "#FFFBEB" : "#F0F2F7"}
+                      >
+                        {obl.enforcement_level || "-"}
+                      </TracePill>
+                    </div>
+                    <div className="px-5 py-5 text-[13px] leading-relaxed text-[#0C233C]">
+                      {obl.obligation_text || "-"}
+                    </div>
+                    <div className="px-5 py-5">
+                      {controlsLoaded ? (
+                        <TracePill color={mappedCtrls.length > 0 ? "#009A44" : "#EAAA00"} fill={mappedCtrls.length > 0 ? "#EDFBF5" : "#FFFBEB"}>
+                          {mappedCtrls.length} mapped
+                        </TracePill>
+                      ) : (
+                        <span className="text-[#8492A6]">-</span>
+                      )}
+                    </div>
+                    <div className="px-5 py-5 text-[12px] leading-relaxed text-[#5A6478]">
+                      <span className="line-clamp-3" title={source}>{source || "-"}</span>
+                    </div>
+                  </div>
+                  {controlsLoaded && mappedCtrls.length > 0 ? (
+                    <div className="px-5 pb-5">
+                      <div className="w-full">
+                        <MappedControlsPanel
+                          controls={mappedCtrls}
+                          defaultExpanded={index === 0 && mappedCtrls.length <= 3}
+                          onControlClick={onControlClick}
+                        />
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+      {rows.length > 250 ? (
+        <p className="border-t border-[#E2E6EF] py-3 text-center text-[12px] text-[#8492A6]">
+          Showing 250 rows. Use search and filters to narrow the obligation list.
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -1018,6 +1528,645 @@ export default function RegulatoryLibraryPage() {
   const ctrlCoveragePct = allControls.length > 0 ? (ctrlWithMapping / allControls.length) * 100 : 0;
   const frameworkNames = Array.from(new Set(libraryDocuments.map(d => d.framework_name).filter(Boolean)));
   const hasCrossData = controlsLoaded && allControls.length > 0 && totalObligations > 0;
+
+  const useRedesignedRegulatoryLibrary = Boolean("trace-regulatory-library-redesign");
+  if (useRedesignedRegulatoryLibrary) {
+    const selectedObligationMode = rightPanelView === "obligations";
+    const activeObligationRows = selectedObligationMode ? filteredObligations : filteredDashboardObligations;
+    const activeSearch = selectedObligationMode ? librarySearch : dashboardSearch;
+    const activeShownCount = activeObligationRows.length;
+    const activeTotalCount = selectedObligationMode
+      ? selectedLibraryDoc?.total_obligations ?? activeShownCount
+      : dashboardViewMode === "merged"
+        ? mergedObligations?.length ?? activeShownCount
+        : dashboardObligations.length;
+    const activeObligationTitle = selectedObligationMode
+      ? "Selected Document Obligations"
+      : dashboardViewMode === "merged"
+        ? "Merged Obligations"
+        : "All Obligations";
+    const uniqueDashboardObligations = Array.from(
+      new Map(dashboardObligations.filter(o => o.obligation_id).map(o => [o.obligation_id, o])).values()
+    );
+    const coveredMetricObligations = uniqueDashboardObligations.filter(o => coveredObligationIds.has(o.obligation_id));
+    const gapMetricObligations = uniqueDashboardObligations.filter(o => !coveredObligationIds.has(o.obligation_id));
+    const gapReady = gapSelectedIds.size >= 2;
+
+    return (
+      <div className="flex h-full flex-col overflow-hidden bg-[#F0F2F7] text-[#0C233C]">
+        <section className="relative shrink-0 overflow-hidden bg-[#0C233C]">
+          <div className="absolute inset-0 opacity-80" style={{ background: "linear-gradient(135deg, #0C233C 0%, #1E49E2 100%)" }} />
+          <div className="relative px-8 py-7 md:px-10">
+            <div className="mb-3 text-[11px] font-bold uppercase tracking-[2.5px] text-[#00B8F5]">Regulatory Corpus</div>
+            <h1 className="text-[34px] font-bold leading-tight text-white md:text-[42px]">
+              Regulatory Library
+            </h1>
+            <p className="mt-3 max-w-[760px] text-[16px] leading-[1.75] text-white/65">
+              Curate source documents, review obligations, and compare frameworks in one workspace.
+            </p>
+          </div>
+        </section>
+
+        <main className="min-h-0 flex-1 overflow-auto px-6 py-6">
+          <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-[#E2E6EF] bg-white p-4 shadow-sm xl:flex-row xl:items-center xl:justify-between">
+            <div>
+              <div className="text-[11px] font-bold uppercase tracking-[2.5px] text-[#00338D]">Feature Workspace</div>
+              <div className="mt-1 text-[20px] font-bold text-[#0C233C]">
+                {rightPanelView === "gap-analysis" ? "Gap Analysis" : "Dashboard"}
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <TraceActionButton
+                active={rightPanelView !== "gap-analysis"}
+                onClick={() => {
+                  setRightPanelView("dashboard");
+                  setSelectedLibraryDoc(null);
+                }}
+              >
+                <LayoutDashboard className="h-4 w-4" />
+                Dashboard
+              </TraceActionButton>
+              <TraceActionButton
+                active={rightPanelView === "gap-analysis"}
+                onClick={() => {
+                  setRightPanelView("gap-analysis");
+                  setSelectedLibraryDoc(null);
+                  setGapResults(null);
+                }}
+              >
+                <GitCompare className="h-4 w-4" />
+                Gap Analysis
+              </TraceActionButton>
+            </div>
+          </div>
+          {rightPanelView !== "gap-analysis" ? (
+          <>
+          <section className="mb-9">
+            <SectionHeader
+              label="Data Inputs"
+              title="Upload Regulatory Source Documents"
+              actions={
+                <>
+                  <TraceActionButton onClick={fetchLibraryDocuments} disabled={libraryLoading}>
+                    <RotateCcw className={`h-4 w-4 ${libraryLoading ? "animate-spin" : ""}`} />
+                    Refresh
+                  </TraceActionButton>
+                </>
+              }
+            />
+
+            <div className="mt-6 grid gap-6 rounded-2xl border border-[#E2E6EF] bg-white p-6 shadow-sm lg:grid-cols-[1fr_1.1fr_1fr]">
+              <div className="flex gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#EEF2FF] text-[#1E49E2]">
+                  <Library className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="text-[17px] font-bold text-[#0C233C]">Add regulatory source files</h3>
+                  <p className="mt-1 text-[13px] leading-relaxed text-[#5A6478]">
+                    Load regulatory documents, extract obligations, and keep the corpus ready for comparison.
+                  </p>
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    <TracePill color="#1E49E2">{libraryDocuments.length} document{libraryDocuments.length !== 1 ? "s" : ""}</TracePill>
+                    <TracePill color="#009A44" fill="#EDFBF5">{totalObligations.toLocaleString()} obligations</TracePill>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                className={`flex min-h-[170px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-6 text-center transition-colors ${
+                  libraryFiles.length > 0 ? "border-[#1E49E2] bg-[#EEF2FF]" : "border-[#E2E6EF] hover:border-[#1E49E2]"
+                }`}
+                onClick={() => document.getElementById("regulatory-redesign-file-input")?.click()}
+              >
+                <input
+                  id="regulatory-redesign-file-input"
+                  type="file"
+                  multiple
+                  accept=".pdf,.docx,.doc,.txt,.md,.csv,.xlsx,.xls,.png,.jpg,.jpeg"
+                  className="hidden"
+                  onChange={event => {
+                    const files = Array.from(event.target.files || []);
+                    if (files.length) setLibraryFiles(prev => [...prev, ...files]);
+                    event.target.value = "";
+                  }}
+                />
+                <Upload className="h-9 w-9 text-[#1E49E2]" />
+                <p className="mt-3 text-[15px] font-bold text-[#0C233C]">Select source documents</p>
+                <p className="mt-1 text-[12px] text-[#8492A6]">PDF, Word, text, spreadsheets, or image files</p>
+                <span className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#EEF2FF] px-4 py-2 text-[13px] font-bold text-[#1E49E2]">
+                  <Upload className="h-4 w-4" />
+                  Browse Files
+                </span>
+              </div>
+
+              <div className="rounded-2xl border border-[#E2E6EF] bg-[#F8FAFD] p-4">
+                <div className="flex h-full min-h-[150px] flex-col justify-between">
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-[2px] text-[#00338D]">Workspace</p>
+                    <p className="mt-2 text-[14px] font-bold text-[#0C233C]">Current library state</p>
+                  </div>
+                  {libraryFiles.length > 0 ? (
+                    <div className="my-3 max-h-28 space-y-2 overflow-auto pr-1">
+                      {libraryFiles.map((file, index) => (
+                        <div key={`${file.name}-${index}`} className="flex items-center gap-2 rounded-xl border border-[#E2E6EF] bg-white px-3 py-2 text-[12px]">
+                          <FileText className="h-4 w-4 shrink-0 text-[#8492A6]" />
+                          <span className="min-w-0 flex-1 truncate text-[#0C233C]">{file.name}</span>
+                          <button
+                            type="button"
+                            className="text-[#8492A6] hover:text-[#E5001B]"
+                            onClick={event => {
+                              event.stopPropagation();
+                              setLibraryFiles(prev => prev.filter((_, i) => i !== index));
+                            }}
+                            aria-label={`Remove ${file.name}`}
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                  <div className="flex flex-wrap gap-2">
+                    {libraryFiles.length > 0 ? (
+                      <TraceActionButton active disabled={libraryIngesting} className="w-full" onClick={handleLibraryIngest}>
+                        {libraryIngesting ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> : <Play className="h-4 w-4" />}
+                        {libraryIngesting ? "Extracting" : "Extract And Save"}
+                      </TraceActionButton>
+                    ) : null}
+                  </div>
+                  {libraryDocuments.length > 0 ? <TracePill color="#1E49E2">{libraryDocuments.length} loaded</TracePill> : null}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="mb-9">
+            <SectionHeader
+              label="Knowledge Base"
+              title="Source Documents"
+              actions={
+                <>
+                  <TraceActionButton disabled={libraryDocuments.length === 0 || mergedObligationsLoading} active={dashboardViewMode === "merged"} onClick={mergedObligations !== null ? () => setDashboardViewMode("merged") : fetchMergedObligations}>
+                    {mergedObligationsLoading ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#1E49E2] border-t-transparent" /> : <Layers className="h-4 w-4" />}
+                    Merged
+                  </TraceActionButton>
+                  {libraryDocuments.length > 0 ? (
+                    <TraceActionButton disabled={clearingLibrary} onClick={() => setShowClearConfirm(true)}>
+                      <Trash2 className="h-4 w-4" />
+                      Clear Library
+                    </TraceActionButton>
+                  ) : null}
+                </>
+              }
+            />
+
+            {showClearConfirm ? (
+              <div className="mt-4 rounded-2xl border border-[#E5001B]/40 bg-[#FEEBED] p-4">
+                <p className="text-[13px] font-bold text-[#E5001B]">Clear entire regulatory library?</p>
+                <p className="mt-1 text-[12px] text-[#5A6478]">This permanently deletes all {libraryDocuments.length} document(s) and their obligations.</p>
+                <div className="mt-3 flex gap-2">
+                  <TraceActionButton active disabled={clearingLibrary} onClick={handleClearLibrary}>{clearingLibrary ? "Clearing" : "Yes, Clear All"}</TraceActionButton>
+                  <TraceActionButton onClick={() => setShowClearConfirm(false)}>Cancel</TraceActionButton>
+                </div>
+              </div>
+            ) : null}
+
+            <div className="mt-6 rounded-2xl border border-[#E2E6EF] bg-white p-5 shadow-sm">
+              {libraryLoading ? (
+                <div className="flex min-h-[180px] items-center justify-center">
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#1E49E2] border-t-transparent" />
+                </div>
+              ) : libraryDocuments.length === 0 ? (
+                <div className="flex min-h-[220px] flex-col items-center justify-center rounded-2xl border border-dashed border-[#E2E6EF] text-center">
+                  <Library className="h-12 w-12 text-[#8492A6]" />
+                  <p className="mt-4 text-[14px] font-bold text-[#5A6478]">No regulatory documents yet</p>
+                  <p className="mt-1 text-[13px] text-[#8492A6]">Upload a regulatory source document above to populate the library.</p>
+                </div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2">
+                  {libraryDocuments.map(doc => (
+                    <RegulatoryDocumentCard
+                      key={doc.document_id}
+                      doc={doc}
+                      selected={selectedLibraryDoc?.document_id === doc.document_id}
+                      checked={gapSelectedIds.has(doc.document_id)}
+                      mode={rightPanelView}
+                      onOpen={() => handleLibraryDocClick(doc)}
+                      onToggle={() => toggleGapDoc(doc.document_id)}
+                      onDelete={() => handleLibraryDelete(doc.document_id)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+
+          <section className="mb-9">
+            <SectionHeader label="Regulatory Library" title="Library Dashboard" />
+            {libraryDocuments.length === 0 ? (
+              <div className="mt-6 flex min-h-[260px] flex-col items-center justify-center rounded-2xl border border-dashed border-[#E2E6EF] bg-white text-center shadow-sm">
+                <Library className="h-12 w-12 text-[#8492A6]" />
+                <p className="mt-4 text-[14px] font-bold text-[#5A6478]">No regulatory corpus loaded</p>
+                <p className="mt-1 text-[13px] text-[#8492A6]">Upload a source document to extract obligations and domain metrics.</p>
+              </div>
+            ) : (
+              <div className="mt-6 space-y-5">
+                <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+                  <RegulatoryKpiTile label="Documents" value={libraryDocuments.length} detail="uploaded source files" accent="#00338D" />
+                  <RegulatoryKpiTile label="Obligations" value={totalObligations.toLocaleString()} detail="requirements extracted" accent="#1E49E2" />
+                  <RegulatoryKpiTile label="Domains" value={sortedDomains.length} detail="current domain bands" accent="#00B8F5" />
+                  <RegulatoryKpiTile
+                    label="Merged"
+                    value={mergedObligationsLoading ? <span className="inline-block h-7 w-7 animate-spin rounded-full border-2 border-[#098E7E] border-t-transparent" /> : mergedObligations !== null ? mergedObligations.length.toLocaleString() : "-"}
+                    detail={mergedObligations !== null ? "deduplicated obligation set" : "deduplication not run"}
+                    accent={mergedObligations !== null ? "#098E7E" : "#8492A6"}
+                  />
+                </div>
+
+                <div className="grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
+                  <div className="rounded-2xl border border-[#E2E6EF] bg-white p-6 shadow-sm">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                      <div>
+                        <h3 className="text-[17px] font-bold text-[#0C233C]">Regulation-Control Coverage</h3>
+                        <p className="mt-1 text-[13px] text-[#8492A6]">Metrics shown when Controls Library mappings are available.</p>
+                      </div>
+                    </div>
+                    {hasCrossData ? (
+                      <div className="mt-6 grid gap-4 md:grid-cols-3">
+                        {[
+                          { label: "Coverage", value: `${oblCoveragePct.toFixed(0)}%`, detail: `${coveredObligations.toLocaleString()} obligations mapped`, color: "#009A44", obligations: coveredMetricObligations, title: `Covered Obligations (${coveredMetricObligations.length})` },
+                          { label: "Gap Obligations", value: gapObligations.toLocaleString(), detail: "requirements without mapped controls", color: "#EAAA00", obligations: gapMetricObligations, title: `Gap Obligations (${gapMetricObligations.length})` },
+                          { label: "Controls Assessed", value: allControls.length.toLocaleString(), detail: `${ctrlCoveragePct.toFixed(0)}% have obligation links`, color: "#1E49E2", obligations: uniqueDashboardObligations, title: `All Obligations (${uniqueDashboardObligations.length})` },
+                        ].map(metric => (
+                          <button key={metric.label} type="button" className="rounded-2xl border border-[#E2E6EF] bg-[#F8FAFD] p-5 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-[#1E49E2]" onClick={() => setCrossMetricDialog({ title: metric.title, obligations: metric.obligations })}>
+                            <p className="text-[11px] font-bold uppercase tracking-[2px] text-[#8492A6]">{metric.label}</p>
+                            <p className="mt-3 text-[34px] font-bold leading-none" style={{ color: metric.color }}>{metric.value}</p>
+                            <p className="mt-3 text-[12px] leading-relaxed text-[#5A6478]">{metric.detail}</p>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="mt-6 rounded-2xl border border-dashed border-[#E2E6EF] bg-[#F8FAFD] px-5 py-8 text-center">
+                        <p className="text-[14px] font-bold text-[#5A6478]">Controls Library mappings unavailable</p>
+                        <p className="mt-1 text-[13px] text-[#8492A6]">Load mapped controls to evaluate obligation coverage.</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="rounded-2xl border border-[#E2E6EF] bg-white p-6 shadow-sm">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="text-[17px] font-bold text-[#0C233C]">Domain Distribution</h3>
+                        <p className="mt-1 text-[13px] text-[#8492A6]">Click a band to filter the obligation explorer below.</p>
+                      </div>
+                      {dashboardDomainFilter !== "all" ? <TraceActionButton onClick={() => setDashboardDomainFilter("all")}>Clear Filter</TraceActionButton> : null}
+                    </div>
+                    <div className="mt-5 max-h-[300px] overflow-auto pr-1">
+                      <DomainDistributionBars domains={sortedDomains} activeDomain={dashboardDomainFilter} onSelect={setDashboardDomainFilter} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </section>
+
+          <section className="mb-9">
+            <SectionHeader
+              label="Obligation Detail"
+              title={activeObligationTitle}
+              actions={
+                selectedObligationMode ? (
+                  <TraceActionButton onClick={() => { setSelectedLibraryDoc(null); setRightPanelView("dashboard"); setLibrarySearch(""); }}>
+                    <ArrowRight className="h-4 w-4 rotate-180" />
+                    All Obligations
+                  </TraceActionButton>
+                ) : (
+                  <>
+                    <TraceActionButton active={dashboardViewMode === "all"} onClick={() => setDashboardViewMode("all")}><BookOpen className="h-4 w-4" />All</TraceActionButton>
+                    <TraceActionButton active={dashboardViewMode === "merged"} disabled={mergedObligationsLoading} onClick={mergedObligations !== null ? () => setDashboardViewMode("merged") : fetchMergedObligations}>
+                      {mergedObligationsLoading ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#1E49E2] border-t-transparent" /> : <Layers className="h-4 w-4" />}
+                      Merged
+                    </TraceActionButton>
+                  </>
+                )
+              }
+            />
+
+            <div className="mt-6 rounded-2xl border border-[#E2E6EF] bg-white p-5 shadow-sm">
+              <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-[17px] font-bold text-[#0C233C]">{activeObligationTitle}</h3>
+                    <TracePill color="#1E49E2">{activeShownCount.toLocaleString()} shown</TracePill>
+                  </div>
+                  <p className="mt-1 text-[13px] text-[#8492A6]">
+                    {selectedObligationMode && selectedLibraryDoc ? selectedLibraryDoc.framework_name : dashboardDomainFilter !== "all" ? `Filtered by ${formatTraceDomain(dashboardDomainFilter)}` : "Search, filter, and review extracted obligations across the corpus."}
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8492A6]" />
+                    <input
+                      className="h-10 w-72 rounded-xl border border-[#E2E6EF] bg-white pl-9 pr-3 text-[13px] outline-none focus:border-[#1E49E2]"
+                      placeholder="Search obligations..."
+                      value={activeSearch}
+                      onChange={event => {
+                        if (selectedObligationMode) setLibrarySearch(event.target.value);
+                        else setDashboardSearch(event.target.value);
+                      }}
+                    />
+                  </div>
+                  {selectedObligationMode && selectedLibraryDoc?.obligations_by_domain ? (
+                    <>
+                      <select className="h-10 rounded-xl border border-[#E2E6EF] bg-white px-3 text-[13px] text-[#0C233C] outline-none focus:border-[#1E49E2]" value={libraryDomainFilter} onChange={event => setLibraryDomainFilter(event.target.value)}>
+                        <option value="all">All Domains</option>
+                        {Object.entries(selectedLibraryDoc.obligations_by_domain).sort((a, b) => b[1] - a[1]).map(([domain]) => <option key={domain} value={domain}>{formatTraceDomain(domain)}</option>)}
+                      </select>
+                      <select className="h-10 rounded-xl border border-[#E2E6EF] bg-white px-3 text-[13px] text-[#0C233C] outline-none focus:border-[#1E49E2]" value={libraryEnforcementFilter} onChange={event => setLibraryEnforcementFilter(event.target.value)}>
+                        <option value="all">All Levels</option>
+                        <option value="mandatory">Mandatory</option>
+                        <option value="recommended">Recommended</option>
+                        <option value="optional">Optional</option>
+                      </select>
+                    </>
+                  ) : null}
+                </div>
+              </div>
+              <p className="mt-3 text-[12px] text-[#8492A6]">Showing {activeShownCount.toLocaleString()} of {activeTotalCount.toLocaleString()} obligations.</p>
+            </div>
+
+            <div className="mt-6">
+              <RegulatoryObligationList
+                rows={activeObligationRows}
+                loading={dashboardLoading || detailLoading}
+                controlsLoaded={controlsLoaded}
+                obligationControlMap={obligationControlMap}
+                onControlClick={handleControlClick}
+                emptyCopy={selectedObligationMode ? "No obligations match the selected document filters." : dashboardObligations.length === 0 ? "No obligations loaded." : "No obligations match the current filters."}
+              />
+            </div>
+          </section>
+
+          </>
+          ) : (
+          <section className="mb-12">
+            <SectionHeader
+              label="Comparison"
+              title="Gap Analysis"
+              actions={
+                <>
+                  <TraceActionButton active disabled={!gapReady || gapLoading} onClick={() => { setRightPanelView("gap-analysis"); handleRunGapAnalysis(); }}>
+                    {gapLoading ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> : <GitCompare className="h-4 w-4" />}
+                    Run Analysis
+                  </TraceActionButton>
+                  {gapResults ? (
+                    <>
+                      <TraceActionButton onClick={handleExportGapJson}><Download className="h-4 w-4" />JSON</TraceActionButton>
+                      <TraceActionButton disabled={!gapResults.final_report} onClick={handleExportGapMarkdown}><Download className="h-4 w-4" />Markdown</TraceActionButton>
+                      <TraceActionButton disabled={!gapResults.final_report || pdfExporting} onClick={handleExportGapPdf}><Download className="h-4 w-4" />PDF</TraceActionButton>
+                    </>
+                  ) : null}
+                </>
+              }
+            />
+
+            <div className="mt-6 rounded-2xl border border-[#E2E6EF] bg-white p-6 shadow-sm">
+              <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <h3 className="text-[17px] font-bold text-[#0C233C]">Documents and comparison modes</h3>
+                  <p className="mt-1 text-[13px] text-[#8492A6]">Gap analysis is available when at least two regulatory source documents are loaded.</p>
+                </div>
+                <TracePill color={gapReady ? "#009A44" : "#EAAA00"} fill={gapReady ? "#EDFBF5" : "#FFFBEB"}>{gapSelectedIds.size} selected</TracePill>
+              </div>
+              <div className="mt-5 grid gap-4 md:grid-cols-2">
+                {libraryDocuments.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-[#E2E6EF] bg-[#F8FAFD] px-5 py-8 text-center text-[13px] text-[#8492A6]">Upload regulatory documents before running gap analysis.</div>
+                ) : (
+                  libraryDocuments.map(doc => (
+                    <RegulatoryDocumentCard key={doc.document_id} doc={doc} selected={false} checked={gapSelectedIds.has(doc.document_id)} mode="gap-analysis" onOpen={() => handleLibraryDocClick(doc)} onToggle={() => toggleGapDoc(doc.document_id)} onDelete={() => handleLibraryDelete(doc.document_id)} />
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+              <RegulatoryKpiTile label="Selected" value={gapSelectedIds.size} detail="documents ready" accent="#00338D" />
+              <RegulatoryKpiTile label="Needed" value={2} detail="minimum documents" accent="#EAAA00" />
+              <RegulatoryKpiTile label="Results" value={gapResults ? "Ready" : "-"} detail={gapResults ? "comparison available" : "comparison not run"} accent={gapResults ? "#009A44" : "#8492A6"} />
+              <RegulatoryKpiTile label="Coverage" value={hasCrossData ? `${oblCoveragePct.toFixed(0)}%` : "-"} detail={hasCrossData ? `${coveredObligations.toLocaleString()} obligations mapped` : "from mapped controls"} accent={hasCrossData ? "#009A44" : "#8492A6"} progress={hasCrossData ? oblCoveragePct : undefined} />
+            </div>
+
+            {gapLoading ? (
+              <div className="mt-6 flex min-h-[260px] flex-col items-center justify-center rounded-2xl border border-[#E2E6EF] bg-white shadow-sm">
+                <div className="h-10 w-10 animate-spin rounded-full border-2 border-[#1E49E2] border-t-transparent" />
+                <p className="mt-4 text-[14px] font-bold text-[#5A6478]">Running gap analysis</p>
+                <p className="mt-1 text-[13px] text-[#8492A6]">Comparing obligations across {gapSelectedIds.size} documents.</p>
+              </div>
+            ) : !gapResults ? (
+              <div className="mt-6 grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
+                <div className="rounded-2xl border border-[#E2E6EF] bg-white p-6 shadow-sm">
+                  <h3 className="text-[17px] font-bold text-[#0C233C]">Selected Document Domains</h3>
+                  <p className="mt-1 text-[13px] text-[#8492A6]">Click a band to filter obligations.</p>
+                  <div className="mt-5 max-h-[300px] overflow-auto pr-1">
+                    <DomainDistributionBars domains={sortedDomains} activeDomain={dashboardDomainFilter} onSelect={setDashboardDomainFilter} />
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-[#E2E6EF] bg-white p-6 shadow-sm">
+                  <h3 className="text-[17px] font-bold text-[#0C233C]">Comparison</h3>
+                  <p className="mt-1 text-[13px] text-[#8492A6]">Shared and unique obligations will appear after analysis.</p>
+                  <div className="mt-8 flex min-h-[180px] flex-col items-center justify-center rounded-2xl border border-dashed border-[#E2E6EF] bg-[#F8FAFD] text-center">
+                    <GitCompare className="h-10 w-10 text-[#8492A6]" />
+                    <p className="mt-4 text-[14px] font-bold text-[#5A6478]">Gap analysis not available yet</p>
+                    <p className="mt-1 max-w-[320px] text-[13px] leading-relaxed text-[#8492A6]">Load a second regulatory document, then run analysis to compare shared and unique obligations.</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-6 space-y-5 animate-[fadeUp_0.5s_ease_both]">
+                <div className="rounded-2xl border border-[#E2E6EF] bg-white p-6 shadow-sm">
+                  <h3 className="text-[17px] font-bold text-[#0C233C]">Gap Analysis Results</h3>
+                  <p className="mt-1 text-[13px] text-[#8492A6]">{gapResults.gap_summary.total_documents} documents · {gapResults.gap_summary.total_domains} domains compared</p>
+                  <div className="mt-5 grid gap-4 md:grid-cols-3">
+                    <RegulatoryKpiTile label="Shared Domains" value={gapResults.gap_summary.shared_domain_count} detail="in all documents" accent="#009A44" />
+                    <RegulatoryKpiTile label="Partial Coverage" value={gapResults.gap_summary.partial_coverage_domain_count} detail="domains in some documents" accent="#EAAA00" />
+                    <RegulatoryKpiTile label="Total Domains" value={gapResults.gap_summary.total_domains} detail="across selected documents" accent="#1E49E2" />
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-[#E2E6EF] bg-white p-6 shadow-sm">
+                  <h3 className="text-[17px] font-bold text-[#0C233C]">Domain Coverage Matrix</h3>
+                  <div className="mt-5 max-h-[420px] overflow-auto rounded-2xl border border-[#E2E6EF]">
+                    <table className="w-full min-w-[820px] text-[12px]">
+                      <thead className="sticky top-0 bg-[#F8FAFD] text-[#8492A6]">
+                        <tr className="border-b border-[#E2E6EF]">
+                          <th className="px-4 py-3 text-left font-bold uppercase tracking-[1.5px]">Domain</th>
+                          {Object.entries(gapResults.documents).map(([id, doc]) => <th key={id} className="px-4 py-3 text-center font-bold uppercase tracking-[1.5px]" title={doc.source_filename}>{doc.framework_name}</th>)}
+                          <th className="px-4 py-3 text-center font-bold uppercase tracking-[1.5px]">Coverage</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Object.entries(gapResults.domain_coverage).sort((a, b) => b[1].coverage_pct - a[1].coverage_pct).map(([domain, info]) => (
+                          <tr key={domain} className="border-b border-[#E2E6EF] last:border-0 hover:bg-[#F8FAFD]">
+                            <td className="px-4 py-4 font-bold text-[#0C233C]">{formatTraceDomain(domain)}</td>
+                            {Object.keys(gapResults.documents).map(docId => (
+                              <td key={docId} className="px-4 py-4 text-center">
+                                {info.present_in.includes(docId) ? <span className="inline-flex flex-col items-center gap-1 text-[#009A44]"><CheckCircle2 className="h-4 w-4" /><span className="text-[11px] font-bold text-[#5A6478]">{info.obligation_counts[docId]}</span></span> : <X className="mx-auto h-4 w-4 text-[#E5001B]" />}
+                              </td>
+                            ))}
+                            <td className="px-4 py-4 text-center"><TracePill color={info.coverage_pct === 100 ? "#009A44" : info.coverage_pct > 0 ? "#EAAA00" : "#E5001B"}>{info.coverage_pct}%</TracePill></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div className="grid gap-5 xl:grid-cols-2">
+                  <div className="rounded-2xl border border-[#E2E6EF] bg-white p-6 shadow-sm">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="text-[17px] font-bold text-[#0C233C]">Shared Domains</h3>
+                        <p className="mt-1 text-[13px] text-[#8492A6]">Domains present in every selected regulation.</p>
+                      </div>
+                      <TracePill color="#009A44" fill="#EDFBF5">{gapResults.similarities.length}</TracePill>
+                    </div>
+                    <div className="mt-5 max-h-[360px] space-y-3 overflow-auto pr-1">
+                      {gapResults.similarities.length === 0 ? (
+                        <p className="rounded-xl border border-dashed border-[#E2E6EF] bg-[#F8FAFD] p-4 text-[13px] text-[#8492A6]">No shared domains found.</p>
+                      ) : gapResults.similarities.map(sim => (
+                        <div key={sim.domain} className="rounded-xl border border-[#E2E6EF] bg-[#F8FAFD] p-4">
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="text-[14px] font-bold text-[#0C233C]">{formatTraceDomain(sim.domain)}</p>
+                            <TracePill color="#009A44" fill="#EDFBF5">Shared</TracePill>
+                          </div>
+                          <div className="mt-3 grid gap-2 md:grid-cols-2">
+                            {Object.entries(sim.docs).map(([docId, info]) => (
+                              <div key={docId} className="rounded-lg border border-[#E2E6EF] bg-white p-3">
+                                <p className="line-clamp-2 text-[12px] font-bold text-[#0C233C]">{gapResults.documents[docId]?.framework_name ?? docId}</p>
+                                <p className="mt-1 text-[12px] text-[#5A6478]">{info.count} obligations</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-[#E2E6EF] bg-white p-6 shadow-sm">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="text-[17px] font-bold text-[#0C233C]">Partial Coverage</h3>
+                        <p className="mt-1 text-[13px] text-[#8492A6]">Domains missing from one or more selected regulations.</p>
+                      </div>
+                      <TracePill color="#EAAA00" fill="#FFFBEB">{gapResults.differences.length}</TracePill>
+                    </div>
+                    <div className="mt-5 max-h-[360px] space-y-3 overflow-auto pr-1">
+                      {gapResults.differences.length === 0 ? (
+                        <p className="rounded-xl border border-dashed border-[#E2E6EF] bg-[#F8FAFD] p-4 text-[13px] text-[#8492A6]">No partial coverage gaps found.</p>
+                      ) : gapResults.differences.map(diff => (
+                        <div key={diff.domain} className="rounded-xl border border-[#E2E6EF] bg-[#F8FAFD] p-4">
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="text-[14px] font-bold text-[#0C233C]">{formatTraceDomain(diff.domain)}</p>
+                            <TracePill color="#EAAA00" fill="#FFFBEB">{diff.coverage_pct}%</TracePill>
+                          </div>
+                          <div className="mt-3 grid gap-2 md:grid-cols-2">
+                            <div className="rounded-lg border border-[#E2E6EF] bg-white p-3">
+                              <p className="text-[11px] font-bold uppercase tracking-[1.5px] text-[#009A44]">Present In</p>
+                              <p className="mt-1 text-[12px] text-[#5A6478]">{diff.present_in.map(id => gapResults.documents[id]?.framework_name ?? id).join(", ")}</p>
+                            </div>
+                            <div className="rounded-lg border border-[#E2E6EF] bg-white p-3">
+                              <p className="text-[11px] font-bold uppercase tracking-[1.5px] text-[#E5001B]">Absent In</p>
+                              <p className="mt-1 text-[12px] text-[#5A6478]">{diff.absent_in.map(id => gapResults.documents[id]?.framework_name ?? id).join(", ")}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-[#E2E6EF] bg-white p-6 shadow-sm">
+                  <h3 className="text-[17px] font-bold text-[#0C233C]">Unique Coverage By Document</h3>
+                  <div className="mt-5 grid gap-4 xl:grid-cols-3">
+                    {Object.entries(gapResults.unique_by_doc).map(([docId, unique]) => (
+                      <div key={docId} className="rounded-xl border border-[#E2E6EF] bg-[#F8FAFD] p-4">
+                        <p className="line-clamp-2 text-[13px] font-bold text-[#0C233C]">{gapResults.documents[docId]?.framework_name ?? docId}</p>
+                        <div className="mt-4 grid grid-cols-2 gap-3">
+                          <div>
+                            <p className="text-[24px] font-bold leading-none text-[#1E49E2]">{unique.unique_domain_count}</p>
+                            <p className="mt-1 text-[11px] text-[#8492A6]">unique domains</p>
+                          </div>
+                          <div>
+                            <p className="text-[24px] font-bold leading-none text-[#009A44]">{unique.shared_domain_count}</p>
+                            <p className="mt-1 text-[11px] text-[#8492A6]">shared domains</p>
+                          </div>
+                        </div>
+                        {unique.sample_obligations.length > 0 ? (
+                          <div className="mt-4 space-y-2">
+                            {unique.sample_obligations.slice(0, 2).map((sample, i) => (
+                              <p key={i} className="line-clamp-2 rounded-lg border border-[#E2E6EF] bg-white p-3 text-[12px] leading-relaxed text-[#5A6478]">
+                                {sample.text}
+                              </p>
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {gapResults.final_report ? (
+                  <div className="rounded-2xl border border-[#E2E6EF] bg-white p-6 shadow-sm">
+                    <h3 className="text-[17px] font-bold text-[#0C233C]">Full Analysis Report</h3>
+                    <div className="prose prose-sm mt-4 max-w-none text-[#5A6478]">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{gapResults.final_report}</ReactMarkdown>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            )}
+          </section>
+          )}
+
+          <style>{`
+            @keyframes fadeUp {
+              from { opacity: 0; transform: translateY(20px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
+          `}</style>
+        </main>
+
+        <Dialog open={!!crossMetricDialog} onOpenChange={open => { if (!open) setCrossMetricDialog(null); }}>
+          <DialogContent className="flex max-h-[80vh] max-w-2xl flex-col gap-0 overflow-hidden border border-[#E2E6EF] bg-white p-0 text-[#0C233C]">
+            <DialogHeader className="shrink-0 border-b border-[#E2E6EF] px-5 py-4">
+              <DialogTitle className="text-[17px] font-bold text-[#0C233C]">{crossMetricDialog?.title}</DialogTitle>
+            </DialogHeader>
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              <div className="divide-y divide-[#E2E6EF]">
+                {(crossMetricDialog?.obligations ?? []).map((obl: any, i: number) => (
+                  <DialogOblRow
+                    key={obl.obligation_id ?? i}
+                    obl={obl}
+                    mappedCtrls={obligationControlMap.get(obl.obligation_id) ?? []}
+                    onControlClick={handleControlClick}
+                    onObligationClick={(oblId) => {
+                      setCrossMetricDialog(null);
+                      setRightPanelView("dashboard");
+                      setSelectedLibraryDoc(null);
+                      setDashboardSearch(oblId);
+                      setDashboardDomainFilter("all");
+                      setDashboardViewMode("all");
+                    }}
+                  />
+                ))}
+                {(crossMetricDialog?.obligations ?? []).length === 0 ? <p className="py-10 text-center text-[13px] text-[#8492A6]">No obligations to display.</p> : null}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+  }
 
   // ── Render ────────────────────────────────────────────────────────────────
 

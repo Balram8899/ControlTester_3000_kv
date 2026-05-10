@@ -322,7 +322,7 @@ export default function ControlTestingPage() {
   const showGenerateAction = canGenerateWorkpaper(readyToGenerate, evidenceSummary);
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full min-h-0 overflow-hidden flex flex-col">
       <HeroSection
         title="Control Testing"
         subtitle="Upload a test script, validate evidence against required controls, and generate an audit workpaper"

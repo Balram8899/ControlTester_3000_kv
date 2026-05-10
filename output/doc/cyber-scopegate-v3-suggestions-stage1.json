@@ -1,0 +1,1954 @@
+[
+  {
+    "suggestion_id": "57af12cb-a861-4d51-a433-1732d5b9189e",
+    "suggestion_type": "process_improvement",
+    "severity": "medium",
+    "title": "Open issue should be reflected in the procedure: Accelerate legacy endpoint migration; implement compensating network segmentation.",
+    "detail": "The source row is open or unresolved and describes: Key Gap Identified: EDR not deployed on 12% of legacy ATM-connected systems running Windows 7; Recommended Action: Accelerate legacy endpoint migration; implement compensating network segmentation.",
+    "proposed_text": "Update the procedure to address the open issue for Accelerate legacy endpoint migration; implement compensating network segmentation, including owner, resolution criteria, escalation path, due date or review cadence, and retained evidence.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "90bcd5c1-bc5e-418f-ac0b-2a932dd4f601",
+        "filename": "cyber_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Control Assessment",
+        "row_index": 2,
+        "row_number": 2,
+        "column_name": "Key Gap Identified",
+        "excerpt": "Control ID: CC-001; Control Name: Endpoint Detection & Response; Control Type: Preventive; Testing Period Q/Year: Q4 2024"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": false,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "f6ec5d58-2f80-4f01-9e95-821f38f1ff71",
+    "suggestion_type": "process_improvement",
+    "severity": "medium",
+    "title": "Open issue should be reflected in the procedure: Deploy hardware FIDO2 tokens for Tier-1 privileged accounts by Q2 2025.",
+    "detail": "The source row is open or unresolved and describes: Key Gap Identified: MFA bypass risk via SIM-swap not mitigated; hardware token not available for all privileged users; Recommended Action: Deploy hardware FIDO2 tokens for Tier-1 privileged accounts by Q2 2025.",
+    "proposed_text": "Update the procedure to address the open issue for Deploy hardware FIDO2 tokens for Tier-1 privileged accounts by Q2 2025, including owner, resolution criteria, escalation path, due date or review cadence, and retained evidence.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "90bcd5c1-bc5e-418f-ac0b-2a932dd4f601",
+        "filename": "cyber_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Control Assessment",
+        "row_index": 3,
+        "row_number": 3,
+        "column_name": "Key Gap Identified",
+        "excerpt": "Control ID: CC-002; Control Name: Multi-Factor Authentication; Control Type: Preventive; Testing Period Q/Year: Q4 2024"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": false,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "14ff7b9a-37f5-4a7f-9e02-ce6f446a0f04",
+    "suggestion_type": "process_improvement",
+    "severity": "medium",
+    "title": "Open issue should be reflected in the procedure: Automate PAR using IAM tooling; set hard deadline with CISO sign-off.",
+    "detail": "The source row is open or unresolved and describes: Key Gap Identified: Reviews completed 6 weeks after due date in 2 of last 4 quarters; orphaned accounts found in AD; Recommended Action: Automate PAR using IAM tooling; set hard deadline with CISO sign-off.",
+    "proposed_text": "Update the procedure to address the open issue for Automate PAR using IAM tooling; set hard deadline with CISO sign-off, including owner, resolution criteria, escalation path, due date or review cadence, and retained evidence.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "90bcd5c1-bc5e-418f-ac0b-2a932dd4f601",
+        "filename": "cyber_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Control Assessment",
+        "row_index": 4,
+        "row_number": 4,
+        "column_name": "Key Gap Identified",
+        "excerpt": "Control ID: CC-003; Control Name: Privileged Access Review; Control Type: Detective; Testing Period Q/Year: Q3 2024"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": false,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "89bc07d5-6337-4ea0-bd6c-8b2508e5c052",
+    "suggestion_type": "process_improvement",
+    "severity": "medium",
+    "title": "Open issue should be reflected in the procedure: Remediate backlog by Q1 2025; update standard vendor contract template.",
+    "detail": "The source row is open or unresolved and describes: Key Gap Identified: 18 active vendors not assessed in last 24 months; no contractual security requirement for 6 vendors; Recommended Action: Remediate backlog by Q1 2025; update standard vendor contract template.",
+    "proposed_text": "Update the procedure to address the open issue for Remediate backlog by Q1 2025; update standard vendor contract template, including owner, resolution criteria, escalation path, due date or review cadence, and retained evidence.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "90bcd5c1-bc5e-418f-ac0b-2a932dd4f601",
+        "filename": "cyber_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Control Assessment",
+        "row_index": 5,
+        "row_number": 5,
+        "column_name": "Key Gap Identified",
+        "excerpt": "Control ID: CC-004; Control Name: Vendor Risk Assessment; Control Type: Preventive; Testing Period Q/Year: Q2 2024"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": false,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "a46442e0-7e32-475a-a2fb-0a4bfda26b21",
+    "suggestion_type": "process_improvement",
+    "severity": "medium",
+    "title": "Open issue should be reflected in the procedure: Conduct full-spectrum DDoS simulation test; evaluate SASE options.",
+    "detail": "The source row is open or unresolved and describes: Key Gap Identified: Scrubbing capacity validated only for volumetric attacks; application-layer DDoS not tested; Recommended Action: Conduct full-spectrum DDoS simulation test; evaluate SASE options.",
+    "proposed_text": "Update the procedure to address the open issue for Conduct full-spectrum DDoS simulation test; evaluate SASE options, including owner, resolution criteria, escalation path, due date or review cadence, and retained evidence.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "90bcd5c1-bc5e-418f-ac0b-2a932dd4f601",
+        "filename": "cyber_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Control Assessment",
+        "row_index": 6,
+        "row_number": 6,
+        "column_name": "Key Gap Identified",
+        "excerpt": "Control ID: CC-005; Control Name: DDoS Mitigation Service; Control Type: Preventive; Testing Period Q/Year: Q4 2024"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": false,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "90e28edf-ea96-458b-94c7-4024053aa355",
+    "suggestion_type": "process_improvement",
+    "severity": "high",
+    "title": "Open issue should be reflected in the procedure: Review and update DLP rules quarterly; expand coverage to cloud-hosted drives.",
+    "detail": "The source row is open or unresolved and describes: Key Gap Identified: DLP policy rules not reviewed in 18 months; 4 high-sensitivity data categories lack coverage; Recommended Action: Review and update DLP rules quarterly; expand coverage to cloud-hosted drives.",
+    "proposed_text": "Update the procedure to address the open issue for Review and update DLP rules quarterly; expand coverage to cloud-hosted drives, including owner, resolution criteria, escalation path, due date or review cadence, and retained evidence.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "90bcd5c1-bc5e-418f-ac0b-2a932dd4f601",
+        "filename": "cyber_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Control Assessment",
+        "row_index": 7,
+        "row_number": 7,
+        "column_name": "Key Gap Identified",
+        "excerpt": "Control ID: CC-006; Control Name: Data Loss Prevention; Control Type: Detective; Testing Period Q/Year: Q3 2024"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": true,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "d5152e5e-cd5c-496d-a1ab-9c181b594dc0",
+    "suggestion_type": "process_improvement",
+    "severity": "medium",
+    "title": "Open issue should be reflected in the procedure: Implement automated patch deployment for OS and middleware; reduce manual approvals.",
+    "detail": "The source row is open or unresolved and describes: Key Gap Identified: Average time-to-patch for CVSS \u2265 7.0 vulnerabilities is 47 days vs. 30-day SLA; Recommended Action: Implement automated patch deployment for OS and middleware; reduce manual approvals.",
+    "proposed_text": "Update the procedure to address the open issue for Implement automated patch deployment for OS and middleware; reduce manual approvals, including owner, resolution criteria, escalation path, due date or review cadence, and retained evidence.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "90bcd5c1-bc5e-418f-ac0b-2a932dd4f601",
+        "filename": "cyber_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Control Assessment",
+        "row_index": 8,
+        "row_number": 8,
+        "column_name": "Key Gap Identified",
+        "excerpt": "Control ID: CC-007; Control Name: Patch Management; Control Type: Preventive; Testing Period Q/Year: Q4 2024"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": false,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "ec7555c5-f235-4bc2-a4df-5c869a9681b0",
+    "suggestion_type": "process_improvement",
+    "severity": "medium",
+    "title": "Open issue should be reflected in the procedure: Integrate SAST into mandatory pre-merge gate; onboard DAST tool by Q2 2025.",
+    "detail": "The source row is open or unresolved and describes: Key Gap Identified: SAST coverage only 60% of active repositories; DAST not integrated into CI/CD pipeline; Recommended Action: Integrate SAST into mandatory pre-merge gate; onboard DAST tool by Q2 2025.",
+    "proposed_text": "Update the procedure to address the open issue for Integrate SAST into mandatory pre-merge gate; onboard DAST tool by Q2 2025, including owner, resolution criteria, escalation path, due date or review cadence, and retained evidence.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "90bcd5c1-bc5e-418f-ac0b-2a932dd4f601",
+        "filename": "cyber_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Control Assessment",
+        "row_index": 9,
+        "row_number": 9,
+        "column_name": "Key Gap Identified",
+        "excerpt": "Control ID: CC-009; Control Name: VAPT / Application Security; Control Type: Preventive; Testing Period Q/Year: Q2 2024"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": false,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "abd21e82-7b9d-4289-9077-6fe2f288ae23",
+    "suggestion_type": "process_improvement",
+    "severity": "medium",
+    "title": "Open issue should be reflected in the procedure: Assign cloud security owner per business unit; configure auto-remediation for Severity 1.",
+    "detail": "The source row is open or unresolved and describes: Key Gap Identified: CSPM alerts not actioned within SLA in 35% of cases; remediation ownership unclear for shared services; Recommended Action: Assign cloud security owner per business unit; configure auto-remediation for Severity 1.",
+    "proposed_text": "Update the procedure to address the open issue for Assign cloud security owner per business unit; configure auto-remediation for Severity 1, including owner, resolution criteria, escalation path, due date or review cadence, and retained evidence.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "90bcd5c1-bc5e-418f-ac0b-2a932dd4f601",
+        "filename": "cyber_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Control Assessment",
+        "row_index": 10,
+        "row_number": 10,
+        "column_name": "Key Gap Identified",
+        "excerpt": "Control ID: CC-010; Control Name: Cloud Security Posture Mgmt; Control Type: Detective; Testing Period Q/Year: Q4 2024"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": false,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "0a91bef2-35b8-40f0-94d8-389634b1990b",
+    "suggestion_type": "process_improvement",
+    "severity": "high",
+    "title": "Open issue should be reflected in the procedure: Extend log retention to 24 months; validate at next SWIFT CSP attestation.",
+    "detail": "The source row is open or unresolved and describes: Key Gap Identified: No major gaps; minor gap in logging retention (currently 12 months vs. SWIFT-recommended 24 months); Recommended Action: Extend log retention to 24 months; validate at next SWIFT CSP attestation.",
+    "proposed_text": "Update the procedure to address the open issue for Extend log retention to 24 months; validate at next SWIFT CSP attestation, including owner, resolution criteria, escalation path, due date or review cadence, and retained evidence.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "90bcd5c1-bc5e-418f-ac0b-2a932dd4f601",
+        "filename": "cyber_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Control Assessment",
+        "row_index": 11,
+        "row_number": 11,
+        "column_name": "Key Gap Identified",
+        "excerpt": "Control ID: CC-012; Control Name: SWIFT CSP Controls; Control Type: Preventive; Testing Period Q/Year: Q1 2024"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": true,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "e15e35d1-a0b7-4e13-aa5f-ac7fb70fdb5b",
+    "suggestion_type": "process_improvement",
+    "severity": "critical",
+    "title": "Open issue should be reflected in the procedure: Repeat DR drill with revised runbook; implement automated backup integrity checks.",
+    "detail": "The source row is open or unresolved and describes: Key Gap Identified: Last DR drill showed CBS recovery in 6.5 hrs vs. 4-hr RTO target; backup integrity not verified monthly; Recommended Action: Repeat DR drill with revised runbook; implement automated backup integrity checks.",
+    "proposed_text": "Update the procedure to address the open issue for Repeat DR drill with revised runbook; implement automated backup integrity checks, including owner, resolution criteria, escalation path, due date or review cadence, and retained evidence.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "90bcd5c1-bc5e-418f-ac0b-2a932dd4f601",
+        "filename": "cyber_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Control Assessment",
+        "row_index": 12,
+        "row_number": 12,
+        "column_name": "Key Gap Identified",
+        "excerpt": "Control ID: CC-013; Control Name: BCP / DR Controls; Control Type: Corrective; Testing Period Q/Year: Q3 2024"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": true,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "9f325e57-b2b2-4196-ae8d-4c50fc3be335",
+    "suggestion_type": "process_improvement",
+    "severity": "medium",
+    "title": "Open issue should be reflected in the procedure: Retrain model with 2023-2024 transaction data; validate against synthetic fraud scenarios.",
+    "detail": "The source row is open or unresolved and describes: Key Gap Identified: ML model trained on 2022 data; significant model drift observed since UPI limit increase in 2023; Recommended Action: Retrain model with 2023-2024 transaction data; validate against synthetic fraud scenarios.",
+    "proposed_text": "Update the procedure to address the open issue for Retrain model with 2023-2024 transaction data; validate against synthetic fraud scenarios, including owner, resolution criteria, escalation path, due date or review cadence, and retained evidence.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "90bcd5c1-bc5e-418f-ac0b-2a932dd4f601",
+        "filename": "cyber_rcm.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Control Assessment",
+        "row_index": 13,
+        "row_number": 13,
+        "column_name": "Key Gap Identified",
+        "excerpt": "Control ID: CC-015; Control Name: Payment Fraud Monitoring; Control Type: Detective; Testing Period Q/Year: Q4 2024"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": false,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "67580ae4-0467-459b-a383-a1d5c8b2cc1d",
+    "suggestion_type": "process_improvement",
+    "severity": "high",
+    "title": "Open issue should be reflected in the procedure: Deepfake detection API integrated into video KYC; passive liveness check upgraded to active challenge-response.",
+    "detail": "The source row is open or unresolved and describes: Root Cause Category: AI / Emerging Tech; Root Cause Detail: AI-generated deepfake video used to pass video KYC check and open 6 mule accounts subsequently used for fraud; Lessons Learned / Action Taken: Deepfake detection API integrated into video KYC; passive liveness check upgraded to active challenge-response.",
+    "proposed_text": "Update the procedure to address the open issue for Deepfake detection API integrated into video KYC; passive liveness check upgraded to active challenge-response, including owner, resolution criteria, escalation path, due date or review cadence, and retained evidence.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "eff9119e-8ff3-4479-8222-f918f723a881",
+        "filename": "cyber_risk_event_log.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Incident Log",
+        "row_index": 30,
+        "row_number": 30,
+        "column_name": "Root Cause Category",
+        "excerpt": "Event ID: CE-029; Date: 2024-06-03; Month / Year: Jun-24; Incident Type: AI-Generated Deepfake Fraud"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": true,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "7d3da657-a594-4927-b5d6-52f33f99cabc",
+    "suggestion_type": "process_improvement",
+    "severity": "critical",
+    "title": "Open issue should be reflected in the procedure: Callback verification added for all payment instruction changes above \u20b925L; counterparty authentication protocol updated.",
+    "detail": "The source row is open or unresolved and describes: Root Cause Category: Social Engineering; Root Cause Detail: Compromised external counterparty email used to divert bulk payment instruction; \u20b91.1Cr wire re-routed; Lessons Learned / Action Taken: Callback verification added for all payment instruction changes above \u20b925L; counterparty authentication protocol updated.",
+    "proposed_text": "Update the procedure to address the open issue for Callback verification added for all payment instruction changes above \u20b925L; counterparty authentication protocol updated, including owner, resolution criteria, escalation path, due date or review cadence, and retained evidence.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "eff9119e-8ff3-4479-8222-f918f723a881",
+        "filename": "cyber_risk_event_log.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Incident Log",
+        "row_index": 31,
+        "row_number": 31,
+        "column_name": "Root Cause Category",
+        "excerpt": "Event ID: CE-030; Date: 2024-07-18; Month / Year: Jul-24; Incident Type: BEC"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": true,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "70d69809-b22a-4074-830e-86d050510764",
+    "suggestion_type": "process_improvement",
+    "severity": "high",
+    "title": "Open issue should be reflected in the procedure: Vendor escalation SLA added to contract; threat intel feed to CBS vendor team established.",
+    "detail": "The source row is open or unresolved and describes: Root Cause Category: Application Vulnerability; Root Cause Detail: Zero-day vulnerability in CBS API middleware (vendor-confirmed CVE pending); threat intel indicated active exploitation in other banks; Lessons Learned / Action Taken: Vendor escalation SLA added to contract; threat intel feed to CBS vendor team established.",
+    "proposed_text": "Update the procedure to address the open issue for Vendor escalation SLA added to contract; threat intel feed to CBS vendor team established, including owner, resolution criteria, escalation path, due date or review cadence, and retained evidence.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "eff9119e-8ff3-4479-8222-f918f723a881",
+        "filename": "cyber_risk_event_log.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Incident Log",
+        "row_index": 33,
+        "row_number": 33,
+        "column_name": "Root Cause Category",
+        "excerpt": "Event ID: CE-032; Date: 2024-08-28; Month / Year: Aug-24; Incident Type: Vulnerability Exploitation"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": true,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "82be12ca-fe00-443d-81a7-4dfd7279a1b2",
+    "suggestion_type": "process_improvement",
+    "severity": "critical",
+    "title": "Open issue should be reflected in the procedure: Offboarding: USB disable immediate upon resignation; UEBA rules triggered correctly; legal hold initiated.",
+    "detail": "The source row is open or unresolved and describes: Root Cause Category: Malicious Insider; Root Cause Detail: Departing wealth RM exported 3,800 HNI client investment profiles to personal USB before exit access revocation; Lessons Learned / Action Taken: Offboarding: USB disable immediate upon resignation; UEBA rules triggered correctly; legal hold initiated.",
+    "proposed_text": "Update the procedure to address the open issue for Offboarding: USB disable immediate upon resignation; UEBA rules triggered correctly; legal hold initiated, including owner, resolution criteria, escalation path, due date or review cadence, and retained evidence.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "eff9119e-8ff3-4479-8222-f918f723a881",
+        "filename": "cyber_risk_event_log.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Incident Log",
+        "row_index": 34,
+        "row_number": 34,
+        "column_name": "Root Cause Category",
+        "excerpt": "Event ID: CE-033; Date: 2024-09-14; Month / Year: Sep-24; Incident Type: Insider Data Theft"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": true,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "ec804dba-27b2-4058-bd66-43b0b3e55918",
+    "suggestion_type": "process_improvement",
+    "severity": "critical",
+    "title": "Open issue should be reflected in the procedure: EDR detection rules updated for LockBit TTPs; payroll backup RTO target reduced from 36 to 8 hrs.",
+    "detail": "The source row is open or unresolved and describes: Root Cause Category: Phishing; Root Cause Detail: LockBit affiliate deployed ransomware via spear-phish targeting HR; payroll system offline 36 hrs; backup restoration successful; Lessons Learned / Action Taken: EDR detection rules updated for LockBit TTPs; payroll backup RTO target reduced from 36 to 8 hrs.",
+    "proposed_text": "Update the procedure to address the open issue for EDR detection rules updated for LockBit TTPs; payroll backup RTO target reduced from 36 to 8 hrs, including owner, resolution criteria, escalation path, due date or review cadence, and retained evidence.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "eff9119e-8ff3-4479-8222-f918f723a881",
+        "filename": "cyber_risk_event_log.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Incident Log",
+        "row_index": 35,
+        "row_number": 35,
+        "column_name": "Root Cause Category",
+        "excerpt": "Event ID: CE-034; Date: 2024-10-02; Month / Year: Oct-24; Incident Type: Ransomware"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": true,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "bc3e07b1-73bc-4773-8d30-ab83e3e703b4",
+    "suggestion_type": "process_improvement",
+    "severity": "high",
+    "title": "Open issue should be reflected in the procedure: SAS token governance policy implemented; wiki scanning for credential/token patterns enabled.",
+    "detail": "The source row is open or unresolved and describes: Root Cause Category: Cloud Misconfiguration; Root Cause Detail: Analytics pipeline misconfigured storage account SAS token with overly permissive access shared in internal wiki; Lessons Learned / Action Taken: SAS token governance policy implemented; wiki scanning for credential/token patterns enabled.",
+    "proposed_text": "Update the procedure to address the open issue for SAS token governance policy implemented; wiki scanning for credential/token patterns enabled, including owner, resolution criteria, escalation path, due date or review cadence, and retained evidence.",
+    "original_text": null,
+    "target_anchor_id": null,
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "eff9119e-8ff3-4479-8222-f918f723a881",
+        "filename": "cyber_risk_event_log.xlsx",
+        "document_role": "evidence_test_result",
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Incident Log",
+        "row_index": 36,
+        "row_number": 36,
+        "column_name": "Root Cause Category",
+        "excerpt": "Event ID: CE-035; Date: 2024-10-30; Month / Year: Oct-24; Incident Type: Cloud Data Exposure"
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": true,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "40c35351-5c5d-4508-bcae-80a75678ce87",
+    "suggestion_type": "missing_process_step",
+    "severity": "high",
+    "title": "Define Incident Classification Tiers",
+    "detail": "Section 5 mentions that incidents should be classified based on impact but does not provide specific tiers (e.g., P1-P4 or Critical-Low). Without defined levels, escalation to 'senior management as appropriate' is subjective and may lead to delays.",
+    "proposed_text": "Incidents must be classified into four tiers (Critical, High, Medium, Low) based on the Impact Matrix in Appendix A; Critical and High incidents must be escalated to the CISO and Senior Management within 30 minutes of confirmation.",
+    "original_text": "Incidents should be classified based on their potential impact to the organisation. Higher impact incidents should be escalated to senior management and the CISO as appropriate.",
+    "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a2",
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+        "filename": "cyber_ir_sop.docx",
+        "document_role": null,
+        "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a2",
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": false,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "378d88d7-22f8-46e7-aba4-7d1c7c9b85c8",
+    "suggestion_type": "mapping_gap",
+    "severity": "medium",
+    "title": "Integrate Specific Threat Intelligence Sources",
+    "detail": "Section 6.1 mentions threat intelligence feeds generally, but the Risk-Control Matrix specifically mandates the integration of FSISAC and FS-CERT feeds.",
+    "proposed_text": "Threat intelligence feeds, specifically including FSISAC and FS-CERT feeds integrated into the SIEM.",
+    "original_text": "Threat intelligence feeds",
+    "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a2",
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "90bcd5c1-bc5e-418f-ac0b-2a932dd4f601",
+        "filename": "cyber_rcm.xlsx",
+        "document_role": null,
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": false,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "a7a70c29-6758-4eb5-8239-87615bd81b20",
+    "suggestion_type": "mapping_gap",
+    "severity": "high",
+    "title": "Incorporate Emergency Patching SLAs",
+    "detail": "Section 6.3 mentions applying security patches during eradication but lacks the specific 72-hour SLA for critical vulnerabilities (CVSS \u2265 9.0) defined in the RCM (CR-007).",
+    "proposed_text": "Applying security patches to address the vulnerability exploited, ensuring that emergency patching for vulnerabilities with a CVSS score \u2265 9.0 is completed within 72 hours.",
+    "original_text": "Applying security patches to address the vulnerability exploited",
+    "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a2",
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "90bcd5c1-bc5e-418f-ac0b-2a932dd4f601",
+        "filename": "cyber_rcm.xlsx",
+        "document_role": null,
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": false,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "4aebe8a3-c7d2-47a3-ab7f-afb00c2b6629",
+    "suggestion_type": "mapping_gap",
+    "severity": "high",
+    "title": "Specify Use of Immutable Backups for Recovery",
+    "detail": "Section 6.4 describes recovery but does not mandate the use of immutable offline backups, which is a critical control (CR-013) for ensuring data integrity during restoration after a ransomware or destructive attack.",
+    "proposed_text": "Systems should be restored to normal operation using immutable offline backups to ensure the integrity of the restored data, following the BCP/DR restoration procedures.",
+    "original_text": "Systems should be restored to normal operation only after the threat has been fully eradicated.",
+    "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a2",
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "90bcd5c1-bc5e-418f-ac0b-2a932dd4f601",
+        "filename": "cyber_rcm.xlsx",
+        "document_role": null,
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": false,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "d0c40763-7cea-4a99-abba-6ce566f76db3",
+    "suggestion_type": "regulatory_alignment",
+    "severity": "medium",
+    "title": "Include Regulatory Reporting Requirements",
+    "detail": "Section 7.2 lacks mention of mandatory regulatory reporting, such as the RBI CSF self-assessment or immediate incident reporting to the regulator, which is implied by the Compliance role and the RCM (CR-014).",
+    "proposed_text": "The Legal and Compliance team will determine if the incident meets the threshold for mandatory reporting to the RBI or other regulators and ensure submission within the required statutory timelines.",
+    "original_text": "The Legal team will advise if law enforcement involvement is required",
+    "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a2",
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "90bcd5c1-bc5e-418f-ac0b-2a932dd4f601",
+        "filename": "cyber_rcm.xlsx",
+        "document_role": null,
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": false,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "3797c0be-a0bf-4a2d-9671-1654660b0f25",
+    "suggestion_type": "terminology_inconsistency",
+    "severity": "low",
+    "title": "Reference Recovery Time Objective (RTO)",
+    "detail": "The term 'RTO' is defined in the document terminology but is never used in the recovery section (6.4) to set performance expectations for the IT Operations team.",
+    "proposed_text": "Systems should be restored to normal operation in accordance with the defined Recovery Time Objective (RTO) for the specific business service, ensuring the threat has been fully eradicated first.",
+    "original_text": "Systems should be restored to normal operation only after the threat has been fully eradicated.",
+    "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a2",
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+        "filename": "cyber_ir_sop.docx",
+        "document_role": null,
+        "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a2",
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": false,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "975e46d8-29f7-4dba-9545-c9ea7d622f33",
+    "suggestion_type": "evidence_requirement",
+    "severity": "medium",
+    "title": "Document Containment Decision Rationale",
+    "detail": "Section 6.2 states the Incident Response Manager should decide on containment actions, but it does not require the rationale or the approval to be recorded, which is necessary for post-incident audits.",
+    "proposed_text": "The Incident Response Manager shall document the chosen containment actions and the rationale for those decisions within the incident tracking system at the time of the decision.",
+    "original_text": "The Incident Response Manager should decide which containment actions are appropriate based on the specific circumstances of the incident.",
+    "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a2",
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+        "filename": "cyber_ir_sop.docx",
+        "document_role": null,
+        "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a2",
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [],
+    "queue_finding": false,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "c3c62b2b-cf72-431c-a070-644379bb028e",
+    "suggestion_type": "mapping_gap",
+    "severity": "high",
+    "title": "Add SOP coverage for CC-001",
+    "detail": "The RCM contains control CC-001, but no matching process step was found in the primary SOP. This is suggested because the SOP should describe the control procedure that auditors will test against the RCM.",
+    "proposed_text": "Add a procedure step for control CC-001 owned by IT Security. The step should describe Endpoint Detection & Response (EDR) deployed across all managed endpoints with real-time alerting to SOC and identify retained evidence: the relevant control evidence.",
+    "original_text": null,
+    "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a8",
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+        "filename": "cyber_ir_sop.docx",
+        "document_role": null,
+        "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a8",
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      },
+      {
+        "document_id": "90bcd5c1-bc5e-418f-ac0b-2a932dd4f601",
+        "filename": "cyber_rcm.xlsx",
+        "document_role": null,
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Risk & Controls Matrix",
+        "row_index": 2,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [
+      {
+        "target_id": "c3c62b2b-cf72-431c-a070-644379bb028e:procedure",
+        "target_type": "procedure_step",
+        "title": "Procedure update",
+        "detail": "Add the missing activity to the process narrative.",
+        "proposed_text": "The IT Security performs endpoint Detection & Response (EDR) deployed across all managed endpoints with real-time alerting to SOC. Retained evidence includes the relevant evidence.",
+        "original_text": null,
+        "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a8",
+        "target_text": "Security incidents may be detected through various sources including:\n\nSIEM alerts and correlation rules\n\nEndpoint Detection and Response (EDR) alerts\n\nReports from employees or customers\n\nThreat intelligence feeds\n\nExternal notifications (e.g., from vendors or law enforcement)\n\nWhen an alert is received, the SOC analyst should review the available information and determine whether it represents a genuine security incident.",
+        "target_heading": null,
+        "review_status": null,
+        "edited_proposed_text": null,
+        "source_references": [
+          {
+            "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+            "filename": "cyber_ir_sop.docx",
+            "document_role": null,
+            "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a8",
+            "section_id": null,
+            "section_heading": null,
+            "page": null,
+            "sheet_name": null,
+            "row_index": null,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          },
+          {
+            "document_id": "90bcd5c1-bc5e-418f-ac0b-2a932dd4f601",
+            "filename": "cyber_rcm.xlsx",
+            "document_role": null,
+            "anchor_id": null,
+            "section_id": null,
+            "section_heading": null,
+            "page": null,
+            "sheet_name": "Risk & Controls Matrix",
+            "row_index": 2,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          }
+        ]
+      },
+      {
+        "target_id": "c3c62b2b-cf72-431c-a070-644379bb028e:responsibility",
+        "target_type": "role_responsibility",
+        "title": "Responsibility update",
+        "detail": "Reflect the accountable role in the responsibilities area.",
+        "proposed_text": "The IT Security performs endpoint Detection & Response (EDR) deployed across all managed endpoints with real-time alerting to SOC. Retained evidence includes the relevant evidence.",
+        "original_text": null,
+        "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a5",
+        "target_text": "The following roles are involved in the incident response process. Each team should be aware of their responsibilities and be ready to act when an incident occurs.\n\n| Role | Responsibilities |\n| --- | --- |\n| CISO | Overall accountability for cybersecurity. Should be informed of significant incidents. |\n| IT Security Team / SOC | Monitors security alerts, conducts triage, coordinates response activities. |\n| Incident Response Manager | Manages the response process and communication during an incident. Usually the IT Security Head. |\n| IT Operations | Supports containment and recovery activities as directed by the security team. |\n| Legal / Compliance | Advises on regulatory and legal obligations. Involved when required. |\n| Senior Management | Should be kept informed of major incidents that affect the business. |\n| HR Department | Involved in cases where an employee is suspected of wrongdoing. |",
+        "target_heading": null,
+        "review_status": null,
+        "edited_proposed_text": null,
+        "source_references": [
+          {
+            "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+            "filename": "cyber_ir_sop.docx",
+            "document_role": null,
+            "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a5",
+            "section_id": null,
+            "section_heading": null,
+            "page": null,
+            "sheet_name": null,
+            "row_index": null,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          },
+          {
+            "document_id": "90bcd5c1-bc5e-418f-ac0b-2a932dd4f601",
+            "filename": "cyber_rcm.xlsx",
+            "document_role": null,
+            "anchor_id": null,
+            "section_id": null,
+            "section_heading": null,
+            "page": null,
+            "sheet_name": "Risk & Controls Matrix",
+            "row_index": 2,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          }
+        ]
+      }
+    ],
+    "queue_finding": true,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "f0ce1796-47be-4df0-ba8b-6f470990ed8a",
+    "suggestion_type": "mapping_gap",
+    "severity": "high",
+    "title": "Add SOP coverage for CC-007",
+    "detail": "The RCM contains control CC-007, but no matching process step was found in the primary SOP. This is suggested because the SOP should describe the control procedure that auditors will test against the RCM.",
+    "proposed_text": "Add a procedure step for control CC-007 owned by IT Ops. The step should describe Monthly patch cycle for standard systems; emergency patching within 72 hours for CVSS \u2265 9.0 vulnerabilities and identify retained evidence: the relevant control evidence.",
+    "original_text": null,
+    "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a7",
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+        "filename": "cyber_ir_sop.docx",
+        "document_role": null,
+        "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a7",
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      },
+      {
+        "document_id": "90bcd5c1-bc5e-418f-ac0b-2a932dd4f601",
+        "filename": "cyber_rcm.xlsx",
+        "document_role": null,
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Risk & Controls Matrix",
+        "row_index": 8,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [
+      {
+        "target_id": "f0ce1796-47be-4df0-ba8b-6f470990ed8a:procedure",
+        "target_type": "procedure_step",
+        "title": "Procedure update",
+        "detail": "Add the missing activity to the process narrative.",
+        "proposed_text": "The IT Ops performs monthly patch cycle for standard systems; emergency patching within 72 hours for CVSS \u2265 9.0 vulnerabilities. Retained evidence includes the relevant evidence.",
+        "original_text": null,
+        "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a7",
+        "target_text": "The incident response process follows six phases as outlined below. Teams should move through each phase systematically.\n\n| Step | Phase | Key Actions |\n| --- | --- | --- |\n| 1 | Detection &amp; Identification | Security alerts received via SIEM, EDR, or user reports. SOC analyst reviews and performs initial triage. |\n| 2 | Initial Assessment | Assess the nature and scope of the incident. Determine if it is a genuine security incident or a false positive. |\n| 3 | Containment | Take steps to contain the incident and prevent further damage. Actions will depend on the type of incident. |\n| 4 | Eradication | Remove the threat from the environment. This may include removing malware, disabling compromised accounts, and patching vulnerabilities. |\n| 5 | Recovery | Restore affected systems and services to normal operations. Verify that systems are clean before bringing them back online. |\n| 6 | Communication | Notify relevant stakeholders as appropriate. This includes management, affected users, and potentially external parties. |",
+        "target_heading": null,
+        "review_status": null,
+        "edited_proposed_text": null,
+        "source_references": [
+          {
+            "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+            "filename": "cyber_ir_sop.docx",
+            "document_role": null,
+            "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a7",
+            "section_id": null,
+            "section_heading": null,
+            "page": null,
+            "sheet_name": null,
+            "row_index": null,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          },
+          {
+            "document_id": "90bcd5c1-bc5e-418f-ac0b-2a932dd4f601",
+            "filename": "cyber_rcm.xlsx",
+            "document_role": null,
+            "anchor_id": null,
+            "section_id": null,
+            "section_heading": null,
+            "page": null,
+            "sheet_name": "Risk & Controls Matrix",
+            "row_index": 8,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          }
+        ]
+      },
+      {
+        "target_id": "f0ce1796-47be-4df0-ba8b-6f470990ed8a:responsibility",
+        "target_type": "role_responsibility",
+        "title": "Responsibility update",
+        "detail": "Reflect the accountable role in the responsibilities area.",
+        "proposed_text": "The IT Ops performs monthly patch cycle for standard systems; emergency patching within 72 hours for CVSS \u2265 9.0 vulnerabilities. Retained evidence includes the relevant evidence.",
+        "original_text": null,
+        "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a5",
+        "target_text": "The following roles are involved in the incident response process. Each team should be aware of their responsibilities and be ready to act when an incident occurs.\n\n| Role | Responsibilities |\n| --- | --- |\n| CISO | Overall accountability for cybersecurity. Should be informed of significant incidents. |\n| IT Security Team / SOC | Monitors security alerts, conducts triage, coordinates response activities. |\n| Incident Response Manager | Manages the response process and communication during an incident. Usually the IT Security Head. |\n| IT Operations | Supports containment and recovery activities as directed by the security team. |\n| Legal / Compliance | Advises on regulatory and legal obligations. Involved when required. |\n| Senior Management | Should be kept informed of major incidents that affect the business. |\n| HR Department | Involved in cases where an employee is suspected of wrongdoing. |",
+        "target_heading": null,
+        "review_status": null,
+        "edited_proposed_text": null,
+        "source_references": [
+          {
+            "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+            "filename": "cyber_ir_sop.docx",
+            "document_role": null,
+            "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a5",
+            "section_id": null,
+            "section_heading": null,
+            "page": null,
+            "sheet_name": null,
+            "row_index": null,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          },
+          {
+            "document_id": "90bcd5c1-bc5e-418f-ac0b-2a932dd4f601",
+            "filename": "cyber_rcm.xlsx",
+            "document_role": null,
+            "anchor_id": null,
+            "section_id": null,
+            "section_heading": null,
+            "page": null,
+            "sheet_name": "Risk & Controls Matrix",
+            "row_index": 8,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          }
+        ]
+      }
+    ],
+    "queue_finding": true,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "b784c419-544c-4053-8718-edd4e1ff31d0",
+    "suggestion_type": "mapping_gap",
+    "severity": "high",
+    "title": "Add SOP coverage for CC-013",
+    "detail": "The RCM contains control CC-013, but no matching process step was found in the primary SOP. This is suggested because the SOP should describe the control procedure that auditors will test against the RCM.",
+    "proposed_text": "Add a procedure step for control CC-013 owned by IT / BCP Team. The step should describe Immutable offline backups maintained for critical systems; BCP/DR drill conducted semi-annually; incident response playbook defined and identify retained evidence: the relevant control evidence.",
+    "original_text": null,
+    "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a16",
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+        "filename": "cyber_ir_sop.docx",
+        "document_role": null,
+        "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a16",
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      },
+      {
+        "document_id": "90bcd5c1-bc5e-418f-ac0b-2a932dd4f601",
+        "filename": "cyber_rcm.xlsx",
+        "document_role": null,
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Risk & Controls Matrix",
+        "row_index": 14,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [
+      {
+        "target_id": "b784c419-544c-4053-8718-edd4e1ff31d0:procedure",
+        "target_type": "procedure_step",
+        "title": "Procedure update",
+        "detail": "Add the missing activity to the process narrative.",
+        "proposed_text": "The IT / BCP Team performs immutable offline backups maintained for critical systems; BCP/DR drill conducted semi-annually; incident response playbook defined. Retained evidence includes the relevant evidence.",
+        "original_text": null,
+        "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a16",
+        "target_text": "All IT security staff should be familiar with this SOP. Annual security awareness training is conducted for all employees.\n\nTabletop exercises and simulations may be conducted periodically to test the bank's incident response readiness.",
+        "target_heading": null,
+        "review_status": null,
+        "edited_proposed_text": null,
+        "source_references": [
+          {
+            "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+            "filename": "cyber_ir_sop.docx",
+            "document_role": null,
+            "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a16",
+            "section_id": null,
+            "section_heading": null,
+            "page": null,
+            "sheet_name": null,
+            "row_index": null,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          },
+          {
+            "document_id": "90bcd5c1-bc5e-418f-ac0b-2a932dd4f601",
+            "filename": "cyber_rcm.xlsx",
+            "document_role": null,
+            "anchor_id": null,
+            "section_id": null,
+            "section_heading": null,
+            "page": null,
+            "sheet_name": "Risk & Controls Matrix",
+            "row_index": 14,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          }
+        ]
+      },
+      {
+        "target_id": "b784c419-544c-4053-8718-edd4e1ff31d0:responsibility",
+        "target_type": "role_responsibility",
+        "title": "Responsibility update",
+        "detail": "Reflect the accountable role in the responsibilities area.",
+        "proposed_text": "The IT / BCP Team performs immutable offline backups maintained for critical systems; BCP/DR drill conducted semi-annually; incident response playbook defined. Retained evidence includes the relevant evidence.",
+        "original_text": null,
+        "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a5",
+        "target_text": "The following roles are involved in the incident response process. Each team should be aware of their responsibilities and be ready to act when an incident occurs.\n\n| Role | Responsibilities |\n| --- | --- |\n| CISO | Overall accountability for cybersecurity. Should be informed of significant incidents. |\n| IT Security Team / SOC | Monitors security alerts, conducts triage, coordinates response activities. |\n| Incident Response Manager | Manages the response process and communication during an incident. Usually the IT Security Head. |\n| IT Operations | Supports containment and recovery activities as directed by the security team. |\n| Legal / Compliance | Advises on regulatory and legal obligations. Involved when required. |\n| Senior Management | Should be kept informed of major incidents that affect the business. |\n| HR Department | Involved in cases where an employee is suspected of wrongdoing. |",
+        "target_heading": null,
+        "review_status": null,
+        "edited_proposed_text": null,
+        "source_references": [
+          {
+            "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+            "filename": "cyber_ir_sop.docx",
+            "document_role": null,
+            "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a5",
+            "section_id": null,
+            "section_heading": null,
+            "page": null,
+            "sheet_name": null,
+            "row_index": null,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          },
+          {
+            "document_id": "90bcd5c1-bc5e-418f-ac0b-2a932dd4f601",
+            "filename": "cyber_rcm.xlsx",
+            "document_role": null,
+            "anchor_id": null,
+            "section_id": null,
+            "section_heading": null,
+            "page": null,
+            "sheet_name": "Risk & Controls Matrix",
+            "row_index": 14,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          }
+        ]
+      }
+    ],
+    "queue_finding": true,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "26829d6d-aba8-412f-94e3-05f83e910651",
+    "suggestion_type": "mapping_gap",
+    "severity": "high",
+    "title": "Add SOP coverage for CC-019",
+    "detail": "The RCM contains control CC-019, but no matching process step was found in the primary SOP. This is suggested because the SOP should describe the control procedure that auditors will test against the RCM.",
+    "proposed_text": "Add a procedure step for control CC-019 owned by Threat Intel. The step should describe FSISAC and FS-CERT threat intelligence feeds integrated into SIEM; weekly threat brief shared with CISO and identify retained evidence: the relevant control evidence.",
+    "original_text": null,
+    "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a8",
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+        "filename": "cyber_ir_sop.docx",
+        "document_role": null,
+        "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a8",
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      },
+      {
+        "document_id": "90bcd5c1-bc5e-418f-ac0b-2a932dd4f601",
+        "filename": "cyber_rcm.xlsx",
+        "document_role": null,
+        "anchor_id": null,
+        "section_id": null,
+        "section_heading": null,
+        "page": null,
+        "sheet_name": "Risk & Controls Matrix",
+        "row_index": 20,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [
+      {
+        "target_id": "26829d6d-aba8-412f-94e3-05f83e910651:procedure",
+        "target_type": "procedure_step",
+        "title": "Procedure update",
+        "detail": "Add the missing activity to the process narrative.",
+        "proposed_text": "The Threat Intel performs fSISAC and FS-CERT threat intelligence feeds integrated into SIEM; weekly threat brief shared with CISO. Retained evidence includes the relevant evidence.",
+        "original_text": null,
+        "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a8",
+        "target_text": "Security incidents may be detected through various sources including:\n\nSIEM alerts and correlation rules\n\nEndpoint Detection and Response (EDR) alerts\n\nReports from employees or customers\n\nThreat intelligence feeds\n\nExternal notifications (e.g., from vendors or law enforcement)\n\nWhen an alert is received, the SOC analyst should review the available information and determine whether it represents a genuine security incident.",
+        "target_heading": null,
+        "review_status": null,
+        "edited_proposed_text": null,
+        "source_references": [
+          {
+            "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+            "filename": "cyber_ir_sop.docx",
+            "document_role": null,
+            "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a8",
+            "section_id": null,
+            "section_heading": null,
+            "page": null,
+            "sheet_name": null,
+            "row_index": null,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          },
+          {
+            "document_id": "90bcd5c1-bc5e-418f-ac0b-2a932dd4f601",
+            "filename": "cyber_rcm.xlsx",
+            "document_role": null,
+            "anchor_id": null,
+            "section_id": null,
+            "section_heading": null,
+            "page": null,
+            "sheet_name": "Risk & Controls Matrix",
+            "row_index": 20,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          }
+        ]
+      },
+      {
+        "target_id": "26829d6d-aba8-412f-94e3-05f83e910651:responsibility",
+        "target_type": "role_responsibility",
+        "title": "Responsibility update",
+        "detail": "Reflect the accountable role in the responsibilities area.",
+        "proposed_text": "The Threat Intel performs fSISAC and FS-CERT threat intelligence feeds integrated into SIEM; weekly threat brief shared with CISO. Retained evidence includes the relevant evidence.",
+        "original_text": null,
+        "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a5",
+        "target_text": "The following roles are involved in the incident response process. Each team should be aware of their responsibilities and be ready to act when an incident occurs.\n\n| Role | Responsibilities |\n| --- | --- |\n| CISO | Overall accountability for cybersecurity. Should be informed of significant incidents. |\n| IT Security Team / SOC | Monitors security alerts, conducts triage, coordinates response activities. |\n| Incident Response Manager | Manages the response process and communication during an incident. Usually the IT Security Head. |\n| IT Operations | Supports containment and recovery activities as directed by the security team. |\n| Legal / Compliance | Advises on regulatory and legal obligations. Involved when required. |\n| Senior Management | Should be kept informed of major incidents that affect the business. |\n| HR Department | Involved in cases where an employee is suspected of wrongdoing. |",
+        "target_heading": null,
+        "review_status": null,
+        "edited_proposed_text": null,
+        "source_references": [
+          {
+            "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+            "filename": "cyber_ir_sop.docx",
+            "document_role": null,
+            "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a5",
+            "section_id": null,
+            "section_heading": null,
+            "page": null,
+            "sheet_name": null,
+            "row_index": null,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          },
+          {
+            "document_id": "90bcd5c1-bc5e-418f-ac0b-2a932dd4f601",
+            "filename": "cyber_rcm.xlsx",
+            "document_role": null,
+            "anchor_id": null,
+            "section_id": null,
+            "section_heading": null,
+            "page": null,
+            "sheet_name": "Risk & Controls Matrix",
+            "row_index": 20,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          }
+        ]
+      }
+    ],
+    "queue_finding": true,
+    "requires_explicit_review": false
+  },
+  {
+    "suggestion_id": "42c93fe4-69d4-46a5-bdcd-b95ca512e6f3",
+    "suggestion_type": "process_improvement",
+    "severity": "high",
+    "title": "Add an accountability matrix for multi-role activities",
+    "detail": "The procedure involves multiple roles and hand-offs but does not define Responsible, Accountable, Consulted, and Informed ownership.",
+    "proposed_text": "Add an accountability matrix for material activities:\n\n| Activity / decision | Responsible | Accountable | Consulted | Informed |\n| --- | --- | --- | --- | --- |\n| Key process activity | Performing team or role | Outcome owner | Specialist contributors | Oversight or impacted stakeholders |\n\nPopulate the matrix from the uploaded procedure and supporting evidence. Where the responsible owner is not explicit, mark it for reviewer confirmation instead of assigning it to an oversight role.",
+    "original_text": null,
+    "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a5",
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+        "filename": "cyber_ir_sop.docx",
+        "document_role": null,
+        "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a5",
+        "section_id": null,
+        "section_heading": "4. Roles and Responsibilities",
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [
+      {
+        "target_id": "42c93fe4-69d4-46a5-bdcd-b95ca512e6f3:structure",
+        "target_type": "raci_matrix",
+        "title": "Add an accountability matrix for multi-role activities",
+        "detail": "The procedure involves multiple roles and hand-offs but does not define Responsible, Accountable, Consulted, and Informed ownership.",
+        "proposed_text": "Add an accountability matrix for material activities:\n\n| Activity / decision | Responsible | Accountable | Consulted | Informed |\n| --- | --- | --- | --- | --- |\n| Key process activity | Performing team or role | Outcome owner | Specialist contributors | Oversight or impacted stakeholders |\n\nPopulate the matrix from the uploaded procedure and supporting evidence. Where the responsible owner is not explicit, mark it for reviewer confirmation instead of assigning it to an oversight role.",
+        "original_text": null,
+        "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a5",
+        "target_text": "The following roles are involved in the incident response process. Each team should be aware of their responsibilities and be ready to act when an incident occurs.\n\n| Role | Responsibilities |\n| --- | --- |\n| CISO | Overall accountability for cybersecurity. Should be informed of significant incidents. |\n| IT Security Team / SOC | Monitors security alerts, conducts triage, coordinates response activities. |\n| Incident Response Manager | Manages the response process and communication during an incident. Usually the IT Security Head. |\n| IT Operations | Supports containment and recovery activities as directed by the security team. |\n| Legal / Compliance | Advises on regulatory and legal obligations. Involved when required. |\n| Senior Management | Should be kept informed of major incidents that affect the business. |\n| HR Department | Involved in cases where an employee is suspected of wrongdoing. |",
+        "target_heading": null,
+        "review_status": null,
+        "edited_proposed_text": null,
+        "source_references": [
+          {
+            "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+            "filename": "cyber_ir_sop.docx",
+            "document_role": null,
+            "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a5",
+            "section_id": null,
+            "section_heading": "4. Roles and Responsibilities",
+            "page": null,
+            "sheet_name": null,
+            "row_index": null,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          }
+        ]
+      }
+    ],
+    "queue_finding": true,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "d74151d4-2e77-4034-a4b5-9596f3f5c4b1",
+    "suggestion_type": "process_improvement",
+    "severity": "high",
+    "title": "Define classification criteria for referenced levels",
+    "detail": "The documents reference levels or categories, but the procedure does not define the objective criteria used to classify them.",
+    "proposed_text": "Add a classification criteria matrix:\n\n| Level / category | Criteria | Required response | Escalation trigger | Evidence retained |\n| --- | --- | --- | --- | --- |\n| Level to be defined | Objective threshold or indicator | Required action | Time or severity trigger | Decision and action evidence |\n\nUse the level names already present in the uploaded documents and define objective criteria for each level.",
+    "original_text": null,
+    "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a7",
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+        "filename": "cyber_ir_sop.docx",
+        "document_role": null,
+        "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a7",
+        "section_id": null,
+        "section_heading": "6. Incident Response Process",
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [
+      {
+        "target_id": "d74151d4-2e77-4034-a4b5-9596f3f5c4b1:structure",
+        "target_type": "monitoring_reporting",
+        "title": "Define classification criteria for referenced levels",
+        "detail": "The documents reference levels or categories, but the procedure does not define the objective criteria used to classify them.",
+        "proposed_text": "Add a classification criteria matrix:\n\n| Level / category | Criteria | Required response | Escalation trigger | Evidence retained |\n| --- | --- | --- | --- | --- |\n| Level to be defined | Objective threshold or indicator | Required action | Time or severity trigger | Decision and action evidence |\n\nUse the level names already present in the uploaded documents and define objective criteria for each level.",
+        "original_text": null,
+        "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a7",
+        "target_text": "The incident response process follows six phases as outlined below. Teams should move through each phase systematically.\n\n| Step | Phase | Key Actions |\n| --- | --- | --- |\n| 1 | Detection &amp; Identification | Security alerts received via SIEM, EDR, or user reports. SOC analyst reviews and performs initial triage. |\n| 2 | Initial Assessment | Assess the nature and scope of the incident. Determine if it is a genuine security incident or a false positive. |\n| 3 | Containment | Take steps to contain the incident and prevent further damage. Actions will depend on the type of incident. |\n| 4 | Eradication | Remove the threat from the environment. This may include removing malware, disabling compromised accounts, and patching vulnerabilities. |\n| 5 | Recovery | Restore affected systems and services to normal operations. Verify that systems are clean before bringing them back online. |\n| 6 | Communication | Notify relevant stakeholders as appropriate. This includes management, affected users, and potentially external parties. |",
+        "target_heading": null,
+        "review_status": null,
+        "edited_proposed_text": null,
+        "source_references": [
+          {
+            "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+            "filename": "cyber_ir_sop.docx",
+            "document_role": null,
+            "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a7",
+            "section_id": null,
+            "section_heading": "6. Incident Response Process",
+            "page": null,
+            "sheet_name": null,
+            "row_index": null,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          }
+        ]
+      }
+    ],
+    "queue_finding": true,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "9aaaf4a1-27b4-4812-a43b-e2f11c3d7a0e",
+    "suggestion_type": "process_improvement",
+    "severity": "high",
+    "title": "Define escalation triggers and timeframes",
+    "detail": "The procedure uses escalation or notification language with vague timing, which makes execution and testing inconsistent.",
+    "proposed_text": "Add an escalation matrix:\n\n| Trigger | Responsible owner | Escalation recipient | Timeframe | Evidence retained |\n| --- | --- | --- | --- | --- |\n| Trigger to be defined | Performing role | Accountable or oversight role | Defined SLA | Notification and decision record |\n\nReplace vague timing terms with measurable thresholds and timeframes.",
+    "original_text": null,
+    "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a7",
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+        "filename": "cyber_ir_sop.docx",
+        "document_role": null,
+        "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a7",
+        "section_id": null,
+        "section_heading": "6. Incident Response Process",
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [
+      {
+        "target_id": "9aaaf4a1-27b4-4812-a43b-e2f11c3d7a0e:structure",
+        "target_type": "monitoring_reporting",
+        "title": "Define escalation triggers and timeframes",
+        "detail": "The procedure uses escalation or notification language with vague timing, which makes execution and testing inconsistent.",
+        "proposed_text": "Add an escalation matrix:\n\n| Trigger | Responsible owner | Escalation recipient | Timeframe | Evidence retained |\n| --- | --- | --- | --- | --- |\n| Trigger to be defined | Performing role | Accountable or oversight role | Defined SLA | Notification and decision record |\n\nReplace vague timing terms with measurable thresholds and timeframes.",
+        "original_text": null,
+        "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a7",
+        "target_text": "The incident response process follows six phases as outlined below. Teams should move through each phase systematically.\n\n| Step | Phase | Key Actions |\n| --- | --- | --- |\n| 1 | Detection &amp; Identification | Security alerts received via SIEM, EDR, or user reports. SOC analyst reviews and performs initial triage. |\n| 2 | Initial Assessment | Assess the nature and scope of the incident. Determine if it is a genuine security incident or a false positive. |\n| 3 | Containment | Take steps to contain the incident and prevent further damage. Actions will depend on the type of incident. |\n| 4 | Eradication | Remove the threat from the environment. This may include removing malware, disabling compromised accounts, and patching vulnerabilities. |\n| 5 | Recovery | Restore affected systems and services to normal operations. Verify that systems are clean before bringing them back online. |\n| 6 | Communication | Notify relevant stakeholders as appropriate. This includes management, affected users, and potentially external parties. |",
+        "target_heading": null,
+        "review_status": null,
+        "edited_proposed_text": null,
+        "source_references": [
+          {
+            "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+            "filename": "cyber_ir_sop.docx",
+            "document_role": null,
+            "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a7",
+            "section_id": null,
+            "section_heading": "6. Incident Response Process",
+            "page": null,
+            "sheet_name": null,
+            "row_index": null,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          }
+        ]
+      }
+    ],
+    "queue_finding": true,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "f5099911-a23f-4945-85e1-f4076b157eb0",
+    "suggestion_type": "process_improvement",
+    "severity": "medium",
+    "title": "Add a post-event review and closure control",
+    "detail": "The procedure describes events or remediation but does not define a structured closure review to confirm root cause, lessons learned, and action completion.",
+    "proposed_text": "Add a post-event review / closure section covering trigger, required participants, timeline, root-cause review, corrective actions, evidence retained, and sign-off before closure.",
+    "original_text": null,
+    "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a7",
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+        "filename": "cyber_ir_sop.docx",
+        "document_role": null,
+        "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a7",
+        "section_id": null,
+        "section_heading": "6. Incident Response Process",
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [
+      {
+        "target_id": "f5099911-a23f-4945-85e1-f4076b157eb0:structure",
+        "target_type": "procedure_step",
+        "title": "Add a post-event review and closure control",
+        "detail": "The procedure describes events or remediation but does not define a structured closure review to confirm root cause, lessons learned, and action completion.",
+        "proposed_text": "Add a post-event review / closure section covering trigger, required participants, timeline, root-cause review, corrective actions, evidence retained, and sign-off before closure.",
+        "original_text": null,
+        "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a7",
+        "target_text": "The incident response process follows six phases as outlined below. Teams should move through each phase systematically.\n\n| Step | Phase | Key Actions |\n| --- | --- | --- |\n| 1 | Detection &amp; Identification | Security alerts received via SIEM, EDR, or user reports. SOC analyst reviews and performs initial triage. |\n| 2 | Initial Assessment | Assess the nature and scope of the incident. Determine if it is a genuine security incident or a false positive. |\n| 3 | Containment | Take steps to contain the incident and prevent further damage. Actions will depend on the type of incident. |\n| 4 | Eradication | Remove the threat from the environment. This may include removing malware, disabling compromised accounts, and patching vulnerabilities. |\n| 5 | Recovery | Restore affected systems and services to normal operations. Verify that systems are clean before bringing them back online. |\n| 6 | Communication | Notify relevant stakeholders as appropriate. This includes management, affected users, and potentially external parties. |",
+        "target_heading": null,
+        "review_status": null,
+        "edited_proposed_text": null,
+        "source_references": [
+          {
+            "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+            "filename": "cyber_ir_sop.docx",
+            "document_role": null,
+            "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a7",
+            "section_id": null,
+            "section_heading": "6. Incident Response Process",
+            "page": null,
+            "sheet_name": null,
+            "row_index": null,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          }
+        ]
+      }
+    ],
+    "queue_finding": false,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "74a1d6d2-9569-47e5-b2c1-e140f87d9f11",
+    "suggestion_type": "process_improvement",
+    "severity": "high",
+    "title": "Define evidence preservation and chain-of-custody requirements",
+    "detail": "The documents refer to collecting or retaining evidence, but the procedure does not define preservation, custody, integrity, retention location, and transfer records.",
+    "proposed_text": "Define evidence preservation and chain-of-custody requirements:\n\n| Evidence type | Preservation action | Custodian | Integrity control | Retention location | Review / transfer record |\n| --- | --- | --- | --- | --- | --- |\n| Evidence from source documents | How it is captured and protected | Responsible role | Integrity control such as access restriction, timestamp, or validation | Repository or record location | Chain-of-custody or hand-off evidence |\n\nApply these requirements to evidence used for investigation, exception handling, remediation, validation, or oversight review.",
+    "original_text": null,
+    "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a4",
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+        "filename": "cyber_ir_sop.docx",
+        "document_role": null,
+        "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a4",
+        "section_id": null,
+        "section_heading": "3. Definitions",
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [
+      {
+        "target_id": "74a1d6d2-9569-47e5-b2c1-e140f87d9f11:structure",
+        "target_type": "evidence_requirement",
+        "title": "Define evidence preservation and chain-of-custody requirements",
+        "detail": "The documents refer to collecting or retaining evidence, but the procedure does not define preservation, custody, integrity, retention location, and transfer records.",
+        "proposed_text": "Define evidence preservation and chain-of-custody requirements:\n\n| Evidence type | Preservation action | Custodian | Integrity control | Retention location | Review / transfer record |\n| --- | --- | --- | --- | --- | --- |\n| Evidence from source documents | How it is captured and protected | Responsible role | Integrity control such as access restriction, timestamp, or validation | Repository or record location | Chain-of-custody or hand-off evidence |\n\nApply these requirements to evidence used for investigation, exception handling, remediation, validation, or oversight review.",
+        "original_text": null,
+        "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a4",
+        "target_text": "| Term | Definition |\n| --- | --- |\n| Cybersecurity Incident | An event that has or may have an adverse effect on the confidentiality, integrity, or availability of information systems or data. |\n| Threat Actor | An individual, group, or organisation responsible for carrying out a cyberattack. |\n| Indicator of Compromise (IoC) | Evidence that a system or network has been compromised, such as unusual network traffic or unexpected file changes. |\n| SIEM | Security Information and Event Management system used to aggregate and correlate security logs. |\n| RTO | Recovery Time Objective \u2014 the target duration for restoring operations after an incident. |",
+        "target_heading": null,
+        "review_status": null,
+        "edited_proposed_text": null,
+        "source_references": [
+          {
+            "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+            "filename": "cyber_ir_sop.docx",
+            "document_role": null,
+            "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a4",
+            "section_id": null,
+            "section_heading": "3. Definitions",
+            "page": null,
+            "sheet_name": null,
+            "row_index": null,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          }
+        ]
+      }
+    ],
+    "queue_finding": true,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "ecd9e743-8798-4f6d-a941-915b2664643f",
+    "suggestion_type": "process_improvement",
+    "severity": "medium",
+    "title": "Add document control metadata",
+    "detail": "The procedure does not clearly define document ownership, versioning, and review cadence.",
+    "proposed_text": "Add document control information including document owner, version, effective date, last review date, next review date, approver, and change summary.",
+    "original_text": null,
+    "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a7",
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+        "filename": "cyber_ir_sop.docx",
+        "document_role": null,
+        "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a7",
+        "section_id": null,
+        "section_heading": "6. Incident Response Process",
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [
+      {
+        "target_id": "ecd9e743-8798-4f6d-a941-915b2664643f:structure",
+        "target_type": "document_metadata",
+        "title": "Add document control metadata",
+        "detail": "The procedure does not clearly define document ownership, versioning, and review cadence.",
+        "proposed_text": "Add document control information including document owner, version, effective date, last review date, next review date, approver, and change summary.",
+        "original_text": null,
+        "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a7",
+        "target_text": "The incident response process follows six phases as outlined below. Teams should move through each phase systematically.\n\n| Step | Phase | Key Actions |\n| --- | --- | --- |\n| 1 | Detection &amp; Identification | Security alerts received via SIEM, EDR, or user reports. SOC analyst reviews and performs initial triage. |\n| 2 | Initial Assessment | Assess the nature and scope of the incident. Determine if it is a genuine security incident or a false positive. |\n| 3 | Containment | Take steps to contain the incident and prevent further damage. Actions will depend on the type of incident. |\n| 4 | Eradication | Remove the threat from the environment. This may include removing malware, disabling compromised accounts, and patching vulnerabilities. |\n| 5 | Recovery | Restore affected systems and services to normal operations. Verify that systems are clean before bringing them back online. |\n| 6 | Communication | Notify relevant stakeholders as appropriate. This includes management, affected users, and potentially external parties. |",
+        "target_heading": null,
+        "review_status": null,
+        "edited_proposed_text": null,
+        "source_references": [
+          {
+            "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+            "filename": "cyber_ir_sop.docx",
+            "document_role": null,
+            "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a7",
+            "section_id": null,
+            "section_heading": "6. Incident Response Process",
+            "page": null,
+            "sheet_name": null,
+            "row_index": null,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          }
+        ]
+      }
+    ],
+    "queue_finding": false,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "2edf7347-4788-4b42-b7a9-8dbb0bf206b7",
+    "suggestion_type": "process_improvement",
+    "severity": "high",
+    "title": "Add an obligation calendar for external or internal requirements",
+    "detail": "Supporting documents reference obligations or frameworks, but the procedure does not define a structured calendar of triggers, owners, deadlines, and evidence.",
+    "proposed_text": "Add an obligation calendar:\n\n| Obligation / reference | Trigger | Owner | Deadline / timeframe | Submission or notification evidence |\n| --- | --- | --- | --- | --- |\n| Reference from supporting documents | Trigger condition | Responsible owner | Defined date or elapsed time | Filing, notification, or approval record |\n\nPopulate the table from the regulatory, framework, standard, or contractual references present in the uploaded source documents.",
+    "original_text": null,
+    "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a7",
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+        "filename": "cyber_ir_sop.docx",
+        "document_role": null,
+        "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a7",
+        "section_id": null,
+        "section_heading": "6. Incident Response Process",
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [
+      {
+        "target_id": "2edf7347-4788-4b42-b7a9-8dbb0bf206b7:structure",
+        "target_type": "monitoring_reporting",
+        "title": "Add an obligation calendar for external or internal requirements",
+        "detail": "Supporting documents reference obligations or frameworks, but the procedure does not define a structured calendar of triggers, owners, deadlines, and evidence.",
+        "proposed_text": "Add an obligation calendar:\n\n| Obligation / reference | Trigger | Owner | Deadline / timeframe | Submission or notification evidence |\n| --- | --- | --- | --- | --- |\n| Reference from supporting documents | Trigger condition | Responsible owner | Defined date or elapsed time | Filing, notification, or approval record |\n\nPopulate the table from the regulatory, framework, standard, or contractual references present in the uploaded source documents.",
+        "original_text": null,
+        "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a7",
+        "target_text": "The incident response process follows six phases as outlined below. Teams should move through each phase systematically.\n\n| Step | Phase | Key Actions |\n| --- | --- | --- |\n| 1 | Detection &amp; Identification | Security alerts received via SIEM, EDR, or user reports. SOC analyst reviews and performs initial triage. |\n| 2 | Initial Assessment | Assess the nature and scope of the incident. Determine if it is a genuine security incident or a false positive. |\n| 3 | Containment | Take steps to contain the incident and prevent further damage. Actions will depend on the type of incident. |\n| 4 | Eradication | Remove the threat from the environment. This may include removing malware, disabling compromised accounts, and patching vulnerabilities. |\n| 5 | Recovery | Restore affected systems and services to normal operations. Verify that systems are clean before bringing them back online. |\n| 6 | Communication | Notify relevant stakeholders as appropriate. This includes management, affected users, and potentially external parties. |",
+        "target_heading": null,
+        "review_status": null,
+        "edited_proposed_text": null,
+        "source_references": [
+          {
+            "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+            "filename": "cyber_ir_sop.docx",
+            "document_role": null,
+            "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a7",
+            "section_id": null,
+            "section_heading": "6. Incident Response Process",
+            "page": null,
+            "sheet_name": null,
+            "row_index": null,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          }
+        ]
+      }
+    ],
+    "queue_finding": true,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "2be0f392-9776-473a-b830-1affef64b281",
+    "suggestion_type": "process_improvement",
+    "severity": "high",
+    "title": "Add a metric ownership and validation matrix",
+    "detail": "Supporting documents contain metrics, targets, or thresholds, but the procedure does not define owners, source systems, validation, deadlines, and retained evidence for each data element.",
+    "proposed_text": "Add a metric ownership and validation matrix:\n\n| Metric / data element | Data owner | Source system | Submission frequency | Validator / approver | Deadline | Evidence retained |\n| --- | --- | --- | --- | --- | --- | --- |\n| Metric from source documents | Accountable data provider | System or record source | Cadence | Independent validator | Due date | Submission and sign-off evidence |",
+    "original_text": null,
+    "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a7",
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+        "filename": "cyber_ir_sop.docx",
+        "document_role": null,
+        "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a7",
+        "section_id": null,
+        "section_heading": "6. Incident Response Process",
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [
+      {
+        "target_id": "2be0f392-9776-473a-b830-1affef64b281:structure",
+        "target_type": "monitoring_reporting",
+        "title": "Add a metric ownership and validation matrix",
+        "detail": "Supporting documents contain metrics, targets, or thresholds, but the procedure does not define owners, source systems, validation, deadlines, and retained evidence for each data element.",
+        "proposed_text": "Add a metric ownership and validation matrix:\n\n| Metric / data element | Data owner | Source system | Submission frequency | Validator / approver | Deadline | Evidence retained |\n| --- | --- | --- | --- | --- | --- | --- |\n| Metric from source documents | Accountable data provider | System or record source | Cadence | Independent validator | Due date | Submission and sign-off evidence |",
+        "original_text": null,
+        "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a7",
+        "target_text": "The incident response process follows six phases as outlined below. Teams should move through each phase systematically.\n\n| Step | Phase | Key Actions |\n| --- | --- | --- |\n| 1 | Detection &amp; Identification | Security alerts received via SIEM, EDR, or user reports. SOC analyst reviews and performs initial triage. |\n| 2 | Initial Assessment | Assess the nature and scope of the incident. Determine if it is a genuine security incident or a false positive. |\n| 3 | Containment | Take steps to contain the incident and prevent further damage. Actions will depend on the type of incident. |\n| 4 | Eradication | Remove the threat from the environment. This may include removing malware, disabling compromised accounts, and patching vulnerabilities. |\n| 5 | Recovery | Restore affected systems and services to normal operations. Verify that systems are clean before bringing them back online. |\n| 6 | Communication | Notify relevant stakeholders as appropriate. This includes management, affected users, and potentially external parties. |",
+        "target_heading": null,
+        "review_status": null,
+        "edited_proposed_text": null,
+        "source_references": [
+          {
+            "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+            "filename": "cyber_ir_sop.docx",
+            "document_role": null,
+            "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a7",
+            "section_id": null,
+            "section_heading": "6. Incident Response Process",
+            "page": null,
+            "sheet_name": null,
+            "row_index": null,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          }
+        ]
+      }
+    ],
+    "queue_finding": true,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "636bb9e3-68a1-48a8-9825-43e802e9edd9",
+    "suggestion_type": "process_improvement",
+    "severity": "medium",
+    "title": "Link thresholds and exceptions to risk appetite",
+    "detail": "The documents contain risk and threshold signals, but the procedure does not explain how breaches map to appetite, tolerance, or management action.",
+    "proposed_text": "Link material metrics, thresholds, or control exceptions to the applicable risk appetite or tolerance statement, including breach triggers, escalation owner, and evidence retained.",
+    "original_text": null,
+    "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a7",
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+        "filename": "cyber_ir_sop.docx",
+        "document_role": null,
+        "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a7",
+        "section_id": null,
+        "section_heading": "6. Incident Response Process",
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [
+      {
+        "target_id": "636bb9e3-68a1-48a8-9825-43e802e9edd9:structure",
+        "target_type": "monitoring_reporting",
+        "title": "Link thresholds and exceptions to risk appetite",
+        "detail": "The documents contain risk and threshold signals, but the procedure does not explain how breaches map to appetite, tolerance, or management action.",
+        "proposed_text": "Link material metrics, thresholds, or control exceptions to the applicable risk appetite or tolerance statement, including breach triggers, escalation owner, and evidence retained.",
+        "original_text": null,
+        "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a7",
+        "target_text": "The incident response process follows six phases as outlined below. Teams should move through each phase systematically.\n\n| Step | Phase | Key Actions |\n| --- | --- | --- |\n| 1 | Detection &amp; Identification | Security alerts received via SIEM, EDR, or user reports. SOC analyst reviews and performs initial triage. |\n| 2 | Initial Assessment | Assess the nature and scope of the incident. Determine if it is a genuine security incident or a false positive. |\n| 3 | Containment | Take steps to contain the incident and prevent further damage. Actions will depend on the type of incident. |\n| 4 | Eradication | Remove the threat from the environment. This may include removing malware, disabling compromised accounts, and patching vulnerabilities. |\n| 5 | Recovery | Restore affected systems and services to normal operations. Verify that systems are clean before bringing them back online. |\n| 6 | Communication | Notify relevant stakeholders as appropriate. This includes management, affected users, and potentially external parties. |",
+        "target_heading": null,
+        "review_status": null,
+        "edited_proposed_text": null,
+        "source_references": [
+          {
+            "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+            "filename": "cyber_ir_sop.docx",
+            "document_role": null,
+            "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a7",
+            "section_id": null,
+            "section_heading": "6. Incident Response Process",
+            "page": null,
+            "sheet_name": null,
+            "row_index": null,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          }
+        ]
+      }
+    ],
+    "queue_finding": false,
+    "requires_explicit_review": true
+  },
+  {
+    "suggestion_id": "ac4fb0fe-e003-44a2-873b-1ed3a66f4c52",
+    "suggestion_type": "process_improvement",
+    "severity": "medium",
+    "title": "Add a category coverage matrix",
+    "detail": "The source documents reference categories, populations, or scopes, but the procedure does not reconcile the full coverage universe with inclusion decisions, owners, requirements, and evidence.",
+    "proposed_text": "Add a category coverage matrix:\n\n| Category / population | Inclusion decision | Source document or system | Owner | Reporting / control requirement | Evidence retained |\n| --- | --- | --- | --- | --- | --- |\n| Category from source documents | Included, excluded, or not applicable | Authoritative source | Accountable owner | Required treatment or reporting obligation | Evidence supporting the decision |\n\nUse the matrix to reconcile the full category or population universe from supporting documents with what the procedure says is in scope.",
+    "original_text": null,
+    "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a3",
+    "review_status": "pending",
+    "edited_proposed_text": null,
+    "reviewer_notes": null,
+    "source_references": [
+      {
+        "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+        "filename": "cyber_ir_sop.docx",
+        "document_role": null,
+        "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a3",
+        "section_id": null,
+        "section_heading": "2. Scope",
+        "page": null,
+        "sheet_name": null,
+        "row_index": null,
+        "row_number": null,
+        "column_name": null,
+        "excerpt": null
+      }
+    ],
+    "edit_targets": [
+      {
+        "target_id": "ac4fb0fe-e003-44a2-873b-1ed3a66f4c52:structure",
+        "target_type": "monitoring_reporting",
+        "title": "Add a category coverage matrix",
+        "detail": "The source documents reference categories, populations, or scopes, but the procedure does not reconcile the full coverage universe with inclusion decisions, owners, requirements, and evidence.",
+        "proposed_text": "Add a category coverage matrix:\n\n| Category / population | Inclusion decision | Source document or system | Owner | Reporting / control requirement | Evidence retained |\n| --- | --- | --- | --- | --- | --- |\n| Category from source documents | Included, excluded, or not applicable | Authoritative source | Accountable owner | Required treatment or reporting obligation | Evidence supporting the decision |\n\nUse the matrix to reconcile the full category or population universe from supporting documents with what the procedure says is in scope.",
+        "original_text": null,
+        "target_anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a3",
+        "target_text": "This SOP applies to all cybersecurity incidents affecting the bank's information systems, networks, applications, and data. This includes:\n\nAll IT systems and infrastructure owned or operated by the bank\n\nThird-party systems that process or store bank data\n\nAll employees, contractors, and vendors who have access to bank systems\n\nThe following are out of scope for this procedure:\n\nPhysical security incidents (refer to the Physical Security policy)\n\nFraud incidents not involving a cybersecurity component",
+        "target_heading": null,
+        "review_status": null,
+        "edited_proposed_text": null,
+        "source_references": [
+          {
+            "document_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2",
+            "filename": "cyber_ir_sop.docx",
+            "document_role": null,
+            "anchor_id": "cdddefe8-5e01-4b14-8ff8-04e435362ab2-a3",
+            "section_id": null,
+            "section_heading": "2. Scope",
+            "page": null,
+            "sheet_name": null,
+            "row_index": null,
+            "row_number": null,
+            "column_name": null,
+            "excerpt": null
+          }
+        ]
+      }
+    ],
+    "queue_finding": false,
+    "requires_explicit_review": true
+  }
+]

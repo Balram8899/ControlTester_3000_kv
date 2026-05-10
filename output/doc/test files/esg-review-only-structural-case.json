@@ -1,0 +1,444 @@
+{
+    "case_id":  "219de152-7009-4a9e-a679-739594c99bdb",
+    "title":  "ESG review-only structural validation",
+    "process_name":  "ESG reporting",
+    "domain_label":  "ESG / Reporting",
+    "notes":  "None",
+    "status":  {
+                   "stage":  "complete",
+                   "stage1_cost":  {
+                                       "provider":  "anthropic",
+                                       "model":  "claude-opus-4-7",
+                                       "call_count":  4,
+                                       "input_tokens":  0,
+                                       "output_tokens":  0,
+                                       "total_tokens":  0,
+                                       "estimated_cost_usd":  0.0,
+                                       "is_local_provider":  false,
+                                       "call_records":  [
+
+                                                        ]
+                                   },
+                   "final_cost":  {
+                                      "provider":  "anthropic",
+                                      "model":  "claude-opus-4-7",
+                                      "call_count":  4,
+                                      "input_tokens":  0,
+                                      "output_tokens":  0,
+                                      "total_tokens":  0,
+                                      "estimated_cost_usd":  0.0,
+                                      "is_local_provider":  false,
+                                      "call_records":  [
+
+                                                       ]
+                                  }
+               },
+    "document_tags":  [
+                          {
+                              "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                              "filename":  "esg_reporting_sop.docx",
+                              "tag":  "procedure",
+                              "conversion_status":  "success",
+                              "looks_corrupt":  false,
+                              "page_count":  0,
+                              "error":  null,
+                              "gridfs_file_id":  "69fdb1756c4ae9b7db53402b"
+                          },
+                          {
+                              "file_id":  "7b568019-47aa-4180-906b-32f4b6b07983",
+                              "filename":  "esg_rcm.xlsx",
+                              "tag":  "rcm",
+                              "conversion_status":  "success",
+                              "looks_corrupt":  false,
+                              "page_count":  0,
+                              "error":  null,
+                              "gridfs_file_id":  "69fdb1756c4ae9b7db53402d"
+                          },
+                          {
+                              "file_id":  "96733a80-bfcb-4ba8-b03c-90cfe51d9e4f",
+                              "filename":  "esg_metric_deviation_log.xlsx",
+                              "tag":  "risk_data",
+                              "conversion_status":  "success",
+                              "looks_corrupt":  false,
+                              "page_count":  0,
+                              "error":  null,
+                              "gridfs_file_id":  "69fdb1756c4ae9b7db53402f"
+                          }
+                      ],
+    "suggestions":  [
+
+                    ],
+    "corpus_map":  null,
+    "processing_state":  {
+                             "conversion":  {
+                                                "total":  3,
+                                                "completed":  3,
+                                                "failed":  0,
+                                                "pending":  0
+                                            },
+                             "analysis":  {
+                                              "total":  1,
+                                              "completed":  1,
+                                              "failed":  0,
+                                              "pending":  0
+                                          },
+                             "pipeline_status":  "partial",
+                             "pipeline_error":  null,
+                             "warnings":  [
+                                              "esg_rcm.xlsx: Excel processing partial",
+                                              "esg_metric_deviation_log.xlsx: Excel processing partial"
+                                          ]
+                         },
+    "readiness":  {
+                      "has_procedure":  false,
+                      "has_any_document":  false,
+                      "ready":  false,
+                      "blocking_reasons":  [
+
+                                           ]
+                  },
+    "outputs":  [
+                    {
+                        "output_id":  "219de152-7009-4a9e-a679-739594c99bdb-uplifted-docx",
+                        "output_type":  "docx",
+                        "filename":  "219de152-7009-4a9e-a679-739594c99bdb-uplifted-sop.docx",
+                        "output_mode":  "track_changes",
+                        "gridfs_file_id":  "69fdb17f6c4ae9b7db534035",
+                        "content_type":  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        "created_at":  "2026-05-08T09:48:47.937338"
+                    }
+                ],
+    "agent_follow_up_questions":  [
+
+                                  ],
+    "final_summary":  "Stage 1 completed with 0 suggestion(s).",
+    "schema_version":  2,
+    "created_at":  "2026-05-08T09:48:37.807048",
+    "updated_at":  "2026-05-08T09:48:51.285232",
+    "process_steps":  [
+
+                      ],
+    "markdown_documents":  [
+                               {
+                                   "document_id":  "doc-134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                                   "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                                   "filename":  "esg_reporting_sop.docx",
+                                   "file_type":  "docx",
+                                   "tag":  "procedure",
+                                   "markdown":  "ESG RISK MONITORING AND REPORTING\n\nStandard Operating Procedure\n\n| Document Title | ESG Risk Monitoring and Reporting Standard Operating Procedure |\n| --- | --- |\n| Document ID | SOP-ESG-002 |\n| Version | 1.1 |\n| Prepared By | Sustainability / ESG Team |\n| Reviewed By | CFO |\n| Date | April 2024 |\n| Status | Active |\n\n# 1. Purpose\n\nThis Standard Operating Procedure (SOP) defines the process for collecting, monitoring, reporting, and managing deviations in Environmental, Social, and Governance (ESG) data and metrics at the bank.\n\nThe objective is to ensure that ESG information reported internally and externally is accurate, complete, and consistent, and that material deviations from targets are identified and managed in a timely manner.\n\n# 2. Scope\n\nThis SOP applies to all ESG data collected and reported by the bank, covering Environmental, Social, and Governance metrics. It is applicable to:\n\nThe corporate sustainability / ESG team\n\nFinance, HR, Facilities, IT, and other functions that contribute ESG data\n\nInternal reporting to senior management and the board\n\nExternal reporting including the annual BRSR disclosure and sustainability report\n\nThis SOP covers direct operations of the bank. It does not cover financed emissions in detail.\n\n# 3. ESG Metric Framework\n\nThe bank tracks a range of ESG metrics across Environmental, Social, and Governance pillars. The table below lists the key metrics, their data sources, and reporting frequency.\n\n| Pillar | Metric | Data Source | Reporting Frequency |\n| --- | --- | --- | --- |\n| E | Scope 1 GHG Emissions (tCO2e) | Utility / DG fuel records | Annual (BRSR) |\n| E | Scope 2 GHG Emissions (tCO2e) | Electricity bills | Annual (BRSR) |\n| E | Scope 3 Emissions (tCO2e) â?? selected categories | Travel management system, financed portfolio | Annual (BRSR Core) |\n| E | Water Consumption (KL) | Water utility records | Quarterly / Annual |\n| E | Renewable Energy % | REC certificates, solar metering | Annual |\n| S | Women in Senior Leadership (%) | HR System | Annual (BRSR) |\n| S | LTIFR (per million hrs) | Admin / Safety records | Quarterly / Annual |\n| S | PSL Achievement (% ANBC) | CBS / Credit system | Quarterly (RBI) |\n| G | Independent Directors (%) | Company Secretariat | Annual (SEBI LODR) |\n| G | ABC Training Completion (%) | LMS / Compliance system | Annual (BRSR) |\n| G | BRSR Core Assurance Coverage (%) | External auditor | Annual (BRSR Core) |\n\n# 4. Data Collection Process\n\n## 4.1 Roles and Responsibilities for Data Collection\n\nESG data collection is the responsibility of the relevant teams across the organisation. Each team should provide accurate data to the ESG team on a timely basis.\n\n## 4.2 Data Collection Steps\n\nThe ESG team will coordinate the collection of data from across the organisation using the following process:\n\nAt the start of each reporting period, the ESG team will reach out to relevant teams to request data\n\nTeams should provide data in the agreed format and by the agreed deadline\n\nThe ESG team will consolidate the data into the ESG reporting template\n\nAny missing or incomplete data should be flagged and followed up with the relevant team\n\n## 4.3 Scope of Emissions Reporting\n\nThe bank reports Scope 1 and Scope 2 greenhouse gas (GHG) emissions in accordance with applicable reporting requirements.\n\nScope 1 emissions include direct emissions from diesel generators, company-owned fleet, and air conditioning refrigerants\n\nScope 2 emissions include indirect emissions from purchased electricity, reported on a market-based basis\n\nScope 3 emissions are reported for selected categories where data is available\n\n# 5. Deviation Identification and Management\n\nWhen ESG metrics deviate from their targets, the bank needs to identify the deviation, understand the root cause, and take corrective action where required.\n\n## 5.1 What Constitutes a Deviation\n\nA deviation occurs when a reported ESG metric is significantly different from the target or the prior year figure. The ESG team, in consultation with the relevant business unit, will determine whether a deviation is material and requires escalation.\n\n## 5.2 Deviation Management Process\n\nWhen a deviation is identified, the following steps should be followed:\n\n| Step | Action | Details |\n| --- | --- | --- |\n| 1 | Identify Deviation | During data collection or reporting, identify any metrics that are significantly different from the target or prior period. Use judgement to determine significance. |\n| 2 | Investigate Root Cause | Work with the relevant team to understand why the deviation has occurred. This may be due to data quality issues, operational changes, or external factors. |\n| 3 | Escalate if Needed | If the deviation is material, escalate to the appropriate level of management. The ESG team will use judgement to determine when escalation is required. |\n| 4 | Document and Report | Document the deviation, root cause, and corrective action. Include in the next ESG report. |\n| 5 | Corrective Action | Work with the relevant team to implement corrective actions to address the deviation. Monitor progress. |\n\n# 6. Reporting\n\n## 6.1 Internal Reporting\n\nESG performance data is reported internally to the senior management team and the board on a periodic basis. Reports should include:\n\nKey ESG metrics and performance against targets\n\nAny significant deviations or issues identified during the period\n\nProgress on ESG initiatives and programmes\n\n## 6.2 External Reporting\n\nThe bank discloses ESG information externally in its annual report, including the BRSR submission. External reporting should be accurate and consistent with internal records.\n\nBefore submission, external reports should be reviewed by the CFO and approved by senior management.\n\n## 6.3 Regulatory Reporting Triggers\n\nWhere ESG-related regulatory requirements exist, the bank should comply with applicable timelines. The ESG team should liaise with Compliance to ensure regulatory obligations are met.\n\n# 7. Roles and Responsibilities\n\nThe following roles are responsible for ESG data collection and reporting:\n\n| Role | Responsibility |\n| --- | --- |\n| ESG / Sustainability Head | Owns this SOP; coordinates data collection; prepares ESG reports. |\n| CFO | Reviews and approves external ESG disclosures; oversees ESG data quality. |\n| CHRO | Provides Social pillar data including gender diversity, training, and LTIFR. |\n| Facilities Head | Provides energy, water, and emissions data for owned and leased premises. |\n| Company Secretary | Provides Governance data including board composition and remuneration. |\n| CRO | Provides climate risk and credit risk data relevant to ESG disclosure. |\n\n# 8. Training and Awareness\n\nAll staff involved in ESG data collection should be aware of their responsibilities under this SOP. The ESG team will provide guidance and support as required.\n\nTraining on ESG reporting requirements will be provided when significant changes to regulatory requirements occur.\n\n# 9. Document Review\n\nThis SOP will be reviewed annually or when significant changes occur to ESG reporting requirements or the bank\u0027s ESG strategy.\n\nThe ESG Head is responsible for maintaining this document.\n\n# Appendix A â?? Key ESG Regulatory References\n\nThe table below lists key regulatory and reporting frameworks relevant to the bank\u0027s ESG reporting obligations.\n\n| Regulation / Framework | Applicability | Responsible Team |\n| --- | --- | --- |\n| SEBI BRSR | Annual ESG disclosure for listed entities | ESG / Compliance |\n| SEBI BRSR Core | Enhanced metrics with mandatory assurance | ESG / CFO |\n| RBI Climate Risk | Climate risk disclosure and stress testing | CRO / ESG |\n| TCFD | Voluntary (becoming mandatory via SEBI) | ESG / CRO |\n| GRI Standards | Sustainability report framework | ESG |",
+                                   "page_count":  3,
+                                   "looks_corrupt":  false,
+                                   "style_profile":  {
+                                                         "heading1_font":  null,
+                                                         "heading2_font":  null,
+                                                         "body_font":  null,
+                                                         "primary_colour_hex":  null,
+                                                         "secondary_colour_hex":  null,
+                                                         "margin_top_cm":  2.54,
+                                                         "margin_bottom_cm":  2.54,
+                                                         "margin_left_cm":  2.22,
+                                                         "margin_right_cm":  2.22,
+                                                         "table_border_style":  "single"
+                                                     },
+                                   "conversion":  {
+                                                      "status":  "success",
+                                                      "error":  null
+                                                  },
+                                   "case_id":  "219de152-7009-4a9e-a679-739594c99bdb",
+                                   "updated_at":  "2026-05-08T09:48:39.826297"
+                               }
+                           ],
+    "anchors":  [
+                    {
+                        "anchor_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a1",
+                        "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                        "section_path":  "Document",
+                        "heading":  "Document",
+                        "content":  "ESG RISK MONITORING AND REPORTING\n\nStandard Operating Procedure\n\n| Document Title | ESG Risk Monitoring and Reporting Standard Operating Procedure |\n| --- | --- |\n| Document ID | SOP-ESG-002 |\n| Version | 1.1 |\n| Prepared By | Sustainability / ESG Team |\n| Reviewed By | CFO |\n| Date | April 2024 |\n| Status | Active |",
+                        "char_count":  318,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    },
+                    {
+                        "anchor_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a2",
+                        "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                        "section_path":  "1. Purpose",
+                        "heading":  "1. Purpose",
+                        "content":  "This Standard Operating Procedure (SOP) defines the process for collecting, monitoring, reporting, and managing deviations in Environmental, Social, and Governance (ESG) data and metrics at the bank.\n\nThe objective is to ensure that ESG information reported internally and externally is accurate, complete, and consistent, and that material deviations from targets are identified and managed in a timely manner.",
+                        "char_count":  411,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    },
+                    {
+                        "anchor_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a3",
+                        "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                        "section_path":  "2. Scope",
+                        "heading":  "2. Scope",
+                        "content":  "This SOP applies to all ESG data collected and reported by the bank, covering Environmental, Social, and Governance metrics. It is applicable to:\n\nThe corporate sustainability / ESG team\n\nFinance, HR, Facilities, IT, and other functions that contribute ESG data\n\nInternal reporting to senior management and the board\n\nExternal reporting including the annual BRSR disclosure and sustainability report\n\nThis SOP covers direct operations of the bank. It does not cover financed emissions in detail.",
+                        "char_count":  495,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    },
+                    {
+                        "anchor_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a4",
+                        "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                        "section_path":  "3. ESG Metric Framework",
+                        "heading":  "3. ESG Metric Framework",
+                        "content":  "The bank tracks a range of ESG metrics across Environmental, Social, and Governance pillars. The table below lists the key metrics, their data sources, and reporting frequency.\n\n| Pillar | Metric | Data Source | Reporting Frequency |\n| --- | --- | --- | --- |\n| E | Scope 1 GHG Emissions (tCO2e) | Utility / DG fuel records | Annual (BRSR) |\n| E | Scope 2 GHG Emissions (tCO2e) | Electricity bills | Annual (BRSR) |\n| E | Scope 3 Emissions (tCO2e) â?? selected categories | Travel management system, financed portfolio | Annual (BRSR Core) |\n| E | Water Consumption (KL) | Water utility records | Quarterly / Annual |\n| E | Renewable Energy % | REC certificates, solar metering | Annual |\n| S | Women in Senior Leadership (%) | HR System | Annual (BRSR) |\n| S | LTIFR (per million hrs) | Admin / Safety records | Quarterly / Annual |\n| S | PSL Achievement (% ANBC) | CBS / Credit system | Quarterly (RBI) |\n| G | Independent Directors (%) | Company Secretariat | Annual (SEBI LODR) |\n| G | ABC Training Completion (%) | LMS / Compliance system | Annual (BRSR) |\n| G | BRSR Core Assurance Coverage (%) | External auditor | Annual (BRSR Core) |",
+                        "char_count":  1140,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    },
+                    {
+                        "anchor_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a5",
+                        "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                        "section_path":  "4.1 Roles and Responsibilities for Data Collection",
+                        "heading":  "4.1 Roles and Responsibilities for Data Collection",
+                        "content":  "ESG data collection is the responsibility of the relevant teams across the organisation. Each team should provide accurate data to the ESG team on a timely basis.",
+                        "char_count":  162,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    },
+                    {
+                        "anchor_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a6",
+                        "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                        "section_path":  "4.2 Data Collection Steps",
+                        "heading":  "4.2 Data Collection Steps",
+                        "content":  "The ESG team will coordinate the collection of data from across the organisation using the following process:\n\nAt the start of each reporting period, the ESG team will reach out to relevant teams to request data\n\nTeams should provide data in the agreed format and by the agreed deadline\n\nThe ESG team will consolidate the data into the ESG reporting template\n\nAny missing or incomplete data should be flagged and followed up with the relevant team",
+                        "char_count":  447,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    },
+                    {
+                        "anchor_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a7",
+                        "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                        "section_path":  "4.3 Scope of Emissions Reporting",
+                        "heading":  "4.3 Scope of Emissions Reporting",
+                        "content":  "The bank reports Scope 1 and Scope 2 greenhouse gas (GHG) emissions in accordance with applicable reporting requirements.\n\nScope 1 emissions include direct emissions from diesel generators, company-owned fleet, and air conditioning refrigerants\n\nScope 2 emissions include indirect emissions from purchased electricity, reported on a market-based basis\n\nScope 3 emissions are reported for selected categories where data is available",
+                        "char_count":  431,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    },
+                    {
+                        "anchor_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a8",
+                        "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                        "section_path":  "5. Deviation Identification and Management",
+                        "heading":  "5. Deviation Identification and Management",
+                        "content":  "When ESG metrics deviate from their targets, the bank needs to identify the deviation, understand the root cause, and take corrective action where required.",
+                        "char_count":  156,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    },
+                    {
+                        "anchor_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a9",
+                        "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                        "section_path":  "5.1 What Constitutes a Deviation",
+                        "heading":  "5.1 What Constitutes a Deviation",
+                        "content":  "A deviation occurs when a reported ESG metric is significantly different from the target or the prior year figure. The ESG team, in consultation with the relevant business unit, will determine whether a deviation is material and requires escalation.",
+                        "char_count":  249,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    },
+                    {
+                        "anchor_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a10",
+                        "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                        "section_path":  "5.2 Deviation Management Process",
+                        "heading":  "5.2 Deviation Management Process",
+                        "content":  "When a deviation is identified, the following steps should be followed:\n\n| Step | Action | Details |\n| --- | --- | --- |\n| 1 | Identify Deviation | During data collection or reporting, identify any metrics that are significantly different from the target or prior period. Use judgement to determine significance. |\n| 2 | Investigate Root Cause | Work with the relevant team to understand why the deviation has occurred. This may be due to data quality issues, operational changes, or external factors. |\n| 3 | Escalate if Needed | If the deviation is material, escalate to the appropriate level of management. The ESG team will use judgement to determine when escalation is required. |\n| 4 | Document and Report | Document the deviation, root cause, and corrective action. Include in the next ESG report. |\n| 5 | Corrective Action | Work with the relevant team to implement corrective actions to address the deviation. Monitor progress. |",
+                        "char_count":  938,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    },
+                    {
+                        "anchor_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a11",
+                        "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                        "section_path":  "6.1 Internal Reporting",
+                        "heading":  "6.1 Internal Reporting",
+                        "content":  "ESG performance data is reported internally to the senior management team and the board on a periodic basis. Reports should include:\n\nKey ESG metrics and performance against targets\n\nAny significant deviations or issues identified during the period\n\nProgress on ESG initiatives and programmes",
+                        "char_count":  292,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    },
+                    {
+                        "anchor_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a12",
+                        "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                        "section_path":  "6.2 External Reporting",
+                        "heading":  "6.2 External Reporting",
+                        "content":  "The bank discloses ESG information externally in its annual report, including the BRSR submission. External reporting should be accurate and consistent with internal records.\n\nBefore submission, external reports should be reviewed by the CFO and approved by senior management.",
+                        "char_count":  276,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    },
+                    {
+                        "anchor_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a13",
+                        "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                        "section_path":  "6.3 Regulatory Reporting Triggers",
+                        "heading":  "6.3 Regulatory Reporting Triggers",
+                        "content":  "Where ESG-related regulatory requirements exist, the bank should comply with applicable timelines. The ESG team should liaise with Compliance to ensure regulatory obligations are met.",
+                        "char_count":  183,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    },
+                    {
+                        "anchor_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a14",
+                        "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                        "section_path":  "7. Roles and Responsibilities",
+                        "heading":  "7. Roles and Responsibilities",
+                        "content":  "The following roles are responsible for ESG data collection and reporting:\n\n| Role | Responsibility |\n| --- | --- |\n| ESG / Sustainability Head | Owns this SOP; coordinates data collection; prepares ESG reports. |\n| CFO | Reviews and approves external ESG disclosures; oversees ESG data quality. |\n| CHRO | Provides Social pillar data including gender diversity, training, and LTIFR. |\n| Facilities Head | Provides energy, water, and emissions data for owned and leased premises. |\n| Company Secretary | Provides Governance data including board composition and remuneration. |\n| CRO | Provides climate risk and credit risk data relevant to ESG disclosure. |",
+                        "char_count":  657,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    },
+                    {
+                        "anchor_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a15",
+                        "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                        "section_path":  "8. Training and Awareness",
+                        "heading":  "8. Training and Awareness",
+                        "content":  "All staff involved in ESG data collection should be aware of their responsibilities under this SOP. The ESG team will provide guidance and support as required.\n\nTraining on ESG reporting requirements will be provided when significant changes to regulatory requirements occur.",
+                        "char_count":  275,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    },
+                    {
+                        "anchor_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a16",
+                        "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                        "section_path":  "9. Document Review",
+                        "heading":  "9. Document Review",
+                        "content":  "This SOP will be reviewed annually or when significant changes occur to ESG reporting requirements or the bank\u0027s ESG strategy.\n\nThe ESG Head is responsible for maintaining this document.",
+                        "char_count":  186,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    },
+                    {
+                        "anchor_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a17",
+                        "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                        "section_path":  "Appendix A â?? Key ESG Regulatory References",
+                        "heading":  "Appendix A â?? Key ESG Regulatory References",
+                        "content":  "The table below lists key regulatory and reporting frameworks relevant to the bank\u0027s ESG reporting obligations.\n\n| Regulation / Framework | Applicability | Responsible Team |\n| --- | --- | --- |\n| SEBI BRSR | Annual ESG disclosure for listed entities | ESG / Compliance |\n| SEBI BRSR Core | Enhanced metrics with mandatory assurance | ESG / CFO |\n| RBI Climate Risk | Climate risk disclosure and stress testing | CRO / ESG |\n| TCFD | Voluntary (becoming mandatory via SEBI) | ESG / CRO |\n| GRI Standards | Sustainability report framework | ESG |",
+                        "char_count":  545,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    }
+                ],
+    "chunks":  [
+                   {
+                       "chunk_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a1-c1",
+                       "anchor_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a1",
+                       "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                       "content":  "ESG RISK MONITORING AND REPORTING\n\nStandard Operating Procedure\n\n| Document Title | ESG Risk Monitoring and Reporting Standard Operating Procedure |\n| --- | --- |\n| Document ID | SOP-ESG-002 |\n| Version | 1.1 |\n| Prepared By | Sustainability / ESG Team |\n| Reviewed By | CFO |\n| Date | April 2024 |\n| Status | Active |",
+                       "char_count":  318
+                   },
+                   {
+                       "chunk_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a2-c1",
+                       "anchor_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a2",
+                       "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                       "content":  "This Standard Operating Procedure (SOP) defines the process for collecting, monitoring, reporting, and managing deviations in Environmental, Social, and Governance (ESG) data and metrics at the bank.\n\nThe objective is to ensure that ESG information reported internally and externally is accurate, complete, and consistent, and that material deviations from targets are identified and managed in a timely manner.",
+                       "char_count":  411
+                   },
+                   {
+                       "chunk_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a3-c1",
+                       "anchor_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a3",
+                       "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                       "content":  "This SOP applies to all ESG data collected and reported by the bank, covering Environmental, Social, and Governance metrics. It is applicable to:\n\nThe corporate sustainability / ESG team\n\nFinance, HR, Facilities, IT, and other functions that contribute ESG data\n\nInternal reporting to senior management and the board\n\nExternal reporting including the annual BRSR disclosure and sustainability report\n\nThis SOP covers direct operations of the bank. It does not cover financed emissions in detail.",
+                       "char_count":  495
+                   },
+                   {
+                       "chunk_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a4-c1",
+                       "anchor_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a4",
+                       "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                       "content":  "The bank tracks a range of ESG metrics across Environmental, Social, and Governance pillars. The table below lists the key metrics, their data sources, and reporting frequency.\n\n| Pillar | Metric | Data Source | Reporting Frequency |\n| --- | --- | --- | --- |\n| E | Scope 1 GHG Emissions (tCO2e) | Utility / DG fuel records | Annual (BRSR) |\n| E | Scope 2 GHG Emissions (tCO2e) | Electricity bills | Annual (BRSR) |\n| E | Scope 3 Emissions (tCO2e) â?? selected categories | Travel management system, financed portfolio | Annual (BRSR Core) |\n| E | Water Consumption (KL) | Water utility records | Quarterly / Annual |\n| E | Renewable Energy % | REC certificates, solar metering | Annual |\n| S | Women in Senior Leadership (%) | HR System | Annual (BRSR) |\n| S | LTIFR (per million hrs) | Admin / Safety records | Quarterly / Annual |\n| S | PSL Achievement (% ANBC) | CBS / Credit system | Quarterly (RBI) |\n| G | Independent Directors (%) | Company Secretariat | Annual (SEBI LODR) |\n| G | ABC Training Completion (%) | LMS / Compliance system | Annual (BRSR) |\n| G | BRSR Core Assurance Coverage (%) | External auditor | Annual (BRSR Core) |",
+                       "char_count":  1140
+                   },
+                   {
+                       "chunk_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a5-c1",
+                       "anchor_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a5",
+                       "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                       "content":  "ESG data collection is the responsibility of the relevant teams across the organisation. Each team should provide accurate data to the ESG team on a timely basis.",
+                       "char_count":  162
+                   },
+                   {
+                       "chunk_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a6-c1",
+                       "anchor_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a6",
+                       "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                       "content":  "The ESG team will coordinate the collection of data from across the organisation using the following process:\n\nAt the start of each reporting period, the ESG team will reach out to relevant teams to request data\n\nTeams should provide data in the agreed format and by the agreed deadline\n\nThe ESG team will consolidate the data into the ESG reporting template\n\nAny missing or incomplete data should be flagged and followed up with the relevant team",
+                       "char_count":  447
+                   },
+                   {
+                       "chunk_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a7-c1",
+                       "anchor_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a7",
+                       "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                       "content":  "The bank reports Scope 1 and Scope 2 greenhouse gas (GHG) emissions in accordance with applicable reporting requirements.\n\nScope 1 emissions include direct emissions from diesel generators, company-owned fleet, and air conditioning refrigerants\n\nScope 2 emissions include indirect emissions from purchased electricity, reported on a market-based basis\n\nScope 3 emissions are reported for selected categories where data is available",
+                       "char_count":  431
+                   },
+                   {
+                       "chunk_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a8-c1",
+                       "anchor_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a8",
+                       "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                       "content":  "When ESG metrics deviate from their targets, the bank needs to identify the deviation, understand the root cause, and take corrective action where required.",
+                       "char_count":  156
+                   },
+                   {
+                       "chunk_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a9-c1",
+                       "anchor_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a9",
+                       "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                       "content":  "A deviation occurs when a reported ESG metric is significantly different from the target or the prior year figure. The ESG team, in consultation with the relevant business unit, will determine whether a deviation is material and requires escalation.",
+                       "char_count":  249
+                   },
+                   {
+                       "chunk_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a10-c1",
+                       "anchor_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a10",
+                       "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                       "content":  "When a deviation is identified, the following steps should be followed:\n\n| Step | Action | Details |\n| --- | --- | --- |\n| 1 | Identify Deviation | During data collection or reporting, identify any metrics that are significantly different from the target or prior period. Use judgement to determine significance. |\n| 2 | Investigate Root Cause | Work with the relevant team to understand why the deviation has occurred. This may be due to data quality issues, operational changes, or external factors. |\n| 3 | Escalate if Needed | If the deviation is material, escalate to the appropriate level of management. The ESG team will use judgement to determine when escalation is required. |\n| 4 | Document and Report | Document the deviation, root cause, and corrective action. Include in the next ESG report. |\n| 5 | Corrective Action | Work with the relevant team to implement corrective actions to address the deviation. Monitor progress. |",
+                       "char_count":  938
+                   },
+                   {
+                       "chunk_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a11-c1",
+                       "anchor_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a11",
+                       "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                       "content":  "ESG performance data is reported internally to the senior management team and the board on a periodic basis. Reports should include:\n\nKey ESG metrics and performance against targets\n\nAny significant deviations or issues identified during the period\n\nProgress on ESG initiatives and programmes",
+                       "char_count":  292
+                   },
+                   {
+                       "chunk_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a12-c1",
+                       "anchor_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a12",
+                       "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                       "content":  "The bank discloses ESG information externally in its annual report, including the BRSR submission. External reporting should be accurate and consistent with internal records.\n\nBefore submission, external reports should be reviewed by the CFO and approved by senior management.",
+                       "char_count":  276
+                   },
+                   {
+                       "chunk_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a13-c1",
+                       "anchor_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a13",
+                       "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                       "content":  "Where ESG-related regulatory requirements exist, the bank should comply with applicable timelines. The ESG team should liaise with Compliance to ensure regulatory obligations are met.",
+                       "char_count":  183
+                   },
+                   {
+                       "chunk_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a14-c1",
+                       "anchor_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a14",
+                       "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                       "content":  "The following roles are responsible for ESG data collection and reporting:\n\n| Role | Responsibility |\n| --- | --- |\n| ESG / Sustainability Head | Owns this SOP; coordinates data collection; prepares ESG reports. |\n| CFO | Reviews and approves external ESG disclosures; oversees ESG data quality. |\n| CHRO | Provides Social pillar data including gender diversity, training, and LTIFR. |\n| Facilities Head | Provides energy, water, and emissions data for owned and leased premises. |\n| Company Secretary | Provides Governance data including board composition and remuneration. |\n| CRO | Provides climate risk and credit risk data relevant to ESG disclosure. |",
+                       "char_count":  657
+                   },
+                   {
+                       "chunk_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a15-c1",
+                       "anchor_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a15",
+                       "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                       "content":  "All staff involved in ESG data collection should be aware of their responsibilities under this SOP. The ESG team will provide guidance and support as required.\n\nTraining on ESG reporting requirements will be provided when significant changes to regulatory requirements occur.",
+                       "char_count":  275
+                   },
+                   {
+                       "chunk_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a16-c1",
+                       "anchor_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a16",
+                       "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                       "content":  "This SOP will be reviewed annually or when significant changes occur to ESG reporting requirements or the bank\u0027s ESG strategy.\n\nThe ESG Head is responsible for maintaining this document.",
+                       "char_count":  186
+                   },
+                   {
+                       "chunk_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a17-c1",
+                       "anchor_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1-a17",
+                       "file_id":  "134e9eff-25e0-4bfb-896c-f6bfaff7c6c1",
+                       "content":  "The table below lists key regulatory and reporting frameworks relevant to the bank\u0027s ESG reporting obligations.\n\n| Regulation / Framework | Applicability | Responsible Team |\n| --- | --- | --- |\n| SEBI BRSR | Annual ESG disclosure for listed entities | ESG / Compliance |\n| SEBI BRSR Core | Enhanced metrics with mandatory assurance | ESG / CFO |\n| RBI Climate Risk | Climate risk disclosure and stress testing | CRO / ESG |\n| TCFD | Voluntary (becoming mandatory via SEBI) | ESG / CRO |\n| GRI Standards | Sustainability report framework | ESG |",
+                       "char_count":  545
+                   }
+               ]
+}

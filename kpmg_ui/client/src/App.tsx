@@ -107,7 +107,7 @@ function Router() {
   return (
     <AppLayout>
       {PAGES.map(({ path, Page }) => (
-        <div key={path} className={location === path ? "h-full overflow-hidden" : "hidden"}>
+        <div key={path} className={location === path ? "h-full min-h-0 overflow-hidden" : "hidden"}>
           <Page />
         </div>
       ))}

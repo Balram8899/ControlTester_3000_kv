@@ -44,7 +44,7 @@ def test_budget_zero_returns_budget_exceeded(monkeypatch: pytest.MonkeyPatch) ->
     orchestrator = load_orchestrator()
 
     get_llm_calls: list[Any] = []
-    monkeypatch.setattr(orchestrator, "get_llm", lambda: get_llm_calls.append("called"))
+    monkeypatch.setattr(orchestrator, "get_llm", lambda temperature=0.2: get_llm_calls.append("called"))
 
     result = orchestrator.call_llm(
         prompt="Return JSON.",
@@ -62,7 +62,7 @@ def test_budget_zero_returns_budget_exceeded(monkeypatch: pytest.MonkeyPatch) ->
 def test_successful_call_returns_parsed_output(monkeypatch: pytest.MonkeyPatch) -> None:
     orchestrator = load_orchestrator()
     fake_llm = FakeLLM(['{"answer": "ok"}'])
-    monkeypatch.setattr(orchestrator, "get_llm", lambda: fake_llm)
+    monkeypatch.setattr(orchestrator, "get_llm", lambda temperature=0.2: fake_llm)
 
     result = orchestrator.call_llm(
         prompt="Return an answer.",
@@ -79,7 +79,7 @@ def test_successful_call_returns_parsed_output(monkeypatch: pytest.MonkeyPatch) 
 
 def test_call_record_populated(monkeypatch: pytest.MonkeyPatch) -> None:
     orchestrator = load_orchestrator()
-    monkeypatch.setattr(orchestrator, "get_llm", lambda: FakeLLM(['{"ok": true}']))
+    monkeypatch.setattr(orchestrator, "get_llm", lambda temperature=0.2: FakeLLM(['{"ok": true}']))
 
     result = orchestrator.call_llm(
         prompt="Return JSON with an ok boolean.",
@@ -99,7 +99,7 @@ def test_call_record_populated(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_malformed_json_retries_once(monkeypatch: pytest.MonkeyPatch) -> None:
     orchestrator = load_orchestrator()
     fake_llm = FakeLLM(["not json", '{"ok": true}'])
-    monkeypatch.setattr(orchestrator, "get_llm", lambda: fake_llm)
+    monkeypatch.setattr(orchestrator, "get_llm", lambda temperature=0.2: fake_llm)
 
     result = orchestrator.call_llm(
         prompt="Return JSON.",

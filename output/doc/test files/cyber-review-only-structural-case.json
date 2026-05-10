@@ -1,0 +1,461 @@
+{
+    "case_id":  "b05e91f2-a247-499e-8e2b-4c0726994219",
+    "title":  "Cyber IR review-only structural validation",
+    "process_name":  "Incident response",
+    "domain_label":  "Technology / Cyber",
+    "notes":  "None",
+    "status":  {
+                   "stage":  "complete",
+                   "stage1_cost":  {
+                                       "provider":  "anthropic",
+                                       "model":  "claude-opus-4-7",
+                                       "call_count":  6,
+                                       "input_tokens":  0,
+                                       "output_tokens":  0,
+                                       "total_tokens":  0,
+                                       "estimated_cost_usd":  0.0,
+                                       "is_local_provider":  false,
+                                       "call_records":  [
+
+                                                        ]
+                                   },
+                   "final_cost":  {
+                                      "provider":  "anthropic",
+                                      "model":  "claude-opus-4-7",
+                                      "call_count":  6,
+                                      "input_tokens":  0,
+                                      "output_tokens":  0,
+                                      "total_tokens":  0,
+                                      "estimated_cost_usd":  0.0,
+                                      "is_local_provider":  false,
+                                      "call_records":  [
+
+                                                       ]
+                                  }
+               },
+    "document_tags":  [
+                          {
+                              "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                              "filename":  "cyber_ir_sop.docx",
+                              "tag":  "procedure",
+                              "conversion_status":  "success",
+                              "looks_corrupt":  false,
+                              "page_count":  0,
+                              "error":  null,
+                              "gridfs_file_id":  "69fdb1706c4ae9b7db534022"
+                          },
+                          {
+                              "file_id":  "307be1b7-9140-4663-a3d1-bab8022aa8cd",
+                              "filename":  "cyber_rcm.xlsx",
+                              "tag":  "rcm",
+                              "conversion_status":  "success",
+                              "looks_corrupt":  false,
+                              "page_count":  0,
+                              "error":  null,
+                              "gridfs_file_id":  "69fdb1706c4ae9b7db534024"
+                          },
+                          {
+                              "file_id":  "df633c99-1d09-4147-b6b3-03944f37bcba",
+                              "filename":  "cyber_risk_event_log.xlsx",
+                              "tag":  "risk_data",
+                              "conversion_status":  "success",
+                              "looks_corrupt":  false,
+                              "page_count":  0,
+                              "error":  null,
+                              "gridfs_file_id":  "69fdb1706c4ae9b7db534026"
+                          }
+                      ],
+    "suggestions":  [
+
+                    ],
+    "corpus_map":  null,
+    "processing_state":  {
+                             "conversion":  {
+                                                "total":  3,
+                                                "completed":  3,
+                                                "failed":  0,
+                                                "pending":  0
+                                            },
+                             "analysis":  {
+                                              "total":  1,
+                                              "completed":  1,
+                                              "failed":  0,
+                                              "pending":  0
+                                          },
+                             "pipeline_status":  "partial",
+                             "pipeline_error":  null,
+                             "warnings":  [
+                                              "cyber_rcm.xlsx: Excel processing partial",
+                                              "cyber_risk_event_log.xlsx: Excel processing partial"
+                                          ]
+                         },
+    "readiness":  {
+                      "has_procedure":  false,
+                      "has_any_document":  false,
+                      "ready":  false,
+                      "blocking_reasons":  [
+
+                                           ]
+                  },
+    "outputs":  [
+                    {
+                        "output_id":  "b05e91f2-a247-499e-8e2b-4c0726994219-uplifted-docx",
+                        "output_type":  "docx",
+                        "filename":  "b05e91f2-a247-499e-8e2b-4c0726994219-uplifted-sop.docx",
+                        "output_mode":  "track_changes",
+                        "gridfs_file_id":  "69fdb17a6c4ae9b7db534033",
+                        "content_type":  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        "created_at":  "2026-05-08T09:48:42.933483"
+                    }
+                ],
+    "agent_follow_up_questions":  [
+
+                                  ],
+    "final_summary":  "Stage 1 completed with 0 suggestion(s).",
+    "schema_version":  2,
+    "created_at":  "2026-05-08T09:48:32.621020",
+    "updated_at":  "2026-05-08T09:48:43.706259",
+    "process_steps":  [
+
+                      ],
+    "markdown_documents":  [
+                               {
+                                   "document_id":  "doc-ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                                   "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                                   "filename":  "cyber_ir_sop.docx",
+                                   "file_type":  "docx",
+                                   "tag":  "procedure",
+                                   "markdown":  "CYBER INCIDENT RESPONSE\n\nStandard Operating Procedure\n\n| Document Title | Cyber Incident Response Standard Operating Procedure |\n| --- | --- |\n| Document ID | SOP-CSIRT-001 |\n| Version | 1.2 |\n| Prepared By | IT Security Team |\n| Reviewed By | CISO |\n| Date | March 2024 |\n| Status | Active |\n\n# 1. Purpose\n\nThis Standard Operating Procedure (SOP) defines the process for detecting, responding to, and recovering from cybersecurity incidents at the bank. The goal is to minimise the impact of security incidents on the bank\u0027s operations, customers, and reputation.\n\nThis document should be used by the IT Security team and other relevant stakeholders when a cybersecurity incident is suspected or confirmed.\n\n# 2. Scope\n\nThis SOP applies to all cybersecurity incidents affecting the bank\u0027s information systems, networks, applications, and data. This includes:\n\nAll IT systems and infrastructure owned or operated by the bank\n\nThird-party systems that process or store bank data\n\nAll employees, contractors, and vendors who have access to bank systems\n\nThe following are out of scope for this procedure:\n\nPhysical security incidents (refer to the Physical Security policy)\n\nFraud incidents not involving a cybersecurity component\n\n# 3. Definitions\n\n| Term | Definition |\n| --- | --- |\n| Cybersecurity Incident | An event that has or may have an adverse effect on the confidentiality, integrity, or availability of information systems or data. |\n| Threat Actor | An individual, group, or organisation responsible for carrying out a cyberattack. |\n| Indicator of Compromise (IoC) | Evidence that a system or network has been compromised, such as unusual network traffic or unexpected file changes. |\n| SIEM | Security Information and Event Management system used to aggregate and correlate security logs. |\n| RTO | Recovery Time Objective â?? the target duration for restoring operations after an incident. |\n\n# 4. Roles and Responsibilities\n\nThe following roles are involved in the incident response process. Each team should be aware of their responsibilities and be ready to act when an incident occurs.\n\n| Role | Responsibilities |\n| --- | --- |\n| CISO | Overall accountability for cybersecurity. Should be informed of significant incidents. |\n| IT Security Team / SOC | Monitors security alerts, conducts triage, coordinates response activities. |\n| Incident Response Manager | Manages the response process and communication during an incident. Usually the IT Security Head. |\n| IT Operations | Supports containment and recovery activities as directed by the security team. |\n| Legal / Compliance | Advises on regulatory and legal obligations. Involved when required. |\n| Senior Management | Should be kept informed of major incidents that affect the business. |\n| HR Department | Involved in cases where an employee is suspected of wrongdoing. |\n\n# 5. Incident Classification\n\nNot all security events are incidents. When an alert is received, the SOC analyst should assess whether it represents a genuine incident or a false positive.\n\nIncidents should be classified based on their potential impact to the organisation. Higher impact incidents should be escalated to senior management and the CISO as appropriate.\n\nFactors to consider when assessing impact include:\n\nNumber of systems or users affected\n\nSensitivity of data involved\n\nWhether services have been disrupted\n\nLikelihood of financial loss or reputational damage\n\n# 6. Incident Response Process\n\nThe incident response process follows six phases as outlined below. Teams should move through each phase systematically.\n\n| Step | Phase | Key Actions |\n| --- | --- | --- |\n| 1 | Detection \u0026amp; Identification | Security alerts received via SIEM, EDR, or user reports. SOC analyst reviews and performs initial triage. |\n| 2 | Initial Assessment | Assess the nature and scope of the incident. Determine if it is a genuine security incident or a false positive. |\n| 3 | Containment | Take steps to contain the incident and prevent further damage. Actions will depend on the type of incident. |\n| 4 | Eradication | Remove the threat from the environment. This may include removing malware, disabling compromised accounts, and patching vulnerabilities. |\n| 5 | Recovery | Restore affected systems and services to normal operations. Verify that systems are clean before bringing them back online. |\n| 6 | Communication | Notify relevant stakeholders as appropriate. This includes management, affected users, and potentially external parties. |\n\n## 6.1 Detection and Identification\n\nSecurity incidents may be detected through various sources including:\n\nSIEM alerts and correlation rules\n\nEndpoint Detection and Response (EDR) alerts\n\nReports from employees or customers\n\nThreat intelligence feeds\n\nExternal notifications (e.g., from vendors or law enforcement)\n\nWhen an alert is received, the SOC analyst should review the available information and determine whether it represents a genuine security incident.\n\n## 6.2 Containment\n\nOnce an incident is confirmed, the priority is to contain the threat and prevent it from spreading. Containment actions may include:\n\nIsolating affected systems from the network\n\nDisabling compromised user accounts\n\nBlocking malicious IP addresses or domains at the firewall or proxy\n\nSuspending affected services if necessary\n\nThe Incident Response Manager should decide which containment actions are appropriate based on the specific circumstances of the incident.\n\n## 6.3 Eradication\n\nAfter the incident has been contained, the source of the compromise should be identified and removed. This may include:\n\nRemoving malware from affected systems using antivirus or EDR tools\n\nRevoking and resetting compromised credentials\n\nApplying security patches to address the vulnerability exploited\n\nReviewing and strengthening access controls\n\n## 6.4 Recovery\n\nSystems should be restored to normal operation only after the threat has been fully eradicated. Before bringing systems back online, the team should verify that:\n\nAll malware or malicious artefacts have been removed\n\nPatching has been applied where relevant\n\nAccess controls have been reviewed and tightened\n\nSystems should be monitored closely for a period following recovery to detect any signs of re-compromise.\n\n# 7. Communication and Escalation\n\nCommunication during an incident is important. The Incident Response Manager is responsible for keeping relevant stakeholders informed.\n\n## 7.1 Internal Communication\n\nThe following stakeholders should be notified as appropriate during an incident:\n\nCISO â?? should be informed of significant incidents promptly\n\nSenior management â?? to be notified if the incident has a material business impact\n\nAffected business units â?? to be kept informed of progress and recovery timelines\n\nHR â?? if an employee is involved\n\n## 7.2 External Communication\n\nExternal communication should be managed carefully and approved by senior management before release.\n\nCustomer notifications â?? if customer data has been compromised, customers may need to be informed\n\nMedia inquiries â?? all media inquiries should be directed to the Communications team\n\nLaw enforcement â?? the Legal team will advise if law enforcement involvement is required\n\n# 8. Documentation and Evidence\n\nAll incidents should be documented in the incident tracking system. The following information should be recorded:\n\nDate and time the incident was detected\n\nNature of the incident\n\nSystems and data affected\n\nActions taken during response\n\nOutcome and resolution\n\nDocumentation should be completed as soon as practicable after the incident is resolved.\n\n# 9. Training and Awareness\n\nAll IT security staff should be familiar with this SOP. Annual security awareness training is conducted for all employees.\n\nTabletop exercises and simulations may be conducted periodically to test the bank\u0027s incident response readiness.\n\n# 10. Document Review\n\nThis SOP should be reviewed and updated periodically, or following a significant security incident. The IT Security team is responsible for maintaining this document.\n\n# Appendix A â?? Contact List\n\nIn the event of an incident, the following contacts should be notified as appropriate. This list should be maintained and kept up to date by the IT Security team.\n\n| Role | Name | Contact |\n| --- | --- | --- |\n| CISO | [Name] | [Phone / Email] |\n| IT Security Head | [Name] | [Phone / Email] |\n| Head of IT Operations | [Name] | [Phone / Email] |\n| Chief Compliance Officer | [Name] | [Phone / Email] |\n| Legal Counsel | [Name] | [Phone / Email] |",
+                                   "page_count":  3,
+                                   "looks_corrupt":  false,
+                                   "style_profile":  {
+                                                         "heading1_font":  null,
+                                                         "heading2_font":  null,
+                                                         "body_font":  null,
+                                                         "primary_colour_hex":  null,
+                                                         "secondary_colour_hex":  null,
+                                                         "margin_top_cm":  2.54,
+                                                         "margin_bottom_cm":  2.54,
+                                                         "margin_left_cm":  2.22,
+                                                         "margin_right_cm":  2.22,
+                                                         "table_border_style":  "single"
+                                                     },
+                                   "conversion":  {
+                                                      "status":  "success",
+                                                      "error":  null
+                                                  },
+                                   "case_id":  "b05e91f2-a247-499e-8e2b-4c0726994219",
+                                   "updated_at":  "2026-05-08T09:48:36.690895"
+                               }
+                           ],
+    "anchors":  [
+                    {
+                        "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a1",
+                        "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                        "section_path":  "Document",
+                        "heading":  "Document",
+                        "content":  "CYBER INCIDENT RESPONSE\n\nStandard Operating Procedure\n\n| Document Title | Cyber Incident Response Standard Operating Procedure |\n| --- | --- |\n| Document ID | SOP-CSIRT-001 |\n| Version | 1.2 |\n| Prepared By | IT Security Team |\n| Reviewed By | CISO |\n| Date | March 2024 |\n| Status | Active |",
+                        "char_count":  292,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    },
+                    {
+                        "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a2",
+                        "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                        "section_path":  "1. Purpose",
+                        "heading":  "1. Purpose",
+                        "content":  "This Standard Operating Procedure (SOP) defines the process for detecting, responding to, and recovering from cybersecurity incidents at the bank. The goal is to minimise the impact of security incidents on the bank\u0027s operations, customers, and reputation.\n\nThis document should be used by the IT Security team and other relevant stakeholders when a cybersecurity incident is suspected or confirmed.",
+                        "char_count":  399,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    },
+                    {
+                        "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a3",
+                        "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                        "section_path":  "2. Scope",
+                        "heading":  "2. Scope",
+                        "content":  "This SOP applies to all cybersecurity incidents affecting the bank\u0027s information systems, networks, applications, and data. This includes:\n\nAll IT systems and infrastructure owned or operated by the bank\n\nThird-party systems that process or store bank data\n\nAll employees, contractors, and vendors who have access to bank systems\n\nThe following are out of scope for this procedure:\n\nPhysical security incidents (refer to the Physical Security policy)\n\nFraud incidents not involving a cybersecurity component",
+                        "char_count":  507,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    },
+                    {
+                        "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a4",
+                        "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                        "section_path":  "3. Definitions",
+                        "heading":  "3. Definitions",
+                        "content":  "| Term | Definition |\n| --- | --- |\n| Cybersecurity Incident | An event that has or may have an adverse effect on the confidentiality, integrity, or availability of information systems or data. |\n| Threat Actor | An individual, group, or organisation responsible for carrying out a cyberattack. |\n| Indicator of Compromise (IoC) | Evidence that a system or network has been compromised, such as unusual network traffic or unexpected file changes. |\n| SIEM | Security Information and Event Management system used to aggregate and correlate security logs. |\n| RTO | Recovery Time Objective â?? the target duration for restoring operations after an incident. |",
+                        "char_count":  655,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    },
+                    {
+                        "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a5",
+                        "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                        "section_path":  "4. Roles and Responsibilities",
+                        "heading":  "4. Roles and Responsibilities",
+                        "content":  "The following roles are involved in the incident response process. Each team should be aware of their responsibilities and be ready to act when an incident occurs.\n\n| Role | Responsibilities |\n| --- | --- |\n| CISO | Overall accountability for cybersecurity. Should be informed of significant incidents. |\n| IT Security Team / SOC | Monitors security alerts, conducts triage, coordinates response activities. |\n| Incident Response Manager | Manages the response process and communication during an incident. Usually the IT Security Head. |\n| IT Operations | Supports containment and recovery activities as directed by the security team. |\n| Legal / Compliance | Advises on regulatory and legal obligations. Involved when required. |\n| Senior Management | Should be kept informed of major incidents that affect the business. |\n| HR Department | Involved in cases where an employee is suspected of wrongdoing. |",
+                        "char_count":  908,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    },
+                    {
+                        "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a6",
+                        "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                        "section_path":  "5. Incident Classification",
+                        "heading":  "5. Incident Classification",
+                        "content":  "Not all security events are incidents. When an alert is received, the SOC analyst should assess whether it represents a genuine incident or a false positive.\n\nIncidents should be classified based on their potential impact to the organisation. Higher impact incidents should be escalated to senior management and the CISO as appropriate.\n\nFactors to consider when assessing impact include:\n\nNumber of systems or users affected\n\nSensitivity of data involved\n\nWhether services have been disrupted\n\nLikelihood of financial loss or reputational damage",
+                        "char_count":  546,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    },
+                    {
+                        "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a7",
+                        "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                        "section_path":  "6. Incident Response Process",
+                        "heading":  "6. Incident Response Process",
+                        "content":  "The incident response process follows six phases as outlined below. Teams should move through each phase systematically.\n\n| Step | Phase | Key Actions |\n| --- | --- | --- |\n| 1 | Detection \u0026amp; Identification | Security alerts received via SIEM, EDR, or user reports. SOC analyst reviews and performs initial triage. |\n| 2 | Initial Assessment | Assess the nature and scope of the incident. Determine if it is a genuine security incident or a false positive. |\n| 3 | Containment | Take steps to contain the incident and prevent further damage. Actions will depend on the type of incident. |\n| 4 | Eradication | Remove the threat from the environment. This may include removing malware, disabling compromised accounts, and patching vulnerabilities. |\n| 5 | Recovery | Restore affected systems and services to normal operations. Verify that systems are clean before bringing them back online. |\n| 6 | Communication | Notify relevant stakeholders as appropriate. This includes management, affected users, and potentially external parties. |",
+                        "char_count":  1038,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    },
+                    {
+                        "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a8",
+                        "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                        "section_path":  "6.1 Detection and Identification",
+                        "heading":  "6.1 Detection and Identification",
+                        "content":  "Security incidents may be detected through various sources including:\n\nSIEM alerts and correlation rules\n\nEndpoint Detection and Response (EDR) alerts\n\nReports from employees or customers\n\nThreat intelligence feeds\n\nExternal notifications (e.g., from vendors or law enforcement)\n\nWhen an alert is received, the SOC analyst should review the available information and determine whether it represents a genuine security incident.",
+                        "char_count":  427,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    },
+                    {
+                        "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a9",
+                        "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                        "section_path":  "6.2 Containment",
+                        "heading":  "6.2 Containment",
+                        "content":  "Once an incident is confirmed, the priority is to contain the threat and prevent it from spreading. Containment actions may include:\n\nIsolating affected systems from the network\n\nDisabling compromised user accounts\n\nBlocking malicious IP addresses or domains at the firewall or proxy\n\nSuspending affected services if necessary\n\nThe Incident Response Manager should decide which containment actions are appropriate based on the specific circumstances of the incident.",
+                        "char_count":  466,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    },
+                    {
+                        "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a10",
+                        "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                        "section_path":  "6.3 Eradication",
+                        "heading":  "6.3 Eradication",
+                        "content":  "After the incident has been contained, the source of the compromise should be identified and removed. This may include:\n\nRemoving malware from affected systems using antivirus or EDR tools\n\nRevoking and resetting compromised credentials\n\nApplying security patches to address the vulnerability exploited\n\nReviewing and strengthening access controls",
+                        "char_count":  347,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    },
+                    {
+                        "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a11",
+                        "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                        "section_path":  "6.4 Recovery",
+                        "heading":  "6.4 Recovery",
+                        "content":  "Systems should be restored to normal operation only after the threat has been fully eradicated. Before bringing systems back online, the team should verify that:\n\nAll malware or malicious artefacts have been removed\n\nPatching has been applied where relevant\n\nAccess controls have been reviewed and tightened\n\nSystems should be monitored closely for a period following recovery to detect any signs of re-compromise.",
+                        "char_count":  414,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    },
+                    {
+                        "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a12",
+                        "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                        "section_path":  "7. Communication and Escalation",
+                        "heading":  "7. Communication and Escalation",
+                        "content":  "Communication during an incident is important. The Incident Response Manager is responsible for keeping relevant stakeholders informed.",
+                        "char_count":  135,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    },
+                    {
+                        "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a13",
+                        "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                        "section_path":  "7.1 Internal Communication",
+                        "heading":  "7.1 Internal Communication",
+                        "content":  "The following stakeholders should be notified as appropriate during an incident:\n\nCISO â?? should be informed of significant incidents promptly\n\nSenior management â?? to be notified if the incident has a material business impact\n\nAffected business units â?? to be kept informed of progress and recovery timelines\n\nHR â?? if an employee is involved",
+                        "char_count":  339,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    },
+                    {
+                        "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a14",
+                        "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                        "section_path":  "7.2 External Communication",
+                        "heading":  "7.2 External Communication",
+                        "content":  "External communication should be managed carefully and approved by senior management before release.\n\nCustomer notifications â?? if customer data has been compromised, customers may need to be informed\n\nMedia inquiries â?? all media inquiries should be directed to the Communications team\n\nLaw enforcement â?? the Legal team will advise if law enforcement involvement is required",
+                        "char_count":  373,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    },
+                    {
+                        "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a15",
+                        "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                        "section_path":  "8. Documentation and Evidence",
+                        "heading":  "8. Documentation and Evidence",
+                        "content":  "All incidents should be documented in the incident tracking system. The following information should be recorded:\n\nDate and time the incident was detected\n\nNature of the incident\n\nSystems and data affected\n\nActions taken during response\n\nOutcome and resolution\n\nDocumentation should be completed as soon as practicable after the incident is resolved.",
+                        "char_count":  350,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    },
+                    {
+                        "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a16",
+                        "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                        "section_path":  "9. Training and Awareness",
+                        "heading":  "9. Training and Awareness",
+                        "content":  "All IT security staff should be familiar with this SOP. Annual security awareness training is conducted for all employees.\n\nTabletop exercises and simulations may be conducted periodically to test the bank\u0027s incident response readiness.",
+                        "char_count":  236,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    },
+                    {
+                        "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a17",
+                        "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                        "section_path":  "10. Document Review",
+                        "heading":  "10. Document Review",
+                        "content":  "This SOP should be reviewed and updated periodically, or following a significant security incident. The IT Security team is responsible for maintaining this document.",
+                        "char_count":  166,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    },
+                    {
+                        "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a18",
+                        "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                        "section_path":  "Appendix A â?? Contact List",
+                        "heading":  "Appendix A â?? Contact List",
+                        "content":  "In the event of an incident, the following contacts should be notified as appropriate. This list should be maintained and kept up to date by the IT Security team.\n\n| Role | Name | Contact |\n| --- | --- | --- |\n| CISO | [Name] | [Phone / Email] |\n| IT Security Head | [Name] | [Phone / Email] |\n| Head of IT Operations | [Name] | [Phone / Email] |\n| Chief Compliance Officer | [Name] | [Phone / Email] |\n| Legal Counsel | [Name] | [Phone / Email] |",
+                        "char_count":  447,
+                        "page_estimate":  1,
+                        "section_type":  "unknown"
+                    }
+                ],
+    "chunks":  [
+                   {
+                       "chunk_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a1-c1",
+                       "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a1",
+                       "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                       "content":  "CYBER INCIDENT RESPONSE\n\nStandard Operating Procedure\n\n| Document Title | Cyber Incident Response Standard Operating Procedure |\n| --- | --- |\n| Document ID | SOP-CSIRT-001 |\n| Version | 1.2 |\n| Prepared By | IT Security Team |\n| Reviewed By | CISO |\n| Date | March 2024 |\n| Status | Active |",
+                       "char_count":  292
+                   },
+                   {
+                       "chunk_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a2-c1",
+                       "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a2",
+                       "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                       "content":  "This Standard Operating Procedure (SOP) defines the process for detecting, responding to, and recovering from cybersecurity incidents at the bank. The goal is to minimise the impact of security incidents on the bank\u0027s operations, customers, and reputation.\n\nThis document should be used by the IT Security team and other relevant stakeholders when a cybersecurity incident is suspected or confirmed.",
+                       "char_count":  399
+                   },
+                   {
+                       "chunk_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a3-c1",
+                       "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a3",
+                       "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                       "content":  "This SOP applies to all cybersecurity incidents affecting the bank\u0027s information systems, networks, applications, and data. This includes:\n\nAll IT systems and infrastructure owned or operated by the bank\n\nThird-party systems that process or store bank data\n\nAll employees, contractors, and vendors who have access to bank systems\n\nThe following are out of scope for this procedure:\n\nPhysical security incidents (refer to the Physical Security policy)\n\nFraud incidents not involving a cybersecurity component",
+                       "char_count":  507
+                   },
+                   {
+                       "chunk_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a4-c1",
+                       "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a4",
+                       "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                       "content":  "| Term | Definition |\n| --- | --- |\n| Cybersecurity Incident | An event that has or may have an adverse effect on the confidentiality, integrity, or availability of information systems or data. |\n| Threat Actor | An individual, group, or organisation responsible for carrying out a cyberattack. |\n| Indicator of Compromise (IoC) | Evidence that a system or network has been compromised, such as unusual network traffic or unexpected file changes. |\n| SIEM | Security Information and Event Management system used to aggregate and correlate security logs. |\n| RTO | Recovery Time Objective â?? the target duration for restoring operations after an incident. |",
+                       "char_count":  655
+                   },
+                   {
+                       "chunk_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a5-c1",
+                       "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a5",
+                       "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                       "content":  "The following roles are involved in the incident response process. Each team should be aware of their responsibilities and be ready to act when an incident occurs.\n\n| Role | Responsibilities |\n| --- | --- |\n| CISO | Overall accountability for cybersecurity. Should be informed of significant incidents. |\n| IT Security Team / SOC | Monitors security alerts, conducts triage, coordinates response activities. |\n| Incident Response Manager | Manages the response process and communication during an incident. Usually the IT Security Head. |\n| IT Operations | Supports containment and recovery activities as directed by the security team. |\n| Legal / Compliance | Advises on regulatory and legal obligations. Involved when required. |\n| Senior Management | Should be kept informed of major incidents that affect the business. |\n| HR Department | Involved in cases where an employee is suspected of wrongdoing. |",
+                       "char_count":  908
+                   },
+                   {
+                       "chunk_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a6-c1",
+                       "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a6",
+                       "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                       "content":  "Not all security events are incidents. When an alert is received, the SOC analyst should assess whether it represents a genuine incident or a false positive.\n\nIncidents should be classified based on their potential impact to the organisation. Higher impact incidents should be escalated to senior management and the CISO as appropriate.\n\nFactors to consider when assessing impact include:\n\nNumber of systems or users affected\n\nSensitivity of data involved\n\nWhether services have been disrupted\n\nLikelihood of financial loss or reputational damage",
+                       "char_count":  546
+                   },
+                   {
+                       "chunk_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a7-c1",
+                       "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a7",
+                       "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                       "content":  "The incident response process follows six phases as outlined below. Teams should move through each phase systematically.\n\n| Step | Phase | Key Actions |\n| --- | --- | --- |\n| 1 | Detection \u0026amp; Identification | Security alerts received via SIEM, EDR, or user reports. SOC analyst reviews and performs initial triage. |\n| 2 | Initial Assessment | Assess the nature and scope of the incident. Determine if it is a genuine security incident or a false positive. |\n| 3 | Containment | Take steps to contain the incident and prevent further damage. Actions will depend on the type of incident. |\n| 4 | Eradication | Remove the threat from the environment. This may include removing malware, disabling compromised accounts, and patching vulnerabilities. |\n| 5 | Recovery | Restore affected systems and services to normal operations. Verify that systems are clean before bringing them back online. |\n| 6 | Communication | Notify relevant stakeholders as appropriate. This includes management, affected users, and potentially external parties. |",
+                       "char_count":  1038
+                   },
+                   {
+                       "chunk_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a8-c1",
+                       "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a8",
+                       "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                       "content":  "Security incidents may be detected through various sources including:\n\nSIEM alerts and correlation rules\n\nEndpoint Detection and Response (EDR) alerts\n\nReports from employees or customers\n\nThreat intelligence feeds\n\nExternal notifications (e.g., from vendors or law enforcement)\n\nWhen an alert is received, the SOC analyst should review the available information and determine whether it represents a genuine security incident.",
+                       "char_count":  427
+                   },
+                   {
+                       "chunk_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a9-c1",
+                       "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a9",
+                       "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                       "content":  "Once an incident is confirmed, the priority is to contain the threat and prevent it from spreading. Containment actions may include:\n\nIsolating affected systems from the network\n\nDisabling compromised user accounts\n\nBlocking malicious IP addresses or domains at the firewall or proxy\n\nSuspending affected services if necessary\n\nThe Incident Response Manager should decide which containment actions are appropriate based on the specific circumstances of the incident.",
+                       "char_count":  466
+                   },
+                   {
+                       "chunk_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a10-c1",
+                       "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a10",
+                       "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                       "content":  "After the incident has been contained, the source of the compromise should be identified and removed. This may include:\n\nRemoving malware from affected systems using antivirus or EDR tools\n\nRevoking and resetting compromised credentials\n\nApplying security patches to address the vulnerability exploited\n\nReviewing and strengthening access controls",
+                       "char_count":  347
+                   },
+                   {
+                       "chunk_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a11-c1",
+                       "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a11",
+                       "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                       "content":  "Systems should be restored to normal operation only after the threat has been fully eradicated. Before bringing systems back online, the team should verify that:\n\nAll malware or malicious artefacts have been removed\n\nPatching has been applied where relevant\n\nAccess controls have been reviewed and tightened\n\nSystems should be monitored closely for a period following recovery to detect any signs of re-compromise.",
+                       "char_count":  414
+                   },
+                   {
+                       "chunk_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a12-c1",
+                       "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a12",
+                       "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                       "content":  "Communication during an incident is important. The Incident Response Manager is responsible for keeping relevant stakeholders informed.",
+                       "char_count":  135
+                   },
+                   {
+                       "chunk_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a13-c1",
+                       "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a13",
+                       "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                       "content":  "The following stakeholders should be notified as appropriate during an incident:\n\nCISO â?? should be informed of significant incidents promptly\n\nSenior management â?? to be notified if the incident has a material business impact\n\nAffected business units â?? to be kept informed of progress and recovery timelines\n\nHR â?? if an employee is involved",
+                       "char_count":  339
+                   },
+                   {
+                       "chunk_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a14-c1",
+                       "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a14",
+                       "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                       "content":  "External communication should be managed carefully and approved by senior management before release.\n\nCustomer notifications â?? if customer data has been compromised, customers may need to be informed\n\nMedia inquiries â?? all media inquiries should be directed to the Communications team\n\nLaw enforcement â?? the Legal team will advise if law enforcement involvement is required",
+                       "char_count":  373
+                   },
+                   {
+                       "chunk_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a15-c1",
+                       "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a15",
+                       "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                       "content":  "All incidents should be documented in the incident tracking system. The following information should be recorded:\n\nDate and time the incident was detected\n\nNature of the incident\n\nSystems and data affected\n\nActions taken during response\n\nOutcome and resolution\n\nDocumentation should be completed as soon as practicable after the incident is resolved.",
+                       "char_count":  350
+                   },
+                   {
+                       "chunk_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a16-c1",
+                       "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a16",
+                       "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                       "content":  "All IT security staff should be familiar with this SOP. Annual security awareness training is conducted for all employees.\n\nTabletop exercises and simulations may be conducted periodically to test the bank\u0027s incident response readiness.",
+                       "char_count":  236
+                   },
+                   {
+                       "chunk_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a17-c1",
+                       "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a17",
+                       "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                       "content":  "This SOP should be reviewed and updated periodically, or following a significant security incident. The IT Security team is responsible for maintaining this document.",
+                       "char_count":  166
+                   },
+                   {
+                       "chunk_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a18-c1",
+                       "anchor_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384-a18",
+                       "file_id":  "ce8f836b-b1bf-4f22-88b2-0404a3650384",
+                       "content":  "In the event of an incident, the following contacts should be notified as appropriate. This list should be maintained and kept up to date by the IT Security team.\n\n| Role | Name | Contact |\n| --- | --- | --- |\n| CISO | [Name] | [Phone / Email] |\n| IT Security Head | [Name] | [Phone / Email] |\n| Head of IT Operations | [Name] | [Phone / Email] |\n| Chief Compliance Officer | [Name] | [Phone / Email] |\n| Legal Counsel | [Name] | [Phone / Email] |",
+                       "char_count":  447
+                   }
+               ]
+}

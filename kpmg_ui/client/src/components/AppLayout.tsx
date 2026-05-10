@@ -204,7 +204,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
         </div>
       </aside>
 
-      <div className="trace-shell-main flex-1 flex flex-col min-w-0">
+      <div className="trace-shell-main flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
         <main className="trace-shell-canvas flex-1 min-h-0 overflow-hidden flex flex-col">{children}</main>
         <Footer />
       </div>

@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TRACE — Document Uplift Mockup</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Arial, sans-serif; height: 100vh; overflow: hidden; background: #F0F2F7; }
+
+/* Shell */
+.trace-shell { display: flex; height: 100vh; overflow: hidden; }
+
+/* Sidebar */
+.trace-sidebar {
+  width: 220px; flex-shrink: 0;
+  background: hsl(214,53%,14%);
+  border-right: 1px solid rgba(255,255,255,0.08);
+  display: flex; flex-direction: column; overflow: hidden; z-index: 30;
+}
+.sidebar-logo { height: 56px; display: flex; align-items: center; gap: 8px; padding: 0 14px; border-bottom: 1px solid rgba(255,255,255,0.08); flex-shrink: 0; }
+.sidebar-logo-text { font-size: 15px; font-weight: 700; color: #00B8F5; }
+.sidebar-nav { flex: 1; padding: 8px 6px; overflow-y: auto; }
+.sbi { width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 10px; border: none; border-left: 3px solid transparent; cursor: pointer; color: #C8D8F0; background: transparent; font-size: 13px; font-family: Arial; transition: background 0.12s; margin-bottom: 2px; white-space: nowrap; }
+.sbi:hover { background: rgba(255,255,255,0.07); color: white; }
+.sbi.active { color: white; background: linear-gradient(90deg,rgba(0,184,245,0.18),rgba(0,184,245,0.08)); border-left-color: #00B8F5; }
+.sbi-badge { font-size: 9px; font-weight: 700; padding: 2px 5px; border-radius: 4px; background: #1E49E2; color: white; margin-left: auto; }
+.sidebar-foot { border-top: 1px solid rgba(255,255,255,0.08); padding: 10px 8px; flex-shrink: 0; }
+.avatar { width: 28px; height: 28px; border-radius: 50%; background: #00338D; color: white; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+/* Main area */
+.trace-main { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
+
+/* Top nav */
+.topnav { height: 56px; background: #0C233C; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; border-bottom: 1px solid rgba(255,255,255,0.06); flex-shrink: 0; }
+.tn-brand { display: flex; align-items: center; }
+.tn-kpmg { font-size: 16px; font-weight: 700; color: white; letter-spacing: -0.3px; }
+.tn-div { font-size: 17px; font-weight: 300; color: #1E49E2; margin: 0 8px; }
+.tn-trace { font-size: 16px; font-weight: 700; color: #00B8F5; letter-spacing: -0.3px; }
+.tn-sep { color: rgba(255,255,255,0.25); margin: 0 6px; font-size: 13px; }
+.tn-crumb { font-size: 13px; color: rgba(255,255,255,0.55); }
+.tn-crumb-link { cursor: pointer; } .tn-crumb-link:hover { color: rgba(255,255,255,0.8); }
+.tn-crumb-active { font-size: 13px; color: rgba(255,255,255,0.85); font-weight: 600; }
+.tn-btn { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14); border-radius: 20px; padding: 6px 13px; cursor: pointer; font-family: Arial; }
+.tn-btn-primary { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: white; background: #7213EA; border: none; border-radius: 8px; padding: 7px 16px; cursor: pointer; font-family: Arial; transition: transform 0.12s; }
+.tn-btn-primary:hover { transform: translateY(-1px); }
+
+/* Canvas */
+.canvas { flex: 1; overflow-y: auto; overflow-x: hidden; background: #F0F2F7; }
+
+/* Hero */
+.hero { position: relative; overflow: hidden; background: #0C233C; padding: 48px 0 52px; }
+.hero-orb1 { position: absolute; border-radius: 50%; width: 460px; height: 460px; background: radial-gradient(circle,rgba(114,19,234,0.3) 0%,transparent 70%); filter: blur(80px); top: -140px; right: -80px; pointer-events: none; }
+.hero-orb2 { position: absolute; border-radius: 50%; width: 320px; height: 320px; background: radial-gradient(circle,rgba(0,184,245,0.18) 0%,transparent 70%); filter: blur(80px); bottom: -100px; left: 5%; pointer-events: none; }
+.hero-in { position: relative; max-width: 1100px; margin: 0 auto; padding: 0 48px; }
+.hero-lbl-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.hero-lbl-bar { width: 16px; height: 2px; border-radius: 2px; background: #00338D; }
+.hero-lbl { font-size: 11px; font-weight: 700; color: #00338D; letter-spacing: 2px; text-transform: uppercase; }
+.hero-h1 { font-weight: 700; color: white; line-height: 1.1; letter-spacing: -2px; font-size: clamp(28px,4vw,46px); margin-bottom: 14px; }
+.hero-lede { font-size: 15px; color: rgba(255,255,255,0.6); max-width: 580px; line-height: 1.75; }
+
+/* Page body */
+.pBody { max-width: 1200px; margin: 0 auto; padding: 36px 48px 72px; }
+
+/* Section headers */
+.slbl { font-size: 11px; font-weight: 700; color: #00338D; letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 4px; }
+.stitle { font-size: 20px; font-weight: 700; color: #0C233C; letter-spacing: -0.5px; }
+.shdr { padding-bottom: 14px; border-bottom: 2px solid #E2E6EF; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+.shdr-btn { background: none; border: none; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: space-between; padding-bottom: 14px; border-bottom: 2px solid #E2E6EF; margin-bottom: 18px; text-align: left; }
+
+/* Card */
+.card { background: white; border-radius: 16px; border: 1px solid #E2E6EF; box-shadow: 0 1px 3px rgba(0,0,0,0.05); padding: 22px; }
+
+/* Buttons */
+.btn-p { display: inline-flex; align-items: center; gap: 7px; font-weight: 700; font-size: 13px; color: white; background: #7213EA; border: none; border-radius: 10px; padding: 9px 18px; cursor: pointer; font-family: Arial; transition: transform 0.12s; }
+.btn-p:hover { transform: translateY(-1px); }
+.btn-s { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 13px; color: #5A6478; background: white; border: 1px solid #E2E6EF; border-radius: 8px; padding: 8px 14px; cursor: pointer; font-family: Arial; }
+.btn-s:hover { background: #F0F2F7; }
+.btn-cobalt { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 13px; color: #00338D; background: #EEF2FF; border: 1px solid #C5D0E8; border-radius: 8px; padding: 8px 14px; cursor: pointer; font-family: Arial; }
+.btn-danger { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; font-size: 13px; color: #E5001B; background: #FEEBED; border: 1px solid #fcc; border-radius: 8px; padding: 7px 10px; cursor: pointer; font-family: Arial; }
+.btn-green { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 12px; color: white; background: #009A44; border: none; border-radius: 8px; padding: 7px 13px; cursor: pointer; font-family: Arial; }
+.btn-red { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 12px; color: white; background: #E5001B; border: none; border-radius: 8px; padding: 7px 13px; cursor: pointer; font-family: Arial; }
+
+/* Badges */
+.bdg { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; border: 1px solid; white-space: nowrap; }
+.bdg-amber { background: #FFFBEB; color: #7A5400; border-color: #F7E7A8; }
+.bdg-green { background: #EDFBF5; color: #005B2A; border-color: #A8D5B5; }
+.bdg-blue  { background: #EEF2FF; color: #1E49E2; border-color: #C5D0E8; }
+.bdg-grey  { background: #F0F2F7; color: #5A6478; border-color: #CAD7E8; }
+.bdg-red   { background: #FEEBED; color: #B00020; border-color: #fcc; }
+
+/* Case rows */
+.case-row { background: white; border-radius: 14px; border: 1px solid #E2E6EF; border-left: 4px solid #CAD7E8; box-shadow: 0 1px 3px rgba(0,0,0,0.04); padding: 14px 18px; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; cursor: pointer; transition: box-shadow 0.12s, transform 0.12s; }
+.case-row:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.09); transform: translateY(-1px); }
+.case-row.c-amber { border-left-color: #EAAA00; }
+.case-row.c-blue  { border-left-color: #1E49E2; }
+.case-row.c-green { border-left-color: #009A44; }
+.ci { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.c-title { font-weight: 700; font-size: 14px; color: #0C233C; margin-bottom: 3px; }
+.c-meta { font-size: 12px; color: #8492A6; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.dot { width: 3px; height: 3px; border-radius: 50%; background: #CAD7E8; display: inline-block; flex-shrink: 0; }
+
+/* How it works grid */
+.hiw { display: grid; grid-template-columns: repeat(5,1fr); gap: 14px; }
+.hiw-card { background: white; border-radius: 14px; border: 1px solid #E2E6EF; box-shadow: 0 1px 3px rgba(0,0,0,0.04); padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+.step-num { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 13px; }
+
+/* Case detail tab bar */
+.tab-bar { background: white; border-bottom: 2px solid #E2E6EF; display: flex; align-items: stretch; padding: 0 24px; flex-shrink: 0; }
+.tab { padding: 13px 18px; font-size: 13px; font-weight: 600; color: #8492A6; border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; display: flex; align-items: center; gap: 6px; font-family: Arial; white-space: nowrap; }
+.tab:hover { color: #0C233C; }
+.tab.active { color: #00338D; border-bottom-color: #00B8F5; font-weight: 700; }
+.tab.locked { color: #CAD7E8; cursor: default; }
+.tab-count { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 10px; background: #FFFBEB; color: #7A5400; border: 1px solid #F7E7A8; }
+
+/* Doc viewer */
+.doc-view { background: white; border-radius: 14px; border: 1px solid #E2E6EF; padding: 22px; font-size: 13px; line-height: 1.75; color: #0C233C; overflow-y: auto; }
+.doc-view h2 { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+.doc-view h3 { font-size: 13px; font-weight: 700; margin: 14px 0 6px; }
+.hl { background: #FFF3CD; border-bottom: 2px solid #EAAA00; cursor: pointer; padding: 0 2px; transition: background 0.1s; }
+.hl:hover, .hl.on { background: #FFE69C; border-bottom-color: #7213EA; }
+
+/* Suggestion card */
+.sug-card { border-radius: 12px; border: 1px solid #E2E6EF; background: white; overflow: hidden; cursor: pointer; transition: box-shadow 0.12s; margin-bottom: 8px; }
+.sug-card:hover { box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+.sug-card.on { border-color: #7213EA; box-shadow: 0 0 0 2px rgba(114,19,234,0.15); }
+.sug-card.accepted { border-color: #A8D5B5; background: #EDFBF5; }
+.sug-card.rejected { border-color: #fcc; background: #fff5f5; opacity: 0.7; }
+.sug-h { padding: 9px 12px; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.sug-b { padding: 0 12px 10px; }
+.sev-high { background: #FEEBED; color: #B00020; border: 1px solid #fcc; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 8px; }
+.sev-med  { background: #FFFBEB; color: #7A5400; border: 1px solid #F7E7A8; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 8px; }
+.sev-low  { background: #EDFBF5; color: #005B2A; border: 1px solid #A8D5B5; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 8px; }
+.sug-btn-a { padding: 3px 9px; font-size: 11px; font-weight: 700; border: none; border-radius: 5px; cursor: pointer; background: #009A44; color: white; font-family: Arial; }
+.sug-btn-r { padding: 3px 9px; font-size: 11px; font-weight: 700; border: none; border-radius: 5px; cursor: pointer; background: #E5001B; color: white; font-family: Arial; }
+
+/* Upload zone */
+.upload-z { border: 2px dashed #C5D0E8; border-radius: 12px; background: #F8FAFD; padding: 24px; text-align: center; cursor: pointer; transition: border-color 0.12s, background 0.12s; }
+.upload-z:hover { border-color: #7213EA; background: #F3F0FF; }
+
+/* Modal */
+.modal-bg { position: fixed; inset: 0; background: rgba(12,35,60,0.5); display: flex; align-items: center; justify-content: center; z-index: 200; }
+.modal { background: white; border-radius: 18px; border: 1px solid #E2E6EF; box-shadow: 0 20px 60px rgba(0,0,0,0.22); padding: 28px; max-width: 430px; width: 90%; }
+.modal-t { font-size: 17px; font-weight: 700; color: #0C233C; margin-bottom: 8px; }
+.modal-b { font-size: 14px; color: #5A6478; line-height: 1.6; margin-bottom: 22px; }
+.modal-row { display: flex; gap: 10px; }
+
+/* Footer */
+.trace-footer { background: white; border-top: 1px solid #E2E6EF; padding: 13px 48px; font-size: 11px; color: #8492A6; flex-shrink: 0; }
+
+/* Doc row */
+.doc-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 10px; border: 1px solid #E2E6EF; background: white; margin-bottom: 7px; }
+
+/* Progress */
+.prog-t { height: 4px; border-radius: 2px; background: #EEF2FF; overflow: hidden; }
+.prog-f { height: 100%; border-radius: 2px; background: #1E49E2; }
+
+/* Input */
+.inp { width: 100%; border: 1.5px solid #E2E6EF; border-radius: 9px; padding: 9px 12px; font-size: 13px; font-family: Arial; color: #0C233C; outline: none; }
+.inp:focus { border-color: #7213EA; }
+.txt { width: 100%; border: 1.5px solid #E2E6EF; border-radius: 9px; padding: 9px 12px; font-size: 13px; font-family: Arial; color: #0C233C; outline: none; resize: vertical; min-height: 64px; }
+.txt:focus { border-color: #7213EA; }
+.fl-lbl { font-size: 11px; font-weight: 700; color: #00338D; letter-spacing: 1.5px; text-transform: uppercase; display: block; margin-bottom: 5px; }
+
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+.fu { animation: fadeUp 0.35s ease both; }
+</style>
+</head>
+<body>
+
+<div class="trace-shell">
+  <!-- Sidebar -->
+  <aside class="trace-sidebar">
+    <div class="sidebar-logo">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#00B8F5" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <span class="sidebar-logo-text">TRACE</span>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="sbi" title="Dashboard"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard</button>
+      <button class="sbi" title="Controls Library"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Controls Library</button>
+      <button class="sbi" title="Risk Assessment"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Risk Assessment</button>
+      <button class="sbi" title="Control Testing"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Control Testing</button>
+      <button class="sbi active" id="sb-uplift" title="Document Uplift"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="6" height="18" rx="1"/><rect x="9" y="3" width="6" height="18" rx="1"/><rect x="16" y="3" width="6" height="18" rx="1"/></svg>Document Uplift<span class="sbi-badge">NEW</span></button>
+      <button class="sbi" title="Issue Management"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Issue Management</button>
+      <button class="sbi" title="Chat"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Chat</button>
+    </nav>
+    <div class="sidebar-foot"><div style="display:flex;align-items:center;gap:8px;padding:7px;border-radius:9px;background:rgba(255,255,255,0.06)"><div class="avatar">KV</div><div style="overflow:hidden"><div style="font-size:12px;font-weight:600;color:#E4EEFB;white-space:nowrap">K Varma</div><div style="font-size:10px;color:#A6BCD9;white-space:nowrap">kvarma9@gmail.com</div></div></div></div>
+  </aside>
+
+  <!-- Main -->
+  <div class="trace-main">
+
+    <!-- Topnav -->
+    <nav class="topnav">
+      <div style="display:flex;align-items:center" id="tn-content">
+        <!-- set by JS -->
+      </div>
+      <div style="display:flex;align-items:center;gap:8px" id="tn-actions"></div>
+    </nav>
+
+    <!-- SCREEN: Dashboard -->
+    <div id="screen-dashboard" class="canvas" style="display:none">
+      <section class="hero"><div class="hero-orb1"></div><div class="hero-orb2"></div>
+        <div class="hero-in">
+          <div class="hero-lbl-row"><div class="hero-lbl-bar"></div><span class="hero-lbl">Document Intelligence</span></div>
+          <h1 class="hero-h1">Document Uplift</h1>
+          <p class="hero-lede">Review, improve, and export procedure documents enriched with cross-document control evidence.</p>
+        </div>
+      </section>
+      <div class="pBody">
+        <!-- How it works -->
+        <div style="margin-bottom:32px">
+          <button class="shdr-btn" onclick="toggleHiw()">
+            <div><div class="slbl">Process</div><div class="stitle">How It Works</div></div>
+            <svg id="hiw-ch" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8492A6" stroke-width="2" style="transition:transform 0.2s;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div id="hiw-grid" class="hiw fu">
+            <div class="hiw-card"><div class="step-num" style="background:#7213EA">1</div><div style="font-weight:700;font-size:13px;color:#0C233C">Create a Case</div><p style="font-size:12px;color:#5A6478;line-height:1.6">Name your uplift and describe the business process.</p></div>
+            <div class="hiw-card"><div class="step-num" style="background:#1E49E2">2</div><div style="font-weight:700;font-size:13px;color:#0C233C">Upload Documents</div><p style="font-size:12px;color:#5A6478;line-height:1.6">Tag SOP, RCM, policy, risk register, and evidence files.</p></div>
+            <div class="hiw-card"><div class="step-num" style="background:#00B8F5">3</div><div style="font-weight:700;font-size:13px;color:#0C233C">Run the Pipeline</div><p style="font-size:12px;color:#5A6478;line-height:1.6">AI extracts, cross-references, and surfaces gaps.</p></div>
+            <div class="hiw-card"><div class="step-num" style="background:#098E7E">4</div><div style="font-weight:700;font-size:13px;color:#0C233C">Review Suggestions</div><p style="font-size:12px;color:#5A6478;line-height:1.6">Accept, edit, or reject — like Word's comment pane.</p></div>
+            <div class="hiw-card"><div class="step-num" style="background:#009A44">5</div><div style="font-weight:700;font-size:13px;color:#0C233C">Export</div><p style="font-size:12px;color:#5A6478;line-height:1.6">Download your uplifted Word doc and diagrams.</p></div>
+          </div>
+        </div>
+        <!-- Cases list -->
+        <div>
+          <div class="shdr">
+            <div><div class="slbl">Workspace</div><div class="stitle">Your Cases <span style="font-size:15px;font-weight:400;color:#8492A6">(4)</span></div></div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <div style="display:flex;align-items:center;gap:6px;background:white;border:1px solid #E2E6EF;border-radius:9px;padding:7px 12px;font-size:12px;color:#8492A6"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8492A6" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Search cases…</div>
+              <button class="btn-p" onclick="showModal('new-case-modal')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Case</button>
+            </div>
+          </div>
+          <!-- Case 1 -->
+          <div class="case-row c-amber" onclick="goToCase()">
+            <div class="ci" style="background:#FFFBEB"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#EAAA00" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+            <div style="flex:1;min-width:0"><div class="c-title">Access Control Review</div><div class="c-meta"><span>IT Security</span><span class="dot"></span><span>4 documents</span><span class="dot"></span><span style="color:#7A5400;font-weight:700">12 suggestions pending</span><span class="dot"></span><span>30 min ago</span></div></div>
+            <div style="display:flex;align-items:center;gap:7px;flex-shrink:0">
+              <span class="bdg bdg-amber">⚠ Review Ready</span>
+              <button class="btn-cobalt" onclick="event.stopPropagation();goToCase()">Open →</button>
+              <button class="btn-danger" onclick="event.stopPropagation();showModal('del-modal')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+            </div>
+          </div>
+          <!-- Case 2 -->
+          <div class="case-row c-blue">
+            <div class="ci" style="background:#EEF2FF"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#1E49E2" stroke-width="1.8" style="animation:spin 2s linear infinite"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg></div>
+            <div style="flex:1;min-width:0"><div class="c-title">Vendor Onboarding Process</div><div class="c-meta"><span>Procurement</span><span class="dot"></span><span>5 documents</span><span class="dot"></span><span style="color:#1E49E2;font-weight:600">Pipeline running…</span></div><div class="prog-t" style="width:120px;margin-top:5px"><div class="prog-f" style="width:60%"></div></div></div>
+            <div style="display:flex;align-items:center;gap:7px;flex-shrink:0">
+              <span class="bdg bdg-blue">↻ Analyzing</span>
+              <button class="btn-s" style="opacity:0.45;cursor:default">Open</button>
+              <button class="btn-danger"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+            </div>
+          </div>
+          <!-- Case 3 -->
+          <div class="case-row c-green">
+            <div class="ci" style="background:#EDFBF5"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#009A44" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 11 17 15 13"/></svg></div>
+            <div style="flex:1;min-width:0"><div class="c-title">Payroll Processing SOP</div><div class="c-meta"><span>Finance</span><span class="dot"></span><span>3 docs</span><span class="dot"></span><span>6 accepted</span><span class="dot"></span><span>2 days ago</span></div></div>
+            <div style="display:flex;align-items:center;gap:7px;flex-shrink:0">
+              <span class="bdg bdg-green">✓ Complete</span>
+              <button class="btn-cobalt">Open →</button>
+              <button class="btn-danger"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+            </div>
+          </div>
+          <!-- Case 4 -->
+          <div class="case-row">
+            <div class="ci" style="background:#F0F2F7"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#8492A6" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+            <div style="flex:1;min-width:0"><div class="c-title">Employee Offboarding Checklist</div><div class="c-meta"><span>HR</span><span class="dot"></span><span style="color:#8492A6">No documents yet</span><span class="dot"></span><span>Created today</span></div></div>
+            <div style="display:flex;align-items:center;gap:7px;flex-shrink:0">
+              <span class="bdg bdg-grey">Setup</span>
+              <button class="btn-cobalt">Open →</button>
+              <button class="btn-danger"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <footer class="trace-footer">© 2026 KPMG Assurance and Consulting Services LLP. All rights reserved. &nbsp;&nbsp;CONFIDENTIAL</footer>
+    </div><!-- /dashboard -->
+
+    <!-- SCREEN: Case Detail -->
+    <div id="screen-case" style="display:none;flex:1;flex-direction:column;overflow:hidden">
+
+      <!-- Case sub-hero -->
+      <div style="background:linear-gradient(135deg,#0C233C,#1a3660);padding:16px 28px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:3px">
+            <span style="font-size:18px;font-weight:700;color:white;letter-spacing:-0.3px">Access Control Review</span>
+            <span class="bdg bdg-amber">⚠ Review Ready</span>
+          </div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.5);display:flex;gap:8px">
+            <span>IT Security</span><span>·</span><span>4 documents</span><span>·</span><span>Created 2026-05-06</span>
+          </div>
+        </div>
+        <button onclick="goToDash()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.18);border-radius:8px;padding:7px 14px;color:rgba(255,255,255,0.8);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:Arial">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>All Cases
+        </button>
+      </div>
+
+      <!-- Tab bar -->
+      <div class="tab-bar">
+        <button class="tab" id="t-docs" onclick="showCaseTab('docs')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>Documents</button>
+        <button class="tab" id="t-proc" onclick="showCaseTab('proc')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="proc-ico"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>Processing</button>
+        <button class="tab active" id="t-review" onclick="showCaseTab('review')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Review Suggestions<span class="tab-count">12</span></button>
+        <button class="tab locked" id="t-export"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></button>
+      </div>
+
+      <!-- Tab contents -->
+      <div style="flex:1;overflow:hidden;position:relative">
+
+        <!-- Documents tab -->
+        <div id="ct-docs" style="display:none;height:100%;overflow-y:auto;padding:24px 28px">
+          <div class="slbl" style="margin-bottom:4px">Case Setup</div><div class="stitle" style="margin-bottom:18px">Documents &amp; Pipeline</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+            <div>
+              <div class="slbl" style="font-size:10px;margin-bottom:8px">Uploaded Documents</div>
+              <div class="doc-row"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#1E49E2" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:#0C233C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Access_Control_Policy_v2.docx</div><div style="font-size:11px;color:#8492A6">Word · 42 KB</div></div><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:#EEF2FF;color:#1E49E2;border:1px solid #C5D0E8;white-space:nowrap">Procedure SOP</span><span class="bdg bdg-green" style="font-size:10px">✓</span></div>
+              <div class="doc-row"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#009A44" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:#0C233C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">ESG_Risk_Controls_Matrix.xlsx</div><div style="font-size:11px;color:#8492A6">Excel · 118 KB</div></div><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:#EDFBF5;color:#005B2A;border:1px solid #A8D5B5;white-space:nowrap">RCM / Controls</span><span class="bdg bdg-green" style="font-size:10px">✓</span></div>
+              <div class="doc-row"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#EAAA00" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:#0C233C;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">IT_Security_Policy.pdf</div><div style="font-size:11px;color:#8492A6">PDF · 2.1 MB</div></div><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:#FFFBEB;color:#7A5400;border:1px solid #F7E7A8;white-space:nowrap">Policy</span><span class="bdg bdg-green" style="font-size:10px">✓</span></div>
+              <div class="upload-z" style="margin-top:10px"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#8492A6" stroke-width="1.5" style="margin:0 auto 8px;display:block"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><div style="font-size:13px;font-weight:600;color:#5A6478">Drop files here or <span style="color:#7213EA;text-decoration:underline;cursor:pointer">browse</span></div><div style="font-size:11px;color:#8492A6;margin-top:3px">PDF, Word, Excel supported</div></div>
+            </div>
+            <div>
+              <div class="slbl" style="font-size:10px;margin-bottom:8px">Document Tags</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+                <button style="padding:5px 12px;border-radius:20px;border:1.5px solid #1E49E2;font-size:12px;font-weight:600;cursor:pointer;background:#EEF2FF;color:#1E49E2;font-family:Arial">Procedure SOP</button>
+                <button style="padding:5px 12px;border-radius:20px;border:1.5px solid #E2E6EF;font-size:12px;font-weight:600;cursor:pointer;background:white;color:#5A6478;font-family:Arial">RCM</button>
+                <button style="padding:5px 12px;border-radius:20px;border:1.5px solid #E2E6EF;font-size:12px;font-weight:600;cursor:pointer;background:white;color:#5A6478;font-family:Arial">Policy</button>
+                <button style="padding:5px 12px;border-radius:20px;border:1.5px solid #E2E6EF;font-size:12px;font-weight:600;cursor:pointer;background:white;color:#5A6478;font-family:Arial">Evidence</button>
+              </div>
+              <div class="card" style="background:#F8FAFD;padding:18px"><div style="font-size:13px;font-weight:700;color:#0C233C;margin-bottom:6px">Pipeline Status</div><div style="font-size:12px;color:#5A6478;margin-bottom:12px">All 4 documents processed. 12 suggestions ready for review.</div><button class="btn-p" style="font-size:12px;padding:8px 16px" onclick="showCaseTab('review')">Go to Review →</button></div>
+              <div style="margin-top:12px;padding:14px;background:white;border-radius:12px;border:1px solid #E2E6EF"><div style="font-size:10px;font-weight:700;color:#8492A6;margin-bottom:8px;letter-spacing:1px;text-transform:uppercase">Re-run Options</div><button class="btn-s" style="font-size:12px;width:100%;justify-content:center" onclick="showCaseTab('proc')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>Re-run Pipeline on All Docs</button></div>
+            </div>
+          </div>
+          <footer class="trace-footer" style="margin:24px -28px -24px;padding:13px 28px">© 2026 KPMG Assurance and Consulting Services LLP. All rights reserved. &nbsp;CONFIDENTIAL</footer>
+        </div>
+
+        <!-- Processing tab -->
+        <div id="ct-proc" style="display:none;height:100%;overflow-y:auto;padding:24px 28px">
+          <div class="slbl" style="margin-bottom:4px">Pipeline</div><div class="stitle" style="margin-bottom:6px">Processing Status</div>
+          <div style="font-size:13px;color:#5A6478;margin-bottom:20px">Completed 2026-05-07 14:32 · All 4 documents processed</div>
+          <div class="card" style="padding:0;overflow:hidden;margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid #F0F2F7"><div style="width:34px;height:34px;border-radius:9px;background:#EDFBF5;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#009A44" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div><div><div style="font-size:13px;font-weight:700;color:#0C233C">Document Conversion</div><div style="font-size:12px;color:#8492A6">4 / 4 converted to searchable text</div></div><span class="bdg bdg-green" style="margin-left:auto">✓ Done</span></div>
+            <div style="display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid #F0F2F7"><div style="width:34px;height:34px;border-radius:9px;background:#EDFBF5;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#009A44" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div><div><div style="font-size:13px;font-weight:700;color:#0C233C">Corpus Analysis</div><div style="font-size:12px;color:#8492A6">847 chunks indexed · cross-document map built</div></div><span class="bdg bdg-green" style="margin-left:auto">✓ Done</span></div>
+            <div style="display:flex;align-items:center;gap:12px;padding:14px 18px"><div style="width:34px;height:34px;border-radius:9px;background:#EDFBF5;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#009A44" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div><div><div style="font-size:13px;font-weight:700;color:#0C233C">Suggestion Generation</div><div style="font-size:12px;color:#8492A6">12 suggestions generated across 3 documents</div></div><span class="bdg bdg-green" style="margin-left:auto">✓ Done</span></div>
+          </div>
+          <button class="btn-p" onclick="showCaseTab('review')">Review Suggestions →</button>
+          <footer class="trace-footer" style="margin:24px -28px -24px;padding:13px 28px">© 2026 KPMG Assurance and Consulting Services LLP. All rights reserved. &nbsp;CONFIDENTIAL</footer>
+        </div>
+
+        <!-- Review tab -->
+        <div id="ct-review" style="height:100%;overflow:hidden;display:flex;flex-direction:column">
+          <!-- Toolbar -->
+          <div style="padding:12px 24px;background:white;border-bottom:1px solid #E2E6EF;display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex-shrink:0">
+            <div><span style="font-size:13px;font-weight:700;color:#0C233C">12 suggestions</span><span style="font-size:13px;color:#8492A6"> across 3 documents</span></div>
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+              <button class="btn-green" onclick="acceptAll()">✓ Accept All</button>
+              <button class="btn-red" onclick="rejectAll()">✕ Reject All</button>
+              <select style="border:1px solid #E2E6EF;border-radius:8px;padding:5px 9px;font-size:12px;color:#5A6478;font-family:Arial;background:white;cursor:pointer"><option>All documents</option><option>Access_Control_Policy_v2.docx</option><option>IT_Security_Policy.pdf</option></select>
+              <select style="border:1px solid #E2E6EF;border-radius:8px;padding:5px 9px;font-size:12px;color:#5A6478;font-family:Arial;background:white;cursor:pointer"><option>All severities</option><option>High</option><option>Medium</option><option>Low</option></select>
+            </div>
+            <button onclick="showModal('continue-modal')" style="margin-left:auto;background:#7213EA;color:white;border:none;border-radius:9px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:Arial;white-space:nowrap">Move to Export <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
+          </div>
+          <!-- Split view -->
+          <div style="flex:1;overflow:hidden;display:grid;grid-template-columns:1fr 300px">
+            <!-- Doc viewer -->
+            <div style="overflow-y:auto;padding:20px 24px;background:#F0F2F7">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+                <div class="slbl" style="margin:0">Document Viewer</div>
+                <select style="border:1px solid #E2E6EF;border-radius:8px;padding:4px 9px;font-size:12px;color:#0C233C;font-family:Arial;background:white;font-weight:600"><option>Access_Control_Policy_v2.docx</option><option>IT_Security_Policy.pdf</option><option>ESG_Risk_Controls_Matrix.xlsx</option></select>
+                <span style="font-size:11px;color:#8492A6">3 suggestions in this doc</span>
+              </div>
+              <div class="doc-view">
+                <h2>Access Control Policy</h2>
+                <p style="font-size:11px;color:#8492A6;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #F0F2F7">Version 2.1 &nbsp;·&nbsp; Last revised: 2026-03-10 &nbsp;·&nbsp; Owner: IT Security</p>
+                <h3>1. Purpose</h3>
+                <p>This policy establishes the requirements for <span class="hl on" onclick="activateSug(this,'sc1')" data-s="sc1">granting and revoking access</span> to company systems and data assets.</p>
+                <h3>2. Scope</h3>
+                <p>Applies to all employees, contractors, and <span class="hl" onclick="activateSug(this,'sc2')" data-s="sc2">third-party vendors with system access</span>. Temporary access is subject to a 90-day review cycle.</p>
+                <h3>3. Responsibilities</h3>
+                <p>The IT Security team is responsible for conducting <span class="hl" onclick="activateSug(this,'sc3')" data-s="sc3">quarterly access reviews</span> of all privileged accounts. Access rights must be revoked within 24 hours of employment termination.</p>
+                <h3>4. Evidence Retention</h3>
+                <p>Records of access provisioning must be retained for <span class="hl" onclick="activateSug(this,'sc4')" data-s="sc4">3 years</span> in accordance with company record-keeping requirements.</p>
+              </div>
+            </div>
+            <!-- Suggestions pane -->
+            <div style="overflow-y:auto;padding:14px;background:white;border-left:2px solid #E2E6EF">
+              <div class="slbl" style="font-size:10px;margin-bottom:10px">Suggestions (3)</div>
+              <div class="sug-card on" id="sc1" onclick="activateSug(null,'sc1')">
+                <div class="sug-h"><span class="sev-high">HIGH</span><div style="display:flex;gap:5px"><button class="sug-btn-a" onclick="event.stopPropagation();acceptSug('sc1')">✓</button><button class="sug-btn-r" onclick="event.stopPropagation();rejectSug('sc1')">✕</button></div></div>
+                <div class="sug-b"><div style="font-size:13px;font-weight:700;color:#0C233C;margin-bottom:4px">Strengthen Access Revocation Wording</div><div style="font-size:12px;color:#5A6478;line-height:1.5">Proposed: <em>"Access must be granted, modified, and revoked with written approval from the data owner, logged in the ITSM system."</em></div><div style="font-size:11px;color:#8492A6;margin-top:6px;padding-top:6px;border-top:1px dashed #F0F2F7">Source: ESG RCM row 4 · IT Security Policy §7.2</div></div>
+              </div>
+              <div class="sug-card" id="sc2" onclick="activateSug(null,'sc2')">
+                <div class="sug-h"><span class="sev-med">MEDIUM</span><div style="display:flex;gap:5px"><button class="sug-btn-a" onclick="event.stopPropagation();acceptSug('sc2')">✓</button><button class="sug-btn-r" onclick="event.stopPropagation();rejectSug('sc2')">✕</button></div></div>
+                <div class="sug-b"><div style="font-size:13px;font-weight:700;color:#0C233C;margin-bottom:4px">Extend Vendor Access Controls</div><div style="font-size:12px;color:#5A6478;line-height:1.5">Add clause requiring MFA and quarterly review for third-party vendors, same as internal staff.</div><div style="font-size:11px;color:#8492A6;margin-top:6px;padding-top:6px;border-top:1px dashed #F0F2F7">Source: ESG RCM row 3</div></div>
+              </div>
+              <div class="sug-card" id="sc3" onclick="activateSug(null,'sc3')">
+                <div class="sug-h"><span class="sev-high">HIGH</span><div style="display:flex;gap:5px"><button class="sug-btn-a" onclick="event.stopPropagation();acceptSug('sc3')">✓</button><button class="sug-btn-r" onclick="event.stopPropagation();rejectSug('sc3')">✕</button></div></div>
+                <div class="sug-b"><div style="font-size:13px;font-weight:700;color:#0C233C;margin-bottom:4px">Increase Review Frequency to Monthly</div><div style="font-size:12px;color:#5A6478;line-height:1.5">Change "quarterly" to "monthly" — RCM row 3 mandates monthly privileged access reviews.</div><div style="font-size:11px;color:#8492A6;margin-top:6px;padding-top:6px;border-top:1px dashed #F0F2F7">Source: ESG RCM row 3</div></div>
+              </div>
+              <div class="sug-card accepted" id="sc4">
+                <div class="sug-h"><span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;background:#EDFBF5;color:#005B2A;border:1px solid #A8D5B5">LOW · Accepted ✓</span></div>
+                <div class="sug-b"><div style="font-size:13px;font-weight:700;color:#0C233C;margin-bottom:4px">Extend Retention to 7 Years</div><div style="font-size:12px;color:#5A6478;line-height:1.5">Increase from 3 to 7 years per regulatory requirements.</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Export tab -->
+        <div id="ct-export" style="display:none;height:100%;overflow-y:auto;padding:24px 28px">
+          <div style="background:linear-gradient(135deg,#005B2A,#009A44);border-radius:14px;padding:20px 24px;display:flex;align-items:center;gap:14px;margin-bottom:24px">
+            <div style="width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div><div style="font-size:16px;font-weight:700;color:white">Uplift Complete</div><div style="font-size:13px;color:rgba(255,255,255,0.75);margin-top:2px">4 suggestions applied · 2 files ready</div></div>
+          </div>
+          <div class="slbl" style="margin-bottom:4px">Downloads</div><div class="stitle" style="margin-bottom:16px">Export Files</div>
+          <div style="background:white;border-radius:12px;border:1px solid #E2E6EF;padding:14px 18px;display:flex;align-items:center;gap:12px;margin-bottom:8px"><div style="width:40px;height:40px;border-radius:10px;background:#EEF2FF;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1E49E2" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div style="flex:1"><div style="font-size:13px;font-weight:700;color:#0C233C">Access_Control_Policy_uplifted.docx</div><div style="font-size:12px;color:#8492A6">Word · 4 suggestions applied · 47 KB</div></div><button class="btn-p" style="font-size:12px;padding:7px 14px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download</button></div>
+          <div style="background:white;border-radius:12px;border:1px solid #E2E6EF;padding:14px 18px;display:flex;align-items:center;gap:12px;margin-bottom:14px"><div style="width:40px;height:40px;border-radius:10px;background:#F3F0FF;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7213EA" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></div><div style="flex:1"><div style="font-size:13px;font-weight:700;color:#0C233C">Process_Flow_Diagram.png</div><div style="font-size:12px;color:#8492A6">Diagram · 142 KB</div></div><button class="btn-p" style="font-size:12px;padding:7px 14px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download</button></div>
+          <button class="btn-s"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download All as ZIP</button>
+          <footer class="trace-footer" style="margin:24px -28px -24px;padding:13px 28px">© 2026 KPMG Assurance and Consulting Services LLP. All rights reserved. &nbsp;CONFIDENTIAL</footer>
+        </div>
+
+      </div><!-- /tab contents -->
+    </div><!-- /case detail screen -->
+
+  </div><!-- /trace-main -->
+</div><!-- /trace-shell -->
+
+<!-- Modals -->
+<div id="del-modal" style="display:none" class="modal-bg" onclick="if(event.target===this)hideModal('del-modal')">
+  <div class="modal">
+    <div style="width:44px;height:44px;border-radius:11px;background:#FEEBED;display:flex;align-items:center;justify-content:center;margin-bottom:14px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E5001B" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></div>
+    <div class="modal-t">Delete This Case?</div>
+    <div class="modal-b"><strong>Access Control Review</strong> and all its documents, results, and suggestions will be permanently deleted. This cannot be undone.</div>
+    <div class="modal-row"><button class="btn-s" style="flex:1" onclick="hideModal('del-modal')">Cancel</button><button class="btn-red" style="flex:1;justify-content:center;padding:10px" onclick="hideModal('del-modal')">Delete Case</button></div>
+  </div>
+</div>
+
+<div id="new-case-modal" style="display:none" class="modal-bg" onclick="if(event.target===this)hideModal('new-case-modal')">
+  <div class="modal" style="max-width:440px">
+    <div style="margin-bottom:18px"><div class="slbl" style="margin-bottom:4px">Document Uplift</div><div class="stitle">Create New Case</div></div>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px">
+      <div><label class="fl-lbl">Case Title *</label><input class="inp" placeholder="e.g. Payroll Processing SOP Uplift"></div>
+      <div><label class="fl-lbl">Process Name</label><input class="inp" placeholder="e.g. Payroll"></div>
+      <div><label class="fl-lbl">Domain / Notes</label><textarea class="txt" placeholder="Optional context for the AI…"></textarea></div>
+    </div>
+    <div class="modal-row"><button class="btn-s" style="flex:1" onclick="hideModal('new-case-modal')">Cancel</button><button style="flex:2;background:#7213EA;color:white;border:none;border-radius:9px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-family:Arial" onclick="hideModal('new-case-modal');goToCase()">Create Case <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button></div>
+  </div>
+</div>
+
+<div id="continue-modal" style="display:none" class="modal-bg" onclick="if(event.target===this)hideModal('continue-modal')">
+  <div class="modal">
+    <div style="width:44px;height:44px;border-radius:11px;background:#FFFBEB;display:flex;align-items:center;justify-content:center;margin-bottom:14px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EAAA00" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+    <div class="modal-t">Move to Export?</div>
+    <div class="modal-b"><strong>8 suggestions are still pending review.</strong> Unreviewed suggestions will be excluded from the uplifted document.<br><br>You can return to Review at any time.</div>
+    <div class="modal-row"><button class="btn-s" style="flex:1" onclick="hideModal('continue-modal')">Go Back and Review</button><button style="flex:1;background:#7213EA;color:white;border:none;border-radius:9px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:Arial" onclick="hideModal('continue-modal');unlockExport()">Continue to Export →</button></div>
+  </div>
+</div>
+
+<script>
+// Nav state
+function setNav(screen, breadcrumb, showNewCase) {
+  const tnc = document.getElementById('tn-content');
+  const tna = document.getElementById('tn-actions');
+  if (screen === 'dashboard') {
+    tnc.innerHTML = `<span class="tn-kpmg">KPMG</span><span class="tn-div" style="margin:0 8px">|</span><span class="tn-trace">TRACE</span><span class="tn-sep">/</span><span class="tn-crumb-active">Document Uplift</span>`;
+    tna.innerHTML = `<button class="tn-btn-primary" onclick="showModal('new-case-modal')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Case</button><button class="tn-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out</button>`;
+  } else {
+    tnc.innerHTML = `<span class="tn-kpmg">KPMG</span><span class="tn-div" style="margin:0 8px">|</span><span class="tn-trace">TRACE</span><span class="tn-sep">/</span><span class="tn-crumb tn-crumb-link" onclick="goToDash()">Document Uplift</span><span class="tn-sep">/</span><span class="tn-crumb-active">Access Control Review</span>`;
+    tna.innerHTML = `<button class="tn-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out</button>`;
+  }
+}
+
+function goToDash() {
+  document.getElementById('screen-dashboard').style.display = '';
+  document.getElementById('screen-case').style.display = 'none';
+  setNav('dashboard');
+}
+function goToCase() {
+  document.getElementById('screen-dashboard').style.display = 'none';
+  const sc = document.getElementById('screen-case');
+  sc.style.display = 'flex';
+  setNav('case');
+  showCaseTab('review');
+}
+
+function showCaseTab(name) {
+  ['docs','proc','review','export'].forEach(t => {
+    const ct = document.getElementById('ct-'+t);
+    if (ct) { ct.style.display = 'none'; if (ct.style.flexDirection) ct.style.flexDirection = ''; }
+    const tb = document.getElementById('t-'+t);
+    if (tb) tb.classList.remove('active');
+  });
+  const el = document.getElementById('ct-'+name);
+  if (el) { el.style.display = name === 'review' ? 'flex' : 'block'; if (name === 'review') el.style.flexDirection = 'column'; }
+  const tb = document.getElementById('t-'+name);
+  if (tb && !tb.classList.contains('locked')) tb.classList.add('active');
+}
+
+function unlockExport() {
+  const tb = document.getElementById('t-export');
+  tb.classList.remove('locked');
+  tb.onclick = () => showCaseTab('export');
+  showCaseTab('export');
+}
+
+function activateSug(hlEl, cardId) {
+  document.querySelectorAll('.hl').forEach(h => h.classList.remove('on'));
+  document.querySelectorAll('.sug-card').forEach(c => { if (!c.classList.contains('accepted') && !c.classList.contains('rejected')) c.classList.remove('on'); });
+  if (hlEl) hlEl.classList.add('on');
+  else { const hl = document.querySelector('[data-s="'+cardId+'"]'); if (hl) hl.classList.add('on'); }
+  const card = document.getElementById(cardId);
+  if (card && !card.classList.contains('accepted') && !card.classList.contains('rejected')) card.classList.add('on');
+  card?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function acceptSug(id) { const c = document.getElementById(id); c.classList.remove('on'); c.classList.add('accepted'); }
+function rejectSug(id) { const c = document.getElementById(id); c.classList.remove('on'); c.classList.add('rejected'); }
+function acceptAll() { ['sc1','sc2','sc3','sc4'].forEach(acceptSug); }
+function rejectAll() { ['sc1','sc2','sc3'].forEach(rejectSug); }
+
+function showModal(id) { document.getElementById(id).style.display = 'flex'; }
+function hideModal(id) { document.getElementById(id).style.display = 'none'; }
+
+function toggleHiw() {
+  const g = document.getElementById('hiw-grid'); const c = document.getElementById('hiw-ch');
+  const h = g.style.display === 'none'; g.style.display = h ? '' : 'none'; c.style.transform = h ? '' : 'rotate(-90deg)';
+}
+
+// Start on dashboard
+goToDash();
+</script>
+</body></html>

@@ -116,6 +116,10 @@ def _fail_task(task_id: str, error: str) -> None:
             _TASK_STORE[task_id].update({"status": "failed", "error": error, "result": None})
 
 
+def _workpaper_template_path() -> Path:
+    return Path(__file__).resolve().parent.parent / "utils" / "Consolidated_WP_Template.xlsx"
+
+
 class AuditStartResponse(BaseModel):
     session_id: str
     status: str
@@ -3031,7 +3035,7 @@ async def audit_generate_workpaper(
         summary = generate_overall_summary(analysis_results)
         
         # Fill workpaper template
-        template_path = Path(__file__).parent / "utils" / "Consolidated_WP_Template.xlsx"
+        template_path = _workpaper_template_path()
         session_dir = audit_session_store.get_session_temp_dir(session_id)
         output_dir = session_dir / "output"
         

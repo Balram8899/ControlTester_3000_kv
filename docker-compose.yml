@@ -31,7 +31,7 @@ services:
       dockerfile: api/Dockerfile
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     environment:
       - LLM_PROVIDER=${LLM_PROVIDER:-gemini}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
@@ -57,13 +57,14 @@ services:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - ANTHROPIC_LLM_MODEL=${ANTHROPIC_LLM_MODEL:-claude-opus-4-7}
       - MONGO_URI=mongodb://mongodb:27017
-      - DOCUMENT_UPLIFT_ENABLED=${DOCUMENT_UPLIFT_ENABLED:-false}
+      - DOCUMENT_UPLIFT_ENABLED=${DOCUMENT_UPLIFT_ENABLED:-true}
       - TASK_BACKEND=${TASK_BACKEND:-asyncio}
       - CELERY_BROKER_URL=${CELERY_BROKER_URL:-redis://redis:6379/0}
       - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND:-redis://redis:6379/0}
       - DOCUMENT_UPLIFT_ASYNC_WORKERS=${DOCUMENT_UPLIFT_ASYNC_WORKERS:-2}
       - DOCUMENT_UPLIFT_QUEUE_MAXSIZE=${DOCUMENT_UPLIFT_QUEUE_MAXSIZE:-20}
       - DOCUMENT_UPLIFT_PIPELINE_TIMEOUT_SECONDS=${DOCUMENT_UPLIFT_PIPELINE_TIMEOUT_SECONDS:-3600}
+      - DOCUMENT_UPLIFT_STAGE2_REWRITE_LIMIT=${DOCUMENT_UPLIFT_STAGE2_REWRITE_LIMIT:-50}
       - SOP_UPLIFT_DEFAULT_BATCH_SIZE=${SOP_UPLIFT_DEFAULT_BATCH_SIZE:-5}
       - SOP_UPLIFT_MAX_CHUNK_CHARS=${SOP_UPLIFT_MAX_CHUNK_CHARS:-4000}
       - SOP_UPLIFT_MAX_CHUNKS_PER_CASE=${SOP_UPLIFT_MAX_CHUNKS_PER_CASE:-200}
@@ -126,10 +127,11 @@ services:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - ANTHROPIC_LLM_MODEL=${ANTHROPIC_LLM_MODEL:-claude-opus-4-7}
       - MONGO_URI=mongodb://mongodb:27017
-      - DOCUMENT_UPLIFT_ENABLED=${DOCUMENT_UPLIFT_ENABLED:-false}
+      - DOCUMENT_UPLIFT_ENABLED=${DOCUMENT_UPLIFT_ENABLED:-true}
       - TASK_BACKEND=celery
       - CELERY_BROKER_URL=${CELERY_BROKER_URL:-redis://redis:6379/0}
       - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND:-redis://redis:6379/0}
+      - DOCUMENT_UPLIFT_STAGE2_REWRITE_LIMIT=${DOCUMENT_UPLIFT_STAGE2_REWRITE_LIMIT:-50}
     depends_on:
       mongodb:
         condition: service_started
@@ -147,7 +149,7 @@ services:
     container_name: agent_assess_web_Trace_KV
     restart: unless-stopped
     ports:
-      - "5000:5000"
+      - "127.0.0.1:5000:5000"
     environment:
       - NODE_ENV=production
       - VITE_API_URL=${VITE_API_URL:-http://fastapi_api:8000}
