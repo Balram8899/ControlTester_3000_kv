@@ -81,6 +81,52 @@ def _docx_with_responsibility_and_procedure_sections() -> bytes:
     return stream.getvalue()
 
 
+def _docx_with_contact_and_responsibility_tables() -> bytes:
+    document = Document()
+    document.add_heading("Contacts", level=1)
+    contact_table = document.add_table(rows=1, cols=2)
+    contact_table.rows[0].cells[0].text = "Role"
+    contact_table.rows[0].cells[1].text = "Responsibility"
+    for role, value in (("CISO", "Primary contact"), ("SOC", "24x7 hotline")):
+        row = contact_table.add_row().cells
+        row[0].text = role
+        row[1].text = value
+
+    document.add_heading("Roles and Responsibilities", level=1)
+    responsibility_table = document.add_table(rows=1, cols=2)
+    responsibility_table.rows[0].cells[0].text = "Role"
+    responsibility_table.rows[0].cells[1].text = "Responsibilities"
+    rows = (
+        (
+            "CISO",
+            "Owns incident governance, executive reporting, severity approval, and regulatory notification oversight.",
+        ),
+        (
+            "SOC",
+            "Monitors alerts, triages incidents, escalates confirmed events, and preserves investigation evidence.",
+        ),
+    )
+    for role, value in rows:
+        row = responsibility_table.add_row().cells
+        row[0].text = role
+        row[1].text = value
+    stream = BytesIO()
+    document.save(stream)
+    return stream.getvalue()
+
+
+def _docx_with_heading_and_body_section() -> bytes:
+    document = Document()
+    document.add_heading("Detection", level=1)
+    document.add_paragraph("Existing detection step one.")
+    document.add_paragraph("Existing detection step two.")
+    document.add_heading("Containment", level=1)
+    document.add_paragraph("Existing containment step.")
+    stream = BytesIO()
+    document.save(stream)
+    return stream.getvalue()
+
+
 def _memory_store(case_id: str = "case-1") -> DocumentUpliftCaseStore:
     store = DocumentUpliftCaseStore.__new__(DocumentUpliftCaseStore)
     store._use_memory_fallback()
@@ -211,6 +257,36 @@ def _fake_llm_markdown_rewrite(prompt: str, schema_name: str, **_kwargs: Any) ->
     if schema_name == "swimlane_extraction":
         return LLMResult(status="success", output={"title": "Invalid", "lanes": [], "steps": []})
     raise AssertionError(f"Unexpected schema_name {schema_name}")
+
+
+def _document_xml_parts(output_bytes: bytes) -> tuple[str, ET.Element, dict[str, str]]:
+    with zipfile.ZipFile(BytesIO(output_bytes)) as package:
+        document_xml = package.read("word/document.xml").decode("utf-8")
+    ns = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
+    return document_xml, ET.fromstring(document_xml), ns
+
+
+def _xml_text(element: ET.Element, ns: dict[str, str]) -> str:
+    return "".join((node.text or "") for node in element.findall(".//w:t", ns))
+
+
+def _xml_paragraph_texts(root: ET.Element, ns: dict[str, str]) -> list[str]:
+    paragraphs = []
+    for paragraph in root.findall(".//w:p", ns):
+        text = _xml_text(paragraph, ns)
+        if text:
+            paragraphs.append(text)
+    return paragraphs
+
+
+def _xml_table_cells(root: ET.Element, ns: dict[str, str]) -> list[list[list[str]]]:
+    tables: list[list[list[str]]] = []
+    for table in root.findall(".//w:tbl", ns):
+        rows: list[list[str]] = []
+        for row in table.findall("./w:tr", ns):
+            rows.append([_xml_text(cell, ns) for cell in row.findall("./w:tc", ns)])
+        tables.append(rows)
+    return tables
 
 
 def test_generate_outputs_retains_docx_shell_and_writes_track_changes_with_rationale(
@@ -586,6 +662,103 @@ def test_generate_outputs_applies_holistic_edit_targets_to_distinct_document_are
     ]
 
 
+def test_generate_outputs_keeps_role_responsibility_insertions_out_of_contact_tables(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from utils.sop_processing import output_generator
+
+    store = _memory_store()
+    monkeypatch.setattr(output_generator, "get_store", lambda: store)
+    monkeypatch.setattr(output_generator, "call_llm", _fake_llm_rewrite_unavailable)
+
+    result = output_generator.generate_outputs(
+        case_id="case-1",
+        original_sop_bytes=_docx_with_contact_and_responsibility_tables(),
+        suggestions=[
+            {
+                "suggestion_id": "role-1",
+                "suggestion_type": "mapping_gap",
+                "severity": "high",
+                "title": "Clarify CISO accountability",
+                "detail": "The support file clarifies CISO accountability.",
+                "review_status": "accepted",
+                "source_references": [{"filename": "support.xlsx"}],
+                "edit_targets": [
+                    {
+                        "target_id": "role-1:responsibility",
+                        "target_type": "role_responsibility",
+                        "title": "Responsibility update",
+                        "proposed_text": (
+                            "The CISO is responsible for approving incident severity and executive reporting."
+                        ),
+                    }
+                ],
+            }
+        ],
+        process_steps=[],
+        corpus_map={"general_relationships": [{"relationship_type": "source_to_procedure"}]},
+        style_profile={"body_font": "Arial"},
+        pipeline_id="case-1:stage2",
+        stage1_cost=None,
+    )
+
+    assert result.status == "success"
+    output_bytes = store.get_output_content("case-1", result.docx_file_id or "")
+    assert output_bytes
+    _document_xml, root, ns = _document_xml_parts(output_bytes)
+    tables = _xml_table_cells(root, ns)
+
+    assert "Approves incident severity and executive reporting." not in tables[0][1][1]
+    assert "Approves incident severity and executive reporting." in tables[1][1][1]
+
+
+def test_generate_outputs_places_heading_anchor_additions_after_section_body(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from utils.sop_processing import output_generator
+
+    store = _memory_store()
+    monkeypatch.setattr(output_generator, "get_store", lambda: store)
+    monkeypatch.setattr(output_generator, "call_llm", _fake_llm_rewrite_unavailable)
+
+    result = output_generator.generate_outputs(
+        case_id="case-1",
+        original_sop_bytes=_docx_with_heading_and_body_section(),
+        suggestions=[
+            {
+                "suggestion_id": "heading-1",
+                "suggestion_type": "process_improvement",
+                "severity": "medium",
+                "title": "Add detection monitoring",
+                "detail": "The support file requires daily alert monitoring.",
+                "target_text": "Detection",
+                "proposed_text": "The SOC monitors correlated alerts daily.",
+                "review_status": "accepted",
+                "source_references": [{"filename": "support.xlsx"}],
+            }
+        ],
+        process_steps=[],
+        corpus_map={"general_relationships": [{"relationship_type": "source_to_procedure"}]},
+        style_profile={"body_font": "Arial"},
+        pipeline_id="case-1:stage2",
+        stage1_cost=None,
+    )
+
+    assert result.status == "success"
+    output_bytes = store.get_output_content("case-1", result.docx_file_id or "")
+    assert output_bytes
+    _document_xml, root, ns = _document_xml_parts(output_bytes)
+    paragraphs = _xml_paragraph_texts(root, ns)
+
+    assert paragraphs.index("Detection") < paragraphs.index("Existing detection step one.")
+    assert paragraphs.index("Existing detection step two.") < paragraphs.index(
+        "The SOC monitors correlated alerts daily."
+    )
+    assert paragraphs.index("The SOC monitors correlated alerts daily.") < paragraphs.index(
+        "Containment"
+    )
+
+
 def test_generate_outputs_formats_markdown_table_targets_as_word_tables(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -816,6 +989,60 @@ def test_generate_outputs_compacts_numbered_subprocedure_additions(
     assert "4.2.1" not in document_xml
     assert "4.2.2" not in document_xml
     assert "Escalation Protocol" not in document_xml
+
+
+def test_generate_outputs_compacts_unnumbered_embedded_subprocedure_additions(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from utils.sop_processing import output_generator
+
+    store = _memory_store()
+
+    def fake_llm(prompt: str, schema_name: str, **_kwargs: Any) -> LLMResult:
+        if schema_name == "swimlane_extraction":
+            return LLMResult(status="success", output={"title": "Invalid", "lanes": [], "steps": []})
+        raise AssertionError(f"Unexpected schema_name {schema_name}")
+
+    monkeypatch.setattr(output_generator, "get_store", lambda: store)
+    monkeypatch.setattr(output_generator, "call_llm", fake_llm)
+    monkeypatch.setenv("DOCUMENT_UPLIFT_STAGE2_REWRITE_LIMIT", "0")
+
+    result = output_generator.generate_outputs(
+        case_id="case-1",
+        original_sop_bytes=_process_docx_bytes(),
+        suggestions=[
+            {
+                "suggestion_id": "subproc-1",
+                "suggestion_type": "process_improvement",
+                "severity": "high",
+                "title": "Add exception monitoring",
+                "detail": "The supporting log shows unresolved exception breaches.",
+                "proposed_text": (
+                    "Monitoring and Remediation of Control Exceptions "
+                    "Identification and Thresholding The Control Owner identifies breaches. "
+                    "Escalation The Control Owner escalates breaches. "
+                    "Remediation The Control Owner tracks closure."
+                ),
+                "target_text": "The Incident Manager reviews major incidents daily.",
+                "review_status": "accepted",
+                "source_references": [{"filename": "deviation_log.xlsx", "row_index": 4}],
+            }
+        ],
+        process_steps=[],
+        corpus_map={"general_relationships": [{"relationship_type": "support_to_procedure"}]},
+        style_profile={"body_font": "Arial"},
+        pipeline_id="case-1:stage2",
+        stage1_cost=None,
+    )
+
+    assert result.status == "success"
+    output_bytes = store.get_output_content("case-1", result.docx_file_id or "")
+    document_xml, _root, _ns = _document_xml_parts(output_bytes)
+
+    assert "Control Exceptions Identification and Thresholding" not in document_xml
+    assert "Escalation The Control Owner escalates" not in document_xml
+    assert "Remediation and Evidencing" not in document_xml
+    assert "SOP-specific handling for exception monitoring" in document_xml
 
 
 def test_generate_outputs_does_not_anchor_additions_to_short_header_fragments(

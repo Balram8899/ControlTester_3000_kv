@@ -1,0 +1,175 @@
+{
+  "cyber-qualityfix": {
+    "tables": [
+      {
+        "index": 0,
+        "headers": [
+          "Document Title",
+          "Cyber Incident Response Standard Operating Procedure"
+        ],
+        "insertions": []
+      },
+      {
+        "index": 1,
+        "headers": [
+          "Term",
+          "Definition"
+        ],
+        "insertions": []
+      },
+      {
+        "index": 2,
+        "headers": [
+          "Role",
+          "Responsibilities"
+        ],
+        "insertions": [
+          {
+            "row": 2,
+            "col": 1,
+            "text": "SOC (Security Operations Center) | Responsible for 24/7 monitoring, initial alert triage, and Level 1 assessment. IT Security Team | Responsible for Level 2 analysis, eradication coordination, and technical recovery support.",
+            "insertions": [
+              "SOC (Security Operations Center) | Responsible for 24/7 monitoring, initial alert triage, and Level 1 assessment. IT Security Team | Responsible for Level 2 analysis, eradication coordination, and technical recovery support."
+            ]
+          }
+        ]
+      },
+      {
+        "index": 3,
+        "headers": [
+          "Step",
+          "Phase",
+          "Key Actions"
+        ],
+        "insertions": [
+          {
+            "row": 5,
+            "col": 2,
+            "text": "Restore affected systems and services to normal operations, utilizing immutable offline backups for critical systems to ensure data integrity. Verify that systems are clean before bringing them back online.",
+            "insertions": [
+              "Restore affected systems and services to normal operations, utilizing immutable offline backups for critical systems to ensure data integrity."
+            ]
+          }
+        ]
+      },
+      {
+        "index": 4,
+        "headers": [
+          "Role",
+          "Name",
+          "Contact"
+        ],
+        "insertions": []
+      }
+    ],
+    "heading_adjacent_bad": []
+  },
+  "esg-qualityfix": {
+    "tables": [
+      {
+        "index": 0,
+        "headers": [
+          "Document Title",
+          "ESG Risk Monitoring and Reporting Standard Operating Procedure"
+        ],
+        "insertions": []
+      },
+      {
+        "index": 1,
+        "headers": [
+          "Pillar",
+          "Metric",
+          "Data Source",
+          "Reporting Frequency"
+        ],
+        "insertions": [
+          {
+            "row": 3,
+            "col": 1,
+            "text": "Scope 3 Emissions (tCO2e) \u2013 selected categoriesThe Sustainability Manager identifies deviations for BRSR Scope 3 Emissions \u2013 Business Travel (tCO2e) based on established thresholds, escalates variances to the ESG Committee within five business days, and documents remediation efforts to ensure data integrity and target compliance.",
+            "insertions": [
+              "The Sustainability Manager identifies deviations for BRSR Scope 3 Emissions \u2013 Business Travel (tCO2e) based on established thresholds, escalates variances to the ESG Committee within five business days, and documents remediation efforts to ensure data integrity and target compliance."
+            ]
+          },
+          {
+            "row": 6,
+            "col": 1,
+            "text": "Women in Senior Leadership (%)The accountable owner documents SOP-specific handling for metric or target deviation needs procedure coverage: Women in Senior Leadership (%), including escalation, remediation, and retained evidence.",
+            "insertions": [
+              "The accountable owner documents SOP-specific handling for metric or target deviation needs procedure coverage: Women in Senior Leadership (%), including escalation, remediation, and retained evidence."
+            ]
+          }
+        ]
+      },
+      {
+        "index": 2,
+        "headers": [
+          "Step",
+          "Action",
+          "Details"
+        ],
+        "insertions": [
+          {
+            "row": 1,
+            "col": 2,
+            "text": "Identify any metrics that deviate from the target or prior period by more than 10% or any deviation that impacts the bank's ability to meet regulatory requirements.",
+            "insertions": [
+              "Identify any metrics that deviate from the target or prior period by more than 10% or any deviation that impacts the bank's ability to meet regulatory requirements."
+            ]
+          },
+          {
+            "row": 3,
+            "col": 2,
+            "text": "If the deviation exceeds the defined materiality threshold, the ESG Head shall escalate the issue to the CFO for financial-related metrics or the relevant Functional Head (e.g., CHRO, Facilities Head) for operational metrics, with a copy to the Senior Management Team.The Corporate Secretary identifies deviations from the Independent Director board percentage threshold, escalates findings to the Board of Directors for remediation within 30 days, and maintains the official board minutes as evidence of the identification and resolution process.The Safety Manager identifies LTIFR (per million hours worked) deviations by comparing performance against established thresholds and escalates these to the Site Director for remediation and evidentiary documentation within five business days to ensure safety performance targets are maintained.The Compliance Manager identifies deviations for the Whistleblower SLA \u2264 60 days (%) metric against established thresholds during monthly reviews, escalating any failures to the Risk Committee within five business days to ensure remediation and documentation of evidence are completed within thirty days to maintain service level integrity.The Facility Manager identifies Water Consumption (KL) deviations exceeding a 5% variance threshold, escalates these to the Sustainability Lead within 48 hours, and provides documented evidence of remediation in the quarterly performance report to ensure resource management targets are met.The Customer Service Manager identifies deviations from the Customer Complaint Resolution \u2264 30 days (%) metric when performance falls below the 95% threshold and initiates escalation for remediation within 48 hours, documenting all evidence in the tracking system to ensure procedural compliance.The accountable owner documents SOP-specific handling for metric or target deviation needs procedure coverage: Financed Emissions \u2013 Oil & Gas Sector (tCO2e / \u20b9 Cr), including escalation, remediation, and retained evidence.The Training Manager identifies deviations when ABC Training Completion (%) falls below the 95% threshold, escalating the issue to the Department Head within 48 hours for remediation and documenting the outcome in the Compliance Log to provide evidence of resolution.The ESG Compliance Manager identifies deviations in the percentage of senior management variable pay linked to ESG KPIs against established thresholds, escalates significant variances to the Remuneration Committee for remediation within thirty days, and maintains comprehensive evidence of all corrective actions taken to ensure alignment with corporate sustainability commitments.The Procurement Manager identifies deviations in the percentage of critical suppliers assessed for ESG and labour standards against established thresholds, escalates non-compliance to the ESG Committee for remediation within 30 days, and documents all evidence to ensure alignment with ethical sourcing requirements.The Portfolio Manager identifies, thresholds, and escalates deviations for PSL Achievement (% of ANBC) within five business days of month-end to ensure timely remediation and the maintenance of comprehensive evidence for audit purposes.The accountable owner documents SOP-specific handling for metric or target deviation needs procedure coverage: Lost Time Injury Frequency Rate (LTIFR), including escalation, remediation, and retained evidence.The Risk Management Team identifies and escalates deviations for Projects with incomplete E&S due diligence (% of project finance portfolio) by evaluating them against established thresholds, requiring the Portfolio Manager to remediate and provide evidence of compliance within thirty days to ensure adherence to sustainability risk standards.The Facilities Manager identifies Water Consumption (KL/year) deviations against established thresholds, escalating and remediating variances within 30 days to ensure target alignment and maintain documented evidence.The Sustainability Manager identifies Scope 2 Emissions (tCO2e \u2013 market-based) deviations exceeding the 5% variance threshold, escalates these to the ESG Committee within five business days for remediation, and archives all supporting evidence in the reporting system to ensure regulatory compliance and data integrity.The Sustainability Lead identifies Scope 1 Emissions (tCO2e) deviations against established thresholds, escalates variances to the ESG Committee within five business days, and manages the remediation and evidencing process to ensure compliance with carbon reduction targets.The Sustainability Risk Manager identifies deviations in Financed Scope 3 emissions (tCO2e / \u20b9 Cr lent) against established thresholds on a monthly basis, escalating any breaches to the ESG Committee for remediation and documenting all evidence within the tracking system to ensure organizational alignment with emission targets.The Risk Management Officer identifies and thresholds deviations for physical asset exposure in high-risk zones (\u20b9 Cr), escalating any breaches to the Department Head for remediation and evidencing within thirty days to ensure continuous risk monitoring and compliance.",
+            "insertions": [
+              "If the deviation exceeds the defined materiality threshold, the ESG Head shall escalate the issue to the CFO for financial-related metrics or the relevant Functional Head (e.g., CHRO, Facilities Head) for operational metrics, with a copy to the Senior Management Team.",
+              "The Corporate Secretary identifies deviations from the Independent Director board percentage threshold, escalates findings to the Board of Directors for remediation within 30 days, and maintains the official board minutes as evidence of the identification and resolution process.",
+              "The Safety Manager identifies LTIFR (per million hours worked) deviations by comparing performance against established thresholds and escalates these to the Site Director for remediation and evidentiary documentation within five business days to ensure safety performance targets are maintained.",
+              "The Compliance Manager identifies deviations for the Whistleblower SLA \u2264 60 days (%) metric against established thresholds during monthly reviews, escalating any failures to the Risk Committee within five business days to ensure remediation and documentation of evidence are completed within thirty days to maintain service level integrity.",
+              "The Facility Manager identifies Water Consumption (KL) deviations exceeding a 5% variance threshold, escalates these to the Sustainability Lead within 48 hours, and provides documented evidence of remediation in the quarterly performance report to ensure resource management targets are met.",
+              "The Customer Service Manager identifies deviations from the Customer Complaint Resolution \u2264 30 days (%) metric when performance falls below the 95% threshold and initiates escalation for remediation within 48 hours, documenting all evidence in the tracking system to ensure procedural compliance.",
+              "The accountable owner documents SOP-specific handling for metric or target deviation needs procedure coverage: Financed Emissions \u2013 Oil & Gas Sector (tCO2e / \u20b9 Cr), including escalation, remediation, and retained evidence.",
+              "The Training Manager identifies deviations when ABC Training Completion (%) falls below the 95% threshold, escalating the issue to the Department Head within 48 hours for remediation and documenting the outcome in the Compliance Log to provide evidence of resolution.",
+              "The ESG Compliance Manager identifies deviations in the percentage of senior management variable pay linked to ESG KPIs against established thresholds, escalates significant variances to the Remuneration Committee for remediation within thirty days, and maintains comprehensive evidence of all corrective actions taken to ensure alignment with corporate sustainability commitments.",
+              "The Procurement Manager identifies deviations in the percentage of critical suppliers assessed for ESG and labour standards against established thresholds, escalates non-compliance to the ESG Committee for remediation within 30 days, and documents all evidence to ensure alignment with ethical sourcing requirements.",
+              "The Portfolio Manager identifies, thresholds, and escalates deviations for PSL Achievement (% of ANBC) within five business days of month-end to ensure timely remediation and the maintenance of comprehensive evidence for audit purposes.",
+              "The accountable owner documents SOP-specific handling for metric or target deviation needs procedure coverage: Lost Time Injury Frequency Rate (LTIFR), including escalation, remediation, and retained evidence.",
+              "The Risk Management Team identifies and escalates deviations for Projects with incomplete E&S due diligence (% of project finance portfolio) by evaluating them against established thresholds, requiring the Portfolio Manager to remediate and provide evidence of compliance within thirty days to ensure adherence to sustainability risk standards.",
+              "The Facilities Manager identifies Water Consumption (KL/year) deviations against established thresholds, escalating and remediating variances within 30 days to ensure target alignment and maintain documented evidence.",
+              "The Sustainability Manager identifies Scope 2 Emissions (tCO2e \u2013 market-based) deviations exceeding the 5% variance threshold, escalates these to the ESG Committee within five business days for remediation, and archives all supporting evidence in the reporting system to ensure regulatory compliance and data integrity.",
+              "The Sustainability Lead identifies Scope 1 Emissions (tCO2e) deviations against established thresholds, escalates variances to the ESG Committee within five business days, and manages the remediation and evidencing process to ensure compliance with carbon reduction targets.",
+              "The Sustainability Risk Manager identifies deviations in Financed Scope 3 emissions (tCO2e / \u20b9 Cr lent) against established thresholds on a monthly basis, escalating any breaches to the ESG Committee for remediation and documenting all evidence within the tracking system to ensure organizational alignment with emission targets.",
+              "The Risk Management Officer identifies and thresholds deviations for physical asset exposure in high-risk zones (\u20b9 Cr), escalating any breaches to the Department Head for remediation and evidencing within thirty days to ensure continuous risk monitoring and compliance."
+            ]
+          },
+          {
+            "row": 4,
+            "col": 2,
+            "text": "Record the deviation, root cause analysis, and assigned corrective actions in the Centralized ESG Deviation Log for inclusion in the next ESG report, and the ESG Team shall update the log monthly to monitor progress until the corrective action is closed.",
+            "insertions": [
+              "Record the deviation, root cause analysis, and assigned corrective actions in the Centralized ESG Deviation Log for inclusion in the next ESG report, and the ESG Team shall update the log monthly to monitor progress until the corrective action is closed."
+            ]
+          }
+        ]
+      },
+      {
+        "index": 3,
+        "headers": [
+          "Role",
+          "Responsibility"
+        ],
+        "insertions": []
+      },
+      {
+        "index": 4,
+        "headers": [
+          "Regulation / Framework",
+          "Applicability",
+          "Responsible Team"
+        ],
+        "insertions": []
+      }
+    ],
+    "heading_adjacent_bad": []
+  }
+}

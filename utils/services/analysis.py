@@ -210,7 +210,7 @@ SCOPE_GENERIC_TERMS = {
 }
 
 _RCM_VERB_PREFIX = re.compile(
-    r"^(?:performs?|reviews?|maintains?|monitors?|manages?|conducts?|executes?|"
+    r"^(?P<verb>performs?|reviews?|maintains?|monitors?|manages?|conducts?|executes?|"
     r"approves?|validates?|verifies?|tests?|checks?|ensures?|documents?|records?|"
     r"identifies?|escalates?|reports?|coordinates?|implements?|deploys?|"
     r"investigates?|assesses?|submits?|screens?)\s+",
@@ -225,6 +225,63 @@ _EVIDENCE_PLACEHOLDER = {
     "none",
     "not applicable",
     "-",
+}
+_WEAK_RCM_VERBS = {"perform", "performs"}
+_STATE_PARTICIPLES = {
+    "approved",
+    "completed",
+    "configured",
+    "deployed",
+    "documented",
+    "enabled",
+    "implemented",
+    "integrated",
+    "maintained",
+    "monitored",
+    "recorded",
+    "retained",
+    "reviewed",
+    "shared",
+    "validated",
+    "verified",
+}
+_SENIOR_ROLE_SIGNALS = {
+    "board",
+    "chief",
+    "ciso",
+    "ceo",
+    "cfo",
+    "cio",
+    "coo",
+    "cro",
+    "cto",
+    "committee",
+    "executive",
+    "senior management",
+}
+_OPERATIONAL_ACTION_SIGNALS = {
+    "apply",
+    "collect",
+    "configure",
+    "deploy",
+    "execute",
+    "extract",
+    "fix",
+    "image",
+    "implement",
+    "investigate",
+    "patch",
+    "perform",
+    "provision",
+    "reconcile",
+    "remediate",
+    "restore",
+    "run",
+    "sample",
+    "scan",
+    "test",
+    "triage",
+    "validate",
 }
 
 
@@ -1241,7 +1298,7 @@ def _cross_document_mapping_gap_suggestions(
                 ],
             )
         ]
-        if responsibility_anchor:
+        if responsibility_anchor and _candidate_supports_responsibility_target(candidate):
             edit_targets.append(
                 SuggestionEditTarget(
                     target_id=f"{suggestion_id}:responsibility",
@@ -1411,16 +1468,166 @@ def _sentence_fragment(value: str) -> str:
 def _role_activity_sentence(owner: str, activity: str, evidence: str) -> str:
     subject = _role_subject(owner)
     raw = _sentence_fragment(activity) or "the source activity"
-    stripped = _RCM_VERB_PREFIX.sub("", raw).strip()
-    activity_text = _lower_first(stripped or raw)
-    if _contains_obligation_or_state(activity_text):
-        action_sentence = f"{subject} is responsible for ensuring that {activity_text}."
+    verb_match = _RCM_VERB_PREFIX.match(raw)
+    verb = _normalize_rcm_verb(verb_match.group("verb")) if verb_match else ""
+    stripped = raw[verb_match.end() :].strip() if verb_match else raw
+    source_sentence = _owner_accountability_sentence(subject, owner, stripped)
+    state_text = _state_activity_text(stripped)
+    if source_sentence:
+        action_sentence = source_sentence
+    elif verb and verb not in _WEAK_RCM_VERBS:
+        action_sentence = f"{subject} {verb} {_lower_first(stripped)}."
+    elif state_text:
+        action_sentence = f"{subject} ensures that {state_text}."
     else:
-        action_sentence = f"{subject} performs {activity_text}."
+        activity_text = _lower_first(stripped or raw)
+        if _contains_obligation_or_state(activity_text):
+            action_sentence = f"{subject} is responsible for ensuring that {activity_text}."
+        else:
+            action_sentence = f"{subject} carries out {activity_text}."
     evidence_clean = _sentence_fragment(evidence)
     if evidence_clean and evidence_clean.casefold() not in _EVIDENCE_PLACEHOLDER:
         return f"{action_sentence} Retained evidence includes {evidence_clean}."
     return action_sentence
+
+
+def _candidate_supports_responsibility_target(candidate: dict[str, Any]) -> bool:
+    text = " ".join(
+        str(candidate.get(key) or "")
+        for key in (
+            "description",
+            "activity",
+            "key_gap",
+            "recommended_action",
+            "recommendation",
+        )
+    )
+    has_explicit_responsibility = bool(
+        re.search(
+            r"\b(accountab(?:le|ility)|responsib(?:le|ility)|owns?|ownership|duty|duties|authority|raci)\b",
+            text,
+            flags=re.IGNORECASE,
+        )
+    )
+    if has_explicit_responsibility:
+        return True
+    owner = str(candidate.get("owner") or "")
+    return _mentions_senior_role(owner) and _mentions_operational_action(text)
+
+
+def _mentions_senior_role(text: str) -> bool:
+    normalized = _normalize_signal_text(text)
+    return any(signal in normalized for signal in _SENIOR_ROLE_SIGNALS)
+
+
+def _mentions_operational_action(text: str) -> bool:
+    tokens = set(_normalize_signal_text(text).split())
+    if tokens.intersection(_OPERATIONAL_ACTION_SIGNALS):
+        return True
+    singularized = {
+        token[:-1]
+        for token in tokens
+        if token.endswith("s") and len(token) > 4
+    }
+    return bool(singularized.intersection(_OPERATIONAL_ACTION_SIGNALS))
+
+
+def _normalize_signal_text(text: str) -> str:
+    return (
+        str(text or "")
+        .casefold()
+        .replace("/", " ")
+        .replace("-", " ")
+        .replace("_", " ")
+    )
+
+
+def _normalize_rcm_verb(verb: str) -> str:
+    cleaned = str(verb or "").strip().casefold()
+    if not cleaned:
+        return ""
+    if cleaned in _WEAK_RCM_VERBS:
+        return cleaned
+    if cleaned.endswith("s"):
+        return cleaned
+    if cleaned.endswith("y"):
+        return f"{cleaned[:-1]}ies"
+    return f"{cleaned}s"
+
+
+def _owner_accountability_sentence(subject: str, owner: str, text: str) -> str:
+    owner_clean = _sentence_fragment(owner)
+    if not owner_clean:
+        return ""
+    owner_pattern = re.escape(owner_clean)
+    match = re.match(
+        rf"^(?:the\s+)?{owner_pattern}\s+(?P<verb>is|are)\s+"
+        rf"(?P<kind>accountable|responsible)\b(?P<rest>.*)$",
+        text,
+        flags=re.IGNORECASE,
+    )
+    if match:
+        return _ensure_period(
+            f"{subject} {match.group('verb').casefold()} "
+            f"{match.group('kind').casefold()}{match.group('rest')}"
+        )
+    match = re.match(
+        rf"^(?:the\s+)?{owner_pattern}\s+owns?\b(?P<rest>.*)$",
+        text,
+        flags=re.IGNORECASE,
+    )
+    if match:
+        return _ensure_period(f"{subject} owns{match.group('rest')}")
+    return ""
+
+
+def _state_activity_text(text: str) -> str:
+    clauses = [clause.strip() for clause in re.split(r"\s*;\s*", str(text or "")) if clause.strip()]
+    if not clauses:
+        return ""
+    normalized: list[str] = []
+    for clause in clauses:
+        state_clause = _state_clause_text(clause)
+        if not state_clause:
+            return ""
+        normalized.append(state_clause)
+    return "; ".join(normalized)
+
+
+def _state_clause_text(clause: str) -> str:
+    match = re.match(
+        r"^(?P<subject>.+?)\s+(?P<participle>"
+        + "|".join(sorted(_STATE_PARTICIPLES))
+        + r")\b(?P<rest>.*)$",
+        clause,
+        flags=re.IGNORECASE,
+    )
+    if not match:
+        return ""
+    phrase_subject = _lower_first(match.group("subject").strip())
+    participle = match.group("participle").casefold()
+    rest = match.group("rest").strip()
+    auxiliary = "are" if _looks_plural_phrase(phrase_subject) else "is"
+    return " ".join(part for part in (phrase_subject, auxiliary, participle, rest) if part)
+
+
+def _looks_plural_phrase(text: str) -> bool:
+    tokens = re.findall(r"[A-Za-z0-9]+", str(text or ""))
+    if not tokens:
+        return False
+    last = tokens[-1].casefold()
+    if last in {"data", "criteria"}:
+        return True
+    if last in {"edr", "siem", "soc"}:
+        return False
+    return last.endswith("s") and not last.endswith(("ss", "us"))
+
+
+def _ensure_period(text: str) -> str:
+    cleaned = _sentence_fragment(text)
+    if not cleaned:
+        return ""
+    return cleaned if cleaned.endswith((".", "!", "?")) else f"{cleaned}."
 
 
 def _role_subject(owner: str) -> str:
@@ -1439,6 +1646,11 @@ def _contains_obligation_or_state(text: str) -> bool:
 
 
 def _lower_first(text: str) -> str:
+    first_token = re.match(r"[A-Za-z0-9][A-Za-z0-9&/-]*", str(text or ""))
+    if first_token:
+        token = first_token.group(0)
+        if len(token) > 1 and token.upper() == token:
+            return text
     return text[:1].lower() + text[1:] if text else text
 
 

@@ -183,7 +183,21 @@ def _missing_escalation_matrix(context: _DocumentStructureContext) -> Suggestion
     has_escalation_signal = any(token in context.text for token in ("escalat", "notify", "approval", "approved"))
     has_vague_timing = any(
         token in context.text
-        for token in ("promptly", "as appropriate", "timely", "periodic", "significant", "where required")
+        for token in (
+            "promptly",
+            "as appropriate",
+            "as required",
+            "as needed",
+            "if needed",
+            "if required",
+            "if necessary",
+            "timely",
+            "periodic",
+            "significant",
+            "when necessary",
+            "where necessary",
+            "where required",
+        )
     )
     has_matrix = "escalation matrix" in context.text or "escalation timeframe" in context.text
     if not (has_escalation_signal and has_vague_timing) or has_matrix:

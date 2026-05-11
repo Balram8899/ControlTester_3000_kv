@@ -90,12 +90,12 @@ Items are listed in **execution order**, not numeric order. Do not reorder. Chec
 | 29 | B | `kpmg_ui/client/src/pages/document-uplift.tsx` — full UI (5 days) | complete |
 | 30 | B | Add SSE endpoint to router (Item 27) + wire `EventSource` in `document-uplift.tsx` — render progress bar | complete |
 | 31 | B | Integration data-flow test: verify cross-document gap analysis runs end-to-end (corpus_map populated → svc.analysis gap output → suggestions contain gap flags) | complete |
-| — | — | **CHECKPOINT C** — Word track-changes opens in Word 365, diagram renders, cost badge correct, `document_uplift_cases` doc < 500KB (T3), TC-05 passing | automated checks complete; Word 365 manual gate pending |
+| — | — | **CHECKPOINT C** — Word track-changes opens in Word 365, diagram renders, cost badge correct, `document_uplift_cases` doc < 500KB (T3), TC-05 passing | complete - human Word 365 gate confirmed 2026-05-11 |
 | -- | B addendum | Checkpoint C domain-agnostic analysis remediation: normalized facts, semantic roles, seed findings, discovery routing, severity bands, and T9 tests | complete |
 | 32 | B | Celery + Redis Docker Compose wiring (`TASK_BACKEND=celery`) | complete |
 | 33 | B | Full asyncio worker queue + `run_in_executor` for all blocking I/O | complete |
-| — | — | **T8 GATE** — human reviews 3 suggestions, ≥ 2 rated useful → set `DOCUMENT_UPLIFT_ENABLED=true` | ⬜ not started |
-| -- | -- | **T9 GATE** - human reviews cross-domain suggestions against at least 3 different document roles/domains; >= 70% useful | not started |
+| — | — | **T8 GATE** — human reviews 3 suggestions, ≥ 2 rated useful → set `DOCUMENT_UPLIFT_ENABLED=true` | complete - human usefulness gate confirmed 2026-05-11 |
+| -- | -- | **T9 GATE** - human reviews cross-domain suggestions against at least 3 different document roles/domains; >= 70% useful | complete - human cross-domain usefulness gate confirmed 2026-05-11 |
 
 ---
 
@@ -3395,3 +3395,171 @@ Items are listed in **execution order**, not numeric order. Do not reorder. Chec
   - Added `_last_body_paragraph_in_section`: if anchor is a heading, walks forward through `document.paragraphs` until the next heading, returning the last body paragraph found.
 
 **Next item:** Rebuild API and rerun Cyber/ESG to verify: insertions land at end of section body (not after heading); CISO/SOC responsibilities update the correct table; contact list is untouched.
+
+---
+
+## [2026-05-11] DOCX quality follow-up - prose, placement, and role target gating
+
+**Status:** Implemented and locally verified.
+
+**Problems addressed from DOCX review:**
+1. RCM prose was still awkward after verb stripping because `_role_activity_sentence` could add `performs` back to noun/state phrases.
+2. Acronym-leading activity text could be lowercased, producing examples like `fSISAC`.
+3. Plain mapping-gap rows created responsibility edit targets too broadly, which fed wrong CISO/SOC-style responsibility insertions.
+4. Vague escalation language such as `escalate if needed` was not deterministically flagged.
+5. Heading-targeted additions could still land immediately below a section heading because `python-docx` paragraph wrappers were compared by object identity rather than their underlying XML element.
+6. Short unnumbered mini-procedures could still bypass the numbered sub-procedure compaction guard.
+
+**Domain-agnostic implementation:**
+- `utils/services/analysis.py`
+  - Reworked `_role_activity_sentence` to parse the leading RCM verb, preserve useful verbs (`reviews`, `monitors`, etc.), drop weak `performs` wrappers, convert state phrases such as `EDR deployed` into `ensures that EDR is deployed`, suppress placeholder evidence, and preserve acronym casing.
+  - Added responsibility-target gating so ordinary control rows produce only a procedure-step target. A role/responsibility target is emitted only when the source row explicitly contains accountability/responsibility language, or when a senior oversight role is assigned operational work that should be converted to RACI by the guard.
+- `utils/services/role_assignment_guard.py`
+  - Added third-person operational verb forms so senior-role operational proposals like `investigates` are still routed away from direct responsibility wording and into RACI.
+- `utils/services/structural_completeness.py`
+  - Added vague escalation phrases: `if needed`, `if required`, `if necessary`, `as needed`, `as required`, `when necessary`, and `where necessary`.
+- `utils/sop_processing/output_generator.py`
+  - Added short inline heading-sequence detection for unnumbered embedded sub-procedures, based on repeated title-case labels followed by procedural body text.
+  - Fixed `_last_body_paragraph_in_section` to compare `paragraph._p is anchor._p`, so heading anchors resolve to the end of the section body.
+
+**Regression coverage added:**
+- RCM cell prose does not produce `performs endpoint`, does not include placeholder evidence, and preserves `FSISAC`.
+- Useful verbs such as `Reviews` remain active-voice verbs.
+- Plain mapping-gap controls do not create role-responsibility targets.
+- Explicit accountability rows still create role-responsibility targets.
+- Senior oversight owner + operational activity routes to RACI.
+- `escalates if needed` produces the escalation trigger/timeframe suggestion.
+- Contact-style tables stay untouched while real responsibility tables receive role updates.
+- Heading-targeted additions are inserted after the section body, before the next heading.
+- Short unnumbered identification/escalation/remediation mini-procedures compact to one SOP sentence.
+
+**Verification:**
+- Focused new regression run: `python -m pytest tests/services/test_analysis.py::test_role_activity_sentence_normalizes_rcm_cell_text_without_acronym_damage tests/services/test_analysis.py::test_mapping_gap_skips_role_responsibility_target_for_plain_control_activity tests/services/test_analysis.py::test_mapping_gap_keeps_role_responsibility_target_for_explicit_accountability tests/services/test_analysis.py::test_structural_completeness_flags_escalate_if_needed_language tests/sop_processing/test_output_generator.py::test_generate_outputs_keeps_role_responsibility_insertions_out_of_contact_tables tests/sop_processing/test_output_generator.py::test_generate_outputs_places_heading_anchor_additions_after_section_body tests/sop_processing/test_output_generator.py::test_generate_outputs_compacts_unnumbered_embedded_subprocedure_additions -q` passed: 7 passed.
+- Affected file run: `python -m pytest tests/services/test_analysis.py tests/sop_processing/test_output_generator.py -q` passed: 52 passed, existing warnings only.
+- Broader service run: `python -m pytest tests/services -q` passed: 100 passed, existing pydantic warning only.
+- `docker compose build fastapi_api` passed.
+- `docker compose up -d --force-recreate fastapi_api` passed.
+- `docker compose ps fastapi_api` reported `Up ... (healthy)`.
+- `GET http://localhost:8000/health` returned `200`.
+
+**Next item:** Rerun Cyber/ESG on the rebuilt API and inspect tracked insertions for no raw `performs endpoint` phrasing, no placeholder evidence sentence, no `fSISAC`, no heading-adjacent insertion when body text exists, no contact-list responsibility insertions, and no short unnumbered mini-procedure blocks.
+
+---
+
+## [2026-05-11] Qualityfix Cyber/ESG rerun after prose/placement patch
+
+**Status:** Complete. Fresh/recovered validation succeeded on the rebuilt API.
+
+**Runtime note:**
+- The first Cyber run was interrupted from the terminal after the case had already reached Stage 2. The case continued server-side and was resumed from `complete`.
+- FastAPI was healthy before continuing.
+
+**Validation cases:**
+- Cyber case `2f62929c-7df1-46a2-837e-99e235a50d3a`
+  - Final status: `complete`.
+  - Suggestions: 39 total, 2 `mapping_gap`, 28 reviewer-gated.
+  - Outputs downloaded:
+    - `output/doc/cyber-qualityfix-2f62929c-7df1-46a2-837e-99e235a50d3a-2f62929c-7df1-46a2-837e-99e235a50d3a-uplifted-sop.docx`
+    - `output/doc/cyber-qualityfix-2f62929c-7df1-46a2-837e-99e235a50d3a-2f62929c-7df1-46a2-837e-99e235a50d3a-swimlane.png`
+    - `output/doc/cyber-qualityfix-2f62929c-7df1-46a2-837e-99e235a50d3a-2f62929c-7df1-46a2-837e-99e235a50d3a-swimlane.pdf`
+  - DOCX sanity: 10 tracked insertions, 7 tracked deletions, 10 comments.
+  - Tracked insertion scan: zero hits for `performs endpoint`, `Retained evidence includes the relevant evidence`, `fSISAC`, `Identification and Thresholding`, inline `Escalation The`, and inline `Remediation The`.
+  - Structure scan: no tracked insertions in the Cyber contact table; no heading-adjacent insertion pattern where body text follows.
+  - Artifact headers valid: DOCX zip, PNG signature, and PDF header.
+- ESG case `d64604c4-c7e2-43d2-bfff-d356d74b0936`
+  - Final status: `complete`.
+  - Suggestions: 48 total, 0 `mapping_gap`, 23 reviewer-gated.
+  - Outputs downloaded:
+    - `output/doc/esg-qualityfix-d64604c4-c7e2-43d2-bfff-d356d74b0936-d64604c4-c7e2-43d2-bfff-d356d74b0936-uplifted-sop.docx`
+    - `output/doc/esg-qualityfix-d64604c4-c7e2-43d2-bfff-d356d74b0936-d64604c4-c7e2-43d2-bfff-d356d74b0936-swimlane.png`
+    - `output/doc/esg-qualityfix-d64604c4-c7e2-43d2-bfff-d356d74b0936-d64604c4-c7e2-43d2-bfff-d356d74b0936-swimlane.pdf`
+  - DOCX sanity: 25 tracked insertions, 4 tracked deletions, 25 comments.
+  - Tracked insertion scan: zero hits for `performs endpoint`, `Retained evidence includes the relevant evidence`, `fSISAC`, `Identification and Thresholding`, inline `Escalation The`, and inline `Remediation The`.
+  - Structure scan: no heading-adjacent insertion pattern where body text follows.
+  - Artifact headers valid: DOCX zip, PNG signature, and PDF header.
+
+**Saved validation files:**
+- `output/doc/qualityfix-rerun-summary.json`
+- `output/doc/qualityfix-rerun-structure-scan.json`
+- `output/doc/cyber-qualityfix-2f62929c-7df1-46a2-837e-99e235a50d3a-case-final.json`
+- `output/doc/cyber-qualityfix-2f62929c-7df1-46a2-837e-99e235a50d3a-suggestions-final.json`
+- `output/doc/esg-qualityfix-d64604c4-c7e2-43d2-bfff-d356d74b0936-case-stage1.json`
+- `output/doc/esg-qualityfix-d64604c4-c7e2-43d2-bfff-d356d74b0936-suggestions-stage1.json`
+- `output/doc/esg-qualityfix-d64604c4-c7e2-43d2-bfff-d356d74b0936-case-final.json`
+- `output/doc/esg-qualityfix-d64604c4-c7e2-43d2-bfff-d356d74b0936-suggestions-final.json`
+
+**Current quality conclusion:**
+- The specific DOCX issues raised in review are fixed in the rerun sanity scans: raw RCM `performs endpoint` phrasing, placeholder evidence text, `fSISAC`, heading-adjacent insertion, contact-list contamination, and short unnumbered mini-procedure markers.
+- ESG still has several accepted metric-specific additions inside tables; they are now sentence-shaped rather than embedded mini-procedures. Human review should decide whether table-cell placement is desirable or whether metric-specific additions should instead be grouped into a generic deviation-handling step.
+
+---
+
+## [2026-05-11] Human gates confirmed for Document Uplift plan
+
+**Plan items addressed:** CHECKPOINT C manual Word 365 gate, T8 suggestion usefulness gate, T9 cross-domain usefulness gate
+
+**Files modified:**
+- `docs/document-uplift-build-log.md` - updated the progress tracker to mark Checkpoint C manual Word review, T8, and T9 complete based on human confirmation.
+- `docs/HANDOFF.md` - updated current handoff status so the remaining work reflects closeout rather than pending human gates.
+
+**Verified:**
+- [x] Human confirmed the prior remaining items 1, 2, and 3 are done: Word 365 review, T8 usefulness review, and T9 cross-domain usefulness review.
+- [x] Progress tracker now records Checkpoint C, T8, and T9 as complete.
+
+**Next item:** Record/pass T4 Pipeline Reliability restart/retry evidence if it has not already been evidenced, then create the final Document Uplift architecture/components/process document.
+
+**Blockers:** None for documentation. T4 requires a runtime restart/retry check if no prior pass evidence is found.
+
+**Plan deviations:** None.
+
+---
+
+## [2026-05-11] T4 restart/retry and Redis/Celery closeout verification
+
+**Plan items addressed:** T4 Pipeline Reliability, Redis/Celery production queue readiness from Items 32-33
+
+**Files modified:**
+- `docs/document-uplift-build-log.md` - recorded the T4 runtime smoke and Redis/Celery health evidence.
+- `docs/HANDOFF.md` - updated remaining closeout to remove T4 and Redis as pending items.
+
+**Verified:**
+- [x] Focused reliability/Redis tests passed: `python -m pytest tests\test_document_uplift_infrastructure.py tests\test_document_uplift_pipeline.py::test_dispatch_pipeline_celery_enqueues_task tests\test_document_uplift_pipeline.py::test_async_queue_rejects_duplicate_case tests\test_document_uplift_pipeline.py::test_async_queue_rejects_when_full tests\test_document_uplift_pipeline.py::test_async_queue_worker_uses_run_in_executor tests\test_document_uplift_pipeline.py::test_get_case_marks_stale_running_pipeline_failed -q` returned `8 passed`.
+- [x] `docker compose config --quiet` passed.
+- [x] `docker compose ps redis celery_worker fastapi_api` showed Redis healthy, Celery worker up, and FastAPI healthy.
+- [x] Runtime T4 smoke: created case `a11738aa-c8a7-431d-a951-a8b68bf6d894`, seeded it in Docker-network Mongo as stale `status.stage="analyzing"` with `pipeline_status="running"`, recreated FastAPI with `docker compose up -d --force-recreate fastapi_api`, then fetched the case. It returned `status.stage="failed"`, `pipeline_status="failed"`, and `pipeline_error="Document Uplift pipeline stale for more than 3600 seconds"`.
+- [x] Runtime retry smoke: `POST /document-uplift/cases/a11738aa-c8a7-431d-a951-a8b68bf6d894/run-pipeline` returned `queued` with `task_backend="asyncio"`, and the case reached `review_ready` with `pipeline_status="success"`.
+- [x] Runtime cleanup: deleted smoke case `a11738aa-c8a7-431d-a951-a8b68bf6d894`; delete returned HTTP `204`.
+- [x] Redis direct check passed: `docker compose exec -T redis redis-cli ping` returned `PONG`.
+- [x] Celery worker check passed: `docker compose exec -T celery_worker celery -A utils.sop_processing.celery_app inspect ping --timeout=10` returned `celery@0e70c7eef565: OK` / `pong`.
+- [x] Celery logs confirm the worker is connected to `redis://redis:6379/0`, declares queues `document_uplift`, `conversion`, `chunking`, `excel`, `llm`, `analysis`, and `outputs`, and has the corresponding tasks registered.
+
+**Redis perspective:** No functional Redis/Celery closeout item remains. The only non-blocking hardening note from logs is Celery's standard warning that the worker runs as root; this is not a T4 or Redis-readiness blocker, but can be handled later by adding a non-root user to the API image/worker service.
+
+**Next item:** Create the final Document Uplift architecture/components/process document.
+
+**Blockers:** None.
+
+**Plan deviations:** None.
+
+---
+
+## [2026-05-11] Final Document Uplift architecture reference
+
+**Plan items addressed:** Final architecture/components/process closeout document
+
+**Files created:**
+- `docs/document-uplift-architecture.md` - final reference for Document Uplift architecture, components, Stage 1/Stage 2 process, storage, Redis/Celery, reliability, configuration, severity/confidence bands, and domain-agnostic principles.
+
+**Files modified:**
+- `docs/document-uplift-build-log.md` - recorded final architecture document creation.
+- `docs/HANDOFF.md` - updated current status to point to the final architecture reference.
+
+**Verified:**
+- [x] The deferred architecture path from the addendum now exists: `docs/document-uplift-architecture.md`.
+- [x] The document records that Checkpoint C, T4, T8, T9, Redis/Celery readiness, and Items 1-33/23b/26a are complete.
+
+**Next item:** None from the original Document Uplift plan.
+
+**Blockers:** None.
+
+**Plan deviations:** None.

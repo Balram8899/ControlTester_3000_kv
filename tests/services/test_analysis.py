@@ -547,15 +547,11 @@ def test_cross_document_mapping_gap_fallback_references_primary_sop_and_matrix(
         if suggestion.suggestion_type == "mapping_gap"
     )
     assert "C-09" in gap.title
-    assert [target.target_type for target in gap.edit_targets] == [
-        "procedure_step",
-        "role_responsibility",
-    ]
+    assert [target.target_type for target in gap.edit_targets] == ["procedure_step"]
     assert all("for control C-09" not in target.proposed_text for target in gap.edit_targets)
     assert gap.edit_targets[0].target_anchor_id == "sop-anchor"
     assert gap.edit_targets[0].target_text == "Branch Operations reviews the NAAF."
-    assert gap.edit_targets[1].target_anchor_id == "roles-anchor"
-    assert "Investment Advisor / RM" in gap.edit_targets[1].proposed_text
+    assert "Investment Advisor / RM" in gap.edit_targets[0].proposed_text
     assert {ref.document_id for ref in gap.source_references} == {"sop-1", "rcm-1"}
     assert gap.source_references[1].sheet_name == "RCM"
     assert gap.source_references[1].row_index == 11
@@ -982,6 +978,157 @@ def test_mapping_gap_relevance_filter_allows_cross_cutting_audit_trail(
     )
 
 
+def test_role_activity_sentence_normalizes_rcm_cell_text_without_acronym_damage() -> None:
+    analysis = load_analysis()
+
+    endpoint_sentence = analysis._role_activity_sentence(
+        "IT Security",
+        "Performs endpoint Detection & Response (EDR) deployed across all managed endpoints with real-time alerting to SOC.",
+        "the relevant evidence",
+    )
+    assert "performs endpoint" not in endpoint_sentence.casefold()
+    assert "Retained evidence includes" not in endpoint_sentence
+    assert "EDR" in endpoint_sentence
+    assert "is deployed" in endpoint_sentence
+
+    threat_intel_sentence = analysis._role_activity_sentence(
+        "Threat Intel",
+        "Performs FSISAC and FS-CERT threat intelligence feeds integrated into SIEM; weekly threat brief shared with CISO.",
+        "",
+    )
+    assert "FSISAC" in threat_intel_sentence
+    assert "fSISAC" not in threat_intel_sentence
+    assert "are integrated into SIEM" in threat_intel_sentence
+
+    review_sentence = analysis._role_activity_sentence(
+        "ESG Team",
+        "Reviews deviation metrics and escalates material deviations within 48 hours.",
+        "Deviation log",
+    )
+    assert review_sentence.startswith("The ESG Team reviews deviation metrics")
+    assert "performs deviation metrics" not in review_sentence.casefold()
+    assert "Retained evidence includes Deviation log." in review_sentence
+
+
+def test_mapping_gap_skips_role_responsibility_target_for_plain_control_activity() -> None:
+    analysis = load_analysis()
+    procedure_conversion = make_conversion("procedure")
+    scope_anchor = make_anchor(
+        "scope",
+        "procedure",
+        "Purpose and Scope",
+        "This SOP covers incident detection, triage, escalation, containment, recovery, and evidence handling.",
+        "purpose_scope",
+    )
+    role_anchor = make_anchor(
+        "roles",
+        "procedure",
+        "Roles and Responsibilities",
+        "SOC monitors alerts and escalates confirmed incidents. CISO provides oversight.",
+        "procedural",
+    )
+    procedure_anchor = make_anchor(
+        "procedure",
+        "procedure",
+        "Detection Procedure",
+        "The SOC reviews alerts and triages incidents.",
+        "procedural",
+    )
+    excel_result = ExcelPipelineResult(
+        status="success",
+        file_id="rcm",
+        corpus_map=CorpusMapContribution(
+            risk_to_control_map=[
+                {
+                    "control_id": "C-EDR",
+                    "owner": "SOC",
+                    "description": "Performs endpoint detection alert monitoring for confirmed incident triage.",
+                    "file_id": "rcm",
+                    "filename": "rcm.xlsx",
+                    "sheet": "Controls",
+                    "row": 4,
+                }
+            ],
+            sop_to_control_map=[],
+            evidence_to_control_map=[],
+        ),
+    )
+
+    suggestions = analysis._cross_document_mapping_gap_suggestions(
+        process_steps=[],
+        anchor_index={
+            anchor.anchor_id: anchor
+            for anchor in [scope_anchor, role_anchor, procedure_anchor]
+        },
+        excel_results=[excel_result],
+        conversions=[procedure_conversion],
+    )
+
+    assert suggestions
+    target_types = [target.target_type for target in suggestions[0].edit_targets]
+    assert target_types == ["procedure_step"]
+
+
+def test_mapping_gap_keeps_role_responsibility_target_for_explicit_accountability() -> None:
+    analysis = load_analysis()
+    procedure_conversion = make_conversion("procedure")
+    scope_anchor = make_anchor(
+        "scope",
+        "procedure",
+        "Purpose and Scope",
+        "This SOP covers incident governance, severity approval, executive reporting, escalation accountability, recovery, and evidence handling.",
+        "purpose_scope",
+    )
+    role_anchor = make_anchor(
+        "roles",
+        "procedure",
+        "Roles and Responsibilities",
+        "SOC monitors alerts. CISO approves incident severity and executive reporting.",
+        "procedural",
+    )
+    procedure_anchor = make_anchor(
+        "procedure",
+        "procedure",
+        "Incident Governance Procedure",
+        "The SOC escalates major incidents for oversight review.",
+        "procedural",
+    )
+    excel_result = ExcelPipelineResult(
+        status="success",
+        file_id="rcm",
+        corpus_map=CorpusMapContribution(
+            risk_to_control_map=[
+                {
+                    "control_id": "C-OWN",
+                    "owner": "CISO",
+                    "description": "CISO is accountable for approving incident severity and executive reporting.",
+                    "file_id": "rcm",
+                    "filename": "rcm.xlsx",
+                    "sheet": "Controls",
+                    "row": 5,
+                }
+            ],
+            sop_to_control_map=[],
+            evidence_to_control_map=[],
+        ),
+    )
+
+    suggestions = analysis._cross_document_mapping_gap_suggestions(
+        process_steps=[],
+        anchor_index={
+            anchor.anchor_id: anchor
+            for anchor in [scope_anchor, role_anchor, procedure_anchor]
+        },
+        excel_results=[excel_result],
+        conversions=[procedure_conversion],
+    )
+
+    assert suggestions
+    target_types = [target.target_type for target in suggestions[0].edit_targets]
+    assert "procedure_step" in target_types
+    assert "role_responsibility" in target_types
+
+
 def test_mapping_gap_relevance_filter_works_for_vendor_management_domain(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -1337,6 +1484,67 @@ def test_structural_completeness_detects_missing_raci_and_classification_schema(
     assert "Responsible" in (raci.proposed_text or "")
     assert "Accountable" in (raci.proposed_text or "")
     assert raci.requires_explicit_review is True
+
+
+def test_structural_completeness_flags_escalate_if_needed_language(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    analysis = load_analysis()
+
+    def fake_call_llm(
+        prompt: str,
+        schema_name: str,
+        response_schema: dict[str, Any],
+        pipeline_id: str,
+        budget_remaining: int,
+        temperature: float = 0.2,
+    ) -> LLMResult:
+        if schema_name == "section_classification":
+            return LLMResult(
+                status="success",
+                output={"sections": [{"anchor_id": "procedure", "section_type": "procedural"}]},
+            )
+        return LLMResult(
+            status="success",
+            output={
+                "process_steps": [
+                    {
+                        "step_id": "s1",
+                        "actor": "Process Owner",
+                        "action": "escalates exceptions if needed",
+                        "anchor_id": "procedure",
+                    }
+                ],
+                "suggestions": [],
+            },
+        )
+
+    monkeypatch.setattr(analysis, "call_llm", fake_call_llm)
+
+    result = analysis.analyze_documents(
+        conversions=[make_conversion("proc-1")],
+        chunk_results={
+            "proc-1": make_chunk_result(
+                "proc-1",
+                [
+                    make_anchor(
+                        "procedure",
+                        "proc-1",
+                        "Escalation Procedure",
+                        "The Process Owner reviews exceptions and escalates if needed.",
+                    )
+                ],
+            )
+        },
+        excel_results=[],
+        pipeline_id="pipe-1",
+        budget_remaining=10,
+    )
+
+    assert any(
+        suggestion.title == "Define escalation triggers and timeframes"
+        for suggestion in result.suggestions
+    )
 
 
 def test_structural_completeness_detects_metric_owner_matrix_from_supporting_facts(

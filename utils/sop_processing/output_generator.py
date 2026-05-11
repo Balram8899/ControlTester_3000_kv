@@ -658,7 +658,41 @@ def _looks_like_embedded_subprocedure(text: str) -> bool:
     )
     if len(section_starts) >= 3 and len(cleaned) > 300:
         return True
+    if _looks_like_inline_heading_sequence(cleaned):
+        return True
     return False
+
+
+def _looks_like_inline_heading_sequence(text: str) -> bool:
+    actor_start = r"(?:The|A|An|Each|All|Any|If|Where|When|For|In)\s+[A-Z]"
+    heading_matches = list(
+        re.finditer(
+            rf"(?:^|\s)([A-Z][A-Za-z/&() -]{{4,55}}?)\s+(?={actor_start})",
+            str(text or ""),
+        )
+    )
+    headings = [
+        match.group(1).strip()
+        for match in heading_matches
+        if len(match.group(1).split()) <= 7
+    ]
+    if len(headings) < 3:
+        return False
+    lowered = [heading.casefold() for heading in headings]
+    generic_section_words = (
+        "identification",
+        "threshold",
+        "escalation",
+        "remediation",
+        "evidencing",
+        "monitoring",
+        "review",
+        "closure",
+        "reporting",
+        "approval",
+        "ownership",
+    )
+    return sum(any(word in heading for word in generic_section_words) for heading in lowered) >= 2
 
 
 def _suggestion_focus(suggestion: dict[str, Any]) -> str:
@@ -1614,9 +1648,12 @@ def _last_body_paragraph_in_section(
     if not _is_heading_paragraph(anchor):
         return anchor
     all_paragraphs = list(document.paragraphs)
-    try:
-        start = all_paragraphs.index(anchor)
-    except ValueError:
+    start = -1
+    for index, paragraph in enumerate(all_paragraphs):
+        if paragraph._p is anchor._p:
+            start = index
+            break
+    if start < 0:
         return anchor
     last_body = anchor
     for paragraph in all_paragraphs[start + 1 :]:

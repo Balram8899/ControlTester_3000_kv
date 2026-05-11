@@ -1,0 +1,109 @@
+{
+  "run_started_at": "2026-05-11T05:38:58",
+  "cases": {
+    "cyber-qualityfix": {
+      "case_id": "2f62929c-7df1-46a2-837e-99e235a50d3a",
+      "final_status": "complete",
+      "suggestion_count": 39,
+      "mapping_gap_count": 2,
+      "reviewer_gated_count": 28,
+      "outputs": [
+        {
+          "filename": "2f62929c-7df1-46a2-837e-99e235a50d3a-uplifted-sop.docx",
+          "path": "C:\\Subho syste,\\ControlTester_3000_kv\\output\\doc\\cyber-qualityfix-2f62929c-7df1-46a2-837e-99e235a50d3a-2f62929c-7df1-46a2-837e-99e235a50d3a-uplifted-sop.docx",
+          "bytes": 14641,
+          "insertions": 10,
+          "deletions": 7,
+          "comments": 10
+        },
+        {
+          "filename": "2f62929c-7df1-46a2-837e-99e235a50d3a-swimlane.png",
+          "path": "C:\\Subho syste,\\ControlTester_3000_kv\\output\\doc\\cyber-qualityfix-2f62929c-7df1-46a2-837e-99e235a50d3a-2f62929c-7df1-46a2-837e-99e235a50d3a-swimlane.png",
+          "bytes": 423010
+        },
+        {
+          "filename": "2f62929c-7df1-46a2-837e-99e235a50d3a-swimlane.pdf",
+          "path": "C:\\Subho syste,\\ControlTester_3000_kv\\output\\doc\\cyber-qualityfix-2f62929c-7df1-46a2-837e-99e235a50d3a-2f62929c-7df1-46a2-837e-99e235a50d3a-swimlane.pdf",
+          "bytes": 31135
+        }
+      ],
+      "docx_scan": {
+        "tracked_insertion_count": 10,
+        "scan_hits": {
+          "performs_endpoint": [],
+          "placeholder_evidence": [],
+          "fsisac_bad_case": [],
+          "identification_thresholding": [],
+          "escalation_inline": [],
+          "remediation_inline": []
+        },
+        "sample_insertions": [
+          "SOC (Security Operations Center) | Responsible for 24/7 monitoring, initial alert triage, and Level 1 assessment. IT Security Team | Responsible for Level 2 analysis, eradication coordination, and technical recovery support.",
+          "Incidents must be classified into Severity Levels (Critical/P1, High/P2, Medium/P3, and Low/P4) based on their potential impact to the organisation. Critical (P1) incidents, such as those involving core banking systems or data breaches, require immediate escalation to the CISO and Senior Management within one hour of confirmation.",
+          "Restore affected systems and services to normal operations, utilizing immutable offline backups for critical systems to ensure data integrity.",
+          "The IT Security ensures that endpoint Detection & Response (EDR) is deployed across all managed endpoints with real-time alerting to SOC. The Threat Intel function integrates FSISAC and FS-CERT threat intelligence feeds into the SIEM and shares a weekly threat brief with the CISO.",
+          "The Security Operations Center integrates FSISAC and FS-CERT threat intelligence feeds within the SIEM to facilitate proactive identification and monitoring of industry-specific security threats.",
+          "Apply security patches to address the vulnerability exploited, ensuring that emergency patching for vulnerabilities with a CVSS score of 9.0 or higher is completed within 72 hours.",
+          "The Legal and Compliance team will advise if law enforcement involvement is required and ensure that mandatory reporting to the RBI is completed in accordance with the CSF requirements and timelines.",
+          "The Incident Response Manager coordinates a hand-off to Security Architecture, the accountable owner of control CC-017, to notify internal and external stakeholders including the CISO, Management, and Legal.",
+          "The IT / BCP Team assumes ownership of control CC-013 following a formal hand-off from IT Operations to restore affected systems and services to normal operations from clean backups.",
+          "IT Operations, as the accountable owner for control CC-007, applies security patches to address exploited vulnerabilities and executes a formal hand-off to the security team for validation."
+        ]
+      }
+    },
+    "esg-qualityfix": {
+      "case_id": "d64604c4-c7e2-43d2-bfff-d356d74b0936",
+      "final_status": "complete",
+      "suggestion_count": 48,
+      "mapping_gap_count": 0,
+      "reviewer_gated_count": 23,
+      "outputs": [
+        {
+          "filename": "d64604c4-c7e2-43d2-bfff-d356d74b0936-uplifted-sop.docx",
+          "path": "C:\\Subho syste,\\ControlTester_3000_kv\\output\\doc\\esg-qualityfix-d64604c4-c7e2-43d2-bfff-d356d74b0936-d64604c4-c7e2-43d2-bfff-d356d74b0936-uplifted-sop.docx",
+          "bytes": 17599,
+          "insertions": 25,
+          "deletions": 4,
+          "comments": 25
+        },
+        {
+          "filename": "d64604c4-c7e2-43d2-bfff-d356d74b0936-swimlane.png",
+          "path": "C:\\Subho syste,\\ControlTester_3000_kv\\output\\doc\\esg-qualityfix-d64604c4-c7e2-43d2-bfff-d356d74b0936-d64604c4-c7e2-43d2-bfff-d356d74b0936-swimlane.png",
+          "bytes": 521498
+        },
+        {
+          "filename": "d64604c4-c7e2-43d2-bfff-d356d74b0936-swimlane.pdf",
+          "path": "C:\\Subho syste,\\ControlTester_3000_kv\\output\\doc\\esg-qualityfix-d64604c4-c7e2-43d2-bfff-d356d74b0936-d64604c4-c7e2-43d2-bfff-d356d74b0936-swimlane.pdf",
+          "bytes": 36256
+        }
+      ],
+      "docx_scan": {
+        "tracked_insertion_count": 25,
+        "scan_hits": {
+          "performs_endpoint": [],
+          "placeholder_evidence": [],
+          "fsisac_bad_case": [],
+          "identification_thresholding": [],
+          "escalation_inline": [],
+          "remediation_inline": []
+        },
+        "sample_insertions": [
+          "The Sustainability Manager identifies deviations for BRSR Scope 3 Emissions \u2013 Business Travel (tCO2e) based on established thresholds, escalates variances to the ESG Committee within five business days, and documents remediation efforts to ensure data integrity and target compliance.",
+          "The accountable owner documents SOP-specific handling for metric or target deviation needs procedure coverage: Women in Senior Leadership (%), including escalation, remediation, and retained evidence.",
+          "Escalate any material deviation to the appropriate level of management to ensure that any data point that could reasonably be expected to influence the decisions of users of the bank's ESG reports or affect regulatory compliance is properly addressed.",
+          "Any missing or incomplete data should be flagged and followed up with the relevant team. If the data is not provided within 48 hours of the follow-up, the ESG Head shall escalate the delay to the respective Functional Head.",
+          "Identify any metrics that deviate from the target or prior period by more than 10% or any deviation that impacts the bank's ability to meet regulatory requirements.",
+          "If the deviation exceeds the defined materiality threshold, the ESG Head shall escalate the issue to the CFO for financial-related metrics or the relevant Functional Head (e.g., CHRO, Facilities Head) for operational metrics, with a copy to the Senior Management Team.",
+          "The Corporate Secretary identifies deviations from the Independent Director board percentage threshold, escalates findings to the Board of Directors for remediation within 30 days, and maintains the official board minutes as evidence of the identification and resolution process.",
+          "The Safety Manager identifies LTIFR (per million hours worked) deviations by comparing performance against established thresholds and escalates these to the Site Director for remediation and evidentiary documentation within five business days to ensure safety performance targets are maintained.",
+          "The Compliance Manager identifies deviations for the Whistleblower SLA \u2264 60 days (%) metric against established thresholds during monthly reviews, escalating any failures to the Risk Committee within five business days to ensure remediation and documentation of evidence are completed within thirty days to maintain service level integrity.",
+          "The Facility Manager identifies Water Consumption (KL) deviations exceeding a 5% variance threshold, escalates these to the Sustainability Lead within 48 hours, and provides documented evidence of remediation in the quarterly performance report to ensure resource management targets are met.",
+          "The Customer Service Manager identifies deviations from the Customer Complaint Resolution \u2264 30 days (%) metric when performance falls below the 95% threshold and initiates escalation for remediation within 48 hours, documenting all evidence in the tracking system to ensure procedural compliance.",
+          "The accountable owner documents SOP-specific handling for metric or target deviation needs procedure coverage: Financed Emissions \u2013 Oil & Gas Sector (tCO2e / \u20b9 Cr), including escalation, remediation, and retained evidence.",
+          "The Training Manager identifies deviations when ABC Training Completion (%) falls below the 95% threshold, escalating the issue to the Department Head within 48 hours for remediation and documenting the outcome in the Compliance Log to provide evidence of resolution.",
+          "The ESG Compliance Manager identifies deviations in the percentage of senior management variable pay linked to ESG KPIs against established thresholds, escalates significant variances to the Remuneration Committee for remediation within thirty days, and maintains comprehensive evidence of all corrective actions taken to ensure alignment with corporate sustainability commitments."
+        ]
+      }
+    }
+  }
+}

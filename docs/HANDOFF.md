@@ -27,7 +27,7 @@
 - Updated `kpmg_ui/client/src/pages/document-uplift.tsx` and added `kpmg_ui/client/src/document-uplift.severity.test.ts` so the UI supports and sorts `critical`, `high`, `medium`, `low`, and `informational`.
 - Added/expanded coverage in `tests/services/test_severity.py`, `tests/services/test_schemas.py`, `tests/services/test_semantic_roles.py`, `tests/services/test_generic_findings.py`, `tests/services/test_excel_pipeline.py`, `tests/services/test_analysis.py`, and `tests/test_document_uplift_pipeline.py`.
 - Verification run: 92 backend tests passed across the Document Uplift addendum, API, and settings slice; frontend guards `document-uplift.item29`, `document-uplift.item30`, and `document-uplift.severity` passed; `npm run check` and `npm run build` passed with existing PostCSS/chunk-size warnings.
-- Remaining original-plan gates from that checkpoint: manual Word 365 review, T8 human usefulness review, and new T9 cross-domain usefulness review.
+- Original-plan human gates from that checkpoint were later confirmed complete on 2026-05-11: manual Word 365 review, T8 human usefulness review, and T9 cross-domain usefulness review.
 
 ---
 
@@ -44,7 +44,7 @@
 - Router dispatch errors map to HTTP 409 for duplicate queued/running cases and HTTP 429 when the async queue is full.
 - Added tests in `tests/test_document_uplift_infrastructure.py` and expanded `tests/test_document_uplift_pipeline.py` for Celery dispatch, queue behavior, executor usage, stale timeout, and Compose/requirements wiring.
 - Verification run: 99 backend tests passed across the Document Uplift, infrastructure, API, and settings slice; frontend guards passed; `npm run check`, `npm run build`, `docker compose config --quiet`, and `docker compose --dry-run build fastapi_api celery_worker` passed.
-- Remaining gates are human-only: manual Word 365 review, T8 suggestion usefulness review, and T9 cross-domain usefulness review. The final overall architecture document remains deferred until those gates are complete.
+- Human gates were confirmed complete on 2026-05-11: manual Word 365 review, T8 suggestion usefulness review, and T9 cross-domain usefulness review. T4 restart/retry reliability was verified on 2026-05-11; Redis and Celery are wired and healthy. The final architecture/components/process document is now `docs/document-uplift-architecture.md`.
 
 ---
 
@@ -1285,3 +1285,65 @@ Final validation update:
 Remaining follow-up:
 - Human review the generated DOCX files in Word 365.
 - Later cleanup: reviewer-gated open-issue notes still contain cross-domain source facts. They are not auto-applied, but the review UI may need a separate evidence-note treatment.
+
+---
+
+## 36. DOCX Placement And Additive Prose Quality Tightening - 2026-05-11
+
+Implemented the follow-up quality fixes from the Cyber/ESG DOCX review. The changes remain domain-agnostic and do not hardcode Cyber, ESG, SWIFT, DLP, Board Independence, LTIFR, or similar domain labels.
+
+Key changes:
+- RCM-derived mapping-gap prose now preserves useful leading verbs such as `reviews` and `monitors`, drops weak `performs` wrappers, converts state phrases like `EDR deployed` into `ensures that EDR is deployed`, suppresses placeholder evidence clauses, and preserves acronym casing such as `FSISAC`.
+- Mapping-gap fallback no longer creates `role_responsibility` edit targets for every plain control row. It creates role/responsibility targets only when the source row explicitly contains responsibility/accountability language, or when a senior oversight role is assigned operational work and should be routed to RACI by the existing guard.
+- Senior-role operational targets still route to `raci_matrix` rather than direct operational responsibilities.
+- Structural completeness now treats `if needed`, `if required`, `if necessary`, `as needed`, `as required`, `when necessary`, and `where necessary` as vague escalation timing that requires defined triggers/timeframes.
+- Stage 2 detects short unnumbered embedded mini-procedures by structure, not domain terms, and compacts them into a single SOP-appropriate sentence.
+- Stage 2 heading placement now compares underlying Word XML paragraph identity, so additions targeted at a heading are inserted after the last body paragraph in that section.
+- Role/responsibility table placement remains structural: contact/directories are skipped because their candidate responsibility column cells are short, while true responsibilities tables have descriptive cells.
+
+Files changed in this checkpoint:
+- `utils/services/analysis.py`
+- `utils/services/role_assignment_guard.py`
+- `utils/services/structural_completeness.py`
+- `utils/sop_processing/output_generator.py`
+- `tests/services/test_analysis.py`
+- `tests/sop_processing/test_output_generator.py`
+- `docs/document-uplift-build-log.md`
+- `docs/HANDOFF.md`
+
+Verification:
+- New focused regression passed: 7 passed for RCM prose, role target gating, vague escalation, contact-table placement, heading-section placement, and unnumbered sub-procedure compaction.
+- Full affected document-uplift Python tests passed: `python -m pytest tests/services/test_analysis.py tests/sop_processing/test_output_generator.py -q` passed: 52 passed, existing warnings only.
+- Broader service tests passed: `python -m pytest tests/services -q` passed: 100 passed, existing pydantic warning only.
+- `docker compose build fastapi_api` passed.
+- `docker compose up -d --force-recreate fastapi_api` passed.
+- `docker compose ps fastapi_api` reported `Up ... (healthy)`.
+- `GET http://localhost:8000/health` returned `200`.
+
+Next recommended step:
+- Rerun Cyber/ESG on the rebuilt API. Inspect the generated DOCX tracked insertions for:
+  - no `performs endpoint...` raw RCM phrasing;
+  - no `Retained evidence includes the relevant evidence`;
+  - no `fSISAC`;
+  - no insertions directly under section headings when that section already has body text;
+  - no role/responsibility insertions inside contact lists;
+  - no unnumbered mini-procedures such as identification/escalation/remediation blocks.
+
+Validation update:
+- Cyber qualityfix case `2f62929c-7df1-46a2-837e-99e235a50d3a` completed after resuming the interrupted run.
+  - 39 suggestions, 2 mapping gaps, 28 reviewer-gated.
+  - DOCX: 10 tracked insertions, 7 deletions, 10 comments.
+  - Scan found zero hits for `performs endpoint`, `Retained evidence includes the relevant evidence`, `fSISAC`, `Identification and Thresholding`, inline `Escalation The`, and inline `Remediation The`.
+  - Structure scan found no contact-table insertions and no heading-adjacent insertion where body text follows.
+- ESG qualityfix case `d64604c4-c7e2-43d2-bfff-d356d74b0936` completed fresh.
+  - 48 suggestions, 0 mapping gaps, 23 reviewer-gated.
+  - DOCX: 25 tracked insertions, 4 deletions, 25 comments.
+  - Scan found zero hits for the same raw-prose/subprocedure markers and no heading-adjacent insertion pattern.
+- Output artifacts and validation summaries are under `output/doc/qualityfix-*`.
+
+Remaining follow-up:
+- Human review of the latest Cyber/ESG DOCX outputs in Word 365 is confirmed complete as of 2026-05-11.
+- T8 and T9 usefulness gates are confirmed complete as of 2026-05-11.
+- T4 restart/retry reliability is confirmed: a seeded stale `analyzing` case survived FastAPI recreation, was marked `failed` with `Document Uplift pipeline stale for more than 3600 seconds`, and then re-triggered to `review_ready`.
+- Redis/Celery closeout is confirmed: Redis is healthy and returns `PONG`; Celery worker is online over Redis and declares the `document_uplift`, `conversion`, `chunking`, `excel`, `llm`, `analysis`, and `outputs` queues.
+- Final architecture/components/process reference is complete at `docs/document-uplift-architecture.md`.
