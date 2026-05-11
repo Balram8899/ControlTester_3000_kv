@@ -31,7 +31,7 @@ services:
       dockerfile: api/Dockerfile
     restart: unless-stopped
     ports:
-      - "127.0.0.1:8000:8000"
+      - "8000:8000"
     environment:
       - LLM_PROVIDER=${LLM_PROVIDER:-gemini}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
@@ -149,7 +149,7 @@ services:
     container_name: agent_assess_web_Trace_KV
     restart: unless-stopped
     ports:
-      - "127.0.0.1:5000:5000"
+      - "5000:5000"
     environment:
       - NODE_ENV=production
       - VITE_API_URL=${VITE_API_URL:-http://fastapi_api:8000}
