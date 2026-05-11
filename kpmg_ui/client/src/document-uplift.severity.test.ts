@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 
-const pageSource = fs.readFileSync(path.resolve("client/src/pages/document-uplift.tsx"), "utf8");
+const pageSource = fs.readFileSync(path.resolve("client/src/pages/document-uplift-case.tsx"), "utf8");
 
 assert.match(
   pageSource,

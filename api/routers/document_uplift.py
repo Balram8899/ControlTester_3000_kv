@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import asyncio
 import json
+import mimetypes
 import os
 import uuid
 from collections.abc import AsyncIterator
 from typing import Any, Literal, Optional
+from urllib.parse import quote
 
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import Response, StreamingResponse
@@ -289,6 +291,30 @@ async def upload_file(
     if not updated:
         raise HTTPException(status_code=404, detail="Document Uplift case not found")
     return document_tag
+
+
+@router.get("/cases/{case_id}/files/{file_id}/content")
+def get_file_content(case_id: str, file_id: str) -> Response:
+    case = _require_case(case_id)
+    file_meta = next(
+        (item for item in case.get("document_tags", []) if item.get("file_id") == file_id),
+        None,
+    )
+    if not file_meta:
+        raise HTTPException(status_code=404, detail="Document Uplift file not found")
+    content = get_store().get_input_file(file_id)
+    if content is None:
+        raise HTTPException(status_code=404, detail="Document Uplift file content not found")
+    filename = str(file_meta.get("filename") or "document")
+    media_type = mimetypes.guess_type(filename)[0] or "application/octet-stream"
+    return Response(
+        content=content,
+        media_type=media_type,
+        headers={
+            "Content-Disposition": f"inline; filename*=UTF-8''{quote(filename)}",
+            "X-Document-Uplift-Filename": filename,
+        },
+    )
 
 
 @router.post("/cases/{case_id}/run-pipeline", status_code=202)

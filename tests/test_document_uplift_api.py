@@ -127,6 +127,36 @@ def test_upload_stores_raw_input_in_gridfs_and_updates_document_tag(
     assert stored_case["document_tags"][0]["tag"] == "procedure"
 
 
+@patch.dict(os.environ, {"DOCUMENT_UPLIFT_ENABLED": "true"})
+@patch("api.routers.document_uplift.get_store")
+def test_get_uploaded_document_content_returns_inline_file(
+    mock_get_store: MagicMock,
+) -> None:
+    mock = MagicMock()
+    mock.get_case.return_value = {
+        "case_id": "case-1",
+        "document_tags": [
+            {
+                "file_id": "file-1",
+                "filename": "Incident Response SOP.docx",
+                "tag": "procedure",
+            }
+        ],
+    }
+    mock.get_input_file.return_value = b"docx-bytes"
+    mock_get_store.return_value = mock
+
+    response = client().get("/document-uplift/cases/case-1/files/file-1/content")
+
+    assert response.status_code == 200
+    assert response.content == b"docx-bytes"
+    assert response.headers["content-type"] == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    assert "inline" in response.headers["content-disposition"]
+    assert "Incident%20Response%20SOP.docx" in response.headers["content-disposition"]
+    assert response.headers["x-document-uplift-filename"] == "Incident Response SOP.docx"
+    mock.get_input_file.assert_called_once_with("file-1")
+
+
 @patch.dict(os.environ, {"DOCUMENT_UPLIFT_ENABLED": "true", "TASK_BACKEND": "asyncio"})
 @patch("api.routers.document_uplift.dispatch_pipeline")
 @patch("api.routers.document_uplift.get_store")

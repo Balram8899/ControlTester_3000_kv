@@ -36,6 +36,7 @@ import RegulationControlsCoveragePage from "@/pages/regulation-controls-coverage
 import Control360Page from "@/pages/control-360";
 import SopUpliftPage from "@/pages/sop-uplift";
 import DocumentUpliftPage from "@/pages/document-uplift";
+import DocumentUpliftCasePage from "@/pages/document-uplift-case";
 import { AssetRegistryProvider } from "@/contexts/AssetRegistryContext";
 import { RiskAssessmentProvider } from "@/contexts/RiskAssessmentContext";
 import { IssueManagementProvider } from "@/contexts/IssueManagementContext";
@@ -106,11 +107,17 @@ function Router() {
 
   return (
     <AppLayout>
-      {PAGES.map(({ path, Page }) => (
-        <div key={path} className={location === path ? "h-full min-h-0 overflow-hidden" : "hidden"}>
-          <Page />
+      {location.startsWith("/document-uplift/") ? (
+        <div className="h-full min-h-0 overflow-hidden">
+          <DocumentUpliftCasePage />
         </div>
-      ))}
+      ) : (
+        PAGES.map(({ path, Page }) => (
+          <div key={path} className={location === path ? "h-full min-h-0 overflow-hidden" : "hidden"}>
+            <Page />
+          </div>
+        ))
+      )}
     </AppLayout>
   );
 }

@@ -5,6 +5,18 @@
 
 ---
 
+## 2026-05-11 Update - Document Uplift UX Redesign
+
+- Scope: redesigned the Document Uplift frontend into a shell-contained landing dashboard and case workspace based on `docs/superpowers/specs/2026-05-08-document-uplift-ux-redesign.md`, using the TRACE/Controls Library visual language.
+- Replaced the monolithic `kpmg_ui/client/src/pages/document-uplift.tsx` with the landing dashboard: hero, KPI strip, collapsible How It Works, searchable case list, create/delete dialogs, and insights rail.
+- Added `kpmg_ui/client/src/pages/document-uplift-case.tsx` for `/document-uplift/:caseId` inside the existing `AppLayout`: compact case header, Documents, Processing, Review Suggestions, and Export tabs with internal scrolling so the UI fits the TRACE shell.
+- Cloned the useful `docx-preview` pattern from the SOP Uplift page into local Document Uplift code only; there are no imports or runtime dependencies on `pages/sop-uplift/**`.
+- Added a read-only `GET /document-uplift/cases/{case_id}/files/{file_id}/content` endpoint so the browser can preview already-uploaded DOCX/XLSX inputs. No backend suggestion generation, review semantics, output generation, or SOP processing code was changed.
+- Updated frontend source guards for the split route architecture and added `kpmg_ui/client/src/document-uplift.redesign.test.ts`. Added backend coverage for the preview content endpoint in `tests/test_document_uplift_api.py`.
+- Verification: `tests/test_document_uplift_api.py` passed; frontend guards `document-uplift.item29`, `document-uplift.item30`, `document-uplift.severity`, and `document-uplift.redesign` passed; `npm run check` and `npm run build` passed with the existing PostCSS/chunk-size warnings.
+
+---
+
 ## 2026-05-08 Update - Control Testing Workpaper Template Path Fix
 
 - Scope: fixed the legacy `/audit/generate-workpaper` path used by `kpmg_ui/client/src/pages/control-testing.tsx` during the Generate Workpaper step.
@@ -1347,3 +1359,27 @@ Remaining follow-up:
 - T4 restart/retry reliability is confirmed: a seeded stale `analyzing` case survived FastAPI recreation, was marked `failed` with `Document Uplift pipeline stale for more than 3600 seconds`, and then re-triggered to `review_ready`.
 - Redis/Celery closeout is confirmed: Redis is healthy and returns `PONG`; Celery worker is online over Redis and declares the `document_uplift`, `conversion`, `chunking`, `excel`, `llm`, `analysis`, and `outputs` queues.
 - Final architecture/components/process reference is complete at `docs/document-uplift-architecture.md`.
+
+---
+
+## 37. Document Uplift Detail UI Fit Fix - 2026-05-11
+
+Implemented the follow-up UI fit fixes for the redesigned Document Uplift case workspace. This is a frontend-only layout/interaction pass except for verifying the existing read-only preview endpoint; no suggestion generation, SOP processing, or document output engine logic was changed.
+
+Key changes:
+- Replaced the oversized case-detail hero with the compact TRACE nav plus a slim case status header, so Documents, Processing, Review Suggestions, and Export fit inside the existing TRACE shell.
+- Expanded the case workspace to full available shell width instead of constraining it to the old 1200px center column.
+- Wired the Documents tab preview icon to open the Review Suggestions document viewer for the selected file.
+- Added an extracted-markdown fallback in the document viewer when native DOCX/XLSX bytes cannot be loaded or rendered.
+- Resized Review Suggestions to reserve a 520px decision queue, keep the queue scrollable, and keep reviewer text areas light themed and compact.
+- Slimmed Processing and Export sidebars to reduce crowding.
+
+Verification:
+- Source guard passed: `node --import tsx .\client\src\document-uplift.redesign.test.ts`.
+- Existing Document Uplift source guards passed: item 29, item 30, and severity checks.
+- TypeScript passed: `npm run check`.
+- API regression passed: `python -m pytest tests/test_document_uplift_api.py -q` passed: 17 passed, existing warnings only.
+- Production frontend build passed: `npm run build` passed with existing PostCSS `from` warning and existing large-chunk warning.
+
+Remaining follow-up:
+- Recreate both `fastapi_api` and `web_ui_agent` containers so the live app has the preview endpoint and compact shell UI together.

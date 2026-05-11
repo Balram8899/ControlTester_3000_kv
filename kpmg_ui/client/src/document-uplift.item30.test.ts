@@ -2,12 +2,12 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 
-const pageSource = fs.readFileSync(path.resolve("client/src/pages/document-uplift.tsx"), "utf8");
+const pageSource = fs.readFileSync(path.resolve("client/src/pages/document-uplift-case.tsx"), "utf8");
 
 assert.match(
   pageSource,
-  /\/api\/document-uplift\/cases\/\$\{selectedCaseId\}\/pipeline\/stream/,
-  "Document Uplift page must connect to the Item 30 pipeline stream endpoint",
+  /\/api\/document-uplift\/cases\/\$\{caseId\}\/pipeline\/stream/,
+  "Document Uplift case page must connect to the Item 30 pipeline stream endpoint",
 );
 assert.match(pageSource, /new EventSource/, "Document Uplift page must use EventSource for live progress");
 assert.match(pageSource, /addEventListener\("stage"/, "Document Uplift page must handle stage SSE events");

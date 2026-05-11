@@ -5,6 +5,7 @@ import path from "node:path";
 const appSource = fs.readFileSync(path.resolve("client/src/App.tsx"), "utf8");
 const layoutSource = fs.readFileSync(path.resolve("client/src/components/AppLayout.tsx"), "utf8");
 const pagePath = path.resolve("client/src/pages/document-uplift.tsx");
+const casePagePath = path.resolve("client/src/pages/document-uplift-case.tsx");
 
 assert.match(appSource, /DocumentUpliftPage/, "App must import the Document Uplift page");
 assert.match(appSource, /path:\s*"\/document-uplift"/, "App must expose the /document-uplift route");
@@ -17,40 +18,40 @@ assert.match(
 );
 
 assert.ok(fs.existsSync(pagePath), "Document Uplift page file must exist");
+assert.ok(fs.existsSync(casePagePath), "Document Uplift case page file must exist");
 const pageSource = fs.readFileSync(pagePath, "utf8");
+const casePageSource = fs.readFileSync(casePagePath, "utf8");
+const combinedSource = `${pageSource}\n${casePageSource}`;
 
 [
   "/api/document-uplift/cases",
-  "/api/document-uplift/cases/${selectedCaseId}",
-  "/api/document-uplift/cases/${selectedCaseId}/upload",
-  "/api/document-uplift/cases/${selectedCaseId}/run-pipeline",
-  "/api/document-uplift/cases/${selectedCaseId}/suggestions",
-  "/api/document-uplift/cases/${selectedCaseId}/suggestions/${suggestionId}",
-  "/api/document-uplift/cases/${selectedCaseId}/suggestions/bulk-review",
-  "/api/document-uplift/cases/${selectedCaseId}/generate-outputs",
-  "/api/document-uplift/cases/${selectedCaseId}/outputs/${output.output_id}",
+  "/api/document-uplift/cases/${caseId}",
+  "/api/document-uplift/cases/${caseId}/upload",
+  "/api/document-uplift/cases/${caseId}/run-pipeline",
+  "/api/document-uplift/cases/${caseId}/suggestions",
+  "/api/document-uplift/cases/${caseId}/suggestions/${suggestionId}",
+  "/api/document-uplift/cases/${caseId}/suggestions/bulk-review",
+  "/api/document-uplift/cases/${caseId}/generate-outputs",
+  "/api/document-uplift/cases/${caseId}/outputs/${output.output_id}",
 ].forEach((endpoint) => {
-  assert.match(pageSource, new RegExp(endpoint.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), `${endpoint} must be wired`);
+  assert.match(combinedSource, new RegExp(endpoint.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), `${endpoint} must be wired`);
 });
 
 [
-  "Case Explorer",
+  "Your Cases",
   "Upload and Tag Documents",
-  "Suggestion Queue",
-  "Document Review",
-  "Uplift Targets",
-  "Source References",
+  "Decision Queue",
+  "Document Library",
+  "Review Suggestions",
   "Generated Outputs",
   "Accept All",
   "Reject All",
-  "REJECT_ALL",
-  "auto-accepted",
+  "Move To Export",
   "Cost",
-  "PIPELINE_STEPS",
 ].forEach((label) => {
-  assert.match(pageSource, new RegExp(label), `${label} must be present in the Item 29 UI`);
+  assert.match(combinedSource, new RegExp(label), `${label} must be present in the Item 29 UI`);
 });
 
 assert.match(pageSource, /data-testid="document-uplift-page"/);
-assert.match(pageSource, /data-testid="document-uplift-run-pipeline"/);
-assert.match(pageSource, /data-testid="document-uplift-generate-outputs"/);
+assert.match(casePageSource, /data-testid="document-uplift-run-pipeline"/);
+assert.match(casePageSource, /data-testid="document-uplift-generate-outputs"/);
