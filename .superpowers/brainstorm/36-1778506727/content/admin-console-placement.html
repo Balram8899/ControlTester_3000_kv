@@ -1,0 +1,92 @@
+<h2>Where should the Admin Console live?</h2>
+<p class="subtitle">Pick the navigation pattern that feels right for TRACE</p>
+
+<div class="options">
+
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Dedicated route — /admin</h3>
+      <div class="mockup" style="margin-top:10px">
+        <div class="mockup-header">TRACE — sidebar navigation</div>
+        <div class="mockup-body" style="display:flex;gap:0;padding:0">
+          <div style="width:160px;background:rgba(0,0,0,0.3);padding:12px;font-size:12px;flex-shrink:0">
+            <div style="color:var(--subtle);font-size:10px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">Platform</div>
+            <div style="padding:4px 8px;border-radius:4px;margin-bottom:2px">Dashboard</div>
+            <div style="padding:4px 8px;border-radius:4px;margin-bottom:2px">Asset Registry</div>
+            <div style="padding:4px 8px;border-radius:4px;margin-bottom:2px">Control Testing</div>
+            <div style="padding:4px 8px;border-radius:4px;margin-bottom:2px">Risk Assessment</div>
+            <div style="padding:4px 8px;border-radius:4px;margin-bottom:2px">Issues</div>
+            <div style="padding:4px 8px;border-radius:4px;margin-bottom:2px">Libraries</div>
+            <div style="color:var(--subtle);font-size:10px;text-transform:uppercase;letter-spacing:.1em;margin:12px 0 8px">Admin only</div>
+            <div style="padding:4px 8px;border-radius:4px;margin-bottom:2px;background:rgba(114,19,234,0.25);border:1px solid rgba(114,19,234,0.4);color:#a78bfa">⚙ Admin Console</div>
+          </div>
+          <div style="flex:1;padding:12px;font-size:12px">
+            <div style="font-size:14px;font-weight:600;margin-bottom:8px">Admin Console</div>
+            <div style="display:flex;gap:8px;margin-bottom:12px">
+              <div style="padding:4px 12px;border-radius:4px;background:rgba(114,19,234,0.2);border:1px solid rgba(114,19,234,0.3);font-size:11px">Users</div>
+              <div style="padding:4px 12px;border-radius:4px;background:rgba(255,255,255,0.05);font-size:11px">Password Policy</div>
+              <div style="padding:4px 12px;border-radius:4px;background:rgba(255,255,255,0.05);font-size:11px">Audit Log</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.05);border-radius:6px;padding:8px;font-size:11px">
+              <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05)"><span>jane@kpmg.com</span><span style="color:#a78bfa">Analyst · Manager</span></div>
+              <div style="display:flex;justify-content:space-between;padding:4px 0"><span>bob@kpmg.com</span><span style="color:#f59e0b">Viewer</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p style="margin-top:8px;font-size:12px;color:var(--subtle)">Cleanest separation. Admin section only appears in nav for Admin-role users. Full page — tabs for Users, Password Policy, Audit Log.</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Settings page — extend /settings with an Admin tab</h3>
+      <div class="mockup" style="margin-top:10px">
+        <div class="mockup-header">TRACE — /settings</div>
+        <div class="mockup-body" style="font-size:12px">
+          <div style="display:flex;gap:8px;margin-bottom:12px">
+            <div style="padding:4px 12px;border-radius:4px;background:rgba(255,255,255,0.05);font-size:11px">General</div>
+            <div style="padding:4px 12px;border-radius:4px;background:rgba(255,255,255,0.05);font-size:11px">LLM / Models</div>
+            <div style="padding:4px 12px;border-radius:4px;background:rgba(114,19,234,0.2);border:1px solid rgba(114,19,234,0.3);font-size:11px">👑 User Management</div>
+            <div style="padding:4px 12px;border-radius:4px;background:rgba(114,19,234,0.2);border:1px solid rgba(114,19,234,0.3);font-size:11px">🔒 Password Policy</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.05);border-radius:6px;padding:8px;font-size:11px">
+            <div style="margin-bottom:6px;color:var(--subtle)">Admin-only tabs only visible to Admin role</div>
+            <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05)"><span>jane@kpmg.com</span><span style="color:#a78bfa">Analyst · Manager</span></div>
+            <div style="display:flex;justify-content:space-between;padding:4px 0"><span>bob@kpmg.com</span><span style="color:#f59e0b">Viewer</span></div>
+          </div>
+        </div>
+      </div>
+      <p style="margin-top:8px;font-size:12px;color:var(--subtle)">Admin functions bolt onto the existing /settings page as extra tabs. Less navigation clutter — admin is "still just settings".</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Avatar menu → "Admin Panel" modal / slide-over</h3>
+      <div class="mockup" style="margin-top:10px">
+        <div class="mockup-header">TRACE — top nav</div>
+        <div class="mockup-body" style="font-size:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;background:rgba(0,0,0,0.2);border-radius:6px;margin-bottom:10px">
+            <span style="font-weight:600">KPMG · TRACE</span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:28px;height:28px;border-radius:50%;background:rgba(114,19,234,0.4);display:flex;align-items:center;justify-content:center;font-size:11px">KV</div>
+              <div style="background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:6px 10px;font-size:11px">
+                <div style="padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.08)">Profile</div>
+                <div style="padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.08)">Settings</div>
+                <div style="padding:3px 0;color:#a78bfa">⚙ Admin Panel</div>
+                <div style="padding:3px 0;color:#ef4444">Sign out</div>
+              </div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--subtle)">Admin Panel opens as a full-screen slide-over or modal — no route change</div>
+        </div>
+      </div>
+      <p style="margin-top:8px;font-size:12px;color:var(--subtle)">Keeps admin off the main nav entirely. Accessible via avatar dropdown — only visible to Admin users. Feels like a power-user panel.</p>
+    </div>
+  </div>
+
+</div>

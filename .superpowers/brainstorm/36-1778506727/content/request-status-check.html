@@ -1,0 +1,75 @@
+<h2>How does a returning user check their request status?</h2>
+<p class="subtitle">They submitted a request — they're back. What do they see?</p>
+
+<div class="options">
+
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Email lookup on the same page</h3>
+      <p style="font-size:12px;color:var(--subtle);margin-bottom:10px">The request page has a small "Check status" section. User types their email → sees only their own status. No login required.</p>
+      <div class="mockup">
+        <div class="mockup-header">/request-access</div>
+        <div class="mockup-body" style="font-size:12px">
+          <div style="border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:12px;margin-bottom:12px">
+            <div style="font-weight:600;margin-bottom:6px">Request Access</div>
+            <div style="background:rgba(255,255,255,0.05);border-radius:6px;padding:8px;color:var(--subtle);font-size:11px">[ Full name · Email · Department · Reason ] → Submit</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--subtle);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Already submitted?</div>
+            <div style="display:flex;gap:6px;align-items:center">
+              <div style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:6px 10px;font-size:11px;color:var(--subtle)">your@email.com</div>
+              <div style="background:rgba(30,73,226,0.3);border:1px solid rgba(30,73,226,0.4);border-radius:6px;padding:6px 12px;font-size:11px">Check</div>
+            </div>
+            <div style="margin-top:8px;padding:8px 10px;border-radius:6px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);font-size:11px;color:#f59e0b">
+              ⏳ Your request is pending review by an administrator.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Pros</h4><ul><li>No friction — no token to remember</li><li>Works even if browser cleared</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Anyone who knows your email can check your status</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Token stored in localStorage after submit</h3>
+      <p style="font-size:12px;color:var(--subtle);margin-bottom:10px">After submitting, a request token is saved to localStorage. When the user returns, the page auto-detects the token and shows only their status — no email input needed.</p>
+      <div class="mockup">
+        <div class="mockup-header">/request-access — returning user</div>
+        <div class="mockup-body" style="font-size:12px">
+          <div style="text-align:center;padding:16px 8px">
+            <div style="font-size:24px;margin-bottom:8px">⏳</div>
+            <div style="font-weight:600;margin-bottom:4px">Request submitted</div>
+            <div style="color:var(--subtle);font-size:11px;margin-bottom:12px">Your request for <strong>jane@kpmg.com</strong> is pending admin approval.</div>
+            <div style="font-size:11px;color:var(--subtle)">← Back to login</div>
+          </div>
+        </div>
+      </div>
+      <div class="mockup" style="margin-top:8px">
+        <div class="mockup-header">/request-access — after rejection</div>
+        <div class="mockup-body" style="font-size:12px">
+          <div style="text-align:center;padding:16px 8px">
+            <div style="font-size:24px;margin-bottom:8px">❌</div>
+            <div style="font-weight:600;margin-bottom:4px;color:#ef4444">Request not approved</div>
+            <div style="color:var(--subtle);font-size:11px;margin-bottom:4px">Reason: <em>"Role not applicable for current project."</em></div>
+            <div style="font-size:11px;color:var(--subtle)">Submit a new request or contact your admin.</div>
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Pros</h4><ul><li>Zero friction on return — auto-detected</li><li>Status tied to this browser only — more private</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Cleared if browser/localStorage wiped</li><li>Doesn't work across devices</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:14px;padding:10px 14px;background:rgba(255,255,255,0.04);border-radius:8px;font-size:12px;color:var(--subtle)">
+  Either way: only <strong>status + optional rejection note</strong> is shown — no other request details, no other users' data.
+</div>

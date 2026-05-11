@@ -6,18 +6,14 @@ import remarkGfm from "remark-gfm";
 import {
   AlertTriangle,
   CheckCircle2,
-  ChevronDown,
   Download,
   Eye,
   FileArchive,
   FileCheck2,
   FileSpreadsheet,
   FileText,
-  Filter,
-  FolderOpen,
   Lock,
   Loader2,
-  Play,
   RefreshCw,
   Search,
   Upload,
@@ -588,6 +584,8 @@ function DocumentNativePreview({
   suggestions,
   activeSuggestionId,
   onSelectSuggestion,
+  onOpenDetachedPreview,
+  initialZoom = 90,
 }: {
   caseId: string;
   file?: DocumentTagEntry;
@@ -596,6 +594,8 @@ function DocumentNativePreview({
   suggestions: Suggestion[];
   activeSuggestionId?: string;
   onSelectSuggestion: (suggestionId: string) => void;
+  onOpenDetachedPreview?: () => void;
+  initialZoom?: number;
 }) {
   const docxContainerRef = useRef<HTMLDivElement | null>(null);
   const [loading, setLoading] = useState(false);
@@ -603,7 +603,7 @@ function DocumentNativePreview({
   const [sheets, setSheets] = useState<WorkbookSheet[]>([]);
   const [documentBuffer, setDocumentBuffer] = useState<ArrayBuffer | null>(null);
   const [activeSheetName, setActiveSheetName] = useState("");
-  const [zoom, setZoom] = useState(100);
+  const [zoom, setZoom] = useState(initialZoom);
   const filename = file?.filename || "";
   const isDocx = isDocxFile(filename);
   const isSheet = isSpreadsheetFile(filename);
@@ -735,7 +735,18 @@ function DocumentNativePreview({
           {matchedSuggestion ? <span className="rounded-full border border-[#C9D7FF] bg-[#EEF2FF] px-2 py-0.5 text-[10px] font-bold text-[#00338D]">Active Comment</span> : null}
         </div>
         <div className="flex items-center gap-2">
-          <Search className="h-4 w-4 text-[#8492A6]" />
+          {onOpenDetachedPreview ? (
+            <button
+              type="button"
+              onClick={onOpenDetachedPreview}
+              aria-label="Open document preview"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#CAD7E8] bg-white text-[#00338D] transition-colors hover:bg-[#EEF2FF]"
+            >
+              <Search className="h-4 w-4" />
+            </button>
+          ) : (
+            <Search className="h-4 w-4 text-[#8492A6]" />
+          )}
           <select className="h-8 rounded-lg border border-[#CAD7E8] bg-white px-2 text-xs text-[#0C233C]" value={zoom} onChange={(event) => setZoom(Number(event.target.value))}>
             {[75, 90, 100, 125, 150].map((value) => <option key={value} value={value}>{value}%</option>)}
           </select>
@@ -814,6 +825,53 @@ function DocumentNativePreview({
   );
 }
 
+function DocumentPreviewDialog({
+  open,
+  onOpenChange,
+  caseId,
+  file,
+  markdownDocument,
+  anchors,
+  suggestions,
+  activeSuggestionId,
+  onSelectSuggestion,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  caseId: string;
+  file?: DocumentTagEntry;
+  markdownDocument?: MarkdownDocument;
+  anchors: Anchor[];
+  suggestions: Suggestion[];
+  activeSuggestionId?: string;
+  onSelectSuggestion: (suggestionId: string) => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="trace-white-dialog flex h-[88vh] max-w-[92vw] flex-col overflow-hidden border border-[#E2E6EF] bg-white p-0 text-[#0C233C] shadow-2xl">
+        <DialogHeader className="shrink-0 border-b border-[#E2E6EF] px-5 py-4 text-left">
+          <DialogTitle className="text-[#0C233C]">Document Preview</DialogTitle>
+          <DialogDescription className="truncate text-[#5A6478]">
+            {file?.filename || "Select a document to preview"}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="min-h-0 flex-1 bg-[#F0F2F7] p-4">
+          <DocumentNativePreview
+            caseId={caseId}
+            file={file}
+            markdownDocument={markdownDocument}
+            anchors={anchors}
+            suggestions={suggestions}
+            activeSuggestionId={activeSuggestionId}
+            onSelectSuggestion={onSelectSuggestion}
+            initialZoom={100}
+          />
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function MoveToExportDialog({
   open,
   onOpenChange,
@@ -833,10 +891,10 @@ function MoveToExportDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="trace-white-dialog max-w-2xl border border-[#E2E6EF] bg-white text-[#0C233C] shadow-2xl">
         <DialogHeader>
           <DialogTitle className="text-[#0C233C]">Move To Export</DialogTitle>
-          <DialogDescription>This locks the review workspace for this run and unlocks output generation.</DialogDescription>
+          <DialogDescription className="text-[#5A6478]">This locks the review workspace for this run and unlocks output generation.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-3 sm:grid-cols-4">
           <div className="rounded-xl border border-[#B8E7D0] bg-[#EDFBF5] p-4 text-center">
@@ -881,16 +939,12 @@ function DocumentsTab({
   selectedFileId,
   onSelectFile,
   onPreviewFile,
-  onRunPipeline,
-  runPending,
 }: {
   caseItem: DocumentUpliftCase | null;
   caseId: string;
   selectedFileId: string;
   onSelectFile: (fileId: string) => void;
   onPreviewFile: (fileId: string) => void;
-  onRunPipeline: () => void;
-  runPending: boolean;
 }) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -929,21 +983,9 @@ function DocumentsTab({
   });
 
   const documents = caseItem?.document_tags ?? [];
-  const primaryUploaded = documents.some((item) => item.tag === "procedure");
-  const supportDocs = documents.filter((item) => item.tag !== "procedure").length;
-  const rcmUploaded = documents.some((item) => item.tag === "rcm");
-  const riskUploaded = documents.some((item) => item.tag === "risk_data");
-  const eventUploaded = documents.some((item) => item.tag === "evidence" || item.tag === "process_doc");
-  const checklist = [
-    ["Primary SOP uploaded", primaryUploaded],
-    ["Minimum 3 support documents", supportDocs >= 3],
-    ["RCM uploaded", rcmUploaded],
-    ["Risk register uploaded", riskUploaded],
-    ["Evidence or event log uploaded", eventUploaded],
-  ] as const;
 
   return (
-    <div className="grid h-full min-h-0 gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
+    <div className="h-full min-h-0">
       <section className="min-h-0 overflow-auto rounded-2xl border border-[#E2E6EF] bg-white p-4 shadow-sm">
         <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -1032,41 +1074,6 @@ function DocumentsTab({
           {!documents.length ? <div className="border-t border-[#E2E6EF] p-8 text-center text-sm text-[#5A6478]">No documents uploaded yet.</div> : null}
         </div>
       </section>
-
-      <aside className="min-h-0 overflow-auto rounded-2xl border border-[#E2E6EF] bg-white p-4 shadow-sm">
-        <div className="mb-5 flex items-center gap-3">
-          <Filter className="h-5 w-5 text-[#1E49E2]" />
-          <div>
-            <div className="text-[17px] font-bold text-[#0C233C]">Run Configuration</div>
-            <div className="text-[12px] text-[#8492A6]">Uses the configured LLM abstraction.</div>
-          </div>
-        </div>
-        <div className="space-y-4">
-          <div>
-            <div className="mb-2 text-[13px] font-bold text-[#0C233C]">Document Completeness</div>
-            <div className="space-y-2">
-              {checklist.map(([label, ok]) => (
-                <div key={label} className="flex items-center justify-between gap-3 text-[13px] text-[#5A6478]">
-                  <span className="flex items-center gap-2">{ok ? <CheckCircle2 className="h-4 w-4 text-[#009A44]" /> : <XCircle className="h-4 w-4 text-[#8492A6]" />}{label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="rounded-xl border border-[#E2E6EF] bg-[#F8FAFD] p-4">
-            <div className="text-[12px] font-bold uppercase tracking-wide text-[#8492A6]">Model / Provider</div>
-            <div className="mt-2 text-[14px] font-bold text-[#0C233C]">Configured Default</div>
-            <div className="mt-1 text-[12px] text-[#5A6478]">Selected by MongoDB settings and backend LLM abstraction.</div>
-          </div>
-          <div className="rounded-xl border border-[#C9D7FF] bg-[#EEF2FF] p-4">
-            <div className="text-[12px] font-bold uppercase tracking-wide text-[#00338D]">Pipeline Status</div>
-            <div className="mt-2 text-[14px] font-bold text-[#0C233C]">{formatStage(caseStage(caseItem))}</div>
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-white">
-              <div className="h-full rounded-full bg-[#1E49E2]" style={{ width: `${stageProgress(caseStage(caseItem))}%` }} />
-            </div>
-          </div>
-          <ActionButton label="Run Pipeline" tone="primary" disabled={!caseId || runPending || !documents.length} icon={runPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />} onClick={onRunPipeline} />
-        </div>
-      </aside>
     </div>
   );
 }
@@ -1075,20 +1082,17 @@ function ProcessingTab({
   caseItem,
   progress,
   progressLabel,
-  sseConnected,
   onRunPipeline,
   runPending,
 }: {
   caseItem: DocumentUpliftCase | null;
   progress: number;
   progressLabel: string;
-  sseConnected: boolean;
   onRunPipeline: () => void;
   runPending: boolean;
 }) {
   const conversion = caseItem?.processing_state?.conversion ?? {};
   const analysis = caseItem?.processing_state?.analysis ?? {};
-  const warnings = caseItem?.processing_state?.warnings ?? [];
   const pipelineError = caseItem?.processing_state?.pipeline_error;
   const stage = caseStage(caseItem);
   const stages = [
@@ -1098,7 +1102,7 @@ function ProcessingTab({
   ];
 
   return (
-    <div className="grid h-full min-h-0 gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+    <div className="h-full min-h-0">
       <section className="min-h-0 overflow-auto rounded-2xl border border-[#E2E6EF] bg-white p-4 shadow-sm">
         <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -1147,31 +1151,14 @@ function ProcessingTab({
             </div>
           ))}
         </div>
-      </section>
 
-      <aside className="min-h-0 overflow-auto space-y-4">
-        <div className="rounded-2xl border border-[#E2E6EF] bg-white p-4 shadow-sm">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-[17px] font-bold text-[#0C233C]">Live Event Stream</h3>
-            <span className={cn("rounded-full px-2 py-1 text-[11px] font-bold", sseConnected ? "bg-[#EDFBF5] text-[#007A3D]" : "bg-[#F0F2F7] text-[#5A6478]")}>{sseConnected ? "Live" : "Polling"}</span>
-          </div>
-          <div className="space-y-3 text-[12px] text-[#5A6478]">
-            <div className="flex gap-2"><span className="mt-1 h-2 w-2 rounded-full bg-[#1E49E2]" />{progressLabel || "Waiting for pipeline events"}</div>
-            {warnings.slice(0, 6).map((warning) => <div key={warning} className="flex gap-2"><span className="mt-1 h-2 w-2 rounded-full bg-[#EAAA00]" />{warning}</div>)}
-          </div>
-        </div>
-        <div className="rounded-2xl border border-[#E2E6EF] bg-white p-4 shadow-sm">
-          <h3 className="text-[17px] font-bold text-[#0C233C]">Usage</h3>
-          <div className="mt-3 text-[28px] font-bold text-[#00338D]">{formatCost(caseItem?.status?.final_cost ?? caseItem?.status?.stage1_cost)}</div>
-          <div className="mt-1 text-[12px] text-[#5A6478]">{caseItem?.status?.stage1_cost?.total_tokens ?? 0} tokens estimated</div>
-        </div>
         {pipelineError ? (
-          <div className="rounded-2xl border border-[#F1B8BF] bg-[#FEEBED] p-4 text-[#8A0010] shadow-sm">
+          <div className="mt-4 rounded-2xl border border-[#F1B8BF] bg-[#FEEBED] p-4 text-[#8A0010] shadow-sm">
             <div className="flex gap-2 text-[14px] font-bold"><AlertTriangle className="h-5 w-5" />Pipeline Failed</div>
             <p className="mt-2 text-[12px] leading-relaxed">{pipelineError}</p>
           </div>
         ) : null}
-      </aside>
+      </section>
     </div>
   );
 }
@@ -1206,6 +1193,8 @@ function ReviewTab({
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [reviewerNotes, setReviewerNotes] = useState("");
   const [editedText, setEditedText] = useState("");
+  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
+  const [editPanelOpen, setEditPanelOpen] = useState(false);
   const documents = caseItem?.document_tags ?? [];
   const documentSuggestions = suggestions.filter((suggestion) => suggestionMatchesDocument(suggestion, selectedFile, markdownDocument, anchors));
   const categories = Array.from(new Set(suggestions.map((item) => item.suggestion_type))).sort();
@@ -1221,6 +1210,7 @@ function ReviewTab({
   useEffect(() => {
     setReviewerNotes(activeSuggestion?.reviewer_notes || "");
     setEditedText(activeSuggestion?.edited_proposed_text || cleanSuggestionText(activeSuggestion) || "");
+    setEditPanelOpen(false);
   }, [activeSuggestion?.suggestion_id]);
 
   const updateSuggestion = useMutation({
@@ -1292,8 +1282,8 @@ function ReviewTab({
         </div>
       </div>
 
-      <div className="grid min-h-0 flex-1 gap-4 xl:grid-cols-[minmax(0,1fr)_520px]">
-        <div className="grid min-h-0 grid-cols-[200px_minmax(0,1fr)] gap-4">
+      <div className="grid min-h-0 flex-1 gap-4 xl:grid-cols-[minmax(0,1fr)_420px]">
+        <div className="grid min-h-0 grid-cols-[160px_minmax(0,1fr)] gap-4">
           <aside className="min-h-0 overflow-auto rounded-2xl border border-[#E2E6EF] bg-white p-3 shadow-sm">
             <div className="mb-3 text-[13px] font-bold text-[#0C233C]">Sections</div>
             <select className="mb-3 h-9 w-full rounded-lg border border-[#CAD7E8] bg-white px-2 text-xs text-[#0C233C]" value={selectedFileId} onChange={(event) => setSelectedFileId(event.target.value)}>
@@ -1316,6 +1306,8 @@ function ReviewTab({
             suggestions={documentSuggestions}
             activeSuggestionId={activeSuggestionId}
             onSelectSuggestion={setActiveSuggestionId}
+            onOpenDetachedPreview={() => setPreviewDialogOpen(true)}
+            initialZoom={75}
           />
         </div>
 
@@ -1357,21 +1349,47 @@ function ReviewTab({
               {!filteredSuggestions.length ? <div className="rounded-xl border border-dashed border-[#CAD7E8] bg-[#F8FAFD] p-8 text-center text-sm text-[#5A6478]">No suggestions match this view.</div> : null}
             </div>
           </div>
-          <div className="max-h-[220px] shrink-0 overflow-auto border-t border-[#E2E6EF] bg-[#F8FAFD] p-3">
+          <div className="shrink-0 border-t border-[#E2E6EF] bg-[#F8FAFD] p-3">
             {activeSuggestion ? (
               <div className="space-y-3">
-                <Textarea value={editedText} onChange={(event) => setEditedText(event.target.value)} className="min-h-16 border-[#CAD7E8] bg-white text-xs text-[#0C233C]" placeholder="Edited proposed text" />
-                <Textarea value={reviewerNotes} onChange={(event) => setReviewerNotes(event.target.value)} className="min-h-12 border-[#CAD7E8] bg-white text-xs text-[#0C233C]" placeholder="Reviewer notes" />
-                <div className="flex flex-wrap gap-2">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
                   <ActionButton label="Accept" tone="success" disabled={updateSuggestion.isPending} onClick={() => updateSuggestion.mutate({ suggestionId: activeSuggestion.suggestion_id, reviewStatus: "accepted", notes: reviewerNotes })} />
-                  <ActionButton label="Edit" tone="secondary" disabled={updateSuggestion.isPending || !editedText.trim()} onClick={() => updateSuggestion.mutate({ suggestionId: activeSuggestion.suggestion_id, reviewStatus: "edited", editedProposedText: editedText, notes: reviewerNotes })} />
+                  <ActionButton
+                    label={editPanelOpen ? "Save Edit" : "Edit Text"}
+                    tone="secondary"
+                    disabled={updateSuggestion.isPending || (editPanelOpen && !editedText.trim())}
+                    onClick={() => {
+                      if (!editPanelOpen) {
+                        setEditPanelOpen(true);
+                        return;
+                      }
+                      updateSuggestion.mutate({ suggestionId: activeSuggestion.suggestion_id, reviewStatus: "edited", editedProposedText: editedText, notes: reviewerNotes });
+                    }}
+                  />
                   <ActionButton label="Reject" tone="danger" disabled={updateSuggestion.isPending} onClick={() => updateSuggestion.mutate({ suggestionId: activeSuggestion.suggestion_id, reviewStatus: "rejected", notes: reviewerNotes })} />
                 </div>
+                {editPanelOpen ? (
+                  <div className="max-h-[180px] space-y-2 overflow-auto">
+                    <Textarea value={editedText} onChange={(event) => setEditedText(event.target.value)} className="min-h-16 border-[#CAD7E8] bg-white text-xs text-[#0C233C]" placeholder="Edited proposed text" />
+                    <Textarea value={reviewerNotes} onChange={(event) => setReviewerNotes(event.target.value)} className="min-h-12 border-[#CAD7E8] bg-white text-xs text-[#0C233C]" placeholder="Reviewer notes" />
+                  </div>
+                ) : null}
               </div>
             ) : null}
           </div>
         </aside>
       </div>
+      <DocumentPreviewDialog
+        open={previewDialogOpen}
+        onOpenChange={setPreviewDialogOpen}
+        caseId={caseId}
+        file={selectedFile}
+        markdownDocument={markdownDocument}
+        anchors={anchors}
+        suggestions={documentSuggestions}
+        activeSuggestionId={activeSuggestionId}
+        onSelectSuggestion={setActiveSuggestionId}
+      />
     </div>
   );
 }
@@ -1393,9 +1411,8 @@ function ExportTab({
   const rejected = suggestions.filter((item) => item.review_status === "rejected").length;
   const edited = suggestions.filter((item) => item.review_status === "edited").length;
   const pending = suggestions.filter((item) => item.review_status === "pending").length;
-  const finalCost = caseItem?.status?.final_cost ?? caseItem?.status?.stage1_cost;
   return (
-    <div className="grid h-full min-h-0 gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+    <div className="h-full min-h-0">
       <section className="min-h-0 overflow-auto space-y-4">
         <div className="rounded-2xl border border-[#B8E7D0] bg-[#EDFBF5] p-4">
           <div className="flex flex-wrap items-center justify-between gap-4">
@@ -1453,23 +1470,6 @@ function ExportTab({
           ))}
         </div>
       </section>
-
-      <aside className="min-h-0 overflow-auto space-y-4">
-        <div className="rounded-2xl border border-[#E2E6EF] bg-white p-4 shadow-sm">
-          <h3 className="text-[17px] font-bold text-[#0C233C]">Quality Checklist</h3>
-          <div className="mt-4 space-y-2 text-[13px] text-[#5A6478]">
-            {["Reviewer decisions recorded", "Tracked changes validated by output engine", "Source references retained", "No document process changes"].map((item) => (
-              <div key={item} className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-[#009A44]" />{item}</div>
-            ))}
-          </div>
-        </div>
-        <div className="rounded-2xl border border-[#E2E6EF] bg-white p-4 shadow-sm">
-          <h3 className="text-[17px] font-bold text-[#0C233C]">Run Summary</h3>
-          <div className="mt-3 text-[32px] font-bold text-[#00338D]">{formatCost(finalCost)}</div>
-          <p className="mt-1 text-[12px] text-[#5A6478]">Final cost estimate</p>
-          <ActionButton label="Download All Outputs" tone="secondary" disabled={!outputs.length} icon={<Download className="h-4 w-4" />} onClick={() => outputs[0] && window.open(`/api/document-uplift/cases/${caseId}/outputs/${outputs[0].output_id}`, "_blank")} />
-        </div>
-      </aside>
     </div>
   );
 }
@@ -1485,7 +1485,6 @@ export default function DocumentUpliftCasePage() {
   const [moveExportOpen, setMoveExportOpen] = useState(false);
   const [documentUpliftProgressLabel, setDocumentUpliftProgressLabel] = useState("");
   const [sseProgress, setSseProgress] = useState<number | null>(null);
-  const [sseConnected, setSseConnected] = useState(false);
 
   const caseQuery = useQuery<DocumentUpliftCase>({
     queryKey: [`/api/document-uplift/cases/${caseId}`],
@@ -1532,7 +1531,6 @@ export default function DocumentUpliftCasePage() {
     const updateFromEvent = (event: MessageEvent) => {
       const data = parseSsePipelineEvent(event);
       if (!data) return;
-      setSseConnected(true);
       setDocumentUpliftProgressLabel(formatSseProgressLabel(data));
       setSseProgress((current) => Math.max(current ?? 0, sseProgressPercent(data, caseStage(caseItem))));
     };
@@ -1552,7 +1550,6 @@ export default function DocumentUpliftCasePage() {
       queryClient.invalidateQueries({ queryKey: [`/api/document-uplift/cases/${caseId}`] });
       queryClient.invalidateQueries({ queryKey: [`/api/document-uplift/cases/${caseId}/suggestions`] });
       eventSource.close();
-      setSseConnected(false);
     };
 
     const handleStreamError = (event: Event) => {
@@ -1563,7 +1560,6 @@ export default function DocumentUpliftCasePage() {
       } else {
         setDocumentUpliftProgressLabel("Live progress stream unavailable; polling status instead.");
       }
-      setSseConnected(false);
       if (data?.stage === "failed") eventSource.close();
     };
 
@@ -1618,35 +1614,7 @@ export default function DocumentUpliftCasePage() {
   return (
     <div className="h-full min-h-0 overflow-hidden bg-[#F0F2F7] text-[#0C233C]" data-testid="document-uplift-case-page">
       <div className="flex h-full min-h-0 flex-col">
-        <TraceNavBar
-          breadcrumb={caseItem?.title || "Document Uplift"}
-          actions={
-            <div className="flex flex-wrap items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => runPipeline.mutate()}
-                disabled={!caseId || runPipeline.isPending}
-                className="inline-flex items-center gap-2 rounded-xl bg-[#1E49E2] px-4 py-2 text-[13px] font-bold text-white transition-colors hover:bg-[#00338D] disabled:cursor-not-allowed disabled:opacity-50"
-                data-testid="document-uplift-run-pipeline"
-              >
-                {runPipeline.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
-                Run Pipeline
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setExportUnlocked(true);
-                  setActiveTab("export");
-                }}
-                className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-[13px] font-bold text-white transition-colors hover:bg-white/15"
-                data-testid="document-uplift-generate-outputs"
-              >
-                <FileCheck2 className="h-4 w-4" />
-                Generate Outputs
-              </button>
-            </div>
-          }
-        />
+        <TraceNavBar breadcrumb={caseItem?.title || "Document Uplift"} />
 
         <section className="shrink-0 border-b border-[#D8E0ED] bg-[#0C233C] px-5 py-4 text-white lg:px-8" data-testid="document-uplift-compact-header">
           <div className="flex w-full flex-wrap items-center justify-between gap-4">
@@ -1714,12 +1682,10 @@ export default function DocumentUpliftCasePage() {
                   setSelectedFileId(fileId);
                   setActiveTab("review");
                 }}
-                onRunPipeline={() => runPipeline.mutate()}
-                runPending={runPipeline.isPending}
               />
             ) : null}
             {activeTab === "processing" ? (
-              <ProcessingTab caseItem={caseItem} progress={progress} progressLabel={documentUpliftProgressLabel} sseConnected={sseConnected} onRunPipeline={() => runPipeline.mutate()} runPending={runPipeline.isPending} />
+              <ProcessingTab caseItem={caseItem} progress={progress} progressLabel={documentUpliftProgressLabel} onRunPipeline={() => runPipeline.mutate()} runPending={runPipeline.isPending} />
             ) : null}
             {activeTab === "review" ? (
               canReview ? (

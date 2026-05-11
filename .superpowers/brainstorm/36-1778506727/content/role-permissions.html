@@ -1,0 +1,53 @@
+<h2>Which pages should each role access?</h2>
+<p class="subtitle">Select the access model that best matches your intent. You can refine per-feature after.</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Strict hierarchy — each role adds more</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:8px;">
+        <thead><tr style="border-bottom:1px solid rgba(255,255,255,0.1)">
+          <th style="text-align:left;padding:4px 8px;color:var(--subtle)">Page / Action</th>
+          <th style="padding:4px 8px;color:#ef4444">Viewer</th>
+          <th style="padding:4px 8px;color:#f59e0b">Analyst</th>
+          <th style="padding:4px 8px;color:#3b82f6">Manager</th>
+          <th style="padding:4px 8px;color:#10b981">Admin</th>
+        </tr></thead>
+        <tbody>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td style="padding:4px 8px">View dashboards / reports</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td style="padding:4px 8px">Asset Registry (read)</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td style="padding:4px 8px">Controls / Regulatory Library (read)</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td style="padding:4px 8px">Run risk assessments / control testing</td><td style="text-align:center">—</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td style="padding:4px 8px">Create / edit issues</td><td style="text-align:center">—</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td style="padding:4px 8px">Upload evidence / libraries</td><td style="text-align:center">—</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td style="padding:4px 8px">Approve validation queue items</td><td style="text-align:center">—</td><td style="text-align:center">—</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td style="padding:4px 8px">Delete records / sessions</td><td style="text-align:center">—</td><td style="text-align:center">—</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td style="padding:4px 8px">Manage users / roles (Admin Console)</td><td style="text-align:center">—</td><td style="text-align:center">—</td><td style="text-align:center">—</td><td style="text-align:center">✓</td></tr>
+          <tr><td style="padding:4px 8px">Password policy / platform settings</td><td style="text-align:center">—</td><td style="text-align:center">—</td><td style="text-align:center">—</td><td style="text-align:center">✓</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Lighter touch — Analyst = Manager, only Admin is special</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:8px;">
+        <thead><tr style="border-bottom:1px solid rgba(255,255,255,0.1)">
+          <th style="text-align:left;padding:4px 8px;color:var(--subtle)">Page / Action</th>
+          <th style="padding:4px 8px;color:#ef4444">Viewer</th>
+          <th style="padding:4px 8px;color:#f59e0b">Analyst &amp; Manager</th>
+          <th style="padding:4px 8px;color:#10b981">Admin</th>
+        </tr></thead>
+        <tbody>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td style="padding:4px 8px">All read access</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td style="padding:4px 8px">All write access (assessments, issues, libraries)</td><td style="text-align:center">—</td><td style="text-align:center">✓</td><td style="text-align:center">✓</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td style="padding:4px 8px">Admin Console (users, settings)</td><td style="text-align:center">—</td><td style="text-align:center">—</td><td style="text-align:center">✓</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:10px;font-size:12px;color:var(--subtle)">Simpler to implement. Manager title is cosmetic — same permissions as Analyst.</p>
+    </div>
+  </div>
+</div>

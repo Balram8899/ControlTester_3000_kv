@@ -1,0 +1,181 @@
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list
+  - generic [ref=e3]:
+    - complementary [ref=e4]:
+      - button "Expand sidebar" [ref=e6] [cursor=pointer]:
+        - img [ref=e7]
+      - navigation [ref=e9]:
+        - generic [ref=e10]:
+          - button [ref=e11] [cursor=pointer]:
+            - img [ref=e12]
+          - button [ref=e17] [cursor=pointer]:
+            - img [ref=e18]
+          - button [ref=e20] [cursor=pointer]:
+            - img [ref=e21]
+          - button [ref=e24] [cursor=pointer]:
+            - img [ref=e25]
+          - button [ref=e27] [cursor=pointer]:
+            - img [ref=e28]
+          - button [ref=e32] [cursor=pointer]:
+            - img [ref=e33]
+          - button [ref=e36] [cursor=pointer]:
+            - img [ref=e37]
+          - button [ref=e42] [cursor=pointer]:
+            - img [ref=e43]
+          - button [ref=e48] [cursor=pointer]:
+            - img [ref=e49]
+          - button [ref=e51] [cursor=pointer]:
+            - img [ref=e52]
+          - button [ref=e55] [cursor=pointer]:
+            - img [ref=e56]
+          - button [ref=e61] [cursor=pointer]:
+            - img [ref=e62]
+          - button [ref=e64] [cursor=pointer]:
+            - img [ref=e65]
+          - button [ref=e67] [cursor=pointer]:
+            - img [ref=e68]
+      - generic [ref=e74]: A
+    - generic [ref=e75]:
+      - main [ref=e76]:
+        - generic [ref=e79]:
+          - generic [ref=e81]:
+            - generic [ref=e82]:
+              - button "KPMG | TRACE" [ref=e83] [cursor=pointer]:
+                - generic [ref=e84]: KPMG
+                - generic [ref=e85]: "|"
+                - generic [ref=e86]: TRACE
+              - generic [ref=e87]:
+                - generic [ref=e88]: /
+                - generic [ref=e89]: ESG qualityfix validation
+            - generic [ref=e90]:
+              - generic [ref=e91]:
+                - button "Run Pipeline" [ref=e92] [cursor=pointer]:
+                  - img [ref=e93]
+                  - text: Run Pipeline
+                - button "Generate Outputs" [active] [ref=e95] [cursor=pointer]:
+                  - img [ref=e96]
+                  - text: Generate Outputs
+              - button "Sign Out" [ref=e100] [cursor=pointer]:
+                - img
+                - text: Sign Out
+          - generic [ref=e102]:
+            - generic [ref=e103]:
+              - img [ref=e105]
+              - generic [ref=e108]:
+                - generic [ref=e109]:
+                  - button "Back To Cases" [ref=e110] [cursor=pointer]
+                  - generic [ref=e111]: Review Ready
+                  - generic [ref=e112]: ESG
+                - heading "ESG qualityfix validation" [level=1] [ref=e226]
+                - generic [ref=e114]:
+                  - generic [ref=e115]: "Primary SOP: esg_reporting_sop.docx"
+                  - generic [ref=e116]: "Model: gpt-5.5"
+                  - generic [ref=e117]: "Last run: 11 May 2026, 10:03 am"
+            - generic [ref=e118]:
+              - generic [ref=e119]:
+                - generic [ref=e120]: "63"
+                - generic [ref=e121]: Suggestions
+              - generic [ref=e122]:
+                - generic [ref=e123]: "63"
+                - generic [ref=e124]: Pending
+              - generic [ref=e125]:
+                - generic [ref=e126]: "3"
+                - generic [ref=e127]: Outputs
+              - generic [ref=e128]:
+                - generic [ref=e129]: $0.00
+                - generic [ref=e130]: Cost
+          - navigation [ref=e131]:
+            - generic [ref=e132]:
+              - button "Documents" [ref=e133] [cursor=pointer]
+              - button "Processing" [ref=e134] [cursor=pointer]
+              - button "Review Suggestions 63" [ref=e227] [cursor=pointer]:
+                - text: Review Suggestions
+                - generic [ref=e228]: "63"
+              - button "Export" [ref=e139] [cursor=pointer]
+          - main [ref=e143]:
+            - generic [ref=e1119]:
+              - generic [ref=e1120]:
+                - generic [ref=e1122]:
+                  - generic [ref=e1123]:
+                    - img [ref=e1125]
+                    - generic [ref=e1128]:
+                      - heading "Export Workspace Ready" [level=2] [ref=e1129]
+                      - paragraph [ref=e1130]: Generate or download tracked outputs for this case.
+                  - button "Generate Outputs" [ref=e1131] [cursor=pointer]:
+                    - img [ref=e1132]
+                    - text: Generate Outputs
+                - generic [ref=e1136]:
+                  - generic [ref=e1137]:
+                    - generic [ref=e1138]: Downloads
+                    - heading "Generated Outputs" [level=3] [ref=e1139]
+                  - generic [ref=e1140]:
+                    - generic [ref=e1141]:
+                      - img [ref=e1142]
+                      - generic [ref=e1146]:
+                        - generic [ref=e1147]: d64604c4-c7e2-43d2-bfff-d356d74b0936-uplifted-sop.docx
+                        - generic [ref=e1148]: Docx · 11 May 2026, 12:14 am
+                    - link "Download" [ref=e1149] [cursor=pointer]:
+                      - /url: /api/document-uplift/cases/d64604c4-c7e2-43d2-bfff-d356d74b0936/outputs/d64604c4-c7e2-43d2-bfff-d356d74b0936-uplifted-docx
+                      - img [ref=e1150]
+                      - text: Download
+                  - generic [ref=e1153]:
+                    - generic [ref=e1154]:
+                      - img [ref=e1155]
+                      - generic [ref=e1159]:
+                        - generic [ref=e1160]: d64604c4-c7e2-43d2-bfff-d356d74b0936-swimlane.png
+                        - generic [ref=e1161]: Png Diagram · 11 May 2026, 12:15 am
+                    - link "Download" [ref=e1162] [cursor=pointer]:
+                      - /url: /api/document-uplift/cases/d64604c4-c7e2-43d2-bfff-d356d74b0936/outputs/d64604c4-c7e2-43d2-bfff-d356d74b0936-swimlane-png
+                      - img [ref=e1163]
+                      - text: Download
+                  - generic [ref=e1166]:
+                    - generic [ref=e1167]:
+                      - img [ref=e1168]
+                      - generic [ref=e1172]:
+                        - generic [ref=e1173]: d64604c4-c7e2-43d2-bfff-d356d74b0936-swimlane.pdf
+                        - generic [ref=e1174]: Pdf Diagram · 11 May 2026, 12:15 am
+                    - link "Download" [ref=e1175] [cursor=pointer]:
+                      - /url: /api/document-uplift/cases/d64604c4-c7e2-43d2-bfff-d356d74b0936/outputs/d64604c4-c7e2-43d2-bfff-d356d74b0936-swimlane-pdf
+                      - img [ref=e1176]
+                      - text: Download
+                - generic [ref=e1179]:
+                  - heading "Change Summary By Status" [level=3] [ref=e1181]
+                  - generic [ref=e1182]:
+                    - generic [ref=e1183]: Accepted
+                    - generic [ref=e1184]: "0"
+                  - generic [ref=e1185]:
+                    - generic [ref=e1186]: Edited
+                    - generic [ref=e1187]: "0"
+                  - generic [ref=e1188]:
+                    - generic [ref=e1189]: Rejected
+                    - generic [ref=e1190]: "0"
+                  - generic [ref=e1191]:
+                    - generic [ref=e1192]: Pending
+                    - generic [ref=e1193]: "63"
+              - complementary [ref=e1194]:
+                - generic [ref=e1195]:
+                  - heading "Quality Checklist" [level=3] [ref=e1196]
+                  - generic [ref=e1197]:
+                    - generic [ref=e1198]:
+                      - img [ref=e1199]
+                      - text: Reviewer decisions recorded
+                    - generic [ref=e1202]:
+                      - img [ref=e1203]
+                      - text: Tracked changes validated by output engine
+                    - generic [ref=e1206]:
+                      - img [ref=e1207]
+                      - text: Source references retained
+                    - generic [ref=e1210]:
+                      - img [ref=e1211]
+                      - text: No document process changes
+                - generic [ref=e1214]:
+                  - heading "Run Summary" [level=3] [ref=e1215]
+                  - generic [ref=e1216]: $0.00
+                  - paragraph [ref=e1217]: Final cost estimate
+                  - button "Download All Outputs" [ref=e1218] [cursor=pointer]:
+                    - img [ref=e1219]
+                    - text: Download All Outputs
+      - contentinfo [ref=e223]:
+        - generic [ref=e224]: © 2026 KPMG Assurance and Consulting Services LLP, an Indian Limited Liability Partnership and a member firm of the KPMG global organization of independent member firms affiliated with KPMG International Limited, a private English company limited by guarantee. All rights reserved.
+        - generic [ref=e225]: Confidential

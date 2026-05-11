@@ -1,0 +1,89 @@
+<h2>Role Entitlements — Draft</h2>
+<p class="subtitle">Click any cell to toggle. Rows you disagree with — tell me in the terminal. Multi-role users get the union of all their roles.</p>
+
+<style>
+.perm-table { width:100%; border-collapse:collapse; font-size:12px; margin-top:12px; }
+.perm-table th { padding:6px 10px; text-align:center; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; }
+.perm-table th.feature-col { text-align:left; }
+.perm-table td { padding:5px 10px; text-align:center; border-bottom:1px solid rgba(255,255,255,0.05); }
+.perm-table td.feature-col { text-align:left; color:var(--text); }
+.perm-table tr:hover td { background:rgba(255,255,255,0.03); }
+.section-header td { background:rgba(255,255,255,0.06); font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:var(--subtle); padding:6px 10px; }
+.yes  { color:#10b981; font-size:15px; }
+.no   { color:rgba(255,255,255,0.15); font-size:15px; }
+.role-viewer  { color:#94a3b8; }
+.role-analyst { color:#f59e0b; }
+.role-manager { color:#3b82f6; }
+.role-admin   { color:#a78bfa; }
+</style>
+
+<table class="perm-table">
+  <thead>
+    <tr>
+      <th class="feature-col" style="width:40%">Feature / Action</th>
+      <th class="role-viewer">Viewer</th>
+      <th class="role-analyst">Analyst</th>
+      <th class="role-manager">Manager</th>
+      <th class="role-admin">Admin</th>
+    </tr>
+  </thead>
+  <tbody>
+
+    <tr class="section-header"><td colspan="5">Asset Registry</td></tr>
+    <tr><td class="feature-col">View assets</td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
+    <tr><td class="feature-col">Create / edit assets</td><td><span class="no">—</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
+    <tr><td class="feature-col">Delete assets</td><td><span class="no">—</span></td><td><span class="no">—</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
+
+    <tr class="section-header"><td colspan="5">Controls Library</td></tr>
+    <tr><td class="feature-col">View controls</td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
+    <tr><td class="feature-col">Upload / import controls</td><td><span class="no">—</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
+    <tr><td class="feature-col">Run 5W1H quality analysis</td><td><span class="no">—</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
+    <tr><td class="feature-col">Delete controls</td><td><span class="no">—</span></td><td><span class="no">—</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
+
+    <tr class="section-header"><td colspan="5">Regulatory &amp; Frameworks Library</td></tr>
+    <tr><td class="feature-col">View obligations / frameworks</td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
+    <tr><td class="feature-col">Upload / import documents</td><td><span class="no">—</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
+    <tr><td class="feature-col">Delete library entries</td><td><span class="no">—</span></td><td><span class="no">—</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
+
+    <tr class="section-header"><td colspan="5">Risk Assessment</td></tr>
+    <tr><td class="feature-col">View assessments &amp; reports</td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
+    <tr><td class="feature-col">Create &amp; run assessments</td><td><span class="no">—</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
+    <tr><td class="feature-col">Delete assessment sessions</td><td><span class="no">—</span></td><td><span class="no">—</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
+
+    <tr class="section-header"><td colspan="5">Control Testing</td></tr>
+    <tr><td class="feature-col">View testing sessions &amp; reports</td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
+    <tr><td class="feature-col">Create sessions &amp; upload evidence</td><td><span class="no">—</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
+    <tr><td class="feature-col">Delete testing sessions</td><td><span class="no">—</span></td><td><span class="no">—</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
+
+    <tr class="section-header"><td colspan="5">Issue Management</td></tr>
+    <tr><td class="feature-col">View issues</td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
+    <tr><td class="feature-col">Create &amp; edit issues</td><td><span class="no">—</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
+    <tr><td class="feature-col">Attach evidence to issues</td><td><span class="no">—</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
+    <tr><td class="feature-col">Close / resolve issues</td><td><span class="no">—</span></td><td><span class="no">—</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
+    <tr><td class="feature-col">Delete issues</td><td><span class="no">—</span></td><td><span class="no">—</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
+
+    <tr class="section-header"><td colspan="5">Validation Queue</td></tr>
+    <tr><td class="feature-col">View queue items</td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
+    <tr><td class="feature-col">Accept / dismiss queue items</td><td><span class="no">—</span></td><td><span class="no">—</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
+
+    <tr class="section-header"><td colspan="5">Chat / LLM</td></tr>
+    <tr><td class="feature-col">Use chat assistant</td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
+
+    <tr class="section-header"><td colspan="5">Reports &amp; Exports</td></tr>
+    <tr><td class="feature-col">Download PDF / workpaper reports</td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
+    <tr><td class="feature-col">Generate RCM compliance reports</td><td><span class="no">—</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
+
+    <tr class="section-header"><td colspan="5">Admin Console</td></tr>
+    <tr><td class="feature-col">View user list</td><td><span class="no">—</span></td><td><span class="no">—</span></td><td><span class="no">—</span></td><td><span class="yes">✓</span></td></tr>
+    <tr><td class="feature-col">Create / invite users</td><td><span class="no">—</span></td><td><span class="no">—</span></td><td><span class="no">—</span></td><td><span class="yes">✓</span></td></tr>
+    <tr><td class="feature-col">Edit user roles</td><td><span class="no">—</span></td><td><span class="no">—</span></td><td><span class="no">—</span></td><td><span class="yes">✓</span></td></tr>
+    <tr><td class="feature-col">Disable / delete users</td><td><span class="no">—</span></td><td><span class="no">—</span></td><td><span class="no">—</span></td><td><span class="yes">✓</span></td></tr>
+    <tr><td class="feature-col">Configure password policy</td><td><span class="no">—</span></td><td><span class="no">—</span></td><td><span class="no">—</span></td><td><span class="yes">✓</span></td></tr>
+    <tr><td class="feature-col">View audit log</td><td><span class="no">—</span></td><td><span class="no">—</span></td><td><span class="no">—</span></td><td><span class="yes">✓</span></td></tr>
+
+  </tbody>
+</table>
+
+<div style="margin-top:16px;padding:12px;background:rgba(255,255,255,0.04);border-radius:8px;font-size:12px;color:var(--subtle)">
+  <strong style="color:var(--text)">Pattern:</strong> Viewer = read-only everywhere · Analyst = create &amp; run work · Manager = approve, close &amp; delete · Admin = everything + user management
+</div>

@@ -1,0 +1,115 @@
+<h2>UI Changes Overview</h2>
+<p class="subtitle">New pages, modified pages, and gating changes across the app</p>
+
+<style>
+.ui-section { margin-bottom:20px; }
+.ui-section h3 { font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:var(--subtle); margin-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.07); padding-bottom:6px; }
+.page-card { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09); border-radius:8px; padding:12px 14px; margin-bottom:8px; display:flex; gap:14px; align-items:flex-start; }
+.page-badge { font-size:10px; font-weight:700; padding:3px 8px; border-radius:4px; white-space:nowrap; flex-shrink:0; margin-top:1px; }
+.badge-new      { background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3); }
+.badge-modified { background:rgba(245,158,11,0.15); color:#f59e0b; border:1px solid rgba(245,158,11,0.3); }
+.badge-gating   { background:rgba(59,130,246,0.15); color:#3b82f6; border:1px solid rgba(59,130,246,0.3); }
+.page-name { font-size:13px; font-weight:600; margin-bottom:3px; }
+.page-desc { font-size:12px; color:var(--subtle); line-height:1.5; }
+.route { font-size:11px; color:#a78bfa; font-family:monospace; margin-bottom:4px; }
+</style>
+
+<div class="ui-section">
+  <h3>New Pages</h3>
+
+  <div class="page-card">
+    <span class="page-badge badge-new">NEW</span>
+    <div>
+      <div class="route">/request-access</div>
+      <div class="page-name">Request Access Page</div>
+      <div class="page-desc">Replaces the current "Create Account" dialog on the login page. Full page with fields: Full name · Work email · Department · Reason for access. Submit stores to <code>access_requests</code>. On return visit, shows "Your request is pending approval" or rejection note if actioned.</div>
+    </div>
+  </div>
+
+  <div class="page-card">
+    <span class="page-badge badge-new">NEW</span>
+    <div>
+      <div class="route">/set-password</div>
+      <div class="page-name">Force Password Reset Page</div>
+      <div class="page-desc">Shown automatically after first login when <code>must_reset_password: true</code>. Cannot be skipped — all other routes redirect here until complete. Fields: New password · Confirm password. Live policy checker shows which rules are met (length, uppercase, number, symbol). On submit, validates against policy + no-reuse check, then redirects to <code>/landing</code>.</div>
+    </div>
+  </div>
+
+  <div class="page-card">
+    <span class="page-badge badge-new">NEW</span>
+    <div>
+      <div class="route">/admin</div>
+      <div class="page-name">Admin Console</div>
+      <div class="page-desc">Dedicated route, visible in sidebar only for Admin-role users. Four tabs:
+        <br/><br/>
+        <strong>Users tab</strong> — table of all users (name, email, roles, status, last login). Actions: Create User (form: name + email + roles → generates temp password shown on screen), Edit roles, Disable/Enable, Delete.
+        <br/><br/>
+        <strong>Requests tab</strong> — badge shows pending count. Table of access requests with status. Approve action opens modal: assign roles (multi-select) + confirm. Reject action opens modal: optional rejection note.
+        <br/><br/>
+        <strong>Password Policy tab</strong> — form to configure: min length slider, complexity toggles, no-reuse count, expiry days. Save button persists to <code>password_policy</code> collection.
+        <br/><br/>
+        <strong>Audit Log tab</strong> — read-only table: who did what and when (logins, role changes, approvals, password resets).
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="ui-section">
+  <h3>Modified Pages</h3>
+
+  <div class="page-card">
+    <span class="page-badge badge-modified">MODIFIED</span>
+    <div>
+      <div class="route">/login (login.tsx)</div>
+      <div class="page-name">Login Page</div>
+      <div class="page-desc">"Create an account" button → replaced with "Request Access" link that navigates to <code>/request-access</code>. Register dialog removed. Login now calls <code>POST /api/auth/login</code> (FastAPI) instead of reading localStorage. On success, JWT stored as httpOnly cookie.</div>
+    </div>
+  </div>
+
+  <div class="page-card">
+    <span class="page-badge badge-modified">MODIFIED</span>
+    <div>
+      <div class="route">AuthContext.tsx</div>
+      <div class="page-name">Auth Context</div>
+      <div class="page-desc">Stripped of all localStorage logic. Now wraps API calls: <code>login()</code> → POST /auth/login, <code>logout()</code> → POST /auth/logout, <code>register()</code> removed. User object gains <code>roles: string[]</code> and <code>must_reset_password: boolean</code>. Exposes <code>hasRole(role)</code> and <code>hasAnyRole(...roles)</code> helpers.</div>
+    </div>
+  </div>
+
+  <div class="page-card">
+    <span class="page-badge badge-modified">MODIFIED</span>
+    <div>
+      <div class="route">App router</div>
+      <div class="page-name">Route Guards</div>
+      <div class="page-desc">Two new wrapper components: <code>&lt;RequireAuth&gt;</code> (redirects to /login if not authenticated) and <code>&lt;RequireRole roles={[...]}&gt;</code> (shows 403 page if user lacks required roles). <code>/admin</code> wrapped with <code>RequireRole roles={["admin"]}</code>. Force-reset check: if <code>must_reset_password</code> is true, all protected routes redirect to <code>/set-password</code>.</div>
+    </div>
+  </div>
+
+  <div class="page-card">
+    <span class="page-badge badge-modified">MODIFIED</span>
+    <div>
+      <div class="route">Sidebar / nav</div>
+      <div class="page-name">Navigation</div>
+      <div class="page-desc">Admin Console link added to sidebar under a separate "Admin" section — only rendered when <code>hasRole("admin")</code> is true. Requests tab badge count fetched on mount. User avatar/name shown in sidebar footer with logout button.</div>
+    </div>
+  </div>
+</div>
+
+<div class="ui-section">
+  <h3>Role Gating (existing pages)</h3>
+
+  <div class="page-card">
+    <span class="page-badge badge-gating">GATING</span>
+    <div>
+      <div class="page-name">Write actions hidden/disabled for Viewer</div>
+      <div class="page-desc">Create, Edit, Delete, Upload buttons are hidden (not just disabled) when the user lacks the required role. Read-only state is rendered instead. Uses <code>hasAnyRole()</code> from AuthContext inline on each page.</div>
+    </div>
+  </div>
+
+  <div class="page-card">
+    <span class="page-badge badge-gating">GATING</span>
+    <div>
+      <div class="page-name">Manager-only actions</div>
+      <div class="page-desc">Delete buttons, Close/Resolve issue, Accept/Dismiss validation queue items — hidden unless user has "manager" or "admin" role.</div>
+    </div>
+  </div>
+</div>

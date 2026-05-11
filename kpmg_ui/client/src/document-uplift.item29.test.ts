@@ -53,5 +53,7 @@ const combinedSource = `${pageSource}\n${casePageSource}`;
 });
 
 assert.match(pageSource, /data-testid="document-uplift-page"/);
-assert.match(casePageSource, /data-testid="document-uplift-run-pipeline"/);
-assert.match(casePageSource, /data-testid="document-uplift-generate-outputs"/);
+assert.match(casePageSource, /ActionButton label="Run Pipeline"/, "Run Pipeline must live in the processing workspace");
+assert.match(casePageSource, /ActionButton label="Generate Outputs"/, "Generate Outputs must live in the export workspace");
+assert.doesNotMatch(casePageSource, /data-testid="document-uplift-run-pipeline"/, "Run Pipeline must not be duplicated in the top shell nav");
+assert.doesNotMatch(casePageSource, /data-testid="document-uplift-generate-outputs"/, "Generate Outputs must not be duplicated in the top shell nav");

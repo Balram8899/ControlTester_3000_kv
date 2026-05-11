@@ -27,6 +27,7 @@ assert.match(landingSource, /apex_uplift_hiw_open/, "How It Works collapsed stat
 assert.match(caseSource, /import \{ renderAsync \} from "docx-preview"/, "Case page must use docx-preview locally");
 assert.match(caseSource, /import TraceNavBar from "@\/components\/TraceNavBar"/, "Case page must use the compact TRACE shell nav");
 assert.doesNotMatch(caseSource, /import HeroSection from "@\/components\/HeroSection"/, "Case detail page must not spend vertical space on the full hero");
+assert.doesNotMatch(caseSource, /<TraceNavBar[\s\S]*actions=\{/, "Case shell nav must not duplicate workflow actions already available in the workspace");
 assert.match(
   caseSource,
   /\/api\/document-uplift\/cases\/\$\{caseId\}\/files\/\$\{file\.file_id\}\/content/,
@@ -42,4 +43,12 @@ assert.match(caseSource, /MoveToExportDialog/, "Case page must gate export with 
 assert.match(caseSource, /h-full min-h-0 overflow-hidden/, "Case page must fit inside the existing TRACE shell");
 assert.match(caseSource, /onPreviewFile=\{\(fileId\) => \{[\s\S]*setActiveTab\("review"\)/, "Document preview action must open the review viewer");
 assert.match(caseSource, /Extracted Preview Fallback/, "Viewer must show extracted markdown if native file preview cannot load");
-assert.match(caseSource, /xl:grid-cols-\[minmax\(0,1fr\)_520px\]/, "Review queue must reserve enough horizontal space for decisions");
+assert.match(caseSource, /DocumentPreviewDialog/, "Review page must provide a detached document preview dialog");
+assert.match(caseSource, /aria-label="Open document preview"/, "Magnifying glass must open the detached document preview");
+assert.match(caseSource, /initialZoom=\{75\}/, "Embedded document preview must default to a fit-oriented zoom");
+assert.match(caseSource, /xl:grid-cols-\[minmax\(0,1fr\)_420px\]/, "Review queue must leave enough horizontal space for the document viewer");
+assert.match(caseSource, /editPanelOpen/, "Review edit fields must be collapsible instead of permanently crowding the queue");
+assert.doesNotMatch(caseSource, /Run Configuration|Live Event Stream|Quality Checklist|Run Summary/, "Case tabs must not reserve right-side panels for low-value status summaries");
+assert.ok((caseSource.match(/trace-white-dialog/g) ?? []).length >= 2, "Case dialogs must use the white TRACE modal treatment");
+assert.ok((landingSource.match(/trace-white-dialog/g) ?? []).length >= 2, "Landing dialogs must use the white TRACE modal treatment");
+assert.match(landingSource, /placeholder:text-\[#8492A6\]/, "Dialog form fields must use the light TRACE placeholder treatment");

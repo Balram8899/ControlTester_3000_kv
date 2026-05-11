@@ -1383,3 +1383,32 @@ Verification:
 
 Remaining follow-up:
 - Recreate both `fastapi_api` and `web_ui_agent` containers so the live app has the preview endpoint and compact shell UI together.
+
+Update:
+- Added a detached document preview dialog from the Review Suggestions workspace. The magnifying-glass control in the inline viewer now opens the selected document in a large modal preview.
+- Improved Review Suggestions visibility by reducing the embedded document zoom to 75%, narrowing the sections rail, resizing the decision queue to leave more document space, and making the edited-text/reviewer-notes fields collapsible behind `Edit Text`.
+- No backend suggestion, SOP processing, or output-engine logic changed in this update.
+- Verification passed:
+  - `node --import tsx .\client\src\document-uplift.redesign.test.ts`
+  - `node --import tsx .\client\src\document-uplift.item29.test.ts`
+  - `node --import tsx .\client\src\document-uplift.item30.test.ts`
+  - `node --import tsx .\client\src\document-uplift.severity.test.ts`
+  - `python -m pytest tests/test_document_uplift_api.py -q` passed: 17 passed, existing warnings only.
+  - `npm run check`
+  - `npm run build` passed with existing PostCSS `from` warning and existing large-chunk warning.
+
+Update:
+- Removed duplicated top-shell `Run Pipeline` and `Generate Outputs` actions from the Document Uplift case page; the actions now live only in the relevant workflow workspaces.
+- Removed low-value right-side panels from Documents, Processing, and Export so each tab uses the full TRACE shell workspace width.
+- Converted Document Uplift case and landing dialogs (`Document Preview`, `Move To Export`, `Create Case`, `Delete Case`) to the white TRACE modal treatment with light form fields and muted placeholders.
+- Updated source guards so Item 29 requires workspace-level actions and rejects the old duplicated top-nav action buttons.
+- No backend suggestion, SOP processing, or output-engine logic changed in this update.
+- Verification passed:
+  - `node --import tsx .\client\src\document-uplift.redesign.test.ts`
+  - `node --import tsx .\client\src\document-uplift.item29.test.ts`
+  - `node --import tsx .\client\src\document-uplift.item30.test.ts`
+  - `node --import tsx .\client\src\document-uplift.severity.test.ts`
+  - `node --import tsx .\client\src\package-scripts.test.ts`
+  - `node --import tsx .\client\src\sop-uplift.routes.test.ts`
+  - `npm run check`
+  - `npm run build` passed with existing PostCSS `from` warning and existing large-chunk warning.

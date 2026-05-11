@@ -320,10 +320,10 @@ function CreateCaseDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="trace-white-dialog max-w-3xl border border-[#E2E6EF] bg-white text-[#0C233C] shadow-2xl">
         <DialogHeader>
           <DialogTitle className="text-[#0C233C]">Create Case</DialogTitle>
-          <DialogDescription>Set up a Document Uplift case for a primary SOP and supporting documents.</DialogDescription>
+          <DialogDescription className="text-[#5A6478]">Set up a Document Uplift case for a primary SOP and supporting documents.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-5 md:grid-cols-[1fr_1fr]">
           <div className="space-y-4">
@@ -332,7 +332,7 @@ function CreateCaseDialog({
               <input
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
-                className="mt-1 h-10 w-full rounded-lg border border-[#CAD7E8] px-3 text-sm text-[#0C233C] outline-none focus:border-[#1E49E2]"
+                className="mt-1 h-10 w-full rounded-lg border border-[#CAD7E8] bg-white px-3 text-sm text-[#0C233C] outline-none placeholder:text-[#8492A6] focus:border-[#1E49E2]"
                 placeholder="Cyber Incident Response SOP"
               />
             </label>
@@ -341,7 +341,7 @@ function CreateCaseDialog({
               <input
                 value={processName}
                 onChange={(event) => setProcessName(event.target.value)}
-                className="mt-1 h-10 w-full rounded-lg border border-[#CAD7E8] px-3 text-sm text-[#0C233C] outline-none focus:border-[#1E49E2]"
+                className="mt-1 h-10 w-full rounded-lg border border-[#CAD7E8] bg-white px-3 text-sm text-[#0C233C] outline-none placeholder:text-[#8492A6] focus:border-[#1E49E2]"
                 placeholder="Incident response"
               />
             </label>
@@ -350,7 +350,7 @@ function CreateCaseDialog({
               <input
                 value={domain}
                 onChange={(event) => setDomain(event.target.value)}
-                className="mt-1 h-10 w-full rounded-lg border border-[#CAD7E8] px-3 text-sm text-[#0C233C] outline-none focus:border-[#1E49E2]"
+                className="mt-1 h-10 w-full rounded-lg border border-[#CAD7E8] bg-white px-3 text-sm text-[#0C233C] outline-none placeholder:text-[#8492A6] focus:border-[#1E49E2]"
                 placeholder="Cyber Security"
               />
             </label>
@@ -360,7 +360,7 @@ function CreateCaseDialog({
             <Textarea
               value={notes}
               onChange={(event) => setNotes(event.target.value)}
-              className="mt-1 min-h-[164px] border-[#CAD7E8] text-sm"
+              className="mt-1 min-h-[164px] border-[#CAD7E8] bg-white text-sm text-[#0C233C] placeholder:text-[#8492A6]"
               placeholder="Optional case context for reviewers."
             />
           </label>
@@ -417,10 +417,10 @@ function DeleteCaseDialog({
 
   return (
     <Dialog open={!!caseItem} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="trace-white-dialog border border-[#E2E6EF] bg-white text-[#0C233C] shadow-2xl">
         <DialogHeader>
           <DialogTitle className="text-[#0C233C]">Delete Case</DialogTitle>
-          <DialogDescription>This removes the case, uploaded documents, suggestions, and generated outputs.</DialogDescription>
+          <DialogDescription className="text-[#5A6478]">This removes the case, uploaded documents, suggestions, and generated outputs.</DialogDescription>
         </DialogHeader>
         <div className="rounded-xl border border-[#F1B8BF] bg-[#FEEBED] p-4 text-[13px] text-[#8A0010]">
           <div className="flex gap-2">
@@ -434,7 +434,7 @@ function DeleteCaseDialog({
           <input
             value={confirm}
             onChange={(event) => setConfirm(event.target.value)}
-            className="h-10 w-full rounded-lg border border-[#CAD7E8] px-3 text-sm text-[#0C233C] outline-none focus:border-[#1E49E2]"
+            className="h-10 w-full rounded-lg border border-[#CAD7E8] bg-white px-3 text-sm text-[#0C233C] outline-none placeholder:text-[#8492A6] focus:border-[#1E49E2]"
             placeholder="Case name"
           />
         </div>
