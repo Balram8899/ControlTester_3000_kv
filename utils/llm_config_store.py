@@ -9,6 +9,7 @@ _DB_NAME = "trace_db"
 _COL_NAME = "settings"
 _DOC_ID = "llm_config"
 _DOCUMENT_UPLIFT_DOC_ID = "document_uplift_config"
+_API_KEYS_DOC_ID = "api_keys"
 _DOCUMENT_UPLIFT_DEFAULT_MAX_LLM_CALLS = 80
 _DOCUMENT_UPLIFT_MIN_MAX_LLM_CALLS = 5
 _DOCUMENT_UPLIFT_MAX_MAX_LLM_CALLS = 200
@@ -174,6 +175,44 @@ def _coerce_document_uplift_budget(value: object) -> int:
     )
 
 
+def get_provider_api_key_from_db(provider: str) -> str | None:
+    """Return the API key for a provider stored in MongoDB, or None."""
+    try:
+        col = _get_collection()
+        doc = col.find_one({"_id": _API_KEYS_DOC_ID})
+        if doc:
+            return doc.get(provider) or None
+    except Exception:
+        pass
+    return None
+
+
+def save_provider_api_key(provider: str, api_key: str) -> None:
+    """Persist a provider API key to MongoDB and update os.environ for the running process."""
+    col = _get_collection()
+    col.update_one(
+        {"_id": _API_KEYS_DOC_ID},
+        {"$set": {provider: api_key}},
+        upsert=True,
+    )
+    reg = PROVIDER_REGISTRY.get(provider, {})
+    key_env = reg.get("key_env")
+    if key_env:
+        os.environ[key_env] = api_key
+
+
+def delete_provider_api_key(provider: str) -> None:
+    """Remove a provider API key from MongoDB."""
+    try:
+        col = _get_collection()
+        col.update_one(
+            {"_id": _API_KEYS_DOC_ID},
+            {"$unset": {provider: ""}},
+        )
+    except Exception:
+        pass
+
+
 def get_provider_key_envs(provider: str) -> list[str]:
     reg = PROVIDER_REGISTRY[provider]
     key_envs = []
@@ -188,6 +227,9 @@ def get_provider_key_label(provider: str) -> str:
 
 
 def get_provider_api_key(provider: str) -> str | None:
+    db_key = get_provider_api_key_from_db(provider)
+    if db_key:
+        return db_key
     for env_name in get_provider_key_envs(provider):
         value = os.getenv(env_name)
         if value:

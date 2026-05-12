@@ -14,9 +14,13 @@ from utils.llm_config_store import (
     get_available_providers,
     get_document_uplift_config,
     get_provider_api_key,
+    get_provider_api_key_from_db,
+    get_provider_key_envs,
     get_provider_key_label,
     save_llm_config,
     save_document_uplift_config,
+    save_provider_api_key,
+    delete_provider_api_key,
 )
 from utils.controls_library import MongoControlsStore
 from utils.regulatory_library import MongoLibraryStore
@@ -34,6 +38,11 @@ class LLMConfigRequest(BaseModel):
 
 class DocumentUpliftConfigRequest(BaseModel):
     max_llm_calls_per_pipeline: int
+
+
+class LLMKeyRequest(BaseModel):
+    provider: str
+    api_key: str
 
 
 def _library_status(store_factory: type) -> dict[str, Any]:
@@ -179,3 +188,51 @@ def update_document_uplift_config(body: DocumentUpliftConfigRequest) -> dict[str
         "max_llm_calls_per_pipeline": config["max_llm_calls_per_pipeline"],
         "saved": True,
     }
+
+
+@router.get("/llm-key-status")
+def llm_key_status():
+    """Return key presence and source (env/db) for every provider. Never returns the actual key."""
+    result = {}
+    for provider, reg in PROVIDER_REGISTRY.items():
+        key_envs = get_provider_key_envs(provider)
+        if not key_envs:
+            result[provider] = {"required": False, "set": True, "source": "none", "env_var": None}
+            continue
+        db_key = get_provider_api_key_from_db(provider)
+        env_key = next((v for e in key_envs if (v := __import__("os").getenv(e))), None)
+        if db_key and env_key:
+            source = "db"
+        elif db_key:
+            source = "db"
+        elif env_key:
+            source = "env"
+        else:
+            source = None
+        result[provider] = {
+            "required": True,
+            "set": bool(db_key or env_key),
+            "source": source,
+            "env_var": " / ".join(key_envs),
+        }
+    return result
+
+
+@router.post("/llm-key")
+def save_llm_key(body: LLMKeyRequest):
+    if body.provider not in PROVIDER_REGISTRY:
+        raise HTTPException(status_code=422, detail=f"Unknown provider: {body.provider}")
+    if not get_provider_key_envs(body.provider):
+        raise HTTPException(status_code=400, detail=f"Provider '{body.provider}' does not require an API key")
+    if not body.api_key.strip():
+        raise HTTPException(status_code=400, detail="API key cannot be empty")
+    save_provider_api_key(body.provider, body.api_key.strip())
+    return {"provider": body.provider, "saved": True}
+
+
+@router.delete("/llm-key/{provider}")
+def clear_llm_key(provider: str):
+    if provider not in PROVIDER_REGISTRY:
+        raise HTTPException(status_code=422, detail=f"Unknown provider: {provider}")
+    delete_provider_api_key(provider)
+    return {"provider": provider, "cleared": True}
