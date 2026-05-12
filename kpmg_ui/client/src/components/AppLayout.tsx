@@ -69,6 +69,12 @@ function readHiddenPages(): string[] {
   }
 }
 
+const ROLE_LABELS: Record<string, string> = {
+  admin: "Admin",
+  l2:    "L2 — Lead",
+  l1:    "L1 — User",
+};
+
 export default function AppLayout({ children }: AppLayoutProps) {
   const [location, setLocation] = useLocation();
   const { user } = useAuth();
@@ -185,7 +191,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 </div>
               </TooltipTrigger>
               <TooltipContent side="right" className="text-xs">
-                {user?.name ?? "User"}
+                {user?.name ?? "User"} · {ROLE_LABELS[user?.role ?? "l1"] ?? "User"}
               </TooltipContent>
             </Tooltip>
           ) : (
@@ -197,7 +203,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
               </Avatar>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-semibold text-white/80 truncate leading-none mb-0.5">{user?.name ?? "User"}</p>
-                <p className="text-[10px] text-[#A6BCD9] leading-none">Analyst</p>
+                <p className="text-[10px] text-[#A6BCD9] leading-none">{ROLE_LABELS[user?.role ?? "l1"] ?? "User"}</p>
               </div>
             </div>
           )}
