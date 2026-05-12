@@ -1,0 +1,826 @@
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list
+  - generic [ref=e3]:
+    - complementary [ref=e4]:
+      - button "Expand sidebar" [ref=e6] [cursor=pointer]:
+        - img [ref=e7]
+      - navigation [ref=e9]:
+        - generic [ref=e10]:
+          - button [ref=e11] [cursor=pointer]:
+            - img [ref=e12]
+          - button [ref=e17] [cursor=pointer]:
+            - img [ref=e18]
+          - button [ref=e20] [cursor=pointer]:
+            - img [ref=e21]
+          - button [ref=e24] [cursor=pointer]:
+            - img [ref=e25]
+          - button [ref=e27] [cursor=pointer]:
+            - img [ref=e28]
+          - button [ref=e32] [cursor=pointer]:
+            - img [ref=e33]
+          - button [ref=e36] [cursor=pointer]:
+            - img [ref=e37]
+          - button [ref=e42] [cursor=pointer]:
+            - img [ref=e43]
+          - button [ref=e48] [cursor=pointer]:
+            - img [ref=e49]
+          - button [ref=e51] [cursor=pointer]:
+            - img [ref=e52]
+          - button [ref=e55] [cursor=pointer]:
+            - img [ref=e56]
+          - button [ref=e61] [cursor=pointer]:
+            - img [ref=e62]
+          - button [ref=e64] [cursor=pointer]:
+            - img [ref=e65]
+          - button [ref=e67] [cursor=pointer]:
+            - img [ref=e68]
+      - generic [ref=e74]: A
+    - generic [ref=e75]:
+      - main [ref=e76]:
+        - generic [ref=e79]:
+          - generic [ref=e81]:
+            - generic [ref=e82]:
+              - button "KPMG | TRACE" [ref=e83] [cursor=pointer]:
+                - generic [ref=e84]: KPMG
+                - generic [ref=e85]: "|"
+                - generic [ref=e86]: TRACE
+              - generic [ref=e87]:
+                - generic [ref=e88]: /
+                - generic [ref=e89]: ESG qualityfix validation
+            - button "Sign Out" [ref=e91] [cursor=pointer]:
+              - img
+              - text: Sign Out
+          - generic [ref=e93]:
+            - generic [ref=e94]:
+              - img [ref=e96]
+              - generic [ref=e99]:
+                - generic [ref=e100]:
+                  - button "Back To Cases" [ref=e101] [cursor=pointer]
+                  - generic [ref=e102]: Review Ready
+                  - generic [ref=e103]: ESG
+                - heading "ESG qualityfix validation" [level=1] [ref=e164]
+                - generic [ref=e105]:
+                  - generic [ref=e106]: "Primary SOP: esg_reporting_sop.docx"
+                  - generic [ref=e107]: "Model: gpt-5.5"
+                  - generic [ref=e108]: "Last run: 11 May 2026, 1:58 pm"
+            - generic [ref=e109]:
+              - generic [ref=e110]:
+                - generic [ref=e111]: "67"
+                - generic [ref=e112]: Suggestions
+              - generic [ref=e113]:
+                - generic [ref=e114]: "0"
+                - generic [ref=e115]: Pending
+              - generic [ref=e116]:
+                - generic [ref=e117]: "3"
+                - generic [ref=e118]: Outputs
+              - generic [ref=e119]:
+                - generic [ref=e120]: $0.00
+                - generic [ref=e121]: Cost
+          - navigation [ref=e122]:
+            - generic [ref=e123]:
+              - button "Documents" [ref=e124] [cursor=pointer]
+              - button "Processing" [ref=e125] [cursor=pointer]
+              - button "Review Suggestions" [ref=e126] [cursor=pointer]
+              - button "Export" [disabled] [ref=e130]:
+                - img [ref=e131]
+                - text: Export
+          - main [ref=e134]:
+            - generic [ref=e219]:
+              - generic [ref=e221]:
+                - generic [ref=e222]:
+                  - generic [ref=e223]: Accepted 0
+                  - generic [ref=e224]: Rejected 67
+                  - generic [ref=e225]: Pending 0
+                - button "Accept All" [ref=e227] [cursor=pointer]:
+                  - img [ref=e228]
+                  - text: Accept All
+                - button "Reject All" [ref=e231] [cursor=pointer]:
+                  - img [ref=e232]
+                  - text: Reject All
+                - combobox [ref=e236]:
+                  - 'option "Severity: All" [selected]'
+                  - option "Critical"
+                  - option "High"
+                  - option "Medium"
+                  - option "Low"
+                  - option "Informational"
+                - combobox [ref=e237]:
+                  - 'option "Category: All" [selected]'
+                  - option "Evidence Requirement"
+                  - option "Missing Process Step"
+                  - option "Ownership Clarification"
+                  - option "Ownership Gap"
+                  - option "Process Improvement"
+                  - option "Regulatory Alignment"
+                  - option "Scope Improvement"
+                  - option "Terminology Inconsistency"
+                - button "Move To Export" [ref=e239] [cursor=pointer]:
+                  - img [ref=e240]
+                  - text: Move To Export
+              - generic [ref=e243]:
+                - generic [ref=e244]:
+                  - complementary [ref=e245]:
+                    - generic [ref=e246]: Sections
+                    - combobox [ref=e247]:
+                      - option "esg_reporting_sop.docx" [selected]
+                      - option "esg_rcm.xlsx"
+                      - option "esg_metric_deviation_log.xlsx"
+                    - generic [ref=e248]:
+                      - button "1. Document" [ref=e249] [cursor=pointer]
+                      - button "2. 1. Purpose" [ref=e250] [cursor=pointer]
+                      - button "3. 2. Scope" [ref=e251] [cursor=pointer]
+                      - button "4. 3. ESG Metric Framework" [ref=e252] [cursor=pointer]
+                      - button "5. 4.1 Roles and Responsibilities for Data Collection" [ref=e253] [cursor=pointer]
+                      - button "6. 4.2 Data Collection Steps" [ref=e254] [cursor=pointer]
+                      - button "7. 4.3 Scope of Emissions Reporting" [ref=e255] [cursor=pointer]
+                      - button "8. 5. Deviation Identification and Management" [ref=e256] [cursor=pointer]
+                      - button "9. 5.1 What Constitutes a Deviation" [ref=e257] [cursor=pointer]
+                      - button "10. 5.2 Deviation Management Process" [ref=e258] [cursor=pointer]
+                      - button "11. 6.1 Internal Reporting" [ref=e259] [cursor=pointer]
+                      - button "12. 6.2 External Reporting" [ref=e260] [cursor=pointer]
+                      - button "13. 6.3 Regulatory Reporting Triggers" [ref=e261] [cursor=pointer]
+                      - button "14. 7. Roles and Responsibilities" [ref=e262] [cursor=pointer]
+                      - button "15. 8. Training and Awareness" [ref=e263] [cursor=pointer]
+                      - button "16. 9. Document Review" [ref=e264] [cursor=pointer]
+                      - button "17. Appendix A – Key ESG Regulatory References" [ref=e265] [cursor=pointer]
+                  - generic [ref=e266]:
+                    - generic [ref=e267]:
+                      - generic [ref=e268]:
+                        - img [ref=e269]
+                        - generic [ref=e272]: esg_reporting_sop.docx
+                        - generic [ref=e273]: docx
+                        - generic [ref=e274]: Active Comment
+                      - generic [ref=e275]:
+                        - button "Open document preview" [ref=e276] [cursor=pointer]:
+                          - img [ref=e277]
+                        - combobox [ref=e280]:
+                          - option "75%" [selected]
+                          - option "90%"
+                          - option "100%"
+                          - option "125%"
+                          - option "150%"
+                    - article [ref=e1031]:
+                      - paragraph [ref=e1032]: ESG RISK MONITORING AND REPORTING
+                      - paragraph [ref=e1033]: Standard Operating Procedure
+                      - table [ref=e1034]:
+                        - row "Document Title ESG Risk Monitoring and Reporting Standard Operating Procedure" [ref=e1038]:
+                          - cell "Document Title" [ref=e1039]:
+                            - paragraph [ref=e1040]: Document Title
+                          - cell "ESG Risk Monitoring and Reporting Standard Operating Procedure" [ref=e1041]:
+                            - paragraph [ref=e1042]: ESG Risk Monitoring and Reporting Standard Operating Procedure
+                        - row "Document ID SOP-ESG-002" [ref=e1043]:
+                          - cell "Document ID" [ref=e1044]:
+                            - paragraph [ref=e1045]: Document ID
+                          - cell "SOP-ESG-002" [ref=e1046]:
+                            - paragraph [ref=e1047]: SOP-ESG-002
+                        - row "Version 1.1" [ref=e1048]:
+                          - cell "Version" [ref=e1049]:
+                            - paragraph [ref=e1050]: Version
+                          - cell "1.1" [ref=e1051]:
+                            - paragraph [ref=e1052]: "1.1"
+                        - row "Prepared By Sustainability / ESG Team" [ref=e1053]:
+                          - cell "Prepared By" [ref=e1054]:
+                            - paragraph [ref=e1055]: Prepared By
+                          - cell "Sustainability / ESG Team" [ref=e1056]:
+                            - paragraph [ref=e1057]: Sustainability / ESG Team
+                        - row "Reviewed By CFO" [ref=e1058]:
+                          - cell "Reviewed By" [ref=e1059]:
+                            - paragraph [ref=e1060]: Reviewed By
+                          - cell "CFO" [ref=e1061]:
+                            - paragraph [ref=e1062]: CFO
+                        - row "Date April 2024" [ref=e1063]:
+                          - cell "Date" [ref=e1064]:
+                            - paragraph [ref=e1065]: Date
+                          - cell "April 2024" [ref=e1066]:
+                            - paragraph [ref=e1067]: April 2024
+                        - row "Status Active" [ref=e1068]:
+                          - cell "Status" [ref=e1069]:
+                            - paragraph [ref=e1070]: Status
+                          - cell "Active" [ref=e1071]:
+                            - paragraph [ref=e1072]: Active
+                      - paragraph [ref=e1073]
+                      - paragraph [ref=e1074]
+                      - paragraph [ref=e1075]: 1. Purpose
+                      - paragraph [ref=e1076]:
+                        - generic [ref=e1077]: This Standard Operating Procedure (SOP) defines the process for collecting, monitoring, reporting, and managing deviations in Environmental, Social, and Governance (ESG) data and metrics at the bank.
+                      - paragraph [ref=e1078]: The objective is to ensure that ESG information reported internally and externally is accurate, complete, and consistent, and that material deviations from targets are identified and managed in a timely manner.
+                      - paragraph [ref=e1079]
+                      - paragraph [ref=e1080]: 2. Scope
+                      - paragraph [ref=e1081]:
+                        - generic [ref=e1082]: "This SOP applies to all ESG data collected and reported by the bank, covering Environmental, Social, and Governance metrics. It is applicable to:"
+                      - paragraph [ref=e1083]: • The corporate sustainability / ESG team
+                      - paragraph [ref=e1084]: • Finance, HR, Facilities, IT, and other functions that contribute ESG data
+                      - paragraph [ref=e1085]: • Internal reporting to senior management and the board
+                      - paragraph [ref=e1086]: • External reporting including the annual BRSR disclosure and sustainability report
+                      - paragraph [ref=e1087]:
+                        - generic [ref=e1088]: This SOP covers direct operations of the bank. It does not cover financed emissions in detail.
+                      - paragraph [ref=e1089]
+                      - paragraph [ref=e1090]: 3. ESG Metric Framework
+                      - paragraph [ref=e1091]:
+                        - generic [ref=e1092]: The bank tracks a range of ESG metrics across Environmental, Social, and Governance pillars. The table below lists the key metrics, their data sources, and reporting frequency.
+                      - paragraph [ref=e1093]
+                      - table [ref=e1094]:
+                        - row "Pillar Metric Data Source Reporting Frequency" [ref=e1100]:
+                          - cell "Pillar" [ref=e1101]:
+                            - paragraph [ref=e1102]: Pillar
+                          - cell "Metric" [ref=e1103]:
+                            - paragraph [ref=e1104]: Metric
+                          - cell "Data Source" [ref=e1105]:
+                            - paragraph [ref=e1106]: Data Source
+                          - cell "Reporting Frequency" [ref=e1107]:
+                            - paragraph [ref=e1108]: Reporting Frequency
+                        - row "E Scope 1 GHG Emissions (tCO2e) Utility / DG fuel records Annual (BRSR)" [ref=e1109]:
+                          - cell "E" [ref=e1110]:
+                            - paragraph [ref=e1111]: E
+                          - cell "Scope 1 GHG Emissions (tCO2e)" [ref=e1112]:
+                            - paragraph [ref=e1113]: Scope 1 GHG Emissions (tCO2e)
+                          - cell "Utility / DG fuel records" [ref=e1114]:
+                            - paragraph [ref=e1115]: Utility / DG fuel records
+                          - cell "Annual (BRSR)" [ref=e1116]:
+                            - paragraph [ref=e1117]: Annual (BRSR)
+                        - row "E Scope 2 GHG Emissions (tCO2e) Electricity bills Annual (BRSR)" [ref=e1118]:
+                          - cell "E" [ref=e1119]:
+                            - paragraph [ref=e1120]: E
+                          - cell "Scope 2 GHG Emissions (tCO2e)" [ref=e1121]:
+                            - paragraph [ref=e1122]: Scope 2 GHG Emissions (tCO2e)
+                          - cell "Electricity bills" [ref=e1123]:
+                            - paragraph [ref=e1124]: Electricity bills
+                          - cell "Annual (BRSR)" [ref=e1125]:
+                            - paragraph [ref=e1126]: Annual (BRSR)
+                        - row "E Scope 3 Emissions (tCO2e) – selected categories Travel management system, financed portfolio Annual (BRSR Core)" [ref=e1127]:
+                          - cell "E" [ref=e1128]:
+                            - paragraph [ref=e1129]: E
+                          - cell "Scope 3 Emissions (tCO2e) – selected categories" [ref=e1130]:
+                            - paragraph [ref=e1131]: Scope 3 Emissions (tCO2e) – selected categories
+                          - cell "Travel management system, financed portfolio" [ref=e1132]:
+                            - paragraph [ref=e1133]: Travel management system, financed portfolio
+                          - cell "Annual (BRSR Core)" [ref=e1134]:
+                            - paragraph [ref=e1135]: Annual (BRSR Core)
+                        - row "E Water Consumption (KL) Water utility records Quarterly / Annual" [ref=e1136]:
+                          - cell "E" [ref=e1137]:
+                            - paragraph [ref=e1138]: E
+                          - cell "Water Consumption (KL)" [ref=e1139]:
+                            - paragraph [ref=e1140]: Water Consumption (KL)
+                          - cell "Water utility records" [ref=e1141]:
+                            - paragraph [ref=e1142]: Water utility records
+                          - cell "Quarterly / Annual" [ref=e1143]:
+                            - paragraph [ref=e1144]: Quarterly / Annual
+                        - row "E Renewable Energy % REC certificates, solar metering Annual" [ref=e1145]:
+                          - cell "E" [ref=e1146]:
+                            - paragraph [ref=e1147]: E
+                          - cell "Renewable Energy %" [ref=e1148]:
+                            - paragraph [ref=e1149]: Renewable Energy %
+                          - cell "REC certificates, solar metering" [ref=e1150]:
+                            - paragraph [ref=e1151]: REC certificates, solar metering
+                          - cell "Annual" [ref=e1152]:
+                            - paragraph [ref=e1153]: Annual
+                        - row "S Women in Senior Leadership (%) HR System Annual (BRSR)" [ref=e1154]:
+                          - cell "S" [ref=e1155]:
+                            - paragraph [ref=e1156]: S
+                          - cell "Women in Senior Leadership (%)" [ref=e1157]:
+                            - paragraph [ref=e1158]: Women in Senior Leadership (%)
+                          - cell "HR System" [ref=e1159]:
+                            - paragraph [ref=e1160]: HR System
+                          - cell "Annual (BRSR)" [ref=e1161]:
+                            - paragraph [ref=e1162]: Annual (BRSR)
+                        - row "S LTIFR (per million hrs) Admin / Safety records Quarterly / Annual" [ref=e1163]:
+                          - cell "S" [ref=e1164]:
+                            - paragraph [ref=e1165]: S
+                          - cell "LTIFR (per million hrs)" [ref=e1166]:
+                            - paragraph [ref=e1167]: LTIFR (per million hrs)
+                          - cell "Admin / Safety records" [ref=e1168]:
+                            - paragraph [ref=e1169]: Admin / Safety records
+                          - cell "Quarterly / Annual" [ref=e1170]:
+                            - paragraph [ref=e1171]: Quarterly / Annual
+                        - row "S PSL Achievement (% ANBC) CBS / Credit system Quarterly (RBI)" [ref=e1172]:
+                          - cell "S" [ref=e1173]:
+                            - paragraph [ref=e1174]: S
+                          - cell "PSL Achievement (% ANBC)" [ref=e1175]:
+                            - paragraph [ref=e1176]: PSL Achievement (% ANBC)
+                          - cell "CBS / Credit system" [ref=e1177]:
+                            - paragraph [ref=e1178]: CBS / Credit system
+                          - cell "Quarterly (RBI)" [ref=e1179]:
+                            - paragraph [ref=e1180]: Quarterly (RBI)
+                        - row "G Independent Directors (%) Company Secretariat Annual (SEBI LODR)" [ref=e1181]:
+                          - cell "G" [ref=e1182]:
+                            - paragraph [ref=e1183]: G
+                          - cell "Independent Directors (%)" [ref=e1184]:
+                            - paragraph [ref=e1185]: Independent Directors (%)
+                          - cell "Company Secretariat" [ref=e1186]:
+                            - paragraph [ref=e1187]: Company Secretariat
+                          - cell "Annual (SEBI LODR)" [ref=e1188]:
+                            - paragraph [ref=e1189]: Annual (SEBI LODR)
+                        - row "G ABC Training Completion (%) LMS / Compliance system Annual (BRSR)" [ref=e1190]:
+                          - cell "G" [ref=e1191]:
+                            - paragraph [ref=e1192]: G
+                          - cell "ABC Training Completion (%)" [ref=e1193]:
+                            - paragraph [ref=e1194]: ABC Training Completion (%)
+                          - cell "LMS / Compliance system" [ref=e1195]:
+                            - paragraph [ref=e1196]: LMS / Compliance system
+                          - cell "Annual (BRSR)" [ref=e1197]:
+                            - paragraph [ref=e1198]: Annual (BRSR)
+                        - row "G BRSR Core Assurance Coverage (%) External auditor Annual (BRSR Core)" [ref=e1199]:
+                          - cell "G" [ref=e1200]:
+                            - paragraph [ref=e1201]: G
+                          - cell "BRSR Core Assurance Coverage (%)" [ref=e1202]:
+                            - paragraph [ref=e1203]: BRSR Core Assurance Coverage (%)
+                          - cell "External auditor" [ref=e1204]:
+                            - paragraph [ref=e1205]: External auditor
+                          - cell "Annual (BRSR Core)" [ref=e1206]:
+                            - paragraph [ref=e1207]: Annual (BRSR Core)
+                      - paragraph [ref=e1208]
+                      - paragraph [ref=e1209]: 4. Data Collection Process
+                      - paragraph [ref=e1210]: 4.1 Roles and Responsibilities for Data Collection
+                      - paragraph [ref=e1211]:
+                        - generic [ref=e1212]: ESG data collection is the responsibility of the relevant teams across the organisation. Each team should provide accurate data to the ESG team on a timely basis.
+                      - paragraph [ref=e1213]
+                      - paragraph [ref=e1214]: 4.2 Data Collection Steps
+                      - paragraph [ref=e1215]:
+                        - generic [ref=e1216]: "The ESG team will coordinate the collection of data from across the organisation using the following process:"
+                      - paragraph [ref=e1217]:
+                        - text: •
+                        - generic [ref=e1218]: At the start of each reporting period, the ESG team will reach out to relevant teams to request data
+                      - paragraph [ref=e1219]:
+                        - text: •
+                        - generic [ref=e1220]: Teams should provide data in the agreed format and by the agreed deadline
+                      - paragraph [ref=e1221]:
+                        - text: •
+                        - generic [ref=e1222]: The ESG team will consolidate the data into the ESG reporting template
+                      - paragraph [ref=e1223]:
+                        - text: •
+                        - generic [ref=e1224]: Any missing or incomplete data should be flagged and followed up with the relevant team
+                      - paragraph [ref=e1225]
+                      - paragraph [ref=e1226]: 4.3 Scope of Emissions Reporting
+                      - paragraph [ref=e1227]:
+                        - generic [ref=e1228]: The bank reports Scope 1 and Scope 2 greenhouse gas (GHG) emissions in accordance with applicable reporting requirements.
+                      - paragraph [ref=e1229]: • Scope 1 emissions include direct emissions from diesel generators, company-owned fleet, and air conditioning refrigerants
+                      - paragraph [ref=e1230]: • Scope 2 emissions include indirect emissions from purchased electricity, reported on a market-based basis
+                      - paragraph [ref=e1231]: • Scope 3 emissions are reported for selected categories where data is available
+                      - paragraph [ref=e1232]
+                      - paragraph [ref=e1233]: 5. Deviation Identification and Management
+                      - paragraph [ref=e1234]:
+                        - generic [ref=e1235]: When ESG metrics deviate from their targets, the bank needs to identify the deviation, understand the root cause, and take corrective action where required.
+                      - paragraph [ref=e1236]: 5.1 What Constitutes a Deviation
+                      - paragraph [ref=e1237]:
+                        - generic [ref=e1238]: A deviation occurs when a reported ESG metric is significantly different from the target or the prior year figure. The ESG team, in consultation with the relevant business unit, will determine whether a deviation is material and requires escalation.
+                      - paragraph [ref=e1239]
+                      - paragraph [ref=e1240]: 5.2 Deviation Management Process
+                      - paragraph [ref=e1241]: "When a deviation is identified, the following steps should be followed:"
+                      - paragraph [ref=e1242]
+                      - table [ref=e1243]:
+                        - row "Step Action Details" [ref=e1248]:
+                          - cell "Step" [ref=e1249]:
+                            - paragraph [ref=e1250]: Step
+                          - cell "Action" [ref=e1251]:
+                            - paragraph [ref=e1252]: Action
+                          - cell "Details" [ref=e1253]:
+                            - paragraph [ref=e1254]: Details
+                        - row "1 Identify Deviation During data collection or reporting, identify any metrics that are significantly different from the target or prior period. Use judgement to determine significance." [ref=e1255]:
+                          - cell "1" [ref=e1256]:
+                            - paragraph [ref=e1257]: "1"
+                          - cell "Identify Deviation" [ref=e1258]:
+                            - paragraph [ref=e1259]: Identify Deviation
+                          - cell "During data collection or reporting, identify any metrics that are significantly different from the target or prior period. Use judgement to determine significance." [ref=e1260]:
+                            - paragraph [ref=e1261]:
+                              - generic [ref=e1262]: During data collection or reporting, identify any metrics that are significantly different from the target or prior period. Use judgement to determine significance.
+                        - row "2 Investigate Root Cause Work with the relevant team to understand why the deviation has occurred. This may be due to data quality issues, operational changes, or external factors." [ref=e1263]:
+                          - cell "2" [ref=e1264]:
+                            - paragraph [ref=e1265]: "2"
+                          - cell "Investigate Root Cause" [ref=e1266]:
+                            - paragraph [ref=e1267]: Investigate Root Cause
+                          - cell "Work with the relevant team to understand why the deviation has occurred. This may be due to data quality issues, operational changes, or external factors." [ref=e1268]:
+                            - paragraph [ref=e1269]:
+                              - generic [ref=e1270]: Work with the relevant team to understand why the deviation has occurred. This may be due to data quality issues, operational changes, or external factors.
+                        - row "3 Escalate if Needed If the deviation is material, escalate to the appropriate level of management. The ESG team will use judgement to determine when escalation is required." [ref=e1271]:
+                          - cell "3" [ref=e1272]:
+                            - paragraph [ref=e1273]: "3"
+                          - cell "Escalate if Needed" [ref=e1274]:
+                            - paragraph [ref=e1275]: Escalate if Needed
+                          - cell "If the deviation is material, escalate to the appropriate level of management. The ESG team will use judgement to determine when escalation is required." [ref=e1276]:
+                            - paragraph [ref=e1277]:
+                              - generic [ref=e1278]: If the deviation is material, escalate to the appropriate level of management. The ESG team will use judgement to determine when escalation is required.
+                        - row "4 Document and Report Document the deviation, root cause, and corrective action. Include in the next ESG report." [ref=e1279]:
+                          - cell "4" [ref=e1280]:
+                            - paragraph [ref=e1281]: "4"
+                          - cell "Document and Report" [ref=e1282]:
+                            - paragraph [ref=e1283]: Document and Report
+                          - cell "Document the deviation, root cause, and corrective action. Include in the next ESG report." [ref=e1284]:
+                            - paragraph [ref=e1285]:
+                              - generic [ref=e1286]: Document the deviation, root cause, and corrective action. Include in the next ESG report.
+                        - row "5 Corrective Action Work with the relevant team to implement corrective actions to address the deviation. Monitor progress." [ref=e1287]:
+                          - cell "5" [ref=e1288]:
+                            - paragraph [ref=e1289]: "5"
+                          - cell "Corrective Action" [ref=e1290]:
+                            - paragraph [ref=e1291]: Corrective Action
+                          - cell "Work with the relevant team to implement corrective actions to address the deviation. Monitor progress." [ref=e1292]:
+                            - paragraph [ref=e1293]:
+                              - generic [ref=e1294]: Work with the relevant team to implement corrective actions to address the deviation. Monitor progress.
+                      - paragraph [ref=e1295]
+                      - paragraph [ref=e1296]: 6. Reporting
+                      - paragraph [ref=e1297]: 6.1 Internal Reporting
+                      - paragraph [ref=e1298]:
+                        - generic [ref=e1299]: "ESG performance data is reported internally to the senior management team and the board on a periodic basis. Reports should include:"
+                      - paragraph [ref=e1300]: • Key ESG metrics and performance against targets
+                      - paragraph [ref=e1301]: • Any significant deviations or issues identified during the period
+                      - paragraph [ref=e1302]: • Progress on ESG initiatives and programmes
+                      - paragraph [ref=e1303]
+                      - paragraph [ref=e1304]: 6.2 External Reporting
+                      - paragraph [ref=e1305]:
+                        - generic [ref=e1306]: The bank discloses ESG information externally in its annual report, including the BRSR submission. External reporting should be accurate and consistent with internal records.
+                      - paragraph [ref=e1307]:
+                        - generic [ref=e1308]: Before submission, external reports should be reviewed by the CFO and approved by senior management.
+                      - paragraph [ref=e1309]
+                      - paragraph [ref=e1310]: 6.3 Regulatory Reporting Triggers
+                      - paragraph [ref=e1311]:
+                        - generic [ref=e1312]: Where ESG-related regulatory requirements exist, the bank should comply with applicable timelines. The ESG team should liaise with Compliance to ensure regulatory obligations are met.
+                      - paragraph [ref=e1313]
+                      - paragraph [ref=e1314]: 7. Roles and Responsibilities
+                      - paragraph [ref=e1315]: "The following roles are responsible for ESG data collection and reporting:"
+                      - table [ref=e1316]:
+                        - row "Role Responsibility" [ref=e1320]:
+                          - cell "Role" [ref=e1321]:
+                            - paragraph [ref=e1322]: Role
+                          - cell "Responsibility" [ref=e1323]:
+                            - paragraph [ref=e1324]: Responsibility
+                        - row "ESG / Sustainability Head Owns this SOP; coordinates data collection; prepares ESG reports." [ref=e1325]:
+                          - cell "ESG / Sustainability Head" [ref=e1326]:
+                            - paragraph [ref=e1327]: ESG / Sustainability Head
+                          - cell "Owns this SOP; coordinates data collection; prepares ESG reports." [ref=e1328]:
+                            - paragraph [ref=e1329]: Owns this SOP; coordinates data collection; prepares ESG reports.
+                        - row "CFO Reviews and approves external ESG disclosures; oversees ESG data quality." [ref=e1330]:
+                          - cell "CFO" [ref=e1331]:
+                            - paragraph [ref=e1332]: CFO
+                          - cell "Reviews and approves external ESG disclosures; oversees ESG data quality." [ref=e1333]:
+                            - paragraph [ref=e1334]: Reviews and approves external ESG disclosures; oversees ESG data quality.
+                        - row "CHRO Provides Social pillar data including gender diversity, training, and LTIFR." [ref=e1335]:
+                          - cell "CHRO" [ref=e1336]:
+                            - paragraph [ref=e1337]: CHRO
+                          - cell "Provides Social pillar data including gender diversity, training, and LTIFR." [ref=e1338]:
+                            - paragraph [ref=e1339]: Provides Social pillar data including gender diversity, training, and LTIFR.
+                        - row "Facilities Head Provides energy, water, and emissions data for owned and leased premises." [ref=e1340]:
+                          - cell "Facilities Head" [ref=e1341]:
+                            - paragraph [ref=e1342]: Facilities Head
+                          - cell "Provides energy, water, and emissions data for owned and leased premises." [ref=e1343]:
+                            - paragraph [ref=e1344]: Provides energy, water, and emissions data for owned and leased premises.
+                        - row "Company Secretary Provides Governance data including board composition and remuneration." [ref=e1345]:
+                          - cell "Company Secretary" [ref=e1346]:
+                            - paragraph [ref=e1347]: Company Secretary
+                          - cell "Provides Governance data including board composition and remuneration." [ref=e1348]:
+                            - paragraph [ref=e1349]: Provides Governance data including board composition and remuneration.
+                        - row "CRO Provides climate risk and credit risk data relevant to ESG disclosure." [ref=e1350]:
+                          - cell "CRO" [ref=e1351]:
+                            - paragraph [ref=e1352]: CRO
+                          - cell "Provides climate risk and credit risk data relevant to ESG disclosure." [ref=e1353]:
+                            - paragraph [ref=e1354]: Provides climate risk and credit risk data relevant to ESG disclosure.
+                      - paragraph [ref=e1355]
+                      - paragraph [ref=e1356]: 8. Training and Awareness
+                      - paragraph [ref=e1357]:
+                        - generic [ref=e1358]: All staff involved in ESG data collection should be aware of their responsibilities under this SOP. The ESG team will provide guidance and support as required.
+                      - paragraph [ref=e1359]: Training on ESG reporting requirements will be provided when significant changes to regulatory requirements occur.
+                      - paragraph [ref=e1360]
+                      - paragraph [ref=e1361]: 9. Document Review
+                      - paragraph [ref=e1362]:
+                        - generic [ref=e1363]: This SOP will be reviewed annually or when significant changes occur to ESG reporting requirements or the bank's ESG strategy.
+                      - paragraph [ref=e1364]: The ESG Head is responsible for maintaining this document.
+                      - paragraph [ref=e1365]
+                      - paragraph [ref=e1366]: Appendix A – Key ESG Regulatory References
+                      - paragraph [ref=e1367]:
+                        - generic [ref=e1368]: The table below lists key regulatory and reporting frameworks relevant to the bank's ESG reporting obligations.
+                      - table [ref=e1369]:
+                        - row "Regulation / Framework Applicability Responsible Team" [ref=e1374]:
+                          - cell "Regulation / Framework" [ref=e1375]:
+                            - paragraph [ref=e1376]: Regulation / Framework
+                          - cell "Applicability" [ref=e1377]:
+                            - paragraph [ref=e1378]: Applicability
+                          - cell "Responsible Team" [ref=e1379]:
+                            - paragraph [ref=e1380]: Responsible Team
+                        - row "SEBI BRSR Annual ESG disclosure for listed entities ESG / Compliance" [ref=e1381]:
+                          - cell "SEBI BRSR" [ref=e1382]:
+                            - paragraph [ref=e1383]: SEBI BRSR
+                          - cell "Annual ESG disclosure for listed entities" [ref=e1384]:
+                            - paragraph [ref=e1385]: Annual ESG disclosure for listed entities
+                          - cell "ESG / Compliance" [ref=e1386]:
+                            - paragraph [ref=e1387]: ESG / Compliance
+                        - row "SEBI BRSR Core Enhanced metrics with mandatory assurance ESG / CFO" [ref=e1388]:
+                          - cell "SEBI BRSR Core" [ref=e1389]:
+                            - paragraph [ref=e1390]: SEBI BRSR Core
+                          - cell "Enhanced metrics with mandatory assurance" [ref=e1391]:
+                            - paragraph [ref=e1392]: Enhanced metrics with mandatory assurance
+                          - cell "ESG / CFO" [ref=e1393]:
+                            - paragraph [ref=e1394]: ESG / CFO
+                        - row "RBI Climate Risk Climate risk disclosure and stress testing CRO / ESG" [ref=e1395]:
+                          - cell "RBI Climate Risk" [ref=e1396]:
+                            - paragraph [ref=e1397]: RBI Climate Risk
+                          - cell "Climate risk disclosure and stress testing" [ref=e1398]:
+                            - paragraph [ref=e1399]: Climate risk disclosure and stress testing
+                          - cell "CRO / ESG" [ref=e1400]:
+                            - paragraph [ref=e1401]: CRO / ESG
+                        - row "TCFD Voluntary (becoming mandatory via SEBI) ESG / CRO" [ref=e1402]:
+                          - cell "TCFD" [ref=e1403]:
+                            - paragraph [ref=e1404]: TCFD
+                          - cell "Voluntary (becoming mandatory via SEBI)" [ref=e1405]:
+                            - paragraph [ref=e1406]: Voluntary (becoming mandatory via SEBI)
+                          - cell "ESG / CRO" [ref=e1407]:
+                            - paragraph [ref=e1408]: ESG / CRO
+                        - row "GRI Standards Sustainability report framework ESG" [ref=e1409]:
+                          - cell "GRI Standards" [ref=e1410]:
+                            - paragraph [ref=e1411]: GRI Standards
+                          - cell "Sustainability report framework" [ref=e1412]:
+                            - paragraph [ref=e1413]: Sustainability report framework
+                          - cell "ESG" [ref=e1414]:
+                            - paragraph [ref=e1415]: ESG
+                      - paragraph [ref=e1416]
+                      - paragraph [ref=e1417]
+                - complementary [ref=e673]:
+                  - generic [ref=e674]:
+                    - generic [ref=e675]: Suggestions (35)
+                    - heading "Decision Queue" [level=3] [ref=e676]
+                  - generic [ref=e678]:
+                    - button "high rejected Define ESG data owners instead of referring only to relevant teams Section 4.1 says ESG data collection is the responsibility of “relevant teams,” and Section 4.2 says the ESG team reaches out to “relevant teams,” but it does not define metric-level owners, reviewers, backups, or named handoffs. This weakens accountability for completeness and timeliness. Add a metric-owner matrix requiring each ESG metric to have a named data owner, backup data owner, reviewer, source system, submission deadline, and evidence requirement; the ESG / Sustainability Head must maintain this matrix and update it before each reporting period. esg_reporting_sop.docx" [ref=e679] [cursor=pointer]:
+                      - generic [ref=e680]:
+                        - generic [ref=e681]: high
+                        - generic [ref=e682]: rejected
+                      - generic [ref=e683]: Define ESG data owners instead of referring only to relevant teams
+                      - paragraph [ref=e684]: Section 4.1 says ESG data collection is the responsibility of “relevant teams,” and Section 4.2 says the ESG team reaches out to “relevant teams,” but it does not define metric-level owners, reviewers, backups, or named handoffs. This weakens accountability for completeness and timeliness.
+                      - generic [ref=e685]: Add a metric-owner matrix requiring each ESG metric to have a named data owner, backup data owner, reviewer, source system, submission deadline, and evidence requirement; the ESG / Sustainability Head must maintain this matrix and update it before each reporting period.
+                      - generic [ref=e687]: esg_reporting_sop.docx
+                    - 'button "high rejected Specify source evidence required with ESG data submissions Section 4.2 requires teams to provide data in the agreed format, but it does not require supporting evidence such as system extracts, invoices, HR reports, facility records, or calculation workpapers. Without evidence requirements, the ESG team cannot verify accuracy or support audit requests. Revise the step to state: “Each contributing team must submit ESG data in the approved template by the agreed deadline together with supporting evidence, such as source-system extracts, invoices, meter readings, HR reports, calculation workpapers, or management-approved reconciliations, as applicable to the metric.” esg_reporting_sop.docx" [ref=e688] [cursor=pointer]':
+                      - generic [ref=e689]:
+                        - generic [ref=e690]: high
+                        - generic [ref=e691]: rejected
+                      - generic [ref=e692]: Specify source evidence required with ESG data submissions
+                      - paragraph [ref=e693]: Section 4.2 requires teams to provide data in the agreed format, but it does not require supporting evidence such as system extracts, invoices, HR reports, facility records, or calculation workpapers. Without evidence requirements, the ESG team cannot verify accuracy or support audit requests.
+                      - generic [ref=e694]: "Revise the step to state: “Each contributing team must submit ESG data in the approved template by the agreed deadline together with supporting evidence, such as source-system extracts, invoices, meter readings, HR reports, calculation workpapers, or management-approved reconciliations, as applicable to the metric.”"
+                      - generic [ref=e696]: esg_reporting_sop.docx
+                    - 'button "high rejected Add validation and reconciliation steps before consolidation and reporting Section 4.2 moves directly from receiving data to consolidation and follow-up for missing data. It does not require validation checks, reasonableness checks, reconciliation to source records, or review of year-on-year variances before reporting. Add a step stating: “Before final consolidation, the ESG team must perform validation checks for completeness, mathematical accuracy, consistency with source evidence, unit consistency, duplicate entries, and year-on-year or target variance; the ESG team must document exceptions and obtain corrections or written explanations from the relevant data owner.” esg_reporting_sop.docx" [ref=e697] [cursor=pointer]':
+                      - generic [ref=e698]:
+                        - generic [ref=e699]: high
+                        - generic [ref=e700]: rejected
+                      - generic [ref=e701]: Add validation and reconciliation steps before consolidation and reporting
+                      - paragraph [ref=e702]: Section 4.2 moves directly from receiving data to consolidation and follow-up for missing data. It does not require validation checks, reasonableness checks, reconciliation to source records, or review of year-on-year variances before reporting.
+                      - generic [ref=e703]: "Add a step stating: “Before final consolidation, the ESG team must perform validation checks for completeness, mathematical accuracy, consistency with source evidence, unit consistency, duplicate entries, and year-on-year or target variance; the ESG team must document exceptions and obtain corrections or written explanations from the relevant data owner.”"
+                      - generic [ref=e705]: esg_reporting_sop.docx
+                    - button "high rejected Define quantitative deviation thresholds and materiality levels Section 5.2 says to “use judgement” to determine significance and escalation, but it does not define thresholds, severity levels, or materiality criteria. This makes deviation identification inconsistent and difficult to audit. Add a deviation threshold table defining significance and materiality by metric type, such as percentage variance from target, percentage variance from prior year, absolute threshold, regulatory sensitivity, reputational impact, and whether the deviation affects an external disclosure; the ESG / Sustainability Head and CFO must approve the threshold table annually. esg_reporting_sop.docx" [ref=e706] [cursor=pointer]:
+                      - generic [ref=e707]:
+                        - generic [ref=e708]: high
+                        - generic [ref=e709]: rejected
+                      - generic [ref=e710]: Define quantitative deviation thresholds and materiality levels
+                      - paragraph [ref=e711]: Section 5.2 says to “use judgement” to determine significance and escalation, but it does not define thresholds, severity levels, or materiality criteria. This makes deviation identification inconsistent and difficult to audit.
+                      - generic [ref=e712]: Add a deviation threshold table defining significance and materiality by metric type, such as percentage variance from target, percentage variance from prior year, absolute threshold, regulatory sensitivity, reputational impact, and whether the deviation affects an external disclosure; the ESG / Sustainability Head and CFO must approve the threshold table annually.
+                      - generic [ref=e714]: esg_reporting_sop.docx
+                    - 'button "high rejected Require a deviation log with mandatory fields Section 5.2 requires deviations to be documented but does not specify the record to be created or the required fields. This creates inconsistent documentation and weakens tracking of root cause and corrective action. Revise the step to state: “The ESG team must record each deviation in the ESG deviation log with a unique ID, metric name, reporting period, target or prior-year comparator, actual value, variance, significance assessment, root cause, data owner, corrective action owner, due date, escalation status, management decision, closure evidence, and closure date.” esg_reporting_sop.docx" [ref=e715] [cursor=pointer]':
+                      - generic [ref=e716]:
+                        - generic [ref=e717]: high
+                        - generic [ref=e718]: rejected
+                      - generic [ref=e719]: Require a deviation log with mandatory fields
+                      - paragraph [ref=e720]: Section 5.2 requires deviations to be documented but does not specify the record to be created or the required fields. This creates inconsistent documentation and weakens tracking of root cause and corrective action.
+                      - generic [ref=e721]: "Revise the step to state: “The ESG team must record each deviation in the ESG deviation log with a unique ID, metric name, reporting period, target or prior-year comparator, actual value, variance, significance assessment, root cause, data owner, corrective action owner, due date, escalation status, management decision, closure evidence, and closure date.”"
+                      - generic [ref=e723]: esg_reporting_sop.docx
+                    - 'button "high rejected Specify escalation recipients and timelines for material deviations Section 5.2 says to escalate to the “appropriate level of management,” but it does not define who receives the escalation, when it must occur, or what information must be included. Replace the escalation step with: “For material deviations, the ESG team must escalate within five business days to the ESG / Sustainability Head, the relevant function head, and the CFO; deviations affecting external disclosures, regulatory reporting, or board-approved targets must also be escalated to senior management and included in the next board ESG update.” esg_reporting_sop.docx" [ref=e724] [cursor=pointer]':
+                      - generic [ref=e725]:
+                        - generic [ref=e726]: high
+                        - generic [ref=e727]: rejected
+                      - generic [ref=e728]: Specify escalation recipients and timelines for material deviations
+                      - paragraph [ref=e729]: Section 5.2 says to escalate to the “appropriate level of management,” but it does not define who receives the escalation, when it must occur, or what information must be included.
+                      - generic [ref=e730]: "Replace the escalation step with: “For material deviations, the ESG team must escalate within five business days to the ESG / Sustainability Head, the relevant function head, and the CFO; deviations affecting external disclosures, regulatory reporting, or board-approved targets must also be escalated to senior management and included in the next board ESG update.”"
+                      - generic [ref=e732]: esg_reporting_sop.docx
+                    - 'button "high rejected Resolve the approval conflict for external ESG disclosures Section 6.2 says external reports should be reviewed by the CFO and approved by senior management, while Section 7 says the CFO reviews and approves external ESG disclosures. These statements conflict on whether the CFO is reviewer only or final approver. Revise the approval roles consistently by stating: “The CFO reviews external ESG disclosures for financial and data-quality consistency and recommends approval; senior management provides final approval before submission, unless a board or committee approval is required by law, regulation, or internal governance.” esg_reporting_sop.docx" [ref=e733] [cursor=pointer]':
+                      - generic [ref=e734]:
+                        - generic [ref=e735]: high
+                        - generic [ref=e736]: rejected
+                      - generic [ref=e737]: Resolve the approval conflict for external ESG disclosures
+                      - paragraph [ref=e738]: Section 6.2 says external reports should be reviewed by the CFO and approved by senior management, while Section 7 says the CFO reviews and approves external ESG disclosures. These statements conflict on whether the CFO is reviewer only or final approver.
+                      - generic [ref=e739]: "Revise the approval roles consistently by stating: “The CFO reviews external ESG disclosures for financial and data-quality consistency and recommends approval; senior management provides final approval before submission, unless a board or committee approval is required by law, regulation, or internal governance.”"
+                      - generic [ref=e741]: esg_reporting_sop.docx
+                    - 'button "high rejected Define external reporting review controls and approval records Section 6.2 requires external reports to be reviewed and approved before submission, but it does not specify the review checklist, reconciliation to internal records, sign-off evidence, or retention of submitted versions. Add a pre-submission control stating: “Before any external ESG disclosure is submitted or published, the ESG team must complete a disclosure checklist, reconcile reported figures to the final ESG reporting template, resolve review comments, obtain documented CFO review and senior management approval, and retain the approved final version and submission evidence.” esg_reporting_sop.docx" [ref=e742] [cursor=pointer]':
+                      - generic [ref=e743]:
+                        - generic [ref=e744]: high
+                        - generic [ref=e745]: rejected
+                      - generic [ref=e746]: Define external reporting review controls and approval records
+                      - paragraph [ref=e747]: Section 6.2 requires external reports to be reviewed and approved before submission, but it does not specify the review checklist, reconciliation to internal records, sign-off evidence, or retention of submitted versions.
+                      - generic [ref=e748]: "Add a pre-submission control stating: “Before any external ESG disclosure is submitted or published, the ESG team must complete a disclosure checklist, reconcile reported figures to the final ESG reporting template, resolve review comments, obtain documented CFO review and senior management approval, and retain the approved final version and submission evidence.”"
+                      - generic [ref=e750]: esg_reporting_sop.docx
+                    - 'button "high rejected Add an accountability matrix for multi-role activities The procedure involves multiple roles and hand-offs but does not define Responsible, Accountable, Consulted, and Informed ownership. Add an accountability matrix for material activities: | Activity / decision | Responsible | Accountable | Consulted | Informed | | --- | --- | --- | --- | --- | | Key process activity | Performing team or role | Outcome owner | Specialist contributors | Oversight or impacted stakeholders | Populate the matrix from the uploaded procedure and supporting evidence. Where the responsible owner is not explicit, mark it for reviewer confirmation instead of assigning it to an oversight role. esg_reporting_sop.docx" [ref=e751] [cursor=pointer]':
+                      - generic [ref=e752]:
+                        - generic [ref=e753]: high
+                        - generic [ref=e754]: rejected
+                      - generic [ref=e755]: Add an accountability matrix for multi-role activities
+                      - paragraph [ref=e756]: The procedure involves multiple roles and hand-offs but does not define Responsible, Accountable, Consulted, and Informed ownership.
+                      - generic [ref=e757]: "Add an accountability matrix for material activities: | Activity / decision | Responsible | Accountable | Consulted | Informed | | --- | --- | --- | --- | --- | | Key process activity | Performing team or role | Outcome owner | Specialist contributors | Oversight or impacted stakeholders | Populate the matrix from the uploaded procedure and supporting evidence. Where the responsible owner is not explicit, mark it for reviewer confirmation instead of assigning it to an oversight role."
+                      - generic [ref=e759]: esg_reporting_sop.docx
+                    - 'button "high rejected Define classification criteria for referenced levels The documents reference levels or categories, but the procedure does not define the objective criteria used to classify them. Add a classification criteria matrix: | Level / category | Criteria | Required response | Escalation trigger | Evidence retained | | --- | --- | --- | --- | --- | | Level to be defined | Objective threshold or indicator | Required action | Time or severity trigger | Decision and action evidence | Use the level names already present in the uploaded documents and define objective criteria for each level. esg_reporting_sop.docx" [ref=e760] [cursor=pointer]':
+                      - generic [ref=e761]:
+                        - generic [ref=e762]: high
+                        - generic [ref=e763]: rejected
+                      - generic [ref=e764]: Define classification criteria for referenced levels
+                      - paragraph [ref=e765]: The documents reference levels or categories, but the procedure does not define the objective criteria used to classify them.
+                      - generic [ref=e766]: "Add a classification criteria matrix: | Level / category | Criteria | Required response | Escalation trigger | Evidence retained | | --- | --- | --- | --- | --- | | Level to be defined | Objective threshold or indicator | Required action | Time or severity trigger | Decision and action evidence | Use the level names already present in the uploaded documents and define objective criteria for each level."
+                      - generic [ref=e768]: esg_reporting_sop.docx
+                    - 'button "high rejected Define escalation triggers and timeframes The procedure uses escalation or notification language with vague timing, which makes execution and testing inconsistent. Add an escalation matrix: | Trigger | Responsible owner | Escalation recipient | Timeframe | Evidence retained | | --- | --- | --- | --- | --- | | Trigger to be defined | Performing role | Accountable or oversight role | Defined SLA | Notification and decision record | Replace vague timing terms with measurable thresholds and timeframes. esg_reporting_sop.docx" [ref=e769] [cursor=pointer]':
+                      - generic [ref=e770]:
+                        - generic [ref=e771]: high
+                        - generic [ref=e772]: rejected
+                      - generic [ref=e773]: Define escalation triggers and timeframes
+                      - paragraph [ref=e774]: The procedure uses escalation or notification language with vague timing, which makes execution and testing inconsistent.
+                      - generic [ref=e775]: "Add an escalation matrix: | Trigger | Responsible owner | Escalation recipient | Timeframe | Evidence retained | | --- | --- | --- | --- | --- | | Trigger to be defined | Performing role | Accountable or oversight role | Defined SLA | Notification and decision record | Replace vague timing terms with measurable thresholds and timeframes."
+                      - generic [ref=e777]: esg_reporting_sop.docx
+                    - 'button "high rejected Define evidence preservation and chain-of-custody requirements The documents refer to collecting or retaining evidence, but the procedure does not define preservation, custody, integrity, retention location, and transfer records. Define evidence preservation and chain-of-custody requirements: | Evidence type | Preservation action | Custodian | Integrity control | Retention location | Review / transfer record | | --- | --- | --- | --- | --- | --- | | Evidence from source documents | How it is captured and protected | Responsible role | Integrity control such as access restriction, timestamp, or validation | Repository or record location | Chain-of-custody or hand-off evidence | Apply these requirements to evidence used for investigation, exception handling, remediation, validation, or oversight review. esg_reporting_sop.docx" [ref=e778] [cursor=pointer]':
+                      - generic [ref=e779]:
+                        - generic [ref=e780]: high
+                        - generic [ref=e781]: rejected
+                      - generic [ref=e782]: Define evidence preservation and chain-of-custody requirements
+                      - paragraph [ref=e783]: The documents refer to collecting or retaining evidence, but the procedure does not define preservation, custody, integrity, retention location, and transfer records.
+                      - generic [ref=e784]: "Define evidence preservation and chain-of-custody requirements: | Evidence type | Preservation action | Custodian | Integrity control | Retention location | Review / transfer record | | --- | --- | --- | --- | --- | --- | | Evidence from source documents | How it is captured and protected | Responsible role | Integrity control such as access restriction, timestamp, or validation | Repository or record location | Chain-of-custody or hand-off evidence | Apply these requirements to evidence used for investigation, exception handling, remediation, validation, or oversight review."
+                      - generic [ref=e786]: esg_reporting_sop.docx
+                    - 'button "high rejected Add an oversight reporting matrix The procedure references reporting to oversight forums, but it does not define the recipient, cadence or trigger, minimum content, owner, and retained evidence. Add an oversight reporting matrix: | Recipient / forum | Reported matter | Owner | Cadence / trigger | Minimum content | Evidence retained | | --- | --- | --- | --- | --- | --- | | Oversight forum from source documents | Metric, exception, decision, or status item | Reporting owner | Defined frequency or trigger | Required data points and decisions | Pack, minutes, submission, or approval evidence | Use the matrix to replace vague references to reporting as appropriate with specific recipients, timing, content, and evidence. esg_reporting_sop.docx" [ref=e787] [cursor=pointer]':
+                      - generic [ref=e788]:
+                        - generic [ref=e789]: high
+                        - generic [ref=e790]: rejected
+                      - generic [ref=e791]: Add an oversight reporting matrix
+                      - paragraph [ref=e792]: The procedure references reporting to oversight forums, but it does not define the recipient, cadence or trigger, minimum content, owner, and retained evidence.
+                      - generic [ref=e793]: "Add an oversight reporting matrix: | Recipient / forum | Reported matter | Owner | Cadence / trigger | Minimum content | Evidence retained | | --- | --- | --- | --- | --- | --- | | Oversight forum from source documents | Metric, exception, decision, or status item | Reporting owner | Defined frequency or trigger | Required data points and decisions | Pack, minutes, submission, or approval evidence | Use the matrix to replace vague references to reporting as appropriate with specific recipients, timing, content, and evidence."
+                      - generic [ref=e795]: esg_reporting_sop.docx
+                    - 'button "high rejected Add an obligation calendar for external or internal requirements Supporting documents reference obligations or frameworks, but the procedure does not define a structured calendar of triggers, owners, deadlines, and evidence. Add an obligation calendar: | Obligation / reference | Trigger | Owner | Deadline / timeframe | Submission or notification evidence | | --- | --- | --- | --- | --- | | Reference from supporting documents | Trigger condition | Responsible owner | Defined date or elapsed time | Filing, notification, or approval record | Populate the table from the regulatory, framework, standard, or contractual references present in the uploaded source documents. esg_reporting_sop.docx" [ref=e796] [cursor=pointer]':
+                      - generic [ref=e797]:
+                        - generic [ref=e798]: high
+                        - generic [ref=e799]: rejected
+                      - generic [ref=e800]: Add an obligation calendar for external or internal requirements
+                      - paragraph [ref=e801]: Supporting documents reference obligations or frameworks, but the procedure does not define a structured calendar of triggers, owners, deadlines, and evidence.
+                      - generic [ref=e802]: "Add an obligation calendar: | Obligation / reference | Trigger | Owner | Deadline / timeframe | Submission or notification evidence | | --- | --- | --- | --- | --- | | Reference from supporting documents | Trigger condition | Responsible owner | Defined date or elapsed time | Filing, notification, or approval record | Populate the table from the regulatory, framework, standard, or contractual references present in the uploaded source documents."
+                      - generic [ref=e804]: esg_reporting_sop.docx
+                    - 'button "high rejected Add a metric ownership and validation matrix Supporting documents contain metrics, targets, or thresholds, but the procedure does not define owners, source systems, validation, deadlines, and retained evidence for each data element. Add a metric ownership and validation matrix: | Metric / data element | Data owner | Source system | Submission frequency | Validator / approver | Deadline | Evidence retained | | --- | --- | --- | --- | --- | --- | --- | | Metric from source documents | Accountable data provider | System or record source | Cadence | Independent validator | Due date | Submission and sign-off evidence | esg_reporting_sop.docx" [ref=e805] [cursor=pointer]':
+                      - generic [ref=e806]:
+                        - generic [ref=e807]: high
+                        - generic [ref=e808]: rejected
+                      - generic [ref=e809]: Add a metric ownership and validation matrix
+                      - paragraph [ref=e810]: Supporting documents contain metrics, targets, or thresholds, but the procedure does not define owners, source systems, validation, deadlines, and retained evidence for each data element.
+                      - generic [ref=e811]: "Add a metric ownership and validation matrix: | Metric / data element | Data owner | Source system | Submission frequency | Validator / approver | Deadline | Evidence retained | | --- | --- | --- | --- | --- | --- | --- | | Metric from source documents | Accountable data provider | System or record source | Cadence | Independent validator | Due date | Submission and sign-off evidence |"
+                      - generic [ref=e813]: esg_reporting_sop.docx
+                    - button [ref=e814] [cursor=pointer]:
+                      - generic [ref=e815]:
+                        - generic [ref=e816]: medium
+                        - generic [ref=e817]: rejected
+                      - generic [ref=e818]: Clarify the boundary for financed emissions and other bank-specific ESG disclosures
+                      - paragraph [ref=e819]: The Scope section states that the SOP covers direct operations and does not cover financed emissions in detail, but Section 7 assigns the CRO responsibility for climate risk and credit risk data relevant to ESG disclosure. This creates ambiguity over whether financed emissions, portfolio climate risk, or credit-risk-related ESG data are included in this process.
+                      - generic [ref=e820]: "Clarify the scope by stating: “This SOP covers ESG data for the bank’s direct operations and internal/external ESG disclosures. Financed emissions and portfolio-level climate or credit risk disclosures are included only to the extent specifically required for BRSR, annual report, sustainability report, or management reporting; detailed financed-emissions calculation procedures are governed by a separate methodology or SOP where applicable.”"
+                      - generic [ref=e822]: esg_reporting_sop.docx
+                    - 'button "medium rejected Add a reporting calendar with defined frequency and deadlines The SOP uses phrases such as “at the start of each reporting period,” “agreed deadline,” and “periodic basis,” but it does not specify the reporting frequency, due dates, or how deadlines are approved and communicated. Add a step stating: “Before the start of each financial year, the ESG / Sustainability Head must issue an ESG reporting calendar specifying data request dates, submission deadlines, review dates, internal reporting dates, external reporting milestones, and escalation dates for late submissions.” esg_reporting_sop.docx" [ref=e823] [cursor=pointer]':
+                      - generic [ref=e824]:
+                        - generic [ref=e825]: medium
+                        - generic [ref=e826]: rejected
+                      - generic [ref=e827]: Add a reporting calendar with defined frequency and deadlines
+                      - paragraph [ref=e828]: The SOP uses phrases such as “at the start of each reporting period,” “agreed deadline,” and “periodic basis,” but it does not specify the reporting frequency, due dates, or how deadlines are approved and communicated.
+                      - generic [ref=e829]: "Add a step stating: “Before the start of each financial year, the ESG / Sustainability Head must issue an ESG reporting calendar specifying data request dates, submission deadlines, review dates, internal reporting dates, external reporting milestones, and escalation dates for late submissions.”"
+                      - generic [ref=e831]: esg_reporting_sop.docx
+                    - 'button "medium rejected Define where ESG templates and records are stored The SOP mentions an “ESG reporting template” but does not identify where templates, evidence, review comments, approvals, or final reports must be stored. This creates a record-retention and auditability gap. Add a recordkeeping requirement stating: “The ESG team must store the completed ESG reporting template, source evidence, review comments, deviation logs, approval records, and final submitted reports in the approved ESG reporting repository with version control and restricted edit access.” esg_reporting_sop.docx" [ref=e832] [cursor=pointer]':
+                      - generic [ref=e833]:
+                        - generic [ref=e834]: medium
+                        - generic [ref=e835]: rejected
+                      - generic [ref=e836]: Define where ESG templates and records are stored
+                      - paragraph [ref=e837]: The SOP mentions an “ESG reporting template” but does not identify where templates, evidence, review comments, approvals, or final reports must be stored. This creates a record-retention and auditability gap.
+                      - generic [ref=e838]: "Add a recordkeeping requirement stating: “The ESG team must store the completed ESG reporting template, source evidence, review comments, deviation logs, approval records, and final submitted reports in the approved ESG reporting repository with version control and restricted edit access.”"
+                      - generic [ref=e840]: esg_reporting_sop.docx
+                    - 'button "medium rejected Define the process for late, missing, or incomplete data Section 4.2 says missing or incomplete data should be flagged and followed up, but it does not define who is notified, the timeframe for response, escalation if unresolved, or how estimates are handled if data remains unavailable. Replace the sentence with: “If data is missing, incomplete, or inconsistent, the ESG team must notify the data owner within two business days, record the issue in the ESG data issue tracker, set a corrective submission deadline, escalate unresolved items to the function head and ESG / Sustainability Head, and document any approved estimate or exclusion before reporting.” esg_reporting_sop.docx" [ref=e841] [cursor=pointer]':
+                      - generic [ref=e842]:
+                        - generic [ref=e843]: medium
+                        - generic [ref=e844]: rejected
+                      - generic [ref=e845]: Define the process for late, missing, or incomplete data
+                      - paragraph [ref=e846]: Section 4.2 says missing or incomplete data should be flagged and followed up, but it does not define who is notified, the timeframe for response, escalation if unresolved, or how estimates are handled if data remains unavailable.
+                      - generic [ref=e847]: "Replace the sentence with: “If data is missing, incomplete, or inconsistent, the ESG team must notify the data owner within two business days, record the issue in the ESG data issue tracker, set a corrective submission deadline, escalate unresolved items to the function head and ESG / Sustainability Head, and document any approved estimate or exclusion before reporting.”"
+                      - generic [ref=e849]: esg_reporting_sop.docx
+                    - 'button "medium rejected Expand the GHG emissions methodology requirements Section 4.3 lists emissions scopes and examples but does not specify calculation responsibilities, data sources, emission factors, organisational boundary, operational boundary, units, assumptions, or approval of methodology changes. Add a methodology requirement stating: “For GHG emissions reporting, the Facilities Head must provide activity data and supporting evidence, and the ESG team must document the organisational boundary, operational boundary, emission factors used, calculation formulas, units, assumptions, exclusions, renewable-energy instruments used for market-based Scope 2 reporting, and approval of any methodology changes.” esg_reporting_sop.docx" [ref=e850] [cursor=pointer]':
+                      - generic [ref=e851]:
+                        - generic [ref=e852]: medium
+                        - generic [ref=e853]: rejected
+                      - generic [ref=e854]: Expand the GHG emissions methodology requirements
+                      - paragraph [ref=e855]: Section 4.3 lists emissions scopes and examples but does not specify calculation responsibilities, data sources, emission factors, organisational boundary, operational boundary, units, assumptions, or approval of methodology changes.
+                      - generic [ref=e856]: "Add a methodology requirement stating: “For GHG emissions reporting, the Facilities Head must provide activity data and supporting evidence, and the ESG team must document the organisational boundary, operational boundary, emission factors used, calculation formulas, units, assumptions, exclusions, renewable-energy instruments used for market-based Scope 2 reporting, and approval of any methodology changes.”"
+                      - generic [ref=e858]: esg_reporting_sop.docx
+                    - 'button "medium rejected Use the defined deviation comparison consistently The provided document terminology defines a deviation as a reported ESG metric that is significantly different from the target or the prior year figure. Section 5.2 instead refers to “prior period,” which may include monthly, quarterly, or other comparisons and is inconsistent with the defined terminology. Revise the sentence to state: “During data collection or reporting, identify any reported ESG metric that is significantly different from the target or the prior year figure.” esg_reporting_sop.docx" [ref=e859] [cursor=pointer]':
+                      - generic [ref=e860]:
+                        - generic [ref=e861]: medium
+                        - generic [ref=e862]: rejected
+                      - generic [ref=e863]: Use the defined deviation comparison consistently
+                      - paragraph [ref=e864]: The provided document terminology defines a deviation as a reported ESG metric that is significantly different from the target or the prior year figure. Section 5.2 instead refers to “prior period,” which may include monthly, quarterly, or other comparisons and is inconsistent with the defined terminology.
+                      - generic [ref=e865]: "Revise the sentence to state: “During data collection or reporting, identify any reported ESG metric that is significantly different from the target or the prior year figure.”"
+                      - generic [ref=e867]: esg_reporting_sop.docx
+                    - 'button "medium rejected Define corrective action planning, approval, monitoring, and closure Section 5.2 says to implement corrective actions and monitor progress, but it does not define who owns the action, how due dates are set, how progress is tracked, or who approves closure. Add a corrective action step stating: “For each deviation requiring action, the relevant function head must assign a corrective action owner and due date, the ESG team must track progress in the deviation log at least monthly until closure, and the ESG / Sustainability Head must approve closure after reviewing evidence that the action has been completed.” esg_reporting_sop.docx" [ref=e868] [cursor=pointer]':
+                      - generic [ref=e869]:
+                        - generic [ref=e870]: medium
+                        - generic [ref=e871]: rejected
+                      - generic [ref=e872]: Define corrective action planning, approval, monitoring, and closure
+                      - paragraph [ref=e873]: Section 5.2 says to implement corrective actions and monitor progress, but it does not define who owns the action, how due dates are set, how progress is tracked, or who approves closure.
+                      - generic [ref=e874]: "Add a corrective action step stating: “For each deviation requiring action, the relevant function head must assign a corrective action owner and due date, the ESG team must track progress in the deviation log at least monthly until closure, and the ESG / Sustainability Head must approve closure after reviewing evidence that the action has been completed.”"
+                      - generic [ref=e876]: esg_reporting_sop.docx
+                    - 'button "medium rejected Separate data-quality corrections from genuine performance deviations Section 5.2 lists data quality issues as a possible root cause, but it does not explain whether corrected data should be restated, how errors in prior reports are handled, or how data errors differ from genuine operational performance deviations. Add a classification requirement stating: “The ESG team must classify each deviation as a data-quality error, methodology change, operational performance change, or external-factor impact; data-quality errors must be corrected in the source record and reporting template, and any error affecting an issued report must be assessed with the CFO and Compliance for restatement or disclosure impact.” esg_reporting_sop.docx" [ref=e877] [cursor=pointer]':
+                      - generic [ref=e878]:
+                        - generic [ref=e879]: medium
+                        - generic [ref=e880]: rejected
+                      - generic [ref=e881]: Separate data-quality corrections from genuine performance deviations
+                      - paragraph [ref=e882]: Section 5.2 lists data quality issues as a possible root cause, but it does not explain whether corrected data should be restated, how errors in prior reports are handled, or how data errors differ from genuine operational performance deviations.
+                      - generic [ref=e883]: "Add a classification requirement stating: “The ESG team must classify each deviation as a data-quality error, methodology change, operational performance change, or external-factor impact; data-quality errors must be corrected in the source record and reporting template, and any error affecting an issued report must be assessed with the CFO and Compliance for restatement or disclosure impact.”"
+                      - generic [ref=e885]: esg_reporting_sop.docx
+                    - 'button "medium rejected Require evidence of internal report review and circulation Section 6.1 says ESG data is reported to senior management and the board, but it does not specify the reporting frequency, distribution method, or records proving that reports were submitted and reviewed. Revise the section to state: “The ESG team must submit internal ESG performance reports according to the approved reporting calendar and retain the report pack, distribution record, meeting agenda or minutes, and any management or board actions arising from the report.” esg_reporting_sop.docx" [ref=e886] [cursor=pointer]':
+                      - generic [ref=e887]:
+                        - generic [ref=e888]: medium
+                        - generic [ref=e889]: rejected
+                      - generic [ref=e890]: Require evidence of internal report review and circulation
+                      - paragraph [ref=e891]: Section 6.1 says ESG data is reported to senior management and the board, but it does not specify the reporting frequency, distribution method, or records proving that reports were submitted and reviewed.
+                      - generic [ref=e892]: "Revise the section to state: “The ESG team must submit internal ESG performance reports according to the approved reporting calendar and retain the report pack, distribution record, meeting agenda or minutes, and any management or board actions arising from the report.”"
+                      - generic [ref=e894]: esg_reporting_sop.docx
+                    - 'button "medium rejected Create a regulatory obligations register for ESG reporting Section 6.3 says the bank should comply with applicable timelines and that ESG should liaise with Compliance, but it does not define how requirements are identified, tracked, assigned, or updated. Revise Section 6.3 to state: “Compliance must maintain an ESG regulatory obligations register that identifies each applicable ESG reporting requirement, owner, due date, submission channel, approval requirement, evidence requirement, and change-monitoring responsibility; the ESG team must review the register before each reporting cycle and confirm completion of applicable obligations.” esg_reporting_sop.docx" [ref=e895] [cursor=pointer]':
+                      - generic [ref=e896]:
+                        - generic [ref=e897]: medium
+                        - generic [ref=e898]: rejected
+                      - generic [ref=e899]: Create a regulatory obligations register for ESG reporting
+                      - paragraph [ref=e900]: Section 6.3 says the bank should comply with applicable timelines and that ESG should liaise with Compliance, but it does not define how requirements are identified, tracked, assigned, or updated.
+                      - generic [ref=e901]: "Revise Section 6.3 to state: “Compliance must maintain an ESG regulatory obligations register that identifies each applicable ESG reporting requirement, owner, due date, submission channel, approval requirement, evidence requirement, and change-monitoring responsibility; the ESG team must review the register before each reporting cycle and confirm completion of applicable obligations.”"
+                      - generic [ref=e903]: esg_reporting_sop.docx
+                    - 'button "medium rejected Clarify the role of Compliance in the roles and responsibilities table Section 6.3 requires the ESG team to liaise with Compliance, but Compliance is not included in Section 7. This creates an ownership gap for regulatory interpretation and obligation tracking. Add a row to the roles and responsibilities table stating: “Compliance | Maintains the ESG regulatory obligations register, advises on applicable ESG reporting requirements and timelines, reviews regulatory submissions where required, and confirms regulatory submission evidence is retained.” esg_reporting_sop.docx" [ref=e904] [cursor=pointer]':
+                      - generic [ref=e905]:
+                        - generic [ref=e906]: medium
+                        - generic [ref=e907]: rejected
+                      - generic [ref=e908]: Clarify the role of Compliance in the roles and responsibilities table
+                      - paragraph [ref=e909]: Section 6.3 requires the ESG team to liaise with Compliance, but Compliance is not included in Section 7. This creates an ownership gap for regulatory interpretation and obligation tracking.
+                      - generic [ref=e910]: "Add a row to the roles and responsibilities table stating: “Compliance | Maintains the ESG regulatory obligations register, advises on applicable ESG reporting requirements and timelines, reviews regulatory submissions where required, and confirms regulatory submission evidence is retained.”"
+                      - generic [ref=e912]: esg_reporting_sop.docx
+                    - button "medium rejected Add responsibilities for IT and Finance where they contribute ESG data The Scope section says Finance, HR, Facilities, IT, and other functions contribute ESG data, but Section 7 lists CHRO, Facilities Head, Company Secretary, CRO, CFO, and ESG / Sustainability Head only. Finance data ownership beyond CFO approval and IT data ownership are not described. Add rows to the roles and responsibilities table for Finance and IT, specifying the ESG metrics they own, the source records they must provide, and their responsibility to certify completeness and accuracy of submitted data. esg_reporting_sop.docx" [ref=e913] [cursor=pointer]:
+                      - generic [ref=e914]:
+                        - generic [ref=e915]: medium
+                        - generic [ref=e916]: rejected
+                      - generic [ref=e917]: Add responsibilities for IT and Finance where they contribute ESG data
+                      - paragraph [ref=e918]: The Scope section says Finance, HR, Facilities, IT, and other functions contribute ESG data, but Section 7 lists CHRO, Facilities Head, Company Secretary, CRO, CFO, and ESG / Sustainability Head only. Finance data ownership beyond CFO approval and IT data ownership are not described.
+                      - generic [ref=e919]: Add rows to the roles and responsibilities table for Finance and IT, specifying the ESG metrics they own, the source records they must provide, and their responsibility to certify completeness and accuracy of submitted data.
+                      - generic [ref=e921]: esg_reporting_sop.docx
+                    - 'button "medium rejected Require data-owner certification of submitted ESG data The SOP requires teams to provide accurate data, but it does not require data owners to certify completeness and accuracy before the ESG team consolidates the information. Add a requirement stating: “Each data owner must certify, by email or workflow approval, that the submitted ESG data is complete, accurate, prepared using the approved methodology, and supported by retained evidence.” esg_reporting_sop.docx" [ref=e922] [cursor=pointer]':
+                      - generic [ref=e923]:
+                        - generic [ref=e924]: medium
+                        - generic [ref=e925]: rejected
+                      - generic [ref=e926]: Require data-owner certification of submitted ESG data
+                      - paragraph [ref=e927]: The SOP requires teams to provide accurate data, but it does not require data owners to certify completeness and accuracy before the ESG team consolidates the information.
+                      - generic [ref=e928]: "Add a requirement stating: “Each data owner must certify, by email or workflow approval, that the submitted ESG data is complete, accurate, prepared using the approved methodology, and supported by retained evidence.”"
+                      - generic [ref=e930]: esg_reporting_sop.docx
+                    - 'button "medium rejected Define training frequency, audience, and training records Section 8 says staff should be aware of responsibilities and training will be provided when regulatory changes occur, but it does not require onboarding training, refresher training, attendance records, or completion tracking. Revise Section 8 to state: “The ESG team must provide onboarding training to new ESG data owners, annual refresher training to all ESG reporting participants, and ad hoc training when significant regulatory, methodology, system, or SOP changes occur; the ESG team must retain training materials, attendance records, and completion status.” esg_reporting_sop.docx" [ref=e931] [cursor=pointer]':
+                      - generic [ref=e932]:
+                        - generic [ref=e933]: medium
+                        - generic [ref=e934]: rejected
+                      - generic [ref=e935]: Define training frequency, audience, and training records
+                      - paragraph [ref=e936]: Section 8 says staff should be aware of responsibilities and training will be provided when regulatory changes occur, but it does not require onboarding training, refresher training, attendance records, or completion tracking.
+                      - generic [ref=e937]: "Revise Section 8 to state: “The ESG team must provide onboarding training to new ESG data owners, annual refresher training to all ESG reporting participants, and ad hoc training when significant regulatory, methodology, system, or SOP changes occur; the ESG team must retain training materials, attendance records, and completion status.”"
+                      - generic [ref=e939]: esg_reporting_sop.docx
+                    - button "medium rejected Add a post-event review and closure control The procedure describes events or remediation but does not define a structured closure review to confirm root cause, lessons learned, and action completion. Add a post-event review / closure section covering trigger, required participants, timeline, root-cause review, corrective actions, evidence retained, and sign-off before closure. esg_reporting_sop.docx" [ref=e940] [cursor=pointer]:
+                      - generic [ref=e941]:
+                        - generic [ref=e942]: medium
+                        - generic [ref=e943]: rejected
+                      - generic [ref=e944]: Add a post-event review and closure control
+                      - paragraph [ref=e945]: The procedure describes events or remediation but does not define a structured closure review to confirm root cause, lessons learned, and action completion.
+                      - generic [ref=e946]: Add a post-event review / closure section covering trigger, required participants, timeline, root-cause review, corrective actions, evidence retained, and sign-off before closure.
+                      - generic [ref=e948]: esg_reporting_sop.docx
+                    - button "medium rejected Add document control metadata The procedure does not clearly define document ownership, versioning, and review cadence. Add document control information including document owner, version, effective date, last review date, next review date, approver, and change summary. esg_reporting_sop.docx" [ref=e949] [cursor=pointer]:
+                      - generic [ref=e950]:
+                        - generic [ref=e951]: medium
+                        - generic [ref=e952]: rejected
+                      - generic [ref=e953]: Add document control metadata
+                      - paragraph [ref=e954]: The procedure does not clearly define document ownership, versioning, and review cadence.
+                      - generic [ref=e955]: Add document control information including document owner, version, effective date, last review date, next review date, approver, and change summary.
+                      - generic [ref=e957]: esg_reporting_sop.docx
+                    - button "medium rejected Link thresholds and exceptions to risk appetite The documents contain risk and threshold signals, but the procedure does not explain how breaches map to appetite, tolerance, or management action. Link material metrics, thresholds, or control exceptions to the applicable risk appetite or tolerance statement, including breach triggers, escalation owner, and evidence retained. esg_reporting_sop.docx" [ref=e958] [cursor=pointer]:
+                      - generic [ref=e959]:
+                        - generic [ref=e960]: medium
+                        - generic [ref=e961]: rejected
+                      - generic [ref=e962]: Link thresholds and exceptions to risk appetite
+                      - paragraph [ref=e963]: The documents contain risk and threshold signals, but the procedure does not explain how breaches map to appetite, tolerance, or management action.
+                      - generic [ref=e964]: Link material metrics, thresholds, or control exceptions to the applicable risk appetite or tolerance statement, including breach triggers, escalation owner, and evidence retained.
+                      - generic [ref=e966]: esg_reporting_sop.docx
+                    - 'button "medium rejected Add a category coverage matrix The source documents reference categories, populations, or scopes, but the procedure does not reconcile the full coverage universe with inclusion decisions, owners, requirements, and evidence. Add a category coverage matrix: | Category / population | Inclusion decision | Source document or system | Owner | Reporting / control requirement | Evidence retained | | --- | --- | --- | --- | --- | --- | | Category from source documents | Included, excluded, or not applicable | Authoritative source | Accountable owner | Required treatment or reporting obligation | Evidence supporting the decision | Use the matrix to reconcile the full category or population universe from supporting documents with what the procedure says is in scope. esg_reporting_sop.docx" [ref=e967] [cursor=pointer]':
+                      - generic [ref=e968]:
+                        - generic [ref=e969]: medium
+                        - generic [ref=e970]: rejected
+                      - generic [ref=e971]: Add a category coverage matrix
+                      - paragraph [ref=e972]: The source documents reference categories, populations, or scopes, but the procedure does not reconcile the full coverage universe with inclusion decisions, owners, requirements, and evidence.
+                      - generic [ref=e973]: "Add a category coverage matrix: | Category / population | Inclusion decision | Source document or system | Owner | Reporting / control requirement | Evidence retained | | --- | --- | --- | --- | --- | --- | | Category from source documents | Included, excluded, or not applicable | Authoritative source | Accountable owner | Required treatment or reporting obligation | Evidence supporting the decision | Use the matrix to reconcile the full category or population universe from supporting documents with what the procedure says is in scope."
+                      - generic [ref=e975]: esg_reporting_sop.docx
+                    - button "low rejected Correct the section numbering gap The SOP jumps from Section 2 to Section 4.1, which may confuse readers and auditors about whether Section 3 is missing or intentionally omitted. Renumber the sections sequentially or insert a Section 3 heading, such as “## 3. Definitions and Abbreviations,” so the SOP has a complete and auditable structure. esg_reporting_sop.docx" [ref=e976] [cursor=pointer]:
+                      - generic [ref=e977]:
+                        - generic [ref=e978]: low
+                        - generic [ref=e979]: rejected
+                      - generic [ref=e980]: Correct the section numbering gap
+                      - paragraph [ref=e981]: The SOP jumps from Section 2 to Section 4.1, which may confuse readers and auditors about whether Section 3 is missing or intentionally omitted.
+                      - generic [ref=e982]: Renumber the sections sequentially or insert a Section 3 heading, such as “## 3. Definitions and Abbreviations,” so the SOP has a complete and auditable structure.
+                      - generic [ref=e984]: esg_reporting_sop.docx
+                    - 'button "low rejected Replace weak advisory wording with mandatory procedural wording The SOP frequently uses “should,” such as “teams should provide data,” “reports should include,” and “training ... will be provided when significant changes ... occur.” For an SOP, mandatory steps should use consistent directive language to avoid ambiguity. Replace advisory wording with mandatory wording where the step is required, for example: “Teams must provide data in the approved format by the approved deadline,” “Reports must include the following items,” and “All staff involved in ESG data collection must understand and follow their responsibilities under this SOP.” esg_reporting_sop.docx" [ref=e985] [cursor=pointer]':
+                      - generic [ref=e986]:
+                        - generic [ref=e987]: low
+                        - generic [ref=e988]: rejected
+                      - generic [ref=e989]: Replace weak advisory wording with mandatory procedural wording
+                      - paragraph [ref=e990]: The SOP frequently uses “should,” such as “teams should provide data,” “reports should include,” and “training ... will be provided when significant changes ... occur.” For an SOP, mandatory steps should use consistent directive language to avoid ambiguity.
+                      - generic [ref=e991]: "Replace advisory wording with mandatory wording where the step is required, for example: “Teams must provide data in the approved format by the approved deadline,” “Reports must include the following items,” and “All staff involved in ESG data collection must understand and follow their responsibilities under this SOP.”"
+                      - generic [ref=e993]: esg_reporting_sop.docx
+                  - generic [ref=e996]:
+                    - button "Accept" [ref=e997] [cursor=pointer]
+                    - button "Edit Text" [ref=e998] [cursor=pointer]
+                    - button "Reject" [ref=e999] [cursor=pointer]
+      - contentinfo [ref=e161]:
+        - generic [ref=e162]: © 2026 KPMG Assurance and Consulting Services LLP, an Indian Limited Liability Partnership and a member firm of the KPMG global organization of independent member firms affiliated with KPMG International Limited, a private English company limited by guarantee. All rights reserved.
+        - generic [ref=e163]: Confidential

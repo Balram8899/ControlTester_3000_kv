@@ -75,6 +75,8 @@
   --scan-line-color: rgba(0, 51, 141, 0.015);
   --grid-color:      rgba(0, 51, 141, 0.035);
   --terminal-green:  #009a44;
+  --trace-shell-header-height: 80px;
+  --trace-shell-footer-height: 30px;
 }
 
 .dark {
@@ -200,6 +202,15 @@ body, p, span, li {
     radial-gradient(ellipse 60% 35% at 0% 0%, rgba(0, 184, 245, 0.08) 0%, transparent 65%),
     radial-gradient(ellipse 45% 25% at 100% 100%, rgba(30, 73, 226, 0.08) 0%, transparent 60%);
   pointer-events: none;
+}
+
+.trace-sidebar-brand {
+  height: var(--trace-shell-header-height);
+  min-height: var(--trace-shell-header-height);
+}
+
+.trace-sidebar-user {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.035) 0%, rgba(255, 255, 255, 0.02) 100%);
 }
 
 .kpmg-sidebar-logo-white {
@@ -668,10 +679,35 @@ body, p, span, li {
    ================================================================ */
 
 .trace-top-ribbon {
+  min-height: var(--trace-shell-header-height);
   border-bottom-color: rgba(255, 255, 255, 0.06);
   background:
     linear-gradient(180deg, rgba(12, 35, 60, 0.98) 0%, rgba(12, 35, 60, 0.92) 100%);
   box-shadow: 0 12px 28px -24px rgba(0, 0, 0, 0.42);
+}
+
+.trace-top-ribbon__inner {
+  min-height: var(--trace-shell-header-height);
+}
+
+.trace-top-ribbon__back {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #ACEAFF;
+  transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
+
+.trace-top-ribbon__brand:hover .trace-top-ribbon__back {
+  border-color: rgba(172, 234, 255, 0.3);
+  background: rgba(255, 255, 255, 0.11);
+  color: #FFFFFF;
 }
 
 .trace-shell-main {
@@ -865,8 +901,9 @@ body, p, span, li {
 }
 
 .trace-footer {
-  min-height: 40px;
-  background: rgba(233, 238, 245, 0.88);
+  height: var(--trace-shell-footer-height);
+  min-height: var(--trace-shell-footer-height);
+  background: rgba(233, 238, 245, 0.9);
   border-top: 1px solid rgba(0, 51, 141, 0.07);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -875,6 +912,9 @@ body, p, span, li {
 .trace-footer__copy {
   color: #5f6f86;
   font-family: Arial, sans-serif;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .trace-footer__badge {
@@ -882,8 +922,8 @@ body, p, span, li {
   border: 1px solid rgba(0, 51, 141, 0.1);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.48);
-  padding: 1px 9px;
-  line-height: 1.45;
+  padding: 0 8px;
+  line-height: 1.35;
 }
 
 @media (max-width: 1024px) {

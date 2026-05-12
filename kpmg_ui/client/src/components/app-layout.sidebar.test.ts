@@ -10,6 +10,14 @@ const brandOverrideCss = fs.readFileSync(
   path.resolve("client/src/styles/kpmg-brand-override.css"),
   "utf8",
 );
+const traceNavSource = fs.readFileSync(
+  path.resolve("client/src/components/TraceNavBar.tsx"),
+  "utf8",
+);
+const footerSource = fs.readFileSync(
+  path.resolve("client/src/components/Footer.tsx"),
+  "utf8",
+);
 
 assert.match(
   appLayoutSource,
@@ -39,6 +47,42 @@ assert.match(
   appLayoutSource,
   /trace-shell-main/,
   "App layout should wrap authenticated content in the shared hero-forward shell surface",
+);
+
+assert.match(
+  appLayoutSource,
+  /trace-sidebar-brand/,
+  "Sidebar brand area should use the shared shell header height token",
+);
+
+assert.match(
+  appLayoutSource,
+  /trace-sidebar-user/,
+  "Sidebar user area should use the integrated shell footer treatment",
+);
+
+assert.match(
+  traceNavSource,
+  /Back to TRACE landing/,
+  "Feature page breadcrumb ribbon should expose explicit back navigation to the TRACE landing page",
+);
+
+assert.match(
+  footerSource,
+  /flex-nowrap/,
+  "Shell footer should stay compact instead of wrapping legal text into a tall block",
+);
+
+assert.match(
+  brandOverrideCss,
+  /--trace-shell-header-height:\s*80px/,
+  "Brand CSS should define the shared top ribbon and sidebar header height",
+);
+
+assert.match(
+  brandOverrideCss,
+  /--trace-shell-footer-height:\s*30px/,
+  "Brand CSS should define the compact feature shell footer height",
 );
 
 assert.match(

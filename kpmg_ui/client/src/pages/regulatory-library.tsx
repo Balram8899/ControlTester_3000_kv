@@ -21,7 +21,6 @@ import { useRegulatoryTesting, LibraryDocument } from "@/contexts/RegulatoryTest
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { TraceMetricCard, TracePanel, TraceSectionHeading, TraceStatusRibbon } from "@/components/TraceAnalysisPrimitives";
-import Footer from "@/components/Footer";
 
 const ENFORCEMENT_COLOR: Record<string, string> = {
   mandatory:    "bg-red-100 text-red-700 border-red-300 dark:bg-red-950 dark:text-red-300",
@@ -1553,19 +1552,12 @@ export default function RegulatoryLibraryPage() {
     const gapReady = gapSelectedIds.size >= 2;
 
     return (
-      <div className="flex h-full flex-col overflow-hidden bg-[#F0F2F7] text-[#0C233C]">
-        <section className="relative shrink-0 overflow-hidden bg-[#0C233C]">
-          <div className="absolute inset-0 opacity-80" style={{ background: "linear-gradient(135deg, #0C233C 0%, #1E49E2 100%)" }} />
-          <div className="relative px-8 py-7 md:px-10">
-            <div className="mb-3 text-[11px] font-bold uppercase tracking-[2.5px] text-[#00B8F5]">Regulatory Corpus</div>
-            <h1 className="text-[34px] font-bold leading-tight text-white md:text-[42px]">
-              Regulatory Library
-            </h1>
-            <p className="mt-3 max-w-[760px] text-[16px] leading-[1.75] text-white/65">
-              Curate source documents, review obligations, and compare frameworks in one workspace.
-            </p>
-          </div>
-        </section>
+      <div className="trace-workbench-shell flex h-full flex-col overflow-hidden bg-[#F0F2F7] text-[#0C233C]">
+        <HeroSection
+          title="Regulatory Library"
+          subtitle="Curate source documents, review obligations, and compare frameworks in one workspace."
+          icon={Library}
+        />
 
         <main className="min-h-0 flex-1 overflow-auto px-6 py-6">
           <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-[#E2E6EF] bg-white p-4 shadow-sm xl:flex-row xl:items-center xl:justify-between">

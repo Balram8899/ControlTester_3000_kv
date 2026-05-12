@@ -27,7 +27,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import TraceNavBar from "@/components/TraceNavBar";
+import HeroSection from "@/components/HeroSection";
 import TracePageBody from "@/components/TracePageBody";
 import {
   AXIS_STYLE,
@@ -655,21 +655,23 @@ export default function DashboardPage() {
 
   return (
     <div className="flex h-full flex-col overflow-hidden bg-[#F0F2F7]">
-      <TraceNavBar breadcrumb="Dashboard" />
+      <HeroSection
+        title="Dashboard"
+        subtitle="Monitor TRACE libraries, workflows, issues, and generated outputs."
+        icon={Grid2X2}
+      />
 
       <TracePageBody width="wide" tint contentClassName="gap-5">
         <section
           data-dashboard-banner="true"
-          className="rounded-lg border border-[#123B7A]/30 bg-[linear-gradient(90deg,#0C233C_0%,#082342_100%)] p-5 text-white shadow-sm"
+          className="rounded-lg border border-[#D8E3F2] bg-white px-5 py-4 text-[#0C233C] shadow-sm"
         >
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex min-w-0 items-center gap-4">
-              <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-[#00B8F5]">
-                <Grid2X2 className="h-6 w-6" />
-              </div>
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex min-w-0 items-center gap-3">
+              <span className={`h-2.5 w-2.5 rounded-full ${platformOnline ? "bg-[#009A44]" : "bg-[#EAAA00]"}`} />
               <div>
-                <p className="text-[18px] font-bold uppercase tracking-[0.8px]">DASHBOARD</p>
-                <p className="mt-1 text-[12px] text-white/60">{platformOnline ? "Platform Online" : "Platform Degraded"} / {activeModel}</p>
+                <p className="text-[11px] font-bold uppercase tracking-[2.5px] text-[#00338D]">Workspace Status</p>
+                <p className="mt-1 text-[13px] font-semibold text-[#5A6478]">{platformOnline ? "Platform Online" : "Platform Degraded"} / {activeModel}</p>
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-3">
@@ -677,13 +679,13 @@ export default function DashboardPage() {
                 type="button"
                 onClick={refreshDashboard}
                 disabled={allPageLoading}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-white/20 bg-white/5 text-white/80 transition-colors hover:bg-white/10 hover:text-white disabled:cursor-wait disabled:text-white/45"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[#D8E3F2] bg-[#F8FBFF] text-[#1E49E2] transition-colors hover:bg-[#EEF2FF] disabled:cursor-wait disabled:text-[#8492A6]"
                 title="Refresh Dashboard"
               >
                 <RefreshCw className={`h-5 w-5 ${allPageLoading ? "animate-spin" : ""}`} />
               </button>
-              <div className="flex items-center gap-3 rounded-full bg-[#1E49E2]/35 px-4 py-2 text-[12px] font-semibold text-white">
-                <span className="rounded-full border border-white/20 px-2 py-1 text-white/80">Last Refresh</span>
+              <div className="flex items-center gap-3 rounded-full border border-[#D8E3F2] bg-[#F8FBFF] px-4 py-2 text-[12px] font-semibold text-[#5A6478]">
+                <span className="rounded-full border border-[#D8E3F2] bg-white px-2 py-1 text-[#00338D]">Last Refresh</span>
                 <span title={lastRefreshLabel}>{lastRefreshed ? lastRefreshDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "Not Refreshed"}</span>
               </div>
             </div>

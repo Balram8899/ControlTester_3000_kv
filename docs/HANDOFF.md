@@ -5,6 +5,17 @@
 
 ---
 
+## 2026-05-11 Update - Feature Shell Navigation and Footer Polish
+
+- Scope: refined the shared KPMG TRACE feature-page shell used by the sidebar modules without changing routes, backend contracts, or page workflows.
+- Updated the shared feature breadcrumb ribbon so `KPMG | TRACE / Feature` includes an explicit back affordance to `/landing`, matching the requested feature landing-page structure.
+- Added shared shell height tokens so the sidebar brand header and top feature ribbon align visually, creating a seamless top band across the shell.
+- Compacted the global feature footer into a single-line, truncated legal strip and tightened the sidebar user footer area so the bottom bands feel integrated and take less vertical space.
+- Follow-up: patched Dashboard, Regulatory Library, and Controls Library, which were bypassing the shared feature hero through page-local banners or direct nav-only headers; Controls Library also no longer renders a duplicate in-page footer.
+- Added static frontend guards in `kpmg_ui/client/src/components/app-layout.sidebar.test.ts` for the shared shell height tokens, landing back navigation, compact footer, and integrated sidebar user treatment.
+
+---
+
 ## 2026-05-11 Update - Document Uplift UX Redesign
 
 - Scope: redesigned the Document Uplift frontend into a shell-contained landing dashboard and case workspace based on `docs/superpowers/specs/2026-05-08-document-uplift-ux-redesign.md`, using the TRACE/Controls Library visual language.

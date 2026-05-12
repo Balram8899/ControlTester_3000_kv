@@ -93,7 +93,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
         style={{ width: collapsed ? 68 : 288 }}
       >
         <div
-          className="relative z-10 flex h-24 items-center border-b border-white/8 px-3 flex-shrink-0"
+          className="trace-sidebar-brand relative z-10 flex items-center border-b border-white/8 px-3 flex-shrink-0"
           style={{ justifyContent: collapsed ? "center" : "flex-start" }}
         >
           {!collapsed && (
@@ -172,12 +172,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
           </div>
         </nav>
 
-        <div className="relative z-10 border-t border-white/8 flex-shrink-0" style={{ padding: collapsed ? "10px 4px" : "10px 8px" }}>
+        <div className="trace-sidebar-user relative z-10 border-t border-white/8 flex-shrink-0" style={{ padding: collapsed ? "6px 4px" : "6px 8px" }}>
           {collapsed ? (
             <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
-                <div className="flex justify-center py-1 cursor-default">
-                  <Avatar className="h-7 w-7">
+                <div className="flex justify-center py-0.5 cursor-default">
+                  <Avatar className="h-6 w-6">
                     <AvatarFallback className="bg-[#00338D] text-white text-xs font-bold">
                       {userInitial}
                     </AvatarFallback>
@@ -189,8 +189,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
               </TooltipContent>
             </Tooltip>
           ) : (
-            <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-white/6 overflow-hidden">
-              <Avatar className="h-7 w-7 flex-shrink-0">
+            <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white/6 overflow-hidden">
+              <Avatar className="h-6 w-6 flex-shrink-0">
                 <AvatarFallback className="bg-[#00338D] text-white text-xs font-bold">
                   {userInitial}
                 </AvatarFallback>

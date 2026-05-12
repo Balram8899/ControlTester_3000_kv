@@ -13,13 +13,13 @@ const brandOverrideCss = fs.readFileSync(
 
 assert.match(
   footerSource,
-  /py-1(?:\s|")/,
-  "Shared footer should use compact vertical padding",
+  /flex-nowrap/,
+  "Shared footer should stay on one line inside the feature shell",
 );
 
 assert.match(
   footerSource,
-  /text-\[9\.5px\]/,
+  /text-\[9px\]/,
   "Legal footer copy should be smaller than normal product body copy",
 );
 
@@ -31,8 +31,8 @@ assert.match(
 
 assert.match(
   brandOverrideCss,
-  /\.trace-footer\s*{[\s\S]*?min-height:\s*40px/,
-  "Brand footer should reserve a compact, natural product-shell height",
+  /--trace-shell-footer-height:\s*30px/,
+  "Brand footer should reserve the compact feature-shell height token",
 );
 
 assert.match(

@@ -1,0 +1,854 @@
+- generic:
+  - generic:
+    - list
+    - generic:
+      - complementary:
+        - generic:
+          - button:
+            - img
+        - navigation:
+          - generic:
+            - button:
+              - img
+            - button:
+              - img
+            - button:
+              - img
+            - button:
+              - img
+            - button:
+              - img
+            - button:
+              - img
+            - button:
+              - img
+            - button:
+              - img
+            - button:
+              - img
+            - button:
+              - img
+            - button:
+              - img
+            - button:
+              - img
+            - button:
+              - img
+            - button:
+              - img
+        - generic:
+          - generic:
+            - generic:
+              - generic: A
+      - generic:
+        - main:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - button:
+                        - generic: KPMG
+                        - generic: "|"
+                        - generic: TRACE
+                      - generic:
+                        - generic: /
+                        - generic: Document Uplift
+                    - generic:
+                      - button:
+                        - img
+                        - text: Sign Out
+                - generic:
+                  - generic:
+                    - generic:
+                      - img
+                    - generic:
+                      - heading [level=1]: Document Uplift
+                      - paragraph: Review, improve, and export procedure documents with cross-document control evidence.
+              - generic: DOCUMENT INTELLIGENCE
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img
+                        - generic:
+                          - generic: Active Cases
+                          - generic: "33"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img
+                        - generic:
+                          - generic: Review Ready
+                          - generic: "16"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img
+                        - generic:
+                          - generic: Pending Uploads
+                          - generic: "2"
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img
+                        - generic:
+                          - generic: Exports
+                          - generic: "47"
+                  - generic:
+                    - button:
+                      - generic:
+                        - generic:
+                          - generic: Process
+                          - generic: How It Works
+                        - img
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic: "1"
+                          - generic:
+                            - img
+                            - generic: Create Case
+                            - paragraph: Set the SOP, process, owner, and domain.
+                      - generic:
+                        - generic:
+                          - generic: "2"
+                          - generic:
+                            - img
+                            - generic: Upload Documents
+                            - paragraph: Add the primary SOP and supporting evidence.
+                      - generic:
+                        - generic:
+                          - generic: "3"
+                          - generic:
+                            - img
+                            - generic: Run Pipeline
+                            - paragraph: Extract anchors and generate uplift suggestions.
+                      - generic:
+                        - generic:
+                          - generic: "4"
+                          - generic:
+                            - img
+                            - generic: Review Suggestions
+                            - paragraph: Accept, reject, or edit proposed changes.
+                      - generic:
+                        - generic:
+                          - generic: "5"
+                          - generic:
+                            - img
+                            - generic: Export
+                            - paragraph: Generate the tracked DOCX and supporting logs.
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic: Cases
+                          - generic: Your Cases
+                        - button:
+                          - img
+                          - text: New Case
+                      - generic:
+                        - img
+                        - textbox:
+                          - /placeholder: Search cases, domains, documents...
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic: Cyber
+                                - generic:
+                                  - generic: Cybersecurity
+                                  - generic: 0 document(s)
+                                  - generic: 0 pending
+                                  - generic: Updated 11 May, 2:00 pm
+                                  - generic: Cost $0.00
+                          - generic:
+                            - generic: Review Ready
+                          - generic:
+                            - button: Open
+                            - button:
+                              - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic: ESG qualityfix validation
+                                - generic:
+                                  - generic: ESG
+                                  - generic: 3 document(s)
+                                  - generic: 0 pending
+                                  - generic: Updated 11 May, 1:58 pm
+                                  - generic: Cost $0.00
+                          - generic:
+                            - generic: Review Ready
+                          - generic:
+                            - button: Open
+                            - button:
+                              - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic: Cyber qualityfix validation
+                                - generic:
+                                  - generic: Cyber
+                                  - generic: 3 document(s)
+                                  - generic: 28 pending
+                                  - generic: Updated 11 May, 12:08 am
+                                  - generic: Cost $0.00
+                          - generic:
+                            - generic: Complete
+                          - generic:
+                            - button: Open
+                            - button:
+                              - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic: esg-scopegate-final2
+                                - generic:
+                                  - generic: None
+                                  - generic: 3 document(s)
+                                  - generic: 23 pending
+                                  - generic: Updated 10 May, 11:03 pm
+                                  - generic: Cost $0.00
+                          - generic:
+                            - generic: Complete
+                          - generic:
+                            - button: Open
+                            - button:
+                              - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic: cyber-scopegate-final2
+                                - generic:
+                                  - generic: None
+                                  - generic: 3 document(s)
+                                  - generic: 28 pending
+                                  - generic: Updated 10 May, 11:00 pm
+                                  - generic: Cost $0.00
+                          - generic:
+                            - generic: Complete
+                          - generic:
+                            - button: Open
+                            - button:
+                              - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic: cyber-scopegate-final
+                                - generic:
+                                  - generic: None
+                                  - generic: 3 document(s)
+                                  - generic: 48 pending
+                                  - generic: Updated 10 May, 10:50 pm
+                                  - generic: Cost $0.00
+                          - generic:
+                            - generic: Review Ready
+                          - generic:
+                            - button: Open
+                            - button:
+                              - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic: esg-scopegate-final
+                                - generic:
+                                  - generic: None
+                                  - generic: 3 document(s)
+                                  - generic: 48 pending
+                                  - generic: Updated 10 May, 10:49 pm
+                                  - generic: Cost $0.00
+                          - generic:
+                            - generic: Review Ready
+                          - generic:
+                            - button: Open
+                            - button:
+                              - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic: esg-scopegate-v2
+                                - generic:
+                                  - generic: None
+                                  - generic: 3 document(s)
+                                  - generic: 49 pending
+                                  - generic: Updated 10 May, 10:37 pm
+                                  - generic: Cost $0.00
+                          - generic:
+                            - generic: Review Ready
+                          - generic:
+                            - button: Open
+                            - button:
+                              - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic: cyber-scopegate-v3
+                                - generic:
+                                  - generic: None
+                                  - generic: 3 document(s)
+                                  - generic: 39 pending
+                                  - generic: Updated 10 May, 10:34 pm
+                                  - generic: Cost $0.00
+                          - generic:
+                            - generic: Review Ready
+                          - generic:
+                            - button: Open
+                            - button:
+                              - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic: cyber-scopegate-v2
+                                - generic:
+                                  - generic: None
+                                  - generic: 3 document(s)
+                                  - generic: 47 pending
+                                  - generic: Updated 10 May, 10:27 pm
+                                  - generic: Cost $0.00
+                          - generic:
+                            - generic: Review Ready
+                          - generic:
+                            - button: Open
+                            - button:
+                              - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic: cyber-scopegate
+                                - generic:
+                                  - generic: None
+                                  - generic: 3 document(s)
+                                  - generic: 46 pending
+                                  - generic: Updated 10 May, 10:17 pm
+                                  - generic: Cost $0.00
+                          - generic:
+                            - generic: Review Ready
+                          - generic:
+                            - button: Open
+                            - button:
+                              - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic: esg-scopegate
+                                - generic:
+                                  - generic: None
+                                  - generic: 3 document(s)
+                                  - generic: 36 pending
+                                  - generic: Updated 10 May, 10:16 pm
+                                  - generic: Cost $0.00
+                          - generic:
+                            - generic: Partial
+                          - generic:
+                            - button: Open
+                            - button:
+                              - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic: ESG Reporting - Gemini validation run
+                                - generic:
+                                  - generic: ESG
+                                  - generic: 3 document(s)
+                                  - generic: 11 pending
+                                  - generic: Updated 10 May, 9:25 pm
+                                  - generic: Cost $0.00
+                          - generic:
+                            - generic: Complete
+                          - generic:
+                            - button: Open
+                            - button:
+                              - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic: Cyber Incident Response - Gemini validation run
+                                - generic:
+                                  - generic: Cyber
+                                  - generic: 3 document(s)
+                                  - generic: 10 pending
+                                  - generic: Updated 10 May, 9:15 pm
+                                  - generic: Cost $0.00
+                          - generic:
+                            - generic: Complete
+                          - generic:
+                            - button: Open
+                            - button:
+                              - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic: Cyber Incident Response - Fresh Prompt Hardening Run
+                                - generic:
+                                  - generic: Cybersecurity
+                                  - generic: 3 document(s)
+                                  - generic: 0 pending
+                                  - generic: Updated 10 May, 8:42 pm
+                                  - generic: Cost $0.00
+                          - generic:
+                            - generic: Partial
+                          - generic:
+                            - button: Open
+                            - button:
+                              - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic: ESG review-only structural validation
+                                - generic:
+                                  - generic: ESG / Reporting
+                                  - generic: 3 document(s)
+                                  - generic: 0 pending
+                                  - generic: Updated 8 May, 9:48 am
+                                  - generic: Cost $0.00
+                          - generic:
+                            - generic: Complete
+                          - generic:
+                            - button: Open
+                            - button:
+                              - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic: Cyber IR review-only structural validation
+                                - generic:
+                                  - generic: Technology / Cyber
+                                  - generic: 3 document(s)
+                                  - generic: 0 pending
+                                  - generic: Updated 8 May, 9:48 am
+                                  - generic: Cost $0.00
+                          - generic:
+                            - generic: Complete
+                          - generic:
+                            - button: Open
+                            - button:
+                              - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic: ESG structural completeness validation
+                                - generic:
+                                  - generic: ESG / Reporting
+                                  - generic: 3 document(s)
+                                  - generic: 0 pending
+                                  - generic: Updated 8 May, 5:49 am
+                                  - generic: Cost $0.00
+                          - generic:
+                            - generic: Complete
+                          - generic:
+                            - button: Open
+                            - button:
+                              - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic: Cyber IR structural completeness validation
+                                - generic:
+                                  - generic: Technology / Cyber
+                                  - generic: 3 document(s)
+                                  - generic: 0 pending
+                                  - generic: Updated 8 May, 5:46 am
+                                  - generic: Cost $0.00
+                          - generic:
+                            - generic: Complete
+                          - generic:
+                            - button: Open
+                            - button:
+                              - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic: Cyber IR structural completeness validation
+                                - generic:
+                                  - generic: Technology / Cyber
+                                  - generic: 0 document(s)
+                                  - generic: 0 pending
+                                  - generic: Updated 8 May, 5:37 am
+                                  - generic: Cost Pending
+                          - generic:
+                            - generic: Draft
+                          - generic:
+                            - button: Open
+                            - button:
+                              - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic: T9 Fresh Cyber Incident Response Validation - Final
+                                - generic:
+                                  - generic: Cybersecurity
+                                  - generic: 3 document(s)
+                                  - generic: 0 pending
+                                  - generic: Updated 7 May, 10:11 pm
+                                  - generic: Cost $0.00
+                          - generic:
+                            - generic: Complete
+                          - generic:
+                            - button: Open
+                            - button:
+                              - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic: T9 Fresh ESG Reporting Validation - Final
+                                - generic:
+                                  - generic: ESG / Sustainability
+                                  - generic: 3 document(s)
+                                  - generic: 0 pending
+                                  - generic: Updated 7 May, 10:10 pm
+                                  - generic: Cost $0.00
+                          - generic:
+                            - generic: Complete
+                          - generic:
+                            - button: Open
+                            - button:
+                              - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic: T9 Fresh Cyber Incident Response Validation - Clean Signal Rerun
+                                - generic:
+                                  - generic: Cybersecurity
+                                  - generic: 3 document(s)
+                                  - generic: 0 pending
+                                  - generic: Updated 7 May, 10:03 pm
+                                  - generic: Cost $0.00
+                          - generic:
+                            - generic: Complete
+                          - generic:
+                            - button: Open
+                            - button:
+                              - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic: T9 Fresh ESG Reporting Validation - Clean Signal Rerun
+                                - generic:
+                                  - generic: ESG / Sustainability
+                                  - generic: 3 document(s)
+                                  - generic: 0 pending
+                                  - generic: Updated 7 May, 9:59 pm
+                                  - generic: Cost $0.00
+                          - generic:
+                            - generic: Complete
+                          - generic:
+                            - button: Open
+                            - button:
+                              - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic: T9 Fresh Cyber Incident Response Validation
+                                - generic:
+                                  - generic: Cybersecurity
+                                  - generic: 3 document(s)
+                                  - generic: 34 pending
+                                  - generic: Updated 7 May, 9:34 pm
+                                  - generic: Cost $0.00
+                          - generic:
+                            - generic: Review Ready
+                          - generic:
+                            - button: Open
+                            - button:
+                              - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic: T9 Fresh ESG Reporting Validation
+                                - generic:
+                                  - generic: ESG / Sustainability
+                                  - generic: 3 document(s)
+                                  - generic: 31 pending
+                                  - generic: Updated 7 May, 9:33 pm
+                                  - generic: Cost $0.00
+                          - generic:
+                            - generic: Review Ready
+                          - generic:
+                            - button: Open
+                            - button:
+                              - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic: Checkpoint C - Wealth Management Client Onboarding - Header Fix
+                                - generic:
+                                  - generic: Wealth Management
+                                  - generic: 4 document(s)
+                                  - generic: 15 pending
+                                  - generic: Updated 7 May, 9:08 pm
+                                  - generic: Cost $0.00
+                          - generic:
+                            - generic: Review Ready
+                          - generic:
+                            - button: Open
+                            - button:
+                              - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic: T9 Cyber Incident Response Validation
+                                - generic:
+                                  - generic: Cybersecurity
+                                  - generic: 3 document(s)
+                                  - generic: 0 pending
+                                  - generic: Updated 7 May, 9:02 pm
+                                  - generic: Cost $0.00
+                          - generic:
+                            - generic: Complete
+                          - generic:
+                            - button: Open
+                            - button:
+                              - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic: T9 ESG Reporting Validation
+                                - generic:
+                                  - generic: ESG / Sustainability
+                                  - generic: 3 document(s)
+                                  - generic: 0 pending
+                                  - generic: Updated 7 May, 8:56 pm
+                                  - generic: Cost $0.00
+                          - generic:
+                            - generic: Complete
+                          - generic:
+                            - button: Open
+                            - button:
+                              - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic: Checkpoint C - Wealth Management Client Onboarding - Mapping Gap Live
+                                - generic:
+                                  - generic: Wealth Management
+                                  - generic: 4 document(s)
+                                  - generic: 0 pending
+                                  - generic: Updated 7 May, 8:36 pm
+                                  - generic: Cost $0.00
+                          - generic:
+                            - generic: Complete
+                          - generic:
+                            - button: Open
+                            - button:
+                              - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic: Checkpoint C - Wealth Management Client Onboarding - TC05 Live
+                                - generic:
+                                  - generic: Wealth Management
+                                  - generic: 4 document(s)
+                                  - generic: 1 pending
+                                  - generic: Updated 6 May, 2:24 pm
+                                  - generic: Cost Pending
+                          - generic:
+                            - generic: Review Ready
+                          - generic:
+                            - button: Open
+                            - button:
+                              - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic: Checkpoint C - Wealth Management Client Onboarding - SOP fallback mapping
+                                - generic:
+                                  - generic: Wealth Management
+                                  - generic: 4 document(s)
+                                  - generic: 0 pending
+                                  - generic: Updated 6 May, 2:10 pm
+                                  - generic: Cost Pending
+                          - generic:
+                            - generic: Review Ready
+                          - generic:
+                            - button: Open
+                            - button:
+                              - img
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - img
+                              - generic:
+                                - generic: Checkpoint C - Wealth Management Client Onboarding
+                                - generic:
+                                  - generic: Wealth Management
+                                  - generic: 4 document(s)
+                                  - generic: 0 pending
+                                  - generic: Updated 6 May, 1:46 pm
+                                  - generic: Cost Pending
+                          - generic:
+                            - generic: Review Ready
+                          - generic:
+                            - button: Open
+                            - button:
+                              - img
+                    - complementary:
+                      - generic:
+                        - generic: Insights
+                        - heading [level=3]: Status Distribution
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: Review Ready
+                              - generic: "14"
+                          - generic:
+                            - generic:
+                              - generic: Converting
+                              - generic: "0"
+                          - generic:
+                            - generic:
+                              - generic: Analyzing
+                              - generic: "0"
+                          - generic:
+                            - generic:
+                              - generic: Complete
+                              - generic: "16"
+                          - generic:
+                            - generic:
+                              - generic: Draft
+                              - generic: "1"
+                      - generic:
+                        - generic:
+                          - generic:
+                            - img
+                          - generic:
+                            - generic: Recent Activity
+                            - generic: Latest case updates
+                        - generic:
+                          - button:
+                            - generic: Cyber
+                            - generic: Review Ready · 11 May, 2:00 pm
+                          - button:
+                            - generic: ESG qualityfix validation
+                            - generic: Review Ready · 11 May, 1:58 pm
+                          - button:
+                            - generic: Cyber qualityfix validation
+                            - generic: Complete · 11 May, 12:08 am
+                          - button:
+                            - generic: esg-scopegate-final2
+                            - generic: Complete · 10 May, 11:03 pm
+                          - button:
+                            - generic: cyber-scopegate-final2
+                            - generic: Complete · 10 May, 11:00 pm
+        - contentinfo:
+          - generic: © 2026 KPMG Assurance and Consulting Services LLP, an Indian Limited Liability Partnership and a member firm of the KPMG global organization of independent member firms affiliated with KPMG International Limited, a private English company limited by guarantee. All rights reserved.
+          - generic: Confidential
+  - dialog "Delete Case" [ref=e1128]:
+    - generic [ref=e1129]:
+      - heading "Delete Case" [level=2] [ref=e1130]
+      - paragraph [ref=e1131]: This removes the case, uploaded documents, suggestions, and generated outputs.
+    - generic [ref=e1133]:
+      - img [ref=e1134]
+      - generic [ref=e1136]: This action cannot be undone.
+    - generic [ref=e1137]:
+      - paragraph [ref=e1138]: "Type the case name to confirm:"
+      - generic [ref=e1139]: ESG qualityfix validation
+      - textbox "Case name" [active] [ref=e1140]
+    - generic [ref=e1141]:
+      - button "Cancel" [ref=e1142] [cursor=pointer]
+      - button "Delete Case" [disabled] [ref=e1143]:
+        - img [ref=e1144]
+        - text: Delete Case
+    - button "Close" [ref=e1147] [cursor=pointer]:
+      - img [ref=e1148]
+      - generic [ref=e1151]: Close

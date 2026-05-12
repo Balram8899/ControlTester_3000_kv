@@ -30,7 +30,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import Footer from "@/components/Footer";
+import HeroSection from "@/components/HeroSection";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -879,23 +879,12 @@ export default function ControlsLibraryPage() {
   const selectedScopeLabel = isSelectedScope ? selectedDoc?.source_filename ?? "Selected Document" : "All Uploaded Database";
 
   return (
-    <div className="h-full overflow-auto bg-[#F0F2F7] text-[#0C233C]">
-      <section className="relative overflow-hidden bg-[#0C233C]">
-        <div className="absolute inset-0 opacity-80" style={{ background: "linear-gradient(135deg, #0C233C 0%, #1E49E2 100%)" }} />
-        <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[#00B8F5]/20 blur-3xl" />
-        <div className="absolute -bottom-28 left-20 h-72 w-72 rounded-full bg-[#7213EA]/20 blur-3xl" />
-        <div className="relative max-w-[1100px] mx-auto px-8 md:px-12" style={{ paddingTop: 44, paddingBottom: 46 }}>
-          <div className="text-[11px] font-bold text-[#00B8F5] tracking-[2.5px] uppercase mb-3">
-            Controls Library
-          </div>
-          <h1 className="font-bold text-white leading-tight" style={{ fontSize: "clamp(32px, 5vw, 52px)", letterSpacing: "-2px" }}>
-            Controls Library
-          </h1>
-          <p className="mt-3 max-w-[720px] text-[16px] leading-[1.75] text-white/65">
-            Browse, filter, and analyse enterprise security controls from the uploaded policy corpus.
-          </p>
-        </div>
-      </section>
+    <div className="trace-workbench-shell h-full min-h-0 overflow-auto bg-[#F0F2F7] text-[#0C233C]">
+      <HeroSection
+        title="Controls Library"
+        subtitle="Browse, filter, and analyse enterprise security controls from the uploaded policy corpus."
+        icon={ShieldCheck}
+      />
 
       <main className="max-w-[1200px] mx-auto px-8 md:px-12 py-12 pb-24">
         <section className="mb-9">
@@ -1711,7 +1700,6 @@ export default function ControlsLibraryPage() {
         </Dialog>
       )}
 
-      <Footer />
     </div>
   );
 }

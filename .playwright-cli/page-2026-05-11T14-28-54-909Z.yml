@@ -1,0 +1,163 @@
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list
+  - generic [ref=e3]:
+    - complementary [ref=e4]:
+      - button "Expand sidebar" [ref=e6] [cursor=pointer]:
+        - img [ref=e7]
+      - navigation [ref=e9]:
+        - generic [ref=e10]:
+          - button [ref=e11] [cursor=pointer]:
+            - img [ref=e12]
+          - button [ref=e17] [cursor=pointer]:
+            - img [ref=e18]
+          - button [ref=e20] [cursor=pointer]:
+            - img [ref=e21]
+          - button [ref=e24] [cursor=pointer]:
+            - img [ref=e25]
+          - button [ref=e27] [cursor=pointer]:
+            - img [ref=e28]
+          - button [ref=e32] [cursor=pointer]:
+            - img [ref=e33]
+          - button [ref=e36] [cursor=pointer]:
+            - img [ref=e37]
+          - button [ref=e42] [cursor=pointer]:
+            - img [ref=e43]
+          - button [ref=e48] [cursor=pointer]:
+            - img [ref=e49]
+          - button [ref=e51] [cursor=pointer]:
+            - img [ref=e52]
+          - button [ref=e55] [cursor=pointer]:
+            - img [ref=e56]
+          - button [ref=e61] [cursor=pointer]:
+            - img [ref=e62]
+          - button [ref=e64] [cursor=pointer]:
+            - img [ref=e65]
+          - button [ref=e67] [cursor=pointer]:
+            - img [ref=e68]
+      - generic [ref=e74]: A
+    - generic [ref=e75]:
+      - main [ref=e76]:
+        - generic [ref=e78]:
+          - generic [ref=e79]:
+            - generic [ref=e81]:
+              - generic [ref=e82]:
+                - button "KPMG | TRACE" [ref=e83] [cursor=pointer]:
+                  - generic [ref=e84]: KPMG
+                  - generic [ref=e85]: "|"
+                  - generic [ref=e86]: TRACE
+                - generic [ref=e87]:
+                  - generic [ref=e88]: /
+                  - generic [ref=e89]: Document Uplift
+              - button "Sign Out" [ref=e91] [cursor=pointer]:
+                - img
+                - text: Sign Out
+            - generic [ref=e93]:
+              - img [ref=e95]
+              - generic [ref=e100]:
+                - heading "Document Uplift" [level=1] [ref=e101]
+                - paragraph [ref=e102]: Review, improve, and export procedure documents with cross-document control evidence.
+          - generic [ref=e103]: DOCUMENT INTELLIGENCE
+          - generic [ref=e105]:
+            - generic [ref=e106]:
+              - generic [ref=e108]:
+                - img [ref=e110]
+                - generic [ref=e112]:
+                  - generic [ref=e113]: Active Cases
+                  - generic [ref=e114]: "0"
+              - generic [ref=e116]:
+                - img [ref=e118]
+                - generic [ref=e121]:
+                  - generic [ref=e122]: Review Ready
+                  - generic [ref=e123]: "0"
+              - generic [ref=e125]:
+                - img [ref=e127]
+                - generic [ref=e130]:
+                  - generic [ref=e131]: Pending Uploads
+                  - generic [ref=e132]: "0"
+              - generic [ref=e134]:
+                - img [ref=e136]
+                - generic [ref=e139]:
+                  - generic [ref=e140]: Exports
+                  - generic [ref=e141]: "0"
+            - generic [ref=e142]:
+              - button "Process How It Works" [ref=e143] [cursor=pointer]:
+                - generic [ref=e144]:
+                  - generic [ref=e145]:
+                    - generic [ref=e146]: Process
+                    - generic [ref=e147]: How It Works
+                  - img [ref=e148]
+              - generic [ref=e150]:
+                - generic [ref=e153]:
+                  - generic [ref=e154]: "1"
+                  - generic [ref=e155]:
+                    - img [ref=e156]
+                    - generic [ref=e160]: Create Case
+                    - paragraph [ref=e161]: Set the SOP, process, owner, and domain.
+                - generic [ref=e164]:
+                  - generic [ref=e165]: "2"
+                  - generic [ref=e166]:
+                    - img [ref=e167]
+                    - generic [ref=e170]: Upload Documents
+                    - paragraph [ref=e171]: Add the primary SOP and supporting evidence.
+                - generic [ref=e174]:
+                  - generic [ref=e175]: "3"
+                  - generic [ref=e176]:
+                    - img [ref=e177]
+                    - generic [ref=e179]: Run Pipeline
+                    - paragraph [ref=e180]: Extract anchors and generate uplift suggestions.
+                - generic [ref=e183]:
+                  - generic [ref=e184]: "4"
+                  - generic [ref=e185]:
+                    - img [ref=e186]
+                    - generic [ref=e189]: Review Suggestions
+                    - paragraph [ref=e190]: Accept, reject, or edit proposed changes.
+                - generic [ref=e193]:
+                  - generic [ref=e194]: "5"
+                  - generic [ref=e195]:
+                    - img [ref=e196]
+                    - generic [ref=e199]: Export
+                    - paragraph [ref=e200]: Generate the tracked DOCX and supporting logs.
+            - generic [ref=e201]:
+              - generic [ref=e202]:
+                - generic [ref=e203]:
+                  - generic [ref=e204]:
+                    - generic [ref=e205]: Cases
+                    - generic [ref=e206]: Your Cases
+                  - button "New Case" [ref=e207] [cursor=pointer]:
+                    - img [ref=e208]
+                    - text: New Case
+                - generic [ref=e209]:
+                  - img [ref=e210]
+                  - textbox "Search cases, domains, documents..." [ref=e213]
+                - generic [ref=e215]: Loading cases...
+              - complementary [ref=e216]:
+                - generic [ref=e217]:
+                  - generic [ref=e218]: Insights
+                  - heading "Status Distribution" [level=3] [ref=e219]
+                  - generic [ref=e220]:
+                    - generic [ref=e222]:
+                      - generic [ref=e223]: Review Ready
+                      - generic [ref=e224]: "0"
+                    - generic [ref=e227]:
+                      - generic [ref=e228]: Converting
+                      - generic [ref=e229]: "0"
+                    - generic [ref=e232]:
+                      - generic [ref=e233]: Analyzing
+                      - generic [ref=e234]: "0"
+                    - generic [ref=e237]:
+                      - generic [ref=e238]: Complete
+                      - generic [ref=e239]: "0"
+                    - generic [ref=e242]:
+                      - generic [ref=e243]: Draft
+                      - generic [ref=e244]: "0"
+                - generic [ref=e246]:
+                  - generic [ref=e247]:
+                    - img [ref=e249]
+                    - generic [ref=e252]:
+                      - generic [ref=e253]: Recent Activity
+                      - generic [ref=e254]: Latest case updates
+                  - paragraph [ref=e256]: No activity yet.
+      - contentinfo [ref=e257]:
+        - generic [ref=e258]: © 2026 KPMG Assurance and Consulting Services LLP, an Indian Limited Liability Partnership and a member firm of the KPMG global organization of independent member firms affiliated with KPMG International Limited, a private English company limited by guarantee. All rights reserved.
+        - generic [ref=e259]: Confidential
