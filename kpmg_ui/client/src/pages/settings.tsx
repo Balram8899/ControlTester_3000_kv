@@ -510,7 +510,7 @@ export default function SettingsPage() {
   }, [models, selectedModel]);
 
   useEffect(() => {
-    if (isAdmin) setAllUsers(listUsers());
+    if (isAdmin) listUsers().then(setAllUsers);
   }, [isAdmin]);
 
   // ── Handlers ──
@@ -646,30 +646,30 @@ export default function SettingsPage() {
     } catch (error) { console.error("Error uploading files:", error); throw error; }
   };
 
-  const handleRoleChange = (email: string, role: UserRole) => {
-    const result = updateUserRole(email, role);
+  const handleRoleChange = async (email: string, role: UserRole) => {
+    const result = await updateUserRole(email, role);
     if (result.ok) {
-      setAllUsers(listUsers());
+      setAllUsers(await listUsers());
       toast({ title: "Role updated", description: `${email} is now ${ROLE_DISPLAY[role]}.` });
     } else {
       toast({ title: "Error", description: result.error, variant: "destructive" });
     }
   };
 
-  const handleDeleteUser = (email: string) => {
-    const result = deleteUser(email);
+  const handleDeleteUser = async (email: string) => {
+    const result = await deleteUser(email);
     if (result.ok) {
-      setAllUsers(listUsers());
+      setAllUsers(await listUsers());
       toast({ title: "User deleted" });
     } else {
       toast({ title: "Error", description: result.error, variant: "destructive" });
     }
   };
 
-  const handleCreateUser = () => {
-    const result = createUser(newUserForm.name, newUserForm.email, newUserForm.password, newUserForm.role);
+  const handleCreateUser = async () => {
+    const result = await createUser(newUserForm.name, newUserForm.email, newUserForm.password, newUserForm.role);
     if (result.ok) {
-      setAllUsers(listUsers());
+      setAllUsers(await listUsers());
       setShowCreateDialog(false);
       setNewUserForm({ name: "", email: "", password: "", role: "l1" });
       toast({ title: "User created", description: `${newUserForm.email} added as ${ROLE_DISPLAY[newUserForm.role]}.` });

@@ -3,67 +3,35 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 export type UserRole = "l1" | "l2" | "admin";
 export type User = { email: string; name: string; role: UserRole };
 
-interface StoredUser extends User {
-  password: string;
-}
-
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => { ok: boolean; error?: string };
+  login: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
   logout: () => void;
-  register: (name: string, email: string, password: string) => { ok: boolean; error?: string };
-  listUsers: () => User[];
-  updateUserRole: (email: string, role: UserRole) => { ok: boolean; error?: string };
-  createUser: (name: string, email: string, password: string, role: UserRole) => { ok: boolean; error?: string };
-  deleteUser: (email: string) => { ok: boolean; error?: string };
+  register: (name: string, email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
+  listUsers: () => Promise<User[]>;
+  updateUserRole: (email: string, role: UserRole) => Promise<{ ok: boolean; error?: string }>;
+  createUser: (name: string, email: string, password: string, role: UserRole) => Promise<{ ok: boolean; error?: string }>;
+  deleteUser: (email: string) => Promise<{ ok: boolean; error?: string }>;
 }
 
-const USERS_KEY = "ct3_users";
 const SESSION_KEY = "ct3_current_user";
-const ADMIN_EMAIL = "admin@bank.com";
-
-const DEFAULT_ADMIN: StoredUser = {
-  email: ADMIN_EMAIL,
-  name: "Admin",
-  password: "zUlqVAZ5wt",
-  role: "admin",
-};
-
-function loadUsers(): StoredUser[] {
-  try {
-    const raw = localStorage.getItem(USERS_KEY);
-    const users: StoredUser[] = raw ? JSON.parse(raw) : [];
-    let mutated = false;
-    const migrated = users.map((u) => {
-      if (!u.role) {
-        mutated = true;
-        return { ...u, role: u.email.toLowerCase() === ADMIN_EMAIL ? "admin" : "l1" } as StoredUser;
-      }
-      if (u.email.toLowerCase() === ADMIN_EMAIL && u.role !== "admin") {
-        mutated = true;
-        return { ...u, role: "admin" } as StoredUser;
-      }
-      return u;
-    });
-    if (mutated) saveUsers(migrated);
-    return migrated;
-  } catch {
-    return [];
-  }
-}
-
-function saveUsers(users: StoredUser[]) {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
-}
-
-function seedDefaultAdmin() {
-  const users = loadUsers();
-  if (!users.find((u) => u.email === DEFAULT_ADMIN.email)) {
-    saveUsers([DEFAULT_ADMIN, ...users]);
-  }
-}
 
 const AuthContext = createContext<AuthContextType | null>(null);
+
+async function apiCall(path: string, body: unknown): Promise<{ ok: boolean; data?: unknown; error?: string }> {
+  try {
+    const res = await fetch(path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (!res.ok) return { ok: false, error: data.detail ?? "Request failed" };
+    return { ok: true, data };
+  } catch {
+    return { ok: false, error: "Network error" };
+  }
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {
@@ -76,20 +44,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   useEffect(() => {
-    seedDefaultAdmin();
-  }, []);
+    if (user) localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+    else localStorage.removeItem(SESSION_KEY);
+  }, [user]);
 
-  function login(email: string, password: string): { ok: boolean; error?: string } {
-    const users = loadUsers();
-    const found = users.find(
-      (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password
-    );
-    if (!found) {
-      return { ok: false, error: "Invalid email or password." };
-    }
-    const sessionUser: User = { email: found.email, name: found.name, role: found.role };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser));
-    setUser(sessionUser);
+  async function login(email: string, password: string): Promise<{ ok: boolean; error?: string }> {
+    const result = await apiCall("/api/users/login", { email, password });
+    if (!result.ok) return { ok: false, error: result.error };
+    const u = result.data as User;
+    setUser(u);
     return { ok: true };
   }
 
@@ -98,67 +61,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }
 
-  function register(
-    name: string,
-    email: string,
-    password: string
-  ): { ok: boolean; error?: string } {
-    const users = loadUsers();
-    if (users.find((u) => u.email.toLowerCase() === email.toLowerCase())) {
-      return { ok: false, error: "An account with this email already exists." };
-    }
-    const newUser: StoredUser = { email, name, password, role: "l1" };
-    saveUsers([...users, newUser]);
-    const sessionUser: User = { email, name, role: "l1" };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser));
-    setUser(sessionUser);
+  async function register(name: string, email: string, password: string): Promise<{ ok: boolean; error?: string }> {
+    const result = await apiCall("/api/users/register", { name, email, password });
+    if (!result.ok) return { ok: false, error: result.error };
+    const u = result.data as User;
+    setUser(u);
     return { ok: true };
   }
 
-  function listUsers(): User[] {
-    return loadUsers().map(({ email, name, role }) => ({ email, name, role }));
+  async function listUsers(): Promise<User[]> {
+    try {
+      const res = await fetch("/api/users");
+      if (!res.ok) return [];
+      return res.json();
+    } catch {
+      return [];
+    }
   }
 
-  function updateUserRole(email: string, role: UserRole): { ok: boolean; error?: string } {
-    const users = loadUsers();
-    const idx = users.findIndex((u) => u.email.toLowerCase() === email.toLowerCase());
-    if (idx === -1) return { ok: false, error: "User not found." };
-    if (users[idx].email.toLowerCase() === ADMIN_EMAIL && role !== "admin") {
-      return { ok: false, error: "Cannot change the role of the default admin." };
+  async function updateUserRole(email: string, role: UserRole): Promise<{ ok: boolean; error?: string }> {
+    try {
+      const res = await fetch(`/api/users/${encodeURIComponent(email)}/role`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role }),
+      });
+      const data = await res.json();
+      if (!res.ok) return { ok: false, error: data.detail ?? "Failed to update role" };
+      if (user && user.email.toLowerCase() === email.toLowerCase()) {
+        setUser((u) => u ? { ...u, role } : u);
+      }
+      return { ok: true };
+    } catch {
+      return { ok: false, error: "Network error" };
     }
-    users[idx] = { ...users[idx], role };
-    saveUsers(users);
-    if (user && user.email.toLowerCase() === email.toLowerCase()) {
-      const updated = { ...user, role };
-      localStorage.setItem(SESSION_KEY, JSON.stringify(updated));
-      setUser(updated);
-    }
+  }
+
+  async function createUser(name: string, email: string, password: string, role: UserRole): Promise<{ ok: boolean; error?: string }> {
+    const result = await apiCall("/api/users", { name, email, password, role });
+    if (!result.ok) return { ok: false, error: result.error };
     return { ok: true };
   }
 
-  function createUser(
-    name: string,
-    email: string,
-    password: string,
-    role: UserRole
-  ): { ok: boolean; error?: string } {
-    const users = loadUsers();
-    if (users.find((u) => u.email.toLowerCase() === email.toLowerCase())) {
-      return { ok: false, error: "An account with this email already exists." };
+  async function deleteUser(email: string): Promise<{ ok: boolean; error?: string }> {
+    try {
+      const res = await fetch(`/api/users/${encodeURIComponent(email)}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) return { ok: false, error: data.detail ?? "Failed to delete user" };
+      return { ok: true };
+    } catch {
+      return { ok: false, error: "Network error" };
     }
-    saveUsers([...users, { email, name, password, role }]);
-    return { ok: true };
-  }
-
-  function deleteUser(email: string): { ok: boolean; error?: string } {
-    if (email.toLowerCase() === ADMIN_EMAIL) {
-      return { ok: false, error: "Cannot delete the default admin." };
-    }
-    const users = loadUsers();
-    const filtered = users.filter((u) => u.email.toLowerCase() !== email.toLowerCase());
-    if (filtered.length === users.length) return { ok: false, error: "User not found." };
-    saveUsers(filtered);
-    return { ok: true };
   }
 
   return (

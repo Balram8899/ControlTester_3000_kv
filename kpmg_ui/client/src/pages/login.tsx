@@ -172,20 +172,20 @@ export default function LoginPage() {
     if (user) setLocation("/landing");
   }, [user, setLocation]);
 
-  function handleLogin(e: React.FormEvent) {
+  async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setLoggingIn(true);
     setLoginError("");
-    const result = login(email.trim(), password);
+    const result = await login(email.trim(), password);
     if (result.ok) {
       setLocation("/landing");
     } else {
       setLoginError(result.error ?? "Login failed.");
+      setLoggingIn(false);
     }
-    setLoggingIn(false);
   }
 
-  function handleRegister(e: React.FormEvent) {
+  async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
     setRegError("");
     if (!regName.trim())        { setRegError("Name is required."); return; }
@@ -193,14 +193,14 @@ export default function LoginPage() {
     if (regPassword.length < 6) { setRegError("Password must be at least 6 characters."); return; }
     if (regPassword !== regConfirm) { setRegError("Passwords do not match."); return; }
     setRegistering(true);
-    const result = register(regName.trim(), regEmail.trim().toLowerCase(), regPassword);
+    const result = await register(regName.trim(), regEmail.trim().toLowerCase(), regPassword);
     if (result.ok) {
       setShowRegister(false);
       setLocation("/landing");
     } else {
       setRegError(result.error ?? "Registration failed.");
+      setRegistering(false);
     }
-    setRegistering(false);
   }
 
   return (

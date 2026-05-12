@@ -73,6 +73,7 @@ from api.routers.control_testing import router as control_testing_router
 from api.routers.sop_uplift import router as sop_uplift_router
 from api.routers.document_uplift import router as document_uplift_router
 from api.routers.settings import router as settings_router
+from api.routers.users import router as users_router
 from utils.sop_processing.pipeline import start_async_pipeline_workers, stop_async_pipeline_workers
 
 # ----------------------------------------------------------------------------
@@ -223,6 +224,7 @@ app.include_router(validation_queue_router)
 app.include_router(sop_uplift_router)
 app.include_router(document_uplift_router)
 app.include_router(settings_router)
+app.include_router(users_router)
 
 
 # ----------------------------------------------------------------------------
