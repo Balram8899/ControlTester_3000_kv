@@ -5,6 +5,35 @@
 
 ---
 
+## 2026-05-12 Update - TRACE Ribbon Standardization
+
+- Scope: standardized the feature-page ribbon colour treatment while preserving existing shared ribbon sizing across other features.
+- Updated the shared `.hero-section` styling in `kpmg_ui/client/src/styles/kpmg-brand-override.css` to use the darker Asset Registry navy base and subtle purple/cobalt radial accents instead of the previous bright cobalt sweep. The existing shared hero padding values were left unchanged.
+- Switched `kpmg_ui/client/src/pages/asset-registry.tsx` to the shared `HeroSection` so its ribbon height matches the rest of the app, and removed the hero-level Add Asset / Filter Register controls. Register filters remain visible in the workspace.
+- Added `kpmg_ui/client/src/trace-ribbon-style.test.ts` and updated `kpmg_ui/client/src/asset-registry.redesign.test.ts` to guard the shared colour treatment, unchanged shared sizing tokens, compact Asset Registry ribbon, and removed hero controls.
+- Verification: focused ribbon and Asset Registry guards passed; `npm run check` passed; `npm run build` passed with existing PostCSS `from` and chunk-size warnings; rebuilt/recreated `web_ui_agent`, confirmed healthy on port 5000, and captured live screenshots at `output/playwright/asset-registry-live-redesign.png` and `output/playwright/dashboard-ribbon-standardized.png`.
+
+---
+
+## 2026-05-12 Update - Asset Registry UI Redesign
+
+- Scope: redesigned `kpmg_ui/client/src/pages/asset-registry.tsx` after the approved mockups, keeping the route, context contract, CIA scoring widget, create/delete/select actions, and suggested-control workflow intact.
+- Replaced the old registry view with the TRACE feature ribbon, inline KPMG-style hero, KPI strip, searchable/filterable register workspace, selected-asset inspector, asset dossier, controls mapping view, and shell-contained create panel.
+- Added `kpmg_ui/client/src/asset-registry.redesign.test.ts` as a static regression guard for the approved page structure, required labels, preserved behaviors, shell styling, and palette constraints.
+- Verification: focused redesign guard passed; `npm run check` passed; `npm run build` passed with the existing PostCSS `from` and chunk-size warnings; rebuilt/recreated `web_ui_agent`, confirmed it is healthy on port 5000, and captured the live page at `output/playwright/asset-registry-live-redesign.png`.
+
+---
+
+## 2026-05-12 Update - Asset Registry Navigation Restore
+
+- Scope: restored Asset Registry to the shared TRACE shell navigation and Settings > Navigation Visibility list.
+- Root cause: `kpmg_ui/client/src/components/AppLayout.tsx` exported its own `HIDEABLE_TABS` list that was missing `/asset-registry`, while the separate helper list already included it. Settings imports the live AppLayout export, so both the left shell and settings visibility list omitted the page.
+- Added the `/asset-registry` tab back to the live AppLayout tab model with the existing database-style icon, preserving route behavior and visibility toggling semantics.
+- Updated `kpmg_ui/client/src/components/app-layout.helpers.test.ts` so the regression guard checks the runtime AppLayout export rather than only the stale helper list.
+- Verification: watched the focused nav regression fail before the fix and pass after it; `npm run check` passed; `npm run build` passed with the existing PostCSS `from` and chunk-size warnings; rebuilt and recreated `web_ui_agent`, which is healthy on port 5000.
+
+---
+
 ## 2026-05-11 Update - Feature Shell Navigation and Footer Polish
 
 - Scope: refined the shared KPMG TRACE feature-page shell used by the sidebar modules without changing routes, backend contracts, or page workflows.

@@ -14,6 +14,7 @@ import {
   FileBarChart,
   BookOpen,
   AlertTriangle,
+  Database,
   FilePenLine,
   FileStack,
 } from "lucide-react";
@@ -42,6 +43,7 @@ export const HIDEABLE_TABS: TraceTab[] = [
   { title: "Frameworks Library", fullTitle: "Frameworks Library", path: "/frameworks-library", icon: BookOpen },
   { title: "Regulatory Testing", fullTitle: "Regulatory Testing", path: "/regulatory-testing", icon: Scale },
   { title: "Reports", fullTitle: "Reports", path: "/reports", icon: FileBarChart },
+  { title: "Asset Registry", fullTitle: "Asset Registry", path: "/asset-registry", icon: Database },
   { title: "Risk Assessment", fullTitle: "Risk Assessment", path: "/risk-assessment", icon: FileSearch },
   { title: "Final Report", fullTitle: "Final Report", path: "/evidence-assessment", icon: FileSearch },
   { title: "Control Testing", fullTitle: "Control Testing", path: "/control-testing", icon: TestTube },

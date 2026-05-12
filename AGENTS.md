@@ -89,16 +89,18 @@ React (client) → Express BFF (kpmg_ui/server/routes.ts) → FastAPI (api/main.
 
 ### LLM Abstraction — CRITICAL RULE
 
-**Never hardcode Gemini or any model directly. Always use the abstraction layer.**
+**Never hardcode any provider or model name. Never pass `provider=` or `model=` overrides to `get_llm()` unless there is an explicit per-call technical reason. Always call `get_llm()` with no arguments so the user's Settings screen selection is respected.**
 
 | File | Function | Use when |
 |---|---|---|
-| `utils/llm_provider.py` | `get_llm()` | Simple generation — new routers, utilities |
+| `utils/llm_provider.py` | `get_llm()` | Simple generation — new routers, utilities, Celery workers |
 | `utils/llm_factory.py` | `make_llm()` / `make_embeddings()` | Embeddings + LangChain chains (llm_chain.py) |
 
-Provider is selected via `LLM_PROVIDER` env var:
-- `LLM_PROVIDER=gemini` (default) — requires `GOOGLE_API_KEY`, uses `GOOGLE_LLM_MODEL` (default: `gemini-3-flash-preview`)
-- `LLM_PROVIDER=ollama` — uses `OLLAMA_LLM_MODEL` (default: `llama3:8b`) at `OLLAMA_BASE_URL`
+**Provider/model resolution order (highest priority first):**
+1. **Settings screen → MongoDB `trace_db.settings`** — written by `save_llm_config()`, read by `get_active_llm_config()`. This is the user's active selection and always wins.
+2. **Env vars** (`LLM_PROVIDER`, `GOOGLE_LLM_MODEL`, etc.) — fallback only when no DB config exists.
+
+**For any new service or worker container** (e.g. `ct_worker`): import `get_llm` from `utils/llm_provider.py` and ensure the container has `MONGO_URI` pointing to `trace_db`. This is sufficient — `get_llm()` will automatically pick up the Settings screen selection.
 
 ### MongoDB Collections (`trace_db`)
 
@@ -183,8 +185,8 @@ Controls are scored on Who/What/Where/When/Why/How (each 0 or 1, max score = 6).
 
 ## Development Rules
 
-1. **LLM**: Use `get_llm()` from `utils/llm_provider.py` for new code. Never instantiate Gemini or Ollama directly.
-2. **Database**: All persistent state goes to MongoDB. Do not use SQLite, Postgres, or Drizzle for application data.
+1. **LLM**: Call `get_llm()` from `utils/llm_provider.py` with no `provider`/`model` overrides. The active provider and model come from the Settings screen (stored in `trace_db.settings`). Never instantiate any LLM class directly. This applies to all containers including `ct_worker`.
+2. **Database**: All persistent state goes to MongoDB (`trace_db`). Do not use SQLite, Postgres, or Drizzle for application data.
 3. **Testing**: Add pytest tests in `tests/` for every new router. Run `python -m pytest tests/ -v` before committing.
 4. **Endpoint naming**: New routers use kebab-case prefixes (`/control-testing`, `/risk-assessment`). Legacy endpoints in `main.py` use snake-case — don't rename them.
 5. **Control testing UI**: The current `control-testing.tsx` page still calls `/audit/*` legacy endpoints. Do not switch to `/control-testing/*` in a UI-only change.

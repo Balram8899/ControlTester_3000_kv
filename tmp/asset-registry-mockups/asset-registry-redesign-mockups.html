@@ -1,0 +1,868 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TRACE Asset Registry Mockups</title>
+  <style>
+    :root {
+      --page: #F0F2F7;
+      --card: #FFFFFF;
+      --border: #E2E6EF;
+      --text: #0C233C;
+      --muted: #5A6478;
+      --soft: #8492A6;
+      --brand: #00338D;
+      --cobalt: #1E49E2;
+      --pacific: #00B8F5;
+      --purple: #7213EA;
+      --teal: #098E7E;
+      --green: #009A44;
+      --amber: #EAAA00;
+      --red: #E5001B;
+      --nav: #071B31;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: #1B2636; font-family: Arial, sans-serif; color: var(--text); }
+    body { overflow: hidden; }
+    button, input, select, textarea { font-family: inherit; }
+
+    .shell {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      background: var(--page);
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 288px;
+      flex: 0 0 288px;
+      background: linear-gradient(180deg, #061B32 0%, #092640 100%);
+      color: #C8D8F0;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .brand {
+      height: 96px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 22px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      font-weight: 700;
+      color: white;
+      letter-spacing: -0.02em;
+    }
+
+    .brand .trace { color: var(--pacific); }
+    .brand .pipe { color: var(--cobalt); font-weight: 400; }
+
+    .side-nav {
+      padding: 14px 12px;
+      display: grid;
+      gap: 4px;
+      overflow: hidden;
+    }
+
+    .nav-item {
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-left: 3px solid transparent;
+      border-radius: 12px;
+      padding: 9px 12px;
+      color: #C8D8F0;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .nav-item.active {
+      color: white;
+      border-left-color: var(--pacific);
+      background: linear-gradient(90deg, rgba(0,184,245,0.18), rgba(0,184,245,0.08));
+    }
+
+    .nav-icon {
+      width: 18px;
+      height: 18px;
+      border: 1.8px solid currentColor;
+      border-radius: 5px;
+      opacity: 0.9;
+    }
+
+    .user-block {
+      margin-top: auto;
+      padding: 10px 14px 12px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      background: rgba(255,255,255,0.04);
+    }
+
+    .avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: #00338D;
+      color: white;
+      display: grid;
+      place-items: center;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .user-name { color: white; font-size: 12px; font-weight: 700; line-height: 1; }
+    .user-role { color: #A6BCD9; font-size: 10px; margin-top: 4px; }
+
+    .workspace {
+      min-width: 0;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--page);
+    }
+
+    .topbar {
+      height: 96px;
+      flex: 0 0 96px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 52px;
+      background: #071B31;
+      color: white;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .crumb {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .crumb .pipe { color: var(--cobalt); font-weight: 400; }
+    .crumb .trace { color: var(--pacific); }
+    .crumb .trail { color: rgba(255,255,255,0.58); font-size: 14px; font-weight: 400; }
+    .signout {
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.06);
+      color: white;
+      border-radius: 999px;
+      padding: 9px 16px;
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .page {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      background: var(--page);
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      background: #0C233C;
+      color: white;
+      padding: 44px 0 48px;
+    }
+
+    .hero:before, .hero:after {
+      content: "";
+      position: absolute;
+      border-radius: 999px;
+      filter: blur(60px);
+      opacity: 0.48;
+      pointer-events: none;
+    }
+
+    .hero:before {
+      width: 360px;
+      height: 360px;
+      background: var(--cobalt);
+      right: 8%;
+      top: -170px;
+    }
+
+    .hero:after {
+      width: 280px;
+      height: 280px;
+      background: var(--purple);
+      left: 6%;
+      bottom: -160px;
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 34px;
+    }
+
+    .eyebrow {
+      color: var(--pacific);
+      font-size: 11px;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .hero h1 {
+      margin: 0;
+      color: white;
+      font-size: clamp(32px, 4vw, 52px);
+      letter-spacing: -2px;
+      line-height: 1.02;
+      font-weight: 700;
+    }
+
+    .lede {
+      margin: 14px 0 0;
+      color: rgba(255,255,255,0.68);
+      font-size: 16px;
+      line-height: 1.75;
+      max-width: 660px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      white-space: nowrap;
+    }
+
+    .primary-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      border: 0;
+      border-radius: 12px;
+      padding: 14px 22px;
+      color: white;
+      background: var(--purple);
+      font-size: 15px;
+      font-weight: 700;
+      box-shadow: 0 20px 44px -30px rgba(114,19,234,0.8);
+    }
+
+    .secondary-action {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 999px;
+      padding: 10px 15px;
+      color: rgba(255,255,255,0.78);
+      background: rgba(255,255,255,0.08);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 48px 72px;
+    }
+
+    .screen { display: none; }
+    body[data-screen="overview"] #overview,
+    body[data-screen="detail"] #detail,
+    body[data-screen="create"] #create { display: block; }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: flex-end;
+      margin-bottom: 18px;
+    }
+
+    .section-title {
+      color: var(--text);
+      font-size: 20px;
+      line-height: 1.15;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .subcopy {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+      margin: 7px 0 0;
+    }
+
+    .grid { display: grid; gap: 16px; }
+    .kpi-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 34px; }
+    .two-col { grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.65fr); align-items: start; }
+    .three-col { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+    .card {
+      position: relative;
+      overflow: hidden;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 18px 42px -34px rgba(12,35,60,0.36);
+    }
+
+    .card.pad { padding: 22px; }
+    .accent { position: absolute; inset: 0 0 auto 0; height: 4px; background: var(--cobalt); }
+    .accent.green { background: var(--green); }
+    .accent.red { background: var(--red); }
+    .accent.amber { background: var(--amber); }
+    .accent.teal { background: var(--teal); }
+
+    .kpi-label {
+      color: var(--soft);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .kpi-value {
+      margin-top: 18px;
+      font-size: 38px;
+      line-height: 1;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.04em;
+    }
+
+    .kpi-note { margin-top: 10px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--border);
+      padding: 14px;
+      background: #FFFFFF;
+    }
+
+    .search {
+      min-width: 260px;
+      flex: 1;
+      height: 40px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      padding: 0 12px;
+      font-size: 13px;
+      background: #FBFCFE;
+    }
+
+    .chip, .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #F0F2F7;
+      color: var(--soft);
+      padding: 7px 11px;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .pill.red { color: var(--red); background: #FEEBED; border-color: rgba(229,0,27,0.18); }
+    .pill.amber { color: #9B7100; background: #FFFBEB; border-color: rgba(234,170,0,0.28); }
+    .pill.green { color: var(--green); background: #EDFBF5; border-color: rgba(0,154,68,0.2); }
+    .pill.blue { color: var(--cobalt); background: #EEF2FF; border-color: rgba(30,73,226,0.18); }
+    .pill.teal { color: var(--teal); background: #E6F4F2; border-color: rgba(9,142,126,0.18); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    th {
+      text-align: left;
+      color: var(--soft);
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 13px 16px;
+      border-bottom: 1px solid var(--border);
+      background: #FBFCFE;
+    }
+
+    td {
+      padding: 16px;
+      border-bottom: 1px solid #EEF1F6;
+      font-size: 13px;
+      color: var(--muted);
+      vertical-align: middle;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    tr.active-row td {
+      background: #F8FBFF;
+      box-shadow: inset 3px 0 0 var(--pacific);
+    }
+
+    .asset-name { color: var(--text); font-weight: 700; }
+    .mini { color: var(--soft); font-size: 11px; margin-top: 4px; }
+    .score { color: var(--text); font-weight: 700; }
+
+    .inspector {
+      background: #0C233C;
+      color: white;
+      border-radius: 16px;
+      padding: 22px;
+      box-shadow: 0 18px 46px -30px rgba(12,35,60,0.5);
+    }
+
+    .inspector .eyebrow { margin-bottom: 8px; }
+    .inspector h3 { margin: 0; font-size: 22px; letter-spacing: -0.03em; line-height: 1.15; }
+    .inspector p { color: rgba(255,255,255,0.66); font-size: 13px; line-height: 1.6; margin: 11px 0 0; }
+    .metric-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 18px;
+    }
+    .dark-metric {
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.08);
+      padding: 13px;
+    }
+    .dark-metric .value { font-size: 26px; line-height: 1; font-weight: 700; color: var(--pacific); }
+    .dark-metric .label { color: rgba(255,255,255,0.62); font-size: 11px; margin-top: 7px; }
+
+    .bars { display: grid; gap: 14px; }
+    .bar-row { display: grid; grid-template-columns: 160px 1fr 36px; align-items: center; gap: 12px; font-size: 13px; color: var(--muted); }
+    .bar-track { height: 9px; background: #EEF1F6; border-radius: 999px; overflow: hidden; }
+    .bar-fill { height: 100%; background: var(--cobalt); border-radius: 999px; }
+    .bar-row:nth-child(2) .bar-fill { background: var(--teal); }
+    .bar-row:nth-child(3) .bar-fill { background: var(--purple); }
+    .bar-row:nth-child(4) .bar-fill { background: var(--amber); }
+    .bar-value { color: var(--text); font-weight: 700; text-align: right; }
+
+    .segmented {
+      display: inline-flex;
+      padding: 4px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: white;
+      gap: 4px;
+    }
+    .segmented span {
+      display: inline-flex;
+      padding: 8px 13px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--soft);
+    }
+    .segmented .selected { background: #EEF2FF; color: var(--cobalt); }
+
+    .fact-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .fact {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: white;
+      padding: 14px;
+    }
+    .fact .label { color: var(--soft); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+    .fact .value { margin-top: 7px; color: var(--text); font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .cia-grid { display: grid; gap: 12px; }
+    .cia-row { display: grid; grid-template-columns: 120px 1fr 34px; gap: 12px; align-items: center; }
+    .cia-label { color: var(--text); font-weight: 700; font-size: 13px; }
+    .cia-track { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+    .cia-box { height: 30px; border-radius: 8px; background: #EEF1F6; border: 1px solid var(--border); }
+    .cia-box.on { background: #E6F4F2; border-color: rgba(9,142,126,0.32); }
+    .cia-score { color: var(--text); font-weight: 700; text-align: right; font-size: 13px; }
+
+    .control-list { display: grid; gap: 10px; }
+    .control-item {
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      background: white;
+      padding: 14px;
+    }
+    .control-top { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
+    .control-title { color: var(--text); font-size: 13px; font-weight: 700; line-height: 1.35; }
+    .control-copy { color: var(--muted); font-size: 12px; line-height: 1.55; margin-top: 8px; }
+
+    .drawer-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 0.86fr) minmax(420px, 0.64fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .context-list { display: grid; gap: 10px; }
+    .context-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: white;
+    }
+
+    .drawer {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 24px 60px -42px rgba(12,35,60,0.5);
+      overflow: hidden;
+    }
+
+    .drawer-head {
+      padding: 20px 22px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+    }
+    .drawer-title { color: var(--text); font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+    .close {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #F0F2F7;
+      color: var(--soft);
+      font-weight: 700;
+    }
+
+    .form-body { padding: 20px 22px; display: grid; gap: 18px; max-height: 520px; overflow: hidden; }
+    .form-section { display: grid; gap: 12px; }
+    .form-section-title {
+      color: var(--brand);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2.5px;
+    }
+    .field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .field { display: grid; gap: 6px; }
+    .field.full { grid-column: 1 / -1; }
+    label { color: var(--soft); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
+    input, select, textarea {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #FBFCFE;
+      min-height: 38px;
+      color: var(--text);
+      font-size: 13px;
+      padding: 9px 11px;
+      width: 100%;
+    }
+    textarea { min-height: 64px; resize: none; }
+    .drawer-foot {
+      border-top: 1px solid var(--border);
+      padding: 15px 22px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      background: #FBFCFE;
+    }
+    .cancel {
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--muted);
+      border-radius: 10px;
+      padding: 10px 15px;
+      font-weight: 700;
+    }
+
+    .footer {
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      border-top: 1px solid #D8E0EC;
+      background: #EAF0F8;
+      color: #4D6485;
+      font-size: 10.5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .confidential {
+      color: #4D6485;
+      border: 1px solid #C7D3E4;
+      border-radius: 999px;
+      padding: 2px 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: #F7FAFE;
+    }
+  </style>
+</head>
+<body data-screen="overview">
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand"><span>KPMG</span><span class="pipe">|</span><span class="trace">TRACE</span></div>
+      <nav class="side-nav">
+        <div class="nav-item"><span class="nav-icon"></span>Dashboard</div>
+        <div class="nav-item"><span class="nav-icon"></span>Regulatory Library</div>
+        <div class="nav-item"><span class="nav-icon"></span>Controls Library</div>
+        <div class="nav-item"><span class="nav-icon"></span>Frameworks Library</div>
+        <div class="nav-item"><span class="nav-icon"></span>Regulatory Testing</div>
+        <div class="nav-item"><span class="nav-icon"></span>Reports</div>
+        <div class="nav-item active"><span class="nav-icon"></span>Asset Registry</div>
+        <div class="nav-item"><span class="nav-icon"></span>Risk Assessment</div>
+        <div class="nav-item"><span class="nav-icon"></span>Final Report</div>
+        <div class="nav-item"><span class="nav-icon"></span>Control Testing</div>
+        <div class="nav-item"><span class="nav-icon"></span>Document Uplift</div>
+        <div class="nav-item"><span class="nav-icon"></span>AI Chat</div>
+        <div class="nav-item"><span class="nav-icon"></span>Issue Management</div>
+        <div class="nav-item"><span class="nav-icon"></span>Settings</div>
+      </nav>
+      <div class="user-block">
+        <div class="avatar">A</div>
+        <div><div class="user-name">Admin</div><div class="user-role">Admin</div></div>
+      </div>
+    </aside>
+
+    <section class="workspace">
+      <header class="topbar">
+        <div class="crumb"><span>KPMG</span><span class="pipe">|</span><span class="trace">TRACE</span><span class="trail">/ Asset Registry</span></div>
+        <button class="signout">Sign Out</button>
+      </header>
+
+      <div class="page">
+        <section class="hero">
+          <div class="hero-inner">
+            <div>
+              <div class="eyebrow">Asset Intelligence</div>
+              <h1>Asset Registry</h1>
+              <p class="lede">Maintain critical assets, CIA ratings, ownership, hosting context, and control linkage evidence from one operational register.</p>
+            </div>
+            <div class="hero-actions">
+              <button class="primary-action">Add Asset</button>
+              <button class="secondary-action">Filter Register</button>
+            </div>
+          </div>
+        </section>
+
+        <main>
+          <section id="overview" class="screen">
+            <div class="grid kpi-grid">
+              <div class="card pad"><div class="accent"></div><div class="kpi-label">Total Assets</div><div class="kpi-value">42</div><div class="kpi-note">10 updated this week</div></div>
+              <div class="card pad"><div class="accent red"></div><div class="kpi-label">Critical Assets</div><div class="kpi-value" style="color: var(--red)">7</div><div class="kpi-note">Owner validation needed</div></div>
+              <div class="card pad"><div class="accent amber"></div><div class="kpi-label">High Assets</div><div class="kpi-value" style="color: var(--amber)">12</div><div class="kpi-note">Control suggestions pending</div></div>
+              <div class="card pad"><div class="accent teal"></div><div class="kpi-label">Cloud Hosted</div><div class="kpi-value" style="color: var(--teal)">18</div><div class="kpi-note">Hybrid and SaaS included</div></div>
+            </div>
+
+            <div class="section-head">
+              <div>
+                <div class="eyebrow">Register</div>
+                <div class="section-title">Asset Inventory</div>
+                <p class="subcopy">Search, filter, and select an asset without leaving the registry workspace.</p>
+              </div>
+              <div class="segmented"><span class="selected">Overview</span><span>Detail</span><span>Controls Mapping</span></div>
+            </div>
+
+            <div class="grid two-col">
+              <section class="card">
+                <div class="toolbar">
+                  <input class="search" value="payment" aria-label="Search assets" />
+                  <span class="chip">Type: All</span>
+                  <span class="chip">Criticality: All</span>
+                  <span class="chip">Status: Active</span>
+                </div>
+                <table>
+                  <thead><tr><th style="width: 34%">Asset</th><th>Owner</th><th>Type</th><th>CIA</th><th>Criticality</th></tr></thead>
+                  <tbody>
+                    <tr class="active-row"><td><div class="asset-name">Payments Hub</div><div class="mini">Core transaction processing</div></td><td>Finance Ops</td><td>Application</td><td><span class="score">14/15</span></td><td><span class="pill red">Critical</span></td></tr>
+                    <tr><td><div class="asset-name">Customer Data Lake</div><div class="mini">Restricted analytics store</div></td><td>Data Office</td><td>Database</td><td><span class="score">13/15</span></td><td><span class="pill red">Critical</span></td></tr>
+                    <tr><td><div class="asset-name">Vendor API Gateway</div><div class="mini">Third-party connectivity</div></td><td>Technology</td><td>Interface/API</td><td><span class="score">11/15</span></td><td><span class="pill amber">High</span></td></tr>
+                    <tr><td><div class="asset-name">Branch Workstation Image</div><div class="mini">Endpoint baseline</div></td><td>End User Compute</td><td>Desktop Software</td><td><span class="score">8/15</span></td><td><span class="pill amber">Medium</span></td></tr>
+                    <tr><td><div class="asset-name">Facilities Access Panel</div><div class="mini">Physical access monitoring</div></td><td>Corporate Security</td><td>Hardware</td><td><span class="score">6/15</span></td><td><span class="pill green">Low</span></td></tr>
+                  </tbody>
+                </table>
+              </section>
+
+              <aside class="inspector">
+                <div class="eyebrow">Selected Asset</div>
+                <h3>Payments Hub</h3>
+                <p>Application supporting customer payment initiation, settlement, reconciliation, and downstream evidence retention.</p>
+                <div class="metric-row">
+                  <div class="dark-metric"><div class="value">14/15</div><div class="label">CIA total</div></div>
+                  <div class="dark-metric"><div class="value">4</div><div class="label">Mapped controls</div></div>
+                  <div class="dark-metric"><div class="value">IN</div><div class="label">Jurisdiction</div></div>
+                  <div class="dark-metric"><div class="value">SaaS</div><div class="label">Hosting</div></div>
+                </div>
+              </aside>
+            </div>
+
+            <div style="height: 34px"></div>
+            <div class="section-head">
+              <div>
+                <div class="eyebrow">Portfolio</div>
+                <div class="section-title">Assets By Type</div>
+              </div>
+            </div>
+            <section class="card pad">
+              <div class="bars">
+                <div class="bar-row"><span>Application</span><div class="bar-track"><div class="bar-fill" style="width: 78%"></div></div><span class="bar-value">18</span></div>
+                <div class="bar-row"><span>Database</span><div class="bar-track"><div class="bar-fill" style="width: 43%"></div></div><span class="bar-value">10</span></div>
+                <div class="bar-row"><span>Interface/API</span><div class="bar-track"><div class="bar-fill" style="width: 35%"></div></div><span class="bar-value">8</span></div>
+                <div class="bar-row"><span>Hardware</span><div class="bar-track"><div class="bar-fill" style="width: 26%"></div></div><span class="bar-value">6</span></div>
+              </div>
+            </section>
+          </section>
+
+          <section id="detail" class="screen">
+            <div class="section-head">
+              <div>
+                <div class="eyebrow">Asset Dossier</div>
+                <div class="section-title">Payments Hub</div>
+                <p class="subcopy">Selected asset detail and suggested control coverage in a single review surface.</p>
+              </div>
+              <div class="segmented"><span>Overview</span><span class="selected">Detail</span><span>Controls Mapping</span></div>
+            </div>
+
+            <div class="grid three-col">
+              <section class="card pad">
+                <div class="accent"></div>
+                <div class="kpi-label">Asset Details</div>
+                <div style="height: 18px"></div>
+                <div class="fact-grid">
+                  <div class="fact"><div class="label">Type</div><div class="value">Application</div></div>
+                  <div class="fact"><div class="label">Status</div><div class="value">Operational</div></div>
+                  <div class="fact"><div class="label">Owner</div><div class="value">Finance Ops</div></div>
+                  <div class="fact"><div class="label">Custodian</div><div class="value">Platform Engineering</div></div>
+                  <div class="fact"><div class="label">Location</div><div class="value">Cloud</div></div>
+                  <div class="fact"><div class="label">Classification</div><div class="value">Restricted</div></div>
+                </div>
+              </section>
+
+              <section class="card pad">
+                <div class="accent teal"></div>
+                <div class="kpi-label">CIA Rating</div>
+                <div class="kpi-value" style="color: var(--teal)">14/15</div>
+                <div class="cia-grid">
+                  <div class="cia-row"><div class="cia-label">Confidentiality</div><div class="cia-track"><span class="cia-box on"></span><span class="cia-box on"></span><span class="cia-box on"></span><span class="cia-box on"></span><span class="cia-box on"></span></div><div class="cia-score">5</div></div>
+                  <div class="cia-row"><div class="cia-label">Integrity</div><div class="cia-track"><span class="cia-box on"></span><span class="cia-box on"></span><span class="cia-box on"></span><span class="cia-box on"></span><span class="cia-box on"></span></div><div class="cia-score">5</div></div>
+                  <div class="cia-row"><div class="cia-label">Availability</div><div class="cia-track"><span class="cia-box on"></span><span class="cia-box on"></span><span class="cia-box on"></span><span class="cia-box on"></span><span class="cia-box"></span></div><div class="cia-score">4</div></div>
+                </div>
+              </section>
+
+              <section class="card pad">
+                <div class="accent amber"></div>
+                <div class="section-head" style="margin: 0 0 14px"><div><div class="kpi-label">Controls Mapping</div></div><button class="secondary-action" style="background:#EEF2FF;color:var(--cobalt);border-color:#D9E3FF">Suggest Controls</button></div>
+                <div class="control-list">
+                  <div class="control-item"><div class="control-top"><div class="control-title">Privileged Access Review</div><span class="pill blue">Controls Library</span></div><div class="control-copy">Owner and custodian roles should be validated for elevated payment operations.</div></div>
+                  <div class="control-item"><div class="control-top"><div class="control-title">Settlement Reconciliation Evidence</div><span class="pill teal">Regulatory</span></div><div class="control-copy">Retain reconciliation evidence linked to transaction events and approval trails.</div></div>
+                  <div class="control-item"><div class="control-top"><div class="control-title">Availability Monitoring</div><span class="pill amber">Suggested</span></div><div class="control-copy">Add service-level monitoring aligned to the availability rating of four.</div></div>
+                </div>
+              </section>
+            </div>
+          </section>
+
+          <section id="create" class="screen">
+            <div class="section-head">
+              <div>
+                <div class="eyebrow">Create Asset</div>
+                <div class="section-title">Add Asset With CIA Rating</div>
+                <p class="subcopy">A right-side creation panel keeps the register visible while the user records identity, ownership, and CIA scoring.</p>
+              </div>
+              <div class="segmented"><span>Overview</span><span>Detail</span><span class="selected">Create</span></div>
+            </div>
+
+            <div class="drawer-layout">
+              <section class="card pad">
+                <div class="accent"></div>
+                <div class="kpi-label">Register Context</div>
+                <div style="height: 18px"></div>
+                <div class="context-list">
+                  <div class="context-row"><div><div class="asset-name">Payments Hub</div><div class="mini">Application - Restricted - CIA 14/15</div></div><span class="pill red">Critical</span></div>
+                  <div class="context-row"><div><div class="asset-name">Customer Data Lake</div><div class="mini">Database - Restricted - CIA 13/15</div></div><span class="pill red">Critical</span></div>
+                  <div class="context-row"><div><div class="asset-name">Vendor API Gateway</div><div class="mini">Interface/API - Confidential - CIA 11/15</div></div><span class="pill amber">High</span></div>
+                  <div class="context-row"><div><div class="asset-name">Branch Workstation Image</div><div class="mini">Desktop Software - Internal - CIA 8/15</div></div><span class="pill amber">Medium</span></div>
+                </div>
+              </section>
+
+              <aside class="drawer">
+                <div class="drawer-head">
+                  <div>
+                    <div class="eyebrow" style="margin:0 0 5px;color:var(--brand)">New Record</div>
+                    <div class="drawer-title">Add Asset</div>
+                  </div>
+                  <button class="close">x</button>
+                </div>
+                <div class="form-body">
+                  <div class="form-section">
+                    <div class="form-section-title">Identity</div>
+                    <div class="field-grid">
+                      <div class="field full"><label>Name</label><input value="Treasury Reporting Portal" /></div>
+                      <div class="field"><label>Asset Type</label><select><option>Application</option></select></div>
+                      <div class="field"><label>Hosting Type</label><select><option>SaaS</option></select></div>
+                      <div class="field full"><label>Description</label><textarea>Treasury reporting workflow used for daily liquidity, controls evidence, and management reporting.</textarea></div>
+                    </div>
+                  </div>
+                  <div class="form-section">
+                    <div class="form-section-title">Ownership</div>
+                    <div class="field-grid">
+                      <div class="field"><label>Owner</label><input value="Treasury Operations" /></div>
+                      <div class="field"><label>Custodian</label><input value="Finance Technology" /></div>
+                      <div class="field"><label>Jurisdiction</label><input value="IN" /></div>
+                      <div class="field"><label>Classification</label><select><option>Confidential</option></select></div>
+                    </div>
+                  </div>
+                  <div class="form-section">
+                    <div class="form-section-title">CIA Rating</div>
+                    <div class="cia-grid">
+                      <div class="cia-row"><div class="cia-label">Confidentiality</div><div class="cia-track"><span class="cia-box on"></span><span class="cia-box on"></span><span class="cia-box on"></span><span class="cia-box on"></span><span class="cia-box"></span></div><div class="cia-score">4</div></div>
+                      <div class="cia-row"><div class="cia-label">Integrity</div><div class="cia-track"><span class="cia-box on"></span><span class="cia-box on"></span><span class="cia-box on"></span><span class="cia-box on"></span><span class="cia-box"></span></div><div class="cia-score">4</div></div>
+                      <div class="cia-row"><div class="cia-label">Availability</div><div class="cia-track"><span class="cia-box on"></span><span class="cia-box on"></span><span class="cia-box on"></span><span class="cia-box"></span><span class="cia-box"></span></div><div class="cia-score">3</div></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="drawer-foot">
+                  <button class="cancel">Cancel</button>
+                  <button class="primary-action" style="padding:10px 16px">Create Asset</button>
+                </div>
+              </aside>
+            </div>
+          </section>
+        </main>
+      </div>
+
+      <footer class="footer">
+        <span>© 2026 KPMG Assurance and Consulting Services LLP, an Indian Limited Liability Partnership and a member firm of the KPMG global organization of independent member firms affiliated with KPMG International Limited.</span>
+        <span class="confidential">Confidential</span>
+      </footer>
+    </section>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const screen = params.get("screen") || "overview";
+    document.body.dataset.screen = screen;
+  </script>
+</body>
+</html>

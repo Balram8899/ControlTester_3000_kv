@@ -275,7 +275,7 @@ body, p, span, li {
    ================================================================ */
 
 .hero-section {
-  background: linear-gradient(135deg, #0c233c 0%, #0f2f5f 52%, #1e49e2 100%);
+  background: #0C233C;
   position: relative;
   overflow: hidden;
   border-bottom: 1px solid rgba(172, 234, 255, 0.14);
@@ -296,9 +296,8 @@ body, p, span, li {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 55% 110% at 95% 50%, rgba(0, 184, 245, 0.1) 0%, transparent 65%),
-    radial-gradient(ellipse 30% 75% at 5% 50%, rgba(30, 73, 226, 0.08) 0%, transparent 65%),
-    radial-gradient(circle at 80% 22%, rgba(114, 19, 234, 0.18), transparent 26%);
+    radial-gradient(ellipse 30% 95% at 6% 115%, rgba(114, 19, 234, 0.45) 0%, transparent 68%),
+    radial-gradient(ellipse 36% 95% at 92% -22%, rgba(30, 73, 226, 0.45) 0%, transparent 68%);
   pointer-events: none;
 }
 
