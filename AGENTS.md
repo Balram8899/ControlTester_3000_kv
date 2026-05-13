@@ -20,7 +20,7 @@ The platform runs fully locally via Docker Compose. It is **not SaaS** — no cl
 
 Core principle: **search before reading.**
 
-Use SocratiCode to search the indexed codebase before opening files.
+Use SocratiCode to search the indexed codebase before opening files. THis is typically found as MCP plugin
 
 ```bash
 # Search for a symbol or concept

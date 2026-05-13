@@ -74,6 +74,8 @@ from api.routers.sop_uplift import router as sop_uplift_router
 from api.routers.document_uplift import router as document_uplift_router
 from api.routers.settings import router as settings_router
 from api.routers.users import router as users_router
+from api.routers.ct_v2 import router as ct_v2_router
+from utils.control_assurance.ct_db import ensure_indexes as ct_ensure_indexes
 from utils.sop_processing.pipeline import start_async_pipeline_workers, stop_async_pipeline_workers
 
 # ----------------------------------------------------------------------------
@@ -152,6 +154,7 @@ class WorkpaperResponse(BaseModel):
 # ----------------------------------------------------------------------------
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    ct_ensure_indexes()
     _seed_nist_controls()  # resolved at call-time; defined later in module
     if os.getenv("TASK_BACKEND", "asyncio").strip().lower() == "asyncio":
         start_async_pipeline_workers()
@@ -225,6 +228,7 @@ app.include_router(sop_uplift_router)
 app.include_router(document_uplift_router)
 app.include_router(settings_router)
 app.include_router(users_router)
+app.include_router(ct_v2_router)
 
 
 # ----------------------------------------------------------------------------

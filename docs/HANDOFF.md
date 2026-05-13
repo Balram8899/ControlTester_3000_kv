@@ -5,6 +5,40 @@
 
 ---
 
+## 2026-05-13 Update - Control Testing V2 Foundation
+
+- Scope: implemented CT V2 Plan 1 foundation for the new `/ct` FastAPI surface while preserving the existing legacy Control Testing UI and `/audit/*` paths.
+- Added Redis AOF persistence in `docker-compose.yml` so future queued CT worker jobs have durable broker state during local restarts.
+- Added `utils/control_assurance/` with CT Pydantic request models, MongoDB index setup for `ct_sessions`, `ct_controls`, and `ct_issues`, and GridFS helpers for the `ct_files` bucket.
+- Added and registered `api/routers/ct_v2.py` with session CRUD/status, manual control input, population upload, multi-file evidence upload, evidence delete, workbook streaming, and blank CT input template download.
+- Added `api/templates/CT_Input_Template.xlsx` with `Control Data` and `Instructions` sheets for manual CT input. This is separate from generated SOX workpaper output.
+- Added `api/tests/` coverage for CT models, GridFS helpers, and the `/ct` router; `api/tests/conftest.py` ensures the planned `cd api && python -m pytest tests/ -v` command can import repo-level `utils`.
+- Verification: `docker compose up --build -d fastapi_api web_ui_agent` rebuilt and started healthy API/UI containers; direct `http://localhost:8000/ct/sessions` and BFF `http://localhost:5000/api/ct/sessions` both returned `[]`; BFF smoke created a session, added a control, read status `input`, and deleted with `204`; `cd api && python -m pytest tests/ -v` passed with 25 tests; `cd kpmg_ui && npm run check` passed.
+
+---
+
+## 2026-05-13 Update - Control Testing V2 Pipeline Stages 1-3
+
+- Scope: implemented CT V2 Plan 2 for the local `ct_worker` service and early pipeline stages: input template parsing, LLM pre-review, evidence/population C&A, sampling, evidence mapping, and API review gates.
+- Added `ct_worker` to `docker-compose.yml`, reusing the API image and consuming the dedicated `ct_pipeline` Celery queue via Redis. The worker uses pass-through LLM environment variables only; CT LLM calls use `get_llm()` with no provider/model override so Settings remains authoritative.
+- Added `utils/control_assurance/celery_app.py`, prompt builders under `utils/control_assurance/prompts/`, pipeline modules under `utils/control_assurance/pipeline/`, and `utils/control_assurance/evidence_extractor.py`.
+- Added a shared LLM JSON helper that retries malformed output once, validates with Pydantic response models, and logs parse failures to `ct_sessions.parse_errors[]`.
+- Extended `/ct` APIs with template upload, manual begin-analysis, review suggestions/questions, review confirmation, mapping views/overrides, C&A override, sampling updates, and strict confirm-mapping gate behavior.
+- Verification: `docker compose up --build -d ct_worker` built and started the worker; `docker compose logs ct_worker --tail=120` showed `celery@... ready` and registered `ct.parse_template`, `ct.llm_review`, `ct.evidence_mapping`, and `ct.run_testing`; `cd api && python -m pytest tests/ -v` passed with 48 tests.
+
+---
+
+## 2026-05-13 Update - Control Testing V2 Pipeline Stages 4-5
+
+- Scope: implemented CT V2 Plan 3 backend pipeline stages for SOX ITGC testing execution, CT issue drafting, workpaper narrative/workbook generation, control result APIs, issue push integration, and sign-off.
+- Added Stage 4 prompt/worker behavior for canonical `todi_results`, `sample_results[].sample_num`, `application`, `item_reference`, `exceptions[].ref`, issue refs, >20% OE threshold enforcement, `W` tickmark normalization out of sample rows, per-control checkpoints, CT issue drafting into `ct_issues`, and Stage 5 dispatch.
+- Added Stage 5 narrative and workbook generation with `SOX_ITGC_Testing_Workpaper_v2.xlsx` as the preferred base template and GridFS metadata `{type, session_id, control_id, filename}` for workbook outputs.
+- Extended `/ct` APIs with control result list/detail, CT issue list/detail/update/push/push-all, idempotent issue pushing into the main `issues` collection, and sign-off updates.
+- Added focused backend validation plus agreed edge/static tests covering C&A gate null states, no-evidence blocking, override pass-through and logs, checkpointing, tickmark/exception consistency, OE boundary behavior, GridFS metadata, delete cascade, push-all skip behavior, `get_llm()` no-override static scan, Celery resilience flags, and Redis AOF config.
+- Verification: `python -m pytest api\tests -v` passed with 83 tests; `docker compose build fastapi_api ct_worker` passed; `docker compose up -d fastapi_api ct_worker` recreated both services; `docker compose ps fastapi_api ct_worker` showed FastAPI healthy and CT worker up; `docker compose logs ct_worker --tail=80` showed all five CT tasks registered including `ct.generate_workbooks`.
+
+---
+
 ## 2026-05-12 Update - TRACE Ribbon Standardization
 
 - Scope: standardized the feature-page ribbon colour treatment while preserving existing shared ribbon sizing across other features.
@@ -1452,3 +1486,147 @@ Update:
   - `node --import tsx .\client\src\sop-uplift.routes.test.ts`
   - `npm run check`
   - `npm run build` passed with existing PostCSS `from` warning and existing large-chunk warning.
+
+---
+
+## 38. Controls Assurance Frontend Build - 2026-05-13
+
+Built the CT V2 frontend as a separate new feature named Controls Assurance instead of replacing the legacy Control Testing page.
+
+Key changes:
+- Preserved the old `/control-testing` page and old `/audit/*` frontend flow.
+- Added `/controls-assurance`, `/controls-assurance/new`, and `/controls-assurance/:id`.
+- Added the Controls Assurance sidebar entry with a `NEW` badge.
+- Added TanStack Query hooks for `/api/ct/*` in `kpmg_ui/client/src/hooks/useControlTesting.ts`.
+- Added list, create, and five-tab detail pages for Case Analysis, Population, Evidence, Testing, and Results.
+- Added `$imagegen` design board at `docs/superpowers/mockups/controls-assurance/controls-assurance-imagegen-board.png`.
+
+Backend note:
+- The legacy backend router `api/routers/control_testing.py` was not modified.
+- `api/main.py` registers the new `/ct/*` router for Controls Assurance; legacy `/audit/*` endpoints remain present.
+
+Verification:
+- `node --import tsx .\client\src\controls-assurance.test.ts`
+- `node --import tsx .\client\src\control-testing.scroll-shell.test.ts`
+- `npm run check`
+- `npm run build` passed with existing PostCSS `from` and large chunk warnings.
+- `docker compose build web_ui_agent`
+- `docker compose up -d web_ui_agent`
+- `docker compose ps web_ui_agent fastapi_api ct_worker` showed the web/API containers healthy and worker running.
+- HTTP smoke returned 200 for `/control-testing`, `/controls-assurance`, and `/api/ct/sessions`.
+
+Next recommended step:
+- Run a live Controls Assurance case end to end with the SOX workpaper template and refine UX copy/layout from actual pipeline output.
+
+Update:
+- Expanded C&A handling so population and evidence can both carry source/query support files.
+- Population upload now stores `population_filename` and `population_file_type`; Stage 3 no longer forces population extraction as Excel.
+- Added support-file endpoints:
+  - `POST /ct/sessions/{session_id}/controls/{control_id}/population/support-files`
+  - `POST /ct/sessions/{session_id}/controls/{control_id}/evidence/{gridfs_id}/support-files`
+- Support files store `support_type`, reviewer `comments`, `unique_key_columns`, and `expected_count`, allowing SQL query screenshots, SAP SUIM parameter screenshots, source report PDFs, timestamps, and source-record-count evidence to be considered in C&A.
+- Stage 3 now includes extracted primary file content, tabular row counts, unique counts when keys are provided, support-file OCR/text, and reconciliation metadata in both population and evidence C&A prompts.
+- Controls Assurance UI now exposes `Source / Query Support` upload panels under Population and each Evidence file, with `Unique Key Columns`, `Expected Count`, and reviewer comments fields.
+
+Verification:
+- Red tests first failed for the missing behavior, then passed after implementation.
+- `python -m pytest api/tests -q` passed: 88 passed, existing warnings only.
+- `node --import tsx .\client\src\controls-assurance.test.ts`
+- `node --import tsx .\client\src\control-testing.scroll-shell.test.ts`
+- `npm run check`
+- `npm run build` passed with existing PostCSS `from` and large chunk warnings.
+- `docker compose build fastapi_api ct_worker web_ui_agent`
+- `docker compose up -d fastapi_api ct_worker web_ui_agent`
+- `docker compose ps fastapi_api ct_worker web_ui_agent` showed API/web healthy and worker running.
+- HTTP smoke returned 200 for `/controls-assurance`, `/api/ct/sessions`, and `/ct/sessions`.
+
+Next recommended step:
+- Generate a synthetic SQL/SUIM evidence pack and run a live Controls Assurance case to validate count and unique-count reconciliation in LLM C&A output.
+
+Update:
+- Fixed the Stage 5 workbook crash found in synthetic scenario `10_workbook_ready`.
+- Root cause: an uploaded `.xlsx` evidence workbook was being decoded as text and written directly into the generated workbook Evidence sheet, which produced illegal Excel cell characters.
+- Workbook generation now writes a safe attachment summary for binary/non-text evidence files and only previews sanitized text-like evidence.
+
+Verification:
+- Added a focused regression test that reproduces the Excel evidence crash.
+- `python -m pytest api/tests/test_ct_pipeline_stages4_5.py::test_build_control_workbook_summarises_binary_excel_evidence_without_crashing -q`
+- `python -m pytest api/tests/test_ct_pipeline_stages4_5.py -q`
+- `python -m pytest api/tests -q` passed: 89 passed, existing warnings only.
+- `docker compose build fastapi_api ct_worker`
+- `docker compose up -d fastapi_api ct_worker`
+- `docker compose ps fastapi_api ct_worker` showed API healthy and CT worker running.
+
+Next recommended step:
+- Rerun the workbook-ready synthetic case in the Controls Assurance UI.
+
+Update:
+- Stage 5 workbook generation now uses `utils/Testing sheet.xlsx` as the output workpaper template.
+- The generated workbook now contains `Test of controls` and `Auditor override`, matching the supplied template.
+- Backend testing data is mapped into the form-style workpaper:
+  - Workpaper name, period, preparer, and entity.
+  - Control ID/title/description/type.
+  - Walkthrough and OE testing flags.
+  - D&I and OE conclusions.
+  - Testing method Y/N selections.
+  - Population description/count, selected sample size, and sampling method.
+  - Test procedure rows A-I.
+  - Sample testing grid, tickmarks, exception notes, and deficiency description.
+  - Override log entries in the `Auditor override` sheet.
+- The old generated workbook sheet set (`Cover`, `Test Steps`, `Sample Results`, `Exceptions`, `Conclusions`, `Evidence`, `Override Log`) is no longer emitted for Controls Assurance Stage 5.
+
+Verification:
+- Added red/green workbook-template tests for the new template cells and override tab.
+- `python -m pytest api/tests/test_ct_pipeline_stages4_5.py::test_build_control_workbook_uses_testing_sheet_template_and_visible_cells api/tests/test_ct_pipeline_stages4_5.py::test_build_control_workbook_summarises_binary_excel_evidence_without_crashing api/tests/test_ct_pipeline_stages4_5.py::test_workbook_contains_override_log_tab_when_overrides_exist -q`
+- `python -m pytest api/tests/test_ct_pipeline_stages4_5.py -q`
+- `python -m pytest api/tests -q` passed: 89 passed, existing warnings only.
+- `docker compose build fastapi_api ct_worker`
+- `docker compose up -d fastapi_api ct_worker`
+- `docker compose ps fastapi_api ct_worker` showed API healthy and CT worker running.
+- HTTP smoke returned 200 for `/health` and `/ct/sessions`.
+
+Next recommended step:
+- Rerun the workbook-ready synthetic case in the Controls Assurance UI and download the workbook to visually inspect the `Test of controls` sheet.
+
+Update:
+- Generated Controls Assurance workbooks now create sample-specific evidence tabs: `Sample 1`, `Sample 2`, etc.
+- Each sample sheet records the sample application, item reference, tested step labels, mapped evidence filename/type, and reviewed value.
+- Image evidence is embedded directly into the sample tab.
+- When Stage 3 saved an `annotation_regions[].bbox`, the embedded image is annotated with a red rectangle around the reviewed area.
+- When exact image coordinates are unavailable or the evidence is non-image, the sample tab uses a red-bordered reviewed-value/evidence-preview block instead.
+- Stage 5 now downloads evidence support-file blobs as well as primary evidence blobs, so SQL/SUIM/query screenshots attached to evidence can be inserted into the workbook.
+
+Verification:
+- Added red/green sample evidence tab test for an embedded image with a red boxed annotation.
+- `python -m pytest api/tests/test_ct_pipeline_stages4_5.py::test_build_control_workbook_adds_sample_evidence_tab_with_red_boxed_image -q`
+- `python -m pytest api/tests/test_ct_pipeline_stages4_5.py -q` passed: 16 passed.
+- `python -m pytest api/tests -q` passed: 90 passed, existing warnings only.
+- `docker compose build fastapi_api ct_worker`
+- `docker compose up -d fastapi_api ct_worker`
+- `docker compose ps fastapi_api ct_worker` showed API healthy and CT worker running.
+- HTTP smoke returned 200 for `/health` and `/ct/sessions`.
+
+Next recommended step:
+- Rerun the workbook-ready synthetic case and visually inspect the generated `Sample 1` sheet against the example screenshot.
+
+Update:
+- Removed `Framework` from the Controls Assurance create-assessment screen.
+- The frontend no longer stores, validates, edits, or submits a user-entered case framework from `/controls-assurance/new`.
+- The backend now defaults omitted framework metadata to `Controls Assurance`, so API responses remain backward-compatible without exposing the field to users.
+- Existing per-control `framework_reference` metadata is unchanged and remains available for template/manual control data if needed.
+
+Verification:
+- Added red/green tests to block the Framework field from returning to the create page and to allow frameworkless backend session creation.
+- `node --import tsx .\client\src\controls-assurance.test.ts`
+- `python -m pytest api/tests/test_ct_models.py::test_create_session_request_defaults_framework_when_omitted -q`
+- `python -m pytest api/tests -q` passed: 91 passed, existing warnings only.
+- `npm run check`
+- `npm run build` passed with existing PostCSS `from` and large-chunk warnings.
+- `docker compose build fastapi_api web_ui_agent`
+- `docker compose up -d fastapi_api web_ui_agent`
+- `docker compose ps fastapi_api web_ui_agent` showed API and web UI healthy.
+- HTTP smoke returned 200 for `/controls-assurance/new` and `/health`.
+- Frameworkless session create returned default framework `Controls Assurance`; the smoke session was deleted.
+
+Next recommended step:
+- Continue reviewing the create-case flow for other fields that should be inferred or moved to a later workflow step.

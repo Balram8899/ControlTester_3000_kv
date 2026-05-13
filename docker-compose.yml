@@ -14,6 +14,7 @@ services:
     image: redis:7-alpine
     container_name: redis_Trace_KV
     restart: unless-stopped
+    command: redis-server --appendonly yes --appendfsync everysec
     ports:
       - "6379:6379"
     networks:
@@ -132,6 +133,51 @@ services:
       - CELERY_BROKER_URL=${CELERY_BROKER_URL:-redis://redis:6379/0}
       - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND:-redis://redis:6379/0}
       - DOCUMENT_UPLIFT_STAGE2_REWRITE_LIMIT=${DOCUMENT_UPLIFT_STAGE2_REWRITE_LIMIT:-50}
+    depends_on:
+      mongodb:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - appnet
+
+  ct_worker:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    container_name: ct_worker_Trace_KV
+    restart: unless-stopped
+    command:
+      - celery
+      - -A
+      - utils.control_assurance.celery_app
+      - worker
+      - --loglevel=INFO
+      - -Q
+      - ct_pipeline
+      - --concurrency=2
+    environment:
+      - LLM_PROVIDER=${LLM_PROVIDER}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - GOOGLE_LLM_MODEL=${GOOGLE_LLM_MODEL}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
+      - OLLAMA_LLM_MODEL=${OLLAMA_LLM_MODEL}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_LLM_MODEL=${OPENAI_LLM_MODEL}
+      - MOONSHOT_API_KEY=${MOONSHOT_API_KEY}
+      - KIMI_API_KEY=${KIMI_API_KEY}
+      - KIMI_BASE_URL=${KIMI_BASE_URL}
+      - KIMI_LLM_MODEL=${KIMI_LLM_MODEL}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - DEEPSEEK_BASE_URL=${DEEPSEEK_BASE_URL}
+      - DEEPSEEK_LLM_MODEL=${DEEPSEEK_LLM_MODEL}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - ANTHROPIC_LLM_MODEL=${ANTHROPIC_LLM_MODEL}
+      - MONGO_URI=mongodb://mongodb:27017
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL:-redis://redis:6379/0}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND:-redis://redis:6379/0}
     depends_on:
       mongodb:
         condition: service_started

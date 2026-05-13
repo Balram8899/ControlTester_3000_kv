@@ -10,6 +10,23 @@
 
 ---
 
+## Spec Alignment Update
+
+This plan is safe to execute only with the following corrections applied throughout the implementation:
+
+- The downloadable template is the **CT input workbook**, not the SOX workpaper. `GET /ct/template/download` serves `api/templates/CT_Input_Template.xlsx`, containing Sheet 1 `Control Data` and Sheet 2 `Instructions` exactly as defined in the spec. The SOX workpaper template is reserved for Plan 3 workbook generation.
+- Manual `POST /ct/sessions/:id/controls` in this foundation plan creates draft controls only. Plan 2 must add the pipeline transition that moves those manually entered controls into `analysing` and queues Stage 2, because Plan 1 intentionally has no Celery dependency.
+- File metadata written to GridFS must use the spec values: `input_template`, `population`, `evidence`, and later `workbook_output`.
+- API response shapes created here are the source of truth for Plan 4. In particular, `GET /ct/sessions` returns a raw array, not `{ sessions: [...] }`, unless the router is intentionally changed before frontend implementation.
+
+## Shared Build Log
+
+All four CT V2 plans share one handoff log: `docs/superpowers/plans/2026-05-12-ct-v2-build-log.md`.
+
+Before starting a task, append a short entry with the task name, planned files, and current status. After completing or pausing a task, append what changed, verification run, blockers, and the exact next step. Keep entries brief but specific enough that another engineer can resume without rereading the whole thread.
+
+---
+
 ## File Map
 
 | Action | Path | Responsibility |
@@ -21,7 +38,7 @@
 | Create | `api/routers/ct_v2.py` | All `/ct` FastAPI endpoints — imports from `utils/control_assurance/` |
 | Create | `api/tests/__init__.py` | Makes `api/tests/` a Python package |
 | Create | `api/tests/test_ct_v2.py` | pytest unit tests (mongomock — no running services needed) |
-| Create | `api/templates/` | Directory for the blank input template xlsx |
+| Create | `api/templates/CT_Input_Template.xlsx` | Blank input workbook: Control Data + Instructions sheets |
 | Modify | `docker-compose.yml` | Add `command` to redis service for AOF persistence |
 | Modify | `api/main.py` | Import and register `ct_v2` router |
 | Modify | `kpmg_ui/server/routes.ts` | Verify `/api/ct/*` proxy reaches FastAPI |
@@ -558,7 +575,7 @@ from utils.control_assurance.ct_models import (
     CreateSessionRequest,
 )
 
-TEMPLATE_PATH = Path(__file__).parent.parent / "templates" / "SOX_ITGC_Testing_Workpaper_v2.xlsx"
+TEMPLATE_PATH = Path(__file__).parent.parent / "templates" / "CT_Input_Template.xlsx"
 
 router = APIRouter(prefix="/ct", tags=["control-testing-v2"])
 
@@ -1127,7 +1144,11 @@ git commit -m "feat(ct-v2): population and evidence file upload endpoints"
 mkdir -p api/templates
 ```
 
-Copy `SOX_ITGC_Testing_Workpaper_v2.xlsx` (the file modified during brainstorming) into `api/templates/SOX_ITGC_Testing_Workpaper_v2.xlsx`. This is the blank template served by `GET /ct/template/download`.
+Create `api/templates/CT_Input_Template.xlsx`. Sheet 1 is named `Control Data` and has the headers required by the spec:
+
+`Control ID`, `Control Name`, `Control Type`, `Domain / Category`, `Framework Reference`, `Inherent Risk Rating`, `Control Owner`, `Frequency`, `Prior Period Result`, `Walkthrough Performed`, `Sampling Mode`, `Step A Description`, `Step A Evidence Required`, through `Step F Description`, `Step F Evidence Required`.
+
+Sheet 2 is named `Instructions` and includes valid values and one example row. This is the blank template served by `GET /ct/template/download`.
 
 - [ ] **Step 2: Write failing tests**
 
@@ -1399,7 +1420,7 @@ Endpoints live:
 - `POST /ct/sessions/:id/controls/:cid/evidence` — multi-file evidence upload
 - `DELETE /ct/sessions/:id/controls/:cid/evidence/:id` — remove evidence file
 - `GET /ct/sessions/:id/controls/:cid/workbook` — stream workbook from GridFS
-- `GET /ct/template/download` — serve blank CT_Input_Template.xlsx
+- `GET /ct/template/download` — serve blank CT input workbook (`CT_Input_Template.xlsx`)
 
 Infrastructure: Redis AOF persistence enabled in docker-compose.yml.
 Tests: `api/tests/test_ct_v2.py` — all passing with mongomock, no live services needed.

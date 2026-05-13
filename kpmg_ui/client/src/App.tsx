@@ -19,6 +19,9 @@ import SettingsPage from "@/pages/settings";
 import EvidenceAssessmentPage from "@/pages/evidence-assessment";
 import RiskAssessmentPage from "@/pages/risk-assessment";
 import ControlTestingPage from "@/pages/control-testing";
+import ControlsAssurancePage from "@/pages/controls-assurance";
+import ControlsAssuranceNewPage from "@/pages/controls-assurance-new";
+import ControlsAssuranceDetailPage from "@/pages/controls-assurance-detail";
 import RegulatoryTestingPage from "@/pages/regulatory-testing";
 import RegulatoryLibraryPage from "@/pages/regulatory-library";
 import ControlsLibraryPage from "@/pages/controls-library";
@@ -51,6 +54,7 @@ const PAGES = [
   { path: "/risk-assessment",      Page: RiskAssessmentPage      },
   { path: "/evidence-assessment",  Page: EvidenceAssessmentPage  },
   { path: "/control-testing",      Page: ControlTestingPage      },
+  { path: "/controls-assurance",   Page: ControlsAssurancePage   },
   { path: "/sop-uplift",           Page: SopUpliftPage           },
   { path: "/document-uplift",      Page: DocumentUpliftPage      },
   { path: "/chat",                 Page: ChatPage                },
@@ -110,6 +114,14 @@ function Router() {
       {location.startsWith("/document-uplift/") ? (
         <div className="h-full min-h-0 overflow-hidden">
           <DocumentUpliftCasePage />
+        </div>
+      ) : location === "/controls-assurance/new" ? (
+        <div className="h-full min-h-0 overflow-hidden">
+          <ControlsAssuranceNewPage />
+        </div>
+      ) : location.startsWith("/controls-assurance/") ? (
+        <div className="h-full min-h-0 overflow-hidden">
+          <ControlsAssuranceDetailPage />
         </div>
       ) : (
         PAGES.map(({ path, Page }) => (

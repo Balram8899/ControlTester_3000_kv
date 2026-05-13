@@ -47,6 +47,7 @@ export const HIDEABLE_TABS: TraceTab[] = [
   { title: "Risk Assessment", fullTitle: "Risk Assessment", path: "/risk-assessment", icon: FileSearch },
   { title: "Final Report", fullTitle: "Final Report", path: "/evidence-assessment", icon: FileSearch },
   { title: "Control Testing", fullTitle: "Control Testing", path: "/control-testing", icon: TestTube },
+  { title: "Controls Assurance", fullTitle: "Controls Assurance", path: "/controls-assurance", icon: ShieldCheck, badge: "NEW" },
   {
     title: "SOP Uplift",
     fullTitle: "SOP Uplift",
