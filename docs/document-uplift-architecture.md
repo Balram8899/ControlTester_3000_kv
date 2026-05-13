@@ -335,18 +335,4 @@ Detailed severity logic lives in `docs/document-uplift-severity-calculation.md`.
 
 ---
 
-## Current Closeout State
-
-| Gate / Item | Status |
-|---|---|
-| Checkpoint A | Complete |
-| Checkpoint B | Complete |
-| Checkpoint C | Complete, including human Word 365 review |
-| Items 1-33, 23b, 26a | Complete |
-| T4 restart/retry reliability | Complete |
-| T8 human usefulness | Complete |
-| T9 cross-domain usefulness | Complete |
-| Redis/Celery readiness | Complete |
-
-No original-plan implementation or Redis closeout item remains open.
 
