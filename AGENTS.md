@@ -191,5 +191,61 @@ Controls are scored on Who/What/Where/When/Why/How (each 0 or 1, max score = 6).
 4. **Endpoint naming**: New routers use kebab-case prefixes (`/control-testing`, `/risk-assessment`). Legacy endpoints in `main.py` use snake-case — don't rename them.
 5. **Control testing UI**: The current `control-testing.tsx` page still calls `/audit/*` legacy endpoints. Do not switch to `/control-testing/*` in a UI-only change.
 6. **HANDOFF.md**: Update `docs/HANDOFF.md` after completing any significant feature or fix.
-7. Avoid failing silently and keep adding fallbacks. THe goal is to write good clean code, short and efficient. Fail loudly so we can fix and diagnose the issue. 
+7. Avoid failing silently and keep adding fallbacks. The goal is to write good clean code, short and efficient. Fail loudly so we can fix and diagnose the issue.
 8. Codebase is not to be bloated.
+
+## UI Design System — CRITICAL RULES
+
+Full spec: `docs/superpowers/specs/2026-05-25-trace-ui-design-system.md`  
+Reference mockup: `.superpowers/brainstorm/1916-1779711650/content/trace-v3-proper.html`
+
+**Every frontend change must follow these rules. No exceptions.**
+
+### Design Principles
+1. Typography creates hierarchy — no decorative gradients on data surfaces
+2. Color is functional — navy for primary actions/active state only; status colors only where they carry meaning
+3. Borders over shadows — panels use `1px solid var(--border)`; shadows only on shell and modals
+4. Icons are Lucide SVG — 15–16px, `stroke-width="1.75"`, no fill. Never emoji or font icons
+5. 4px spacing grid — all padding/margin/gap must be multiples of 4px
+6. Gradients on primary button only — subtle inset. Never on data cards, headers, or panels
+
+### KPMG Color Palette
+| Token | Hex | Use |
+|---|---|---|
+| `--kpmg-navy` | `#00338D` | Primary button, active sidebar item |
+| `--kpmg-cobalt` | `#1E49E2` | Focus rings, links, interactive elements |
+| `--kpmg-pacific` | `#00B8F5` | Logo mark, progress fills |
+| `--color-success` | `#059669` | Pass/active status |
+| `--color-warning` | `#D97706` | Review/pending status |
+| `--color-danger` | `#DC2626` | Fail/error status |
+
+### App Shell
+- Sidebar: `#0B1526`, 232px expanded / 68px collapsed, 34px item height, grouped nav (Overview / Libraries / Testing / Operations)
+- Topbar: 52px, white, `border-bottom: 1px solid var(--border)`, title left + actions right
+- `HeroSection.tsx` is **deleted** — replaced by inline page-header pattern per page
+- No gradient banners anywhere
+
+### Page Templates (assign the right one to every page)
+| Template | Pages |
+|---|---|
+| **A — List** | Controls Library, Regulatory Library, Frameworks Library, Asset Registry, Issue Management, Reports, Exception Management |
+| **B — Detail** | Controls Assurance Detail, Evidence Assessment, Document Uplift Case, Control 360 |
+| **C — Wizard** | Controls Assurance New, Risk Assessment (active session), Document Uplift |
+| **D — Dashboard/Analytics** | Dashboard, Risk Controls Coverage, Regulation Controls Coverage, Controls Diagnostics, Control Quality Analysis |
+| **E — Standalone** | Login, Landing, Not Found |
+
+### Component Rules
+- **KPI cards**: white, `rounded-lg`, 3px top-border accent in semantic color. No gradient fill on the card body
+- **Status pills**: `rounded-full`, 11px/600, inline dot + label. See spec §5.3 for all variants
+- **Tables**: checkbox col, sortable headers (10.5px/700/uppercase), 44px row height, hover `bg-blue-50/60`, row actions on hover
+- **Modals**: max-w 560px, `rounded-[14px]`, `--shadow-lg`, header + divider + scrollable body + sticky footer
+- **Drawers**: shadcn `<Sheet side="right">`, 480px detail / 640px form
+- **Charts**: use `chartTheme.ts` constants (updated per spec §6.1); navy/cobalt/pacific color series; `barSize={24}` bars
+- **Empty states**: Lucide icon (muted 30%) + heading + body + CTA. No SVG illustrations
+- **Toasts**: shadcn Sonner, bottom-right, left border in semantic color
+
+### What NOT to Change (UI work)
+- API calls, fetch hooks, custom hooks — untouched
+- FastAPI routers, Python utils — untouched
+- MongoDB collections, data models — untouched
+- Test files (except fixture updates if a prop signature changes)
