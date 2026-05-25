@@ -472,3 +472,56 @@ def evidence_mapping(session_id: str) -> dict:
             },
         )
         raise
+
+
+@celery_app.task(
+    name="ct.verify_population_ca",
+    queue="ct_pipeline",
+    acks_late=True,
+    reject_on_worker_lost=True,
+)
+def verify_population_ca(session_id: str, control_id: str) -> dict:
+    try:
+        _process_population(session_id, control_id)
+        return {"status": "ok", "session_id": session_id, "control_id": control_id}
+    except Exception as exc:
+        _get_db().ct_controls.update_one(
+            {"_id": control_id},
+            {
+                "$set": {
+                    "sampling.population_ca_verification.completeness_passed": False,
+                    "sampling.population_ca_verification.accuracy_passed": False,
+                    "sampling.population_ca_verification.issues": [
+                        {"check": "system", "finding": f"C&A verification failed: {exc}", "severity": "high"}
+                    ],
+                    "updated_at": _now(),
+                }
+            },
+        )
+        raise
+
+
+@celery_app.task(
+    name="ct.verify_evidence_ca",
+    queue="ct_pipeline",
+    acks_late=True,
+    reject_on_worker_lost=True,
+)
+def verify_evidence_ca(session_id: str, control_id: str, gridfs_id: str) -> dict:
+    try:
+        _verify_evidence_ca(session_id, control_id, gridfs_id)
+        return {"status": "ok", "session_id": session_id, "control_id": control_id, "gridfs_id": gridfs_id}
+    except Exception as exc:
+        _set_evidence_fields(
+            _get_db(),
+            control_id,
+            gridfs_id,
+            {
+                "ca_verification.completeness_passed": False,
+                "ca_verification.accuracy_passed": False,
+                "ca_verification.issues": [
+                    {"check": "system", "finding": f"C&A verification failed: {exc}", "severity": "high"}
+                ],
+            },
+        )
+        raise

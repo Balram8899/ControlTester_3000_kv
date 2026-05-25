@@ -1,19 +1,62 @@
+# ── Secrets & local config ───────────────────────────────────────────────────
 .env
+.streamlit/secrets.toml
+
+# ── Python runtime ────────────────────────────────────────────────────────────
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+api/.pytest_cache/
+pytest_*.out.log
+pytest_*.err.log
+.pycache_check/
+
+# ── Virtualenvs ───────────────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+logs/
+api.log
+api/api.log
+audit_pipeline.log
+
+# ── Frontend build output ─────────────────────────────────────────────────────
+node_modules/
+tmp/node_modules/
+
+# ── Generated output ──────────────────────────────────────────────────────────
+output/
 saved_company_vectorstore/
 saved_kb_vectorstore/
-THINGS_TODO.txt
-.venv/
-.streamlit/
-utils/__pycache__/
-audit_pipeline.log
+dependency-graph.html
+asd_fixed_diagram.png
+
+# ── Temp / scratch ────────────────────────────────────────────────────────────
+tmp/
+
+# ── Local tool state (never deployed) ────────────────────────────────────────
+.claude/
 .vscode/
-.node_modules/
-node_modules
+.superpowers/
+.playwright-cli/
+.mockup-edge-profile/
+
+# ── Backup files ──────────────────────────────────────────────────────────────
+utils/Consolidated_WP_Template_backup.xlsx
+*_backup.*
+
+# ── Scratch / one-off files ───────────────────────────────────────────────────
+google_test.py
+THINGS_TODO.txt
+
+# ── Claude / agent instruction files (local only) ────────────────────────────
 CLAUDE.md
-./claude
-./docs
 AGENTS.md
-AGENTS.md
-CLAUDE.md
 docs/HANDOFF.md
 docs/superpowers/specs/2026-05-12-control-testing-v2-design.md

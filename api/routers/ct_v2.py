@@ -382,10 +382,15 @@ async def upload_population(
                 "sampling.population_file_id": gridfs_id,
                 "sampling.population_filename": filename,
                 "sampling.population_file_type": file_type,
+                "sampling.population_ca_verification.completeness_passed": None,
+                "sampling.population_ca_verification.accuracy_passed": None,
+                "sampling.population_ca_verification.issues": [],
                 "updated_at": _now(),
             }
         },
     )
+    from utils.control_assurance.pipeline.stage3_evidence import verify_population_ca
+    verify_population_ca.apply_async(args=[session_id, control_id], queue="ct_pipeline")
     return {"gridfs_id": gridfs_id, "filename": filename, "file_type": file_type, "status": "uploaded"}
 
 
@@ -511,6 +516,8 @@ async def upload_evidence(
             {"_id": control_id},
             {"$push": {"evidence_files": evidence_entry}, "$set": {"updated_at": _now()}},
         )
+        from utils.control_assurance.pipeline.stage3_evidence import verify_evidence_ca
+        verify_evidence_ca.apply_async(args=[session_id, control_id, gridfs_id], queue="ct_pipeline")
         uploaded.append(
             {"gridfs_id": gridfs_id, "filename": filename, "file_type": file_type}
         )
