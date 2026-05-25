@@ -8,6 +8,17 @@ import openpyxl
 
 from utils.control_assurance import ct_db
 from utils.control_assurance.celery_app import celery_app
+from utils.control_assurance.control_setup import (
+    build_control_doc,
+    empty_conclusions,
+    empty_sampling,
+    empty_testing_methods,
+    normalize_header,
+    normalize_sampling_mode,
+    now_iso,
+    parse_bool,
+    row_to_control_input,
+)
 from utils.control_assurance.ct_gridfs import download_from_gridfs
 
 
@@ -21,57 +32,32 @@ _SAMPLING_MODE_MAP = {
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return now_iso()
 
 
 def _empty_sampling(mode: str) -> dict:
-    return {
-        "mode": mode,
-        "population_description": "",
-        "population_file_id": None,
-        "population_count": 0,
-        "sample_period": "",
-        "llm_suggested_strategy": None,
-        "llm_suggested_size": 0,
-        "selection_strategy": None,
-        "selected_size": 0,
-        "selected_items": [],
-        "population_ca_verification": {
-            "completeness_passed": None,
-            "accuracy_passed": None,
-            "issues": [],
-            "overridden": False,
-            "override_reason": None,
-        },
-    }
+    return empty_sampling(mode)
 
 
 def _empty_conclusions() -> dict:
-    return {
-        "d_and_i": None,
-        "oe": None,
-        "deficiencies_noted": False,
-        "issues_log_refs": [],
-        "rationale": "",
-        "testing_summary": "",
-    }
+    return empty_conclusions()
 
 
 def _empty_testing_methods() -> dict:
-    return {
-        "inquiry": False,
-        "observation": False,
-        "inspection": False,
-        "reperformance": False,
-    }
+    return empty_testing_methods()
 
 
 def _parse_bool(value: str) -> bool:
-    return value.lower() in {"yes", "true", "1", "y"}
+    return parse_bool(value)
 
 
 def _parse_sampling_mode(value: str) -> str:
-    return _SAMPLING_MODE_MAP.get(value.lower(), "sample")
+    return normalize_sampling_mode(value)
+
+
+def _is_new_control_input(headers: list[str]) -> bool:
+    normalized = {normalize_header(header) for header in headers}
+    return "riskstatement" in normalized and "teststeps" in normalized
 
 
 def _parse_and_create_controls(session_id: str, gridfs_file_id: str) -> None:
@@ -92,9 +78,48 @@ def _parse_and_create_controls(session_id: str, gridfs_file_id: str) -> None:
     content = download_from_gridfs(gridfs_file_id)
     workbook = openpyxl.load_workbook(io.BytesIO(content), data_only=True)
     worksheet = workbook.active
+    headers = [str(cell.value or "").strip() for cell in worksheet[1]]
 
     now = _now()
     controls_created = 0
+
+    if _is_new_control_input(headers):
+        for row in worksheet.iter_rows(min_row=2, values_only=True):
+            if not row or not row[0]:
+                continue
+
+            doc = build_control_doc(session_id, row_to_control_input(headers, row), now=now)
+            db.ct_controls.insert_one(doc)
+            controls_created += 1
+            db.ct_sessions.update_one(
+                {"_id": session_id},
+                {
+                    "$set": {
+                        "stage_checkpoint": {
+                            "stage": "parse_template",
+                            "step": f"parsed_{controls_created}_controls",
+                            "updated_at": _now(),
+                        }
+                    }
+                },
+            )
+        db.ct_sessions.update_one(
+            {"_id": session_id},
+            {
+                "$set": {
+                    "stage": "analysing",
+                    "controls_finalized": False,
+                    "stage_checkpoint": {
+                        "stage": "parse_template",
+                        "step": "complete",
+                        "controls_found": controls_created,
+                        "updated_at": _now(),
+                    },
+                    "updated_at": _now(),
+                }
+            },
+        )
+        return
 
     for row in worksheet.iter_rows(min_row=2, values_only=True):
         if not row or not row[0]:
@@ -124,7 +149,9 @@ def _parse_and_create_controls(session_id: str, gridfs_file_id: str) -> None:
                 test_steps.append(
                     {
                         "step_id": str(uuid.uuid4()),
+                        "attribute_id": label,
                         "label": label,
+                        "test_attribute": description,
                         "description": description,
                         "evidence_required": evidence_required,
                     }
@@ -145,6 +172,9 @@ def _parse_and_create_controls(session_id: str, gridfs_file_id: str) -> None:
             "walkthrough_performed": _parse_bool(walkthrough_raw),
             "risk": "",
             "test_steps": test_steps,
+            "field_sources": {},
+            "controls_finalized": False,
+            "finalized_at": None,
             "sampling": _empty_sampling(_parse_sampling_mode(sampling_mode_raw)),
             "evidence_files": [],
             "sample_results": [],
@@ -177,6 +207,7 @@ def _parse_and_create_controls(session_id: str, gridfs_file_id: str) -> None:
         {
             "$set": {
                 "stage": "analysing",
+                "controls_finalized": False,
                 "stage_checkpoint": {
                     "stage": "parse_template",
                     "step": "complete",

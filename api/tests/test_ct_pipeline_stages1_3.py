@@ -332,10 +332,73 @@ def test_llm_review_writes_suggestions(mock_db):
     assert session["llm_suggestions"][0]["text"] == "Consider adding step C"
 
 
+def test_llm_review_records_active_llm_config(mock_db):
+    from utils.control_assurance.pipeline.stage2_review import _run_llm_review
+
+    session_id = _insert_review_session(mock_db, "sess-llm-config")
+    mock_llm = MagicMock()
+    mock_llm.invoke.return_value = MagicMock(content='{"case_questions": [], "controls": []}')
+
+    with patch("utils.control_assurance.pipeline.stage2_review._get_db", return_value=mock_db):
+        with patch("utils.control_assurance.pipeline.stage2_review.get_llm", return_value=mock_llm) as mock_get_llm:
+            with patch(
+                "utils.control_assurance.pipeline.stage2_review.get_active_llm_config",
+                return_value={"provider": "gemini", "model": "gemini-3-flash-preview"},
+            ):
+                _run_llm_review(session_id)
+
+    mock_get_llm.assert_called_once_with()
+    session = mock_db.ct_sessions.find_one({"_id": session_id})
+    assert session["last_llm_review_config"]["provider"] == "gemini"
+    assert session["last_llm_review_config"]["model"] == "gemini-3-flash-preview"
+    assert session["stage_checkpoint"]["llm"]["provider"] == "gemini"
+    assert session["stage_checkpoint"]["llm"]["model"] == "gemini-3-flash-preview"
+
+
+def test_llm_review_limits_question_volume(mock_db):
+    from utils.control_assurance.pipeline.stage2_review import _run_llm_review
+
+    session_id = _insert_review_session(mock_db, "sess-question-limits")
+    fake_llm_response = {
+        "case_questions": [
+            {"question_id": f"case-{index}", "question": f"Case question {index}"}
+            for index in range(1, 6)
+        ],
+        "controls": [
+            {
+                "control_id": "ITGC-001",
+                "suggestions": [],
+                "questions": [
+                    {"question_id": f"control-{index}", "question": f"Control question {index}"}
+                    for index in range(1, 7)
+                ],
+            }
+        ],
+    }
+    mock_llm = MagicMock()
+    mock_llm.invoke.return_value = MagicMock(content=json.dumps(fake_llm_response))
+
+    with patch("utils.control_assurance.pipeline.stage2_review._get_db", return_value=mock_db):
+        with patch("utils.control_assurance.pipeline.stage2_review.get_llm", return_value=mock_llm):
+            _run_llm_review(session_id)
+
+    session = mock_db.ct_sessions.find_one({"_id": session_id})
+    assert [question["question_id"] for question in session["llm_questions"]] == [
+        "case-1",
+        "case-2",
+        "case-3",
+        "control-1",
+        "control-2",
+        "control-3",
+        "control-4",
+    ]
+
+
 def test_llm_review_applies_derived_fields_and_moves_to_control_review(mock_db):
     from utils.control_assurance.pipeline.stage2_review import _run_llm_review
 
     session_id = _insert_review_session(mock_db, "sess-derived-review")
+    mock_db.ct_controls.update_one({"session_id": session_id}, {"$set": {"domain": ""}})
     fake_llm_response = """{
       "case_questions": [],
       "controls": [{
@@ -457,6 +520,26 @@ def test_answer_question_marks_answered(api_client, mock_db):
     assert stored["llm_questions"][0]["answered"] is True
 
 
+def test_answer_question_rejects_blank_answer(api_client, mock_db):
+    session_id = "sess-question-blank"
+    mock_db.ct_sessions.insert_one(
+        {
+            "_id": session_id,
+            "llm_questions": [{"question_id": "q1", "question": "Scope?", "answered": False}],
+        }
+    )
+
+    response = api_client.post(
+        f"/ct/sessions/{session_id}/questions/q1/answer",
+        json={"answer": "   "},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == "Answer is required"
+    stored = mock_db.ct_sessions.find_one({"_id": session_id})
+    assert stored["llm_questions"][0]["answered"] is False
+
+
 def test_confirm_review_blocks_unanswered_questions(api_client, mock_db):
     session_id = "sess-blocked"
     mock_db.ct_sessions.insert_one(
@@ -469,6 +552,40 @@ def test_confirm_review_blocks_unanswered_questions(api_client, mock_db):
     response = api_client.post(f"/ct/sessions/{session_id}/confirm-review")
 
     assert response.status_code == 409
+
+
+def test_confirm_review_blocks_pending_suggestions(api_client, mock_db):
+    session_id = "sess-pending-suggestion"
+    mock_db.ct_sessions.insert_one(
+        {
+            "_id": session_id,
+            "controls_finalized": True,
+            "llm_suggestions": [{"suggestion_id": "s1", "text": "Add step", "status": "pending"}],
+            "llm_questions": [{"question_id": "q1", "question": "Scope?", "answered": True}],
+        }
+    )
+
+    response = api_client.post(f"/ct/sessions/{session_id}/confirm-review")
+
+    assert response.status_code == 409
+    assert "suggestion(s) still pending" in response.json()["detail"]
+
+
+def test_confirm_review_blocks_until_controls_finalized(api_client, mock_db):
+    session_id = "sess-needs-finalization"
+    mock_db.ct_sessions.insert_one(
+        {
+            "_id": session_id,
+            "stage": "control_review",
+            "controls_finalized": False,
+            "llm_questions": [{"question_id": "q1", "question": "Scope?", "answered": True}],
+        }
+    )
+
+    response = api_client.post(f"/ct/sessions/{session_id}/confirm-review")
+
+    assert response.status_code == 409
+    assert "Finalize control setup" in response.json()["detail"]
 
 
 def test_confirm_review_queues_evidence_mapping(api_client, mock_db):

@@ -36,7 +36,8 @@ Apply these rules:
 - Use sample_results[].sample_num for the sample number.
 - Use sample_results[].application for the application/system tested.
 - Use sample_results[].item_reference for the sampled record, ticket, user, change, job, or policy reference.
-- For each sample, produce step_results for every test step label.
+- For each sample, produce step_results for every test step label or attribute_id.
+- Prefer dynamic test attribute labels such as TA-001, TA-002, and TA-003. Do not assume A-I is the limit.
 - Use PASS for no exception. Use X1, X2, X3, etc. for exceptions.
 - Every X tickmark in sample_results[].step_results must have a matching exceptions[].ref.
 - Reuse the same exception ref for repeated failures with the same root cause.
@@ -55,7 +56,7 @@ OUTPUT SCHEMA:
     "application": "string",
     "item_reference": "string",
     "step_results": [{{
-      "label": "A",
+      "label": "TA-001",
       "tickmark": "PASS|X1",
       "notes": "string"
     }}]

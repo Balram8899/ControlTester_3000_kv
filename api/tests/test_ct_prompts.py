@@ -22,7 +22,17 @@ def test_case_analysis_prompt_is_string_with_json_schema():
             "prior_period_result": "Effective",
             "walkthrough_performed": False,
             "sampling_mode": "sample",
-            "test_steps": [{"label": "A", "description": "Inspect policy"}],
+            "control_description": "Password complexity is enforced in Active Directory",
+            "test_objectives": "Verify configured password settings match the standard",
+            "sampling_additional_context": "Inspect all domain password policy objects.",
+            "test_steps": [
+                {
+                    "label": "TA-001",
+                    "test_attribute": "Minimum password length",
+                    "description": "Inspect policy",
+                    "evidence_required": "AD password policy export",
+                }
+            ],
         }
     ]
 
@@ -31,6 +41,12 @@ def test_case_analysis_prompt_is_string_with_json_schema():
     assert isinstance(prompt, str)
     assert "case_questions" in prompt
     assert "ITGC-001" in prompt
+    assert "Password complexity is enforced in Active Directory" in prompt
+    assert "Verify configured password settings match the standard" in prompt
+    assert "AD password policy export" in prompt
+    assert "Inspect all domain password policy objects." in prompt
+    assert "Do not ask questions that are already answered in DATA" in prompt
+    assert "At most 3 case_questions" in prompt
 
 
 def test_population_ca_prompt_is_string():

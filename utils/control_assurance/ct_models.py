@@ -38,15 +38,17 @@ class CreateSessionRequest(BaseModel):
 
 
 class ControlStepInput(BaseModel):
-    label: str
-    description: str
+    attribute_id: str = ""
+    label: str = ""
+    test_attribute: str = ""
+    description: str = ""
     evidence_required: str = ""
 
 
 class CreateControlRequest(BaseModel):
     control_id: str
     control_name: str
-    control_type: str
+    control_type: str = ""
     domain: str = ""
     framework_reference: str = ""
     inherent_risk_rating: str = "Medium"
@@ -56,4 +58,5 @@ class CreateControlRequest(BaseModel):
     walkthrough_performed: bool = False
     risk: str = ""
     sampling_mode: str = "sample"
+    sampling_additional_context: str = ""
     test_steps: list[ControlStepInput] = Field(default_factory=list)

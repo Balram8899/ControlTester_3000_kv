@@ -8,12 +8,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import {
-  addCtControls,
-  uploadCtTemplate,
+  beginCtAnalysis,
+  parseCtControls,
   useCreateSession,
-  type CreateControlBody,
-  type TestStep,
+  type ParseControlBody,
 } from "@/hooks/useControlTesting";
+import { parseControlsTemplateFile } from "@/lib/controls-assurance-template";
 
 type SessionDraft = {
   title: string;
@@ -24,7 +24,7 @@ type SessionDraft = {
   preparer: string;
 };
 
-type ControlDraft = Omit<CreateControlBody, "test_steps"> & { test_steps: TestStep[] };
+type ScreenControlDraft = ParseControlBody;
 
 const emptySession: SessionDraft = {
   title: "",
@@ -35,21 +35,22 @@ const emptySession: SessionDraft = {
   preparer: "",
 };
 
-function emptyControl(index: number): ControlDraft {
+function emptyControl(index: number): ScreenControlDraft {
   return {
     control_id: `ITGC-${String(index + 1).padStart(3, "0")}`,
-    control_name: "",
-    control_type: "Preventive",
-    domain: "",
-    framework_reference: "SOX s.404",
-    inherent_risk_rating: "Medium",
+    risk_statement: "",
+    control_title: "",
+    control_description: "",
+    control_type: "",
+    domain_category: "",
     control_owner: "",
     frequency: "",
-    prior_period_result: "N/A",
-    walkthrough_performed: false,
-    risk: "",
+    walkthrough_performed: "No",
     sampling_mode: "sample",
-    test_steps: [{ label: "A", description: "", evidence_required: "" }],
+    test_objectives: "",
+    test_steps: "",
+    evidence_requirements: "",
+    additional_sampling_context: "",
   };
 }
 
@@ -62,13 +63,7 @@ function SectionHeader({ label, title }: { label: string; title: string }) {
   );
 }
 
-function Field({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}) {
+function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="space-y-2">
       <Label className="text-[12px] font-bold text-[#0C233C]">{label}</Label>
@@ -78,62 +73,71 @@ function Field({
 }
 
 const inputClass = "h-10 border-[#DCE3EE] bg-white text-[13px] text-[#0C233C]";
+const textareaClass = "min-h-[92px] border-[#DCE3EE] bg-white text-[13px] text-[#0C233C]";
 
 export default function ControlsAssuranceNewPage() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [session, setSession] = useState<SessionDraft>(emptySession);
-  const [controls, setControls] = useState<ControlDraft[]>([emptyControl(0)]);
+  const [controls, setControls] = useState<ScreenControlDraft[]>([emptyControl(0)]);
   const [templateFile, setTemplateFile] = useState<File | null>(null);
+  const [isParsingTemplate, setIsParsingTemplate] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const createSession = useCreateSession();
 
-  const sessionValid =
-    session.title.trim() &&
-    session.entity.trim() &&
-    session.periodFrom &&
-    session.periodTo;
-  const manualControlsValid =
+  const sessionValid = Boolean(session.title.trim() && session.entity.trim() && session.periodFrom && session.periodTo);
+  const screenControlsValid =
     controls.length > 0 &&
-    controls.every((control) => control.control_id.trim() && control.control_name.trim() && control.test_steps[0]?.description.trim());
-  const canSubmit = Boolean(sessionValid && (templateFile || manualControlsValid));
+    controls.every((control) => control.control_id.trim() && control.control_title.trim() && control.test_steps.trim());
+  const canSubmit = Boolean(sessionValid && screenControlsValid);
 
   function updateSession(field: keyof SessionDraft, value: string) {
     setSession((prev) => ({ ...prev, [field]: value }));
   }
 
-  function updateControl(index: number, field: keyof ControlDraft, value: string | boolean) {
+  function updateControl(index: number, field: keyof ScreenControlDraft, value: string) {
     setControls((prev) => prev.map((control, i) => (i === index ? { ...control, [field]: value } : control)));
   }
 
-  function updateStep(controlIndex: number, stepIndex: number, field: keyof TestStep, value: string) {
-    setControls((prev) =>
-      prev.map((control, i) => {
-        if (i !== controlIndex) return control;
-        return {
-          ...control,
-          test_steps: control.test_steps.map((step, s) => (s === stepIndex ? { ...step, [field]: value } : step)),
-        };
-      }),
-    );
-  }
+  async function handleTemplateSelection(file: File | null) {
+    if (!file) {
+      setTemplateFile(null);
+      return;
+    }
 
-  function addStep(controlIndex: number) {
-    setControls((prev) =>
-      prev.map((control, i) => {
-        if (i !== controlIndex || control.test_steps.length >= 6) return control;
-        const nextLabel = String.fromCharCode(65 + control.test_steps.length);
-        return {
-          ...control,
-          test_steps: [...control.test_steps, { label: nextLabel, description: "", evidence_required: "" }],
-        };
-      }),
-    );
+    setIsParsingTemplate(true);
+    try {
+      const parsedControls = await parseControlsTemplateFile(file);
+      if (!parsedControls.length) {
+        throw new Error("No control rows were found in the workbook.");
+      }
+
+      setTemplateFile(file);
+      setControls(parsedControls);
+      toast({
+        title: "Workbook Parsed",
+        description: `${parsedControls.length} control(s) loaded into the form below.`,
+      });
+      window.setTimeout(() => {
+        document.getElementById("control-data-entry")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+    } catch (error) {
+      setTemplateFile(null);
+      toast({
+        title: "Workbook Not Parsed",
+        description: error instanceof Error ? error.message : "Upload a valid Controls Assurance .xlsx workbook.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsParsingTemplate(false);
+    }
   }
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (!canSubmit) return;
+    if (!canSubmit || isSubmitting) return;
 
+    setIsSubmitting(true);
     try {
       const created = await createSession.mutateAsync({
         title: session.title.trim(),
@@ -143,14 +147,10 @@ export default function ControlsAssuranceNewPage() {
         testing_period: { from: session.periodFrom, to: session.periodTo },
       });
 
-      if (manualControlsValid) {
-        await addCtControls(created.id, controls);
-      }
-      if (templateFile) {
-        await uploadCtTemplate(created.id, templateFile);
-      }
+      await parseCtControls(created.id, controls);
+      await beginCtAnalysis(created.id);
 
-      toast({ title: "Assessment Created", description: "The controls assurance workspace is ready." });
+      toast({ title: "Assessment Created", description: "Control setup is being prepared for review." });
       navigate(`/controls-assurance/${created.id}`);
     } catch (error) {
       toast({
@@ -158,6 +158,8 @@ export default function ControlsAssuranceNewPage() {
         description: error instanceof Error ? error.message : "Review the entered details and try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -182,7 +184,7 @@ export default function ControlsAssuranceNewPage() {
             Create Controls Assurance Case
           </h1>
           <p className="mt-4 max-w-2xl text-[16px] leading-[1.75] text-white/65">
-            Set the case scope, upload the Excel template, or enter controls manually before starting analysis.
+            Set the case scope, then upload a completed workbook or enter control rows on screen for LLM review.
           </p>
         </div>
       </section>
@@ -209,26 +211,22 @@ export default function ControlsAssuranceNewPage() {
               </Field>
               <div className="md:col-span-2">
                 <Field label="Description">
-                  <Textarea
-                    className="min-h-[92px] border-[#DCE3EE] bg-white text-[13px] text-[#0C233C]"
-                    value={session.description}
-                    onChange={(e) => updateSession("description", e.target.value)}
-                  />
+                  <Textarea className={textareaClass} value={session.description} onChange={(e) => updateSession("description", e.target.value)} />
                 </Field>
               </div>
             </div>
           </section>
 
           <section className="mb-9">
-            <SectionHeader label="Template" title="Excel Input Path" />
+            <SectionHeader label="Workbook Input" title="Excel Input Path" />
             <div className="grid gap-5 rounded-2xl border border-[#E2E6EF] bg-white p-6 shadow-sm md:grid-cols-[1fr_auto] md:items-center">
               <div>
                 <div className="flex items-center gap-3 text-[16px] font-bold text-[#0C233C]">
                   <FileSpreadsheet size={20} style={{ color: "#098E7E" }} />
-                  Download Template Or Upload Completed Workbook
+                  Completed Control Input Workbook
                 </div>
                 <p className="mt-2 text-[13px] leading-relaxed text-[#5A6478]">
-                  Use the CT input template when controls are already documented outside TRACE.
+                  Upload the control data workbook when testing procedures are already maintained in Excel.
                 </p>
                 <div className="mt-4 flex flex-wrap items-center gap-3">
                   <a
@@ -238,26 +236,33 @@ export default function ControlsAssuranceNewPage() {
                     <Download size={16} />
                     Download Template
                   </a>
-                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-[#EEF2FF] px-4 py-2 text-[13px] font-semibold text-[#1E49E2]">
-                    <Upload size={16} />
-                    Upload .xlsx
+                  <label
+                    className={`inline-flex cursor-pointer items-center gap-2 rounded-lg bg-[#EEF2FF] px-4 py-2 text-[13px] font-semibold text-[#1E49E2] ${
+                      isParsingTemplate ? "pointer-events-none opacity-75" : ""
+                    }`}
+                  >
+                    {isParsingTemplate ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                    {isParsingTemplate ? "Reading .xlsx" : "Upload .xlsx"}
                     <input
                       type="file"
                       accept=".xlsx"
                       className="hidden"
-                      onChange={(e) => setTemplateFile(e.target.files?.[0] ?? null)}
+                      onChange={(e) => {
+                        void handleTemplateSelection(e.target.files?.[0] ?? null);
+                        e.target.value = "";
+                      }}
                     />
                   </label>
                 </div>
               </div>
               <span className="rounded-full border border-[#E2E6EF] bg-[#F0F2F7] px-3 py-1 text-[11px] font-semibold text-[#5A6478]">
-                {templateFile ? templateFile.name : "No template selected"}
+                {isParsingTemplate ? "Reading workbook" : templateFile ? `${templateFile.name} loaded` : "No workbook selected"}
               </span>
             </div>
           </section>
 
-          <section className="mb-12">
-            <SectionHeader label="Manual Controls" title="Manual Control Entry" />
+          <section id="control-data-entry" className="mb-12">
+            <SectionHeader label="Screen Input" title="Control Data Entry" />
             <div className="space-y-5">
               {controls.map((control, index) => (
                 <div key={index} className="rounded-2xl border border-[#E2E6EF] bg-white p-6 shadow-sm">
@@ -278,44 +283,57 @@ export default function ControlsAssuranceNewPage() {
                     <Field label="Control ID">
                       <Input className={inputClass} value={control.control_id} onChange={(e) => updateControl(index, "control_id", e.target.value)} />
                     </Field>
-                    <Field label="Control Name">
-                      <Input className={inputClass} value={control.control_name} onChange={(e) => updateControl(index, "control_name", e.target.value)} />
+                    <Field label="Control Title">
+                      <Input className={inputClass} value={control.control_title} onChange={(e) => updateControl(index, "control_title", e.target.value)} />
+                    </Field>
+                    <Field label="Risk Statement">
+                      <Input className={inputClass} value={control.risk_statement} onChange={(e) => updateControl(index, "risk_statement", e.target.value)} />
                     </Field>
                     <Field label="Control Type">
                       <Input className={inputClass} value={control.control_type} onChange={(e) => updateControl(index, "control_type", e.target.value)} />
                     </Field>
-                    <Field label="Domain">
-                      <Input className={inputClass} value={control.domain} onChange={(e) => updateControl(index, "domain", e.target.value)} />
+                    <Field label="Domain / Category">
+                      <Input className={inputClass} value={control.domain_category} onChange={(e) => updateControl(index, "domain_category", e.target.value)} />
                     </Field>
-                    <Field label="Risk Rating">
-                      <Input className={inputClass} value={control.inherent_risk_rating} onChange={(e) => updateControl(index, "inherent_risk_rating", e.target.value)} />
+                    <Field label="Control Owner">
+                      <Input className={inputClass} value={control.control_owner} onChange={(e) => updateControl(index, "control_owner", e.target.value)} />
+                    </Field>
+                    <Field label="Frequency">
+                      <Input className={inputClass} value={control.frequency} onChange={(e) => updateControl(index, "frequency", e.target.value)} />
+                    </Field>
+                    <Field label="Walkthrough Performed">
+                      <Input className={inputClass} value={control.walkthrough_performed} onChange={(e) => updateControl(index, "walkthrough_performed", e.target.value)} />
                     </Field>
                     <Field label="Sampling Mode">
                       <Input className={inputClass} value={control.sampling_mode} onChange={(e) => updateControl(index, "sampling_mode", e.target.value)} />
                     </Field>
                   </div>
-                  <div className="mt-5 space-y-3">
-                    {control.test_steps.map((step, stepIndex) => (
-                      <div key={step.label} className="grid gap-3 rounded-xl border border-[#E2E6EF] bg-[#F8FAFD] p-4 md:grid-cols-[80px_1fr_1fr]">
-                        <Field label="Step">
-                          <Input className={inputClass} value={step.label} readOnly />
-                        </Field>
-                        <Field label="Description">
-                          <Input className={inputClass} value={step.description} onChange={(e) => updateStep(index, stepIndex, "description", e.target.value)} />
-                        </Field>
-                        <Field label="Evidence Required">
-                          <Input className={inputClass} value={step.evidence_required} onChange={(e) => updateStep(index, stepIndex, "evidence_required", e.target.value)} />
-                        </Field>
-                      </div>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={() => addStep(index)}
-                      className="inline-flex items-center gap-2 rounded-lg bg-[#F3F0FF] px-4 py-2 text-[13px] font-semibold text-[#7213EA]"
-                    >
-                      <Plus size={16} />
-                      Add Step A-F
-                    </button>
+                  <div className="mt-4 grid gap-4 md:grid-cols-2">
+                    <Field label="Control Description">
+                      <Textarea className={textareaClass} value={control.control_description} onChange={(e) => updateControl(index, "control_description", e.target.value)} />
+                    </Field>
+                    <Field label="Test Objectives">
+                      <Textarea className={textareaClass} value={control.test_objectives} onChange={(e) => updateControl(index, "test_objectives", e.target.value)} />
+                    </Field>
+                    <Field label="Test Steps">
+                      <Textarea
+                        className="min-h-[128px] border-[#DCE3EE] bg-white text-[13px] text-[#0C233C]"
+                        value={control.test_steps}
+                        onChange={(e) => updateControl(index, "test_steps", e.target.value)}
+                      />
+                    </Field>
+                    <Field label="Evidence Requirements">
+                      <Textarea className="min-h-[128px] border-[#DCE3EE] bg-white text-[13px] text-[#0C233C]" value={control.evidence_requirements} onChange={(e) => updateControl(index, "evidence_requirements", e.target.value)} />
+                    </Field>
+                    <div className="md:col-span-2">
+                      <Field label="Additional Sampling Guidance">
+                        <Textarea
+                          className={textareaClass}
+                          value={control.additional_sampling_context}
+                          onChange={(e) => updateControl(index, "additional_sampling_context", e.target.value)}
+                        />
+                      </Field>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -333,11 +351,11 @@ export default function ControlsAssuranceNewPage() {
           <div className="flex justify-end">
             <button
               type="submit"
-              disabled={!canSubmit || createSession.isPending}
+              disabled={!canSubmit || isSubmitting}
               className="inline-flex items-center gap-3 rounded-xl px-8 py-4 text-[16px] font-bold text-white transition-all duration-200 disabled:cursor-not-allowed disabled:bg-[#8492A6]"
               style={{ background: canSubmit ? "#7213EA" : "#8492A6" }}
             >
-              {createSession.isPending ? <Loader2 size={20} className="animate-spin" /> : <Save size={20} />}
+              {isSubmitting ? <Loader2 size={20} className="animate-spin" /> : <Save size={20} />}
               Create Assessment
             </button>
           </div>

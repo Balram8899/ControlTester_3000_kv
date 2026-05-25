@@ -18,13 +18,21 @@ def build_case_analysis_prompt(session: dict, controls: list[dict]) -> str:
                 "type": control["type"],
                 "risk": control.get("risk", ""),
                 "domain": control.get("domain", ""),
+                "control_description": control.get("control_description", ""),
+                "test_objectives": control.get("test_objectives", ""),
                 "frequency": control.get("frequency", ""),
                 "inherent_risk_rating": control.get("inherent_risk_rating", ""),
                 "prior_period_result": control.get("prior_period_result", ""),
                 "walkthrough_performed": control.get("walkthrough_performed", False),
                 "sampling_mode": control.get("sampling_mode", "sample"),
+                "sampling_additional_context": control.get("sampling_additional_context", ""),
                 "test_steps": [
-                    {"label": step["label"], "description": step["description"]}
+                    {
+                        "label": step["label"],
+                        "test_attribute": step.get("test_attribute", ""),
+                        "description": step["description"],
+                        "evidence_required": step.get("evidence_required", ""),
+                    }
                     for step in control.get("test_steps", [])
                 ],
             }
@@ -36,8 +44,14 @@ Your role is to:
 1. Identify test coverage gaps or methodological concerns across the case.
 2. Surface clarifying questions that need answering before testing starts.
 3. Flag per-control concerns about sampling mode, evidence requirements, or step completeness.
+4. Derive missing control setup fields for auditor review, especially risk, test attributes, and evidence requirements.
 
 Focus only on testing adequacy, not control design quality. Control design improvement is out of scope.
+Do not overwrite auditor-provided facts. Only derive a field when it is missing, unclear, or implicit in a test step.
+Use dynamic test attribute IDs in the format TA-001, TA-002, TA-003, etc. There is no A-I limit.
+Do not ask questions that are already answered in DATA. If the answer is present but weak, write a suggestion instead of a question.
+Ask only blocker questions needed before testing can proceed. Avoid generic methodology questions unless they are directly tied to a missing fact.
+At most 3 case_questions. At most 4 control questions per control. Prefer the highest-risk unanswered facts.
 
 Return valid JSON only. Do not include prose outside the JSON object.
 
@@ -47,7 +61,21 @@ OUTPUT SCHEMA:
   "controls": [{{
     "control_id": "string",
     "suggestions": [{{"suggestion_id": "uuid", "text": "string"}}],
-    "questions": [{{"question_id": "uuid", "question": "string"}}]
+    "questions": [{{"question_id": "uuid", "question": "string"}}],
+    "derived_fields": {{
+      "risk": "string",
+      "domain": "string",
+      "control_type": "string",
+      "control_description": "string",
+      "test_objectives": "string",
+      "test_steps": [{{
+        "attribute_id": "TA-001",
+        "label": "TA-001",
+        "test_attribute": "specific criterion each sample is graded against",
+        "description": "auditor test procedure",
+        "evidence_required": "required screenshot/report/export/log/configuration"
+      }}]
+    }}
   }}]
 }}
 

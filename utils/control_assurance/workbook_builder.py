@@ -18,20 +18,7 @@ WORKPAPER_TEMPLATE = REPO_ROOT / "utils" / "Testing sheet.xlsx"
 
 TESTING_SHEET = "Test of controls"
 OVERRIDE_SHEET = "Auditor override"
-TEST_STEP_ROWS = list(range(31, 40))
-TESTING_GRID_START_ROW = 46
 TESTING_GRID_DEFAULT_ROWS = 16
-TESTING_GRID_STEP_COLUMNS = {
-    "A": "D",
-    "B": "E",
-    "C": "F",
-    "D": "G",
-    "E": "H",
-    "F": "I",
-    "G": "J",
-    "H": "K",
-    "I": "L",
-}
 RED = "FF0000"
 RED_SIDE = Side(style="thick", color=RED)
 RED_BORDER = Border(left=RED_SIDE, right=RED_SIDE, top=RED_SIDE, bottom=RED_SIDE)
@@ -166,6 +153,48 @@ def _copy_row_style(worksheet, source_row: int, target_row: int, max_column: int
             target.alignment = copy(source.alignment)
 
 
+def _find_row(worksheet, text: str, column: int = 1) -> int | None:
+    target = text.strip().lower()
+    for row in range(1, worksheet.max_row + 1):
+        value = worksheet.cell(row, column).value
+        if isinstance(value, str) and value.strip().lower() == target:
+            return row
+    return None
+
+
+def _find_row_contains(worksheet, text: str, column: int = 1) -> int | None:
+    target = text.strip().lower()
+    for row in range(1, worksheet.max_row + 1):
+        value = worksheet.cell(row, column).value
+        if isinstance(value, str) and target in value.strip().lower():
+            return row
+    return None
+
+
+def _procedure_header_row(worksheet) -> int:
+    return _find_row(worksheet, "Test step/ Testing Attribute", 1) or 32
+
+
+def _testing_header_row(worksheet) -> int:
+    return _find_row(worksheet, "Sample #", 1) or 47
+
+
+def _tickmark_key_row(worksheet) -> int:
+    return _find_row_contains(worksheet, "tick mark key", 1) or 66
+
+
+def _conclusions_row(worksheet) -> int:
+    return _find_row_contains(worksheet, "conclusions", 1) or 75
+
+
+def _step_label(step: dict, index: int) -> str:
+    return str(step.get("attribute_id") or step.get("label") or f"TA-{index:03d}").strip()
+
+
+def _notes_column(attribute_count: int) -> int:
+    return 4 + max(attribute_count, 1)
+
+
 def _set_title(worksheet, cell: str, value: str) -> None:
     worksheet[cell] = value
     worksheet[cell].font = Font(bold=True, size=14)
@@ -178,7 +207,12 @@ def _set_label(worksheet, cell: str, value: str) -> None:
 
 
 def _sample_step_labels(sample: dict) -> set[str]:
-    return {str(step.get("label", "")).upper() for step in sample.get("step_results", []) if step.get("label")}
+    labels = set()
+    for step in sample.get("step_results", []):
+        label = step.get("attribute_id") or step.get("label")
+        if label:
+            labels.add(str(label).upper())
+    return labels
 
 
 def _evidence_matches_sample(evidence: dict, step_labels: set[str]) -> bool:
@@ -350,15 +384,70 @@ def _write_sample_evidence_sheets(workbook: Workbook, control: dict, evidence_bl
         _write_sample_evidence_sheet(worksheet, sample, offset, control, evidence_blobs)
 
 
-def _ensure_sample_rows(worksheet, sample_count: int) -> None:
+def _ensure_sample_rows(worksheet, start_row: int, sample_count: int) -> None:
     extra_rows = max(0, sample_count - TESTING_GRID_DEFAULT_ROWS)
     if not extra_rows:
         return
 
-    insert_at = TESTING_GRID_START_ROW + TESTING_GRID_DEFAULT_ROWS
+    insert_at = start_row + TESTING_GRID_DEFAULT_ROWS
     worksheet.insert_rows(insert_at, extra_rows)
     for row in range(insert_at, insert_at + extra_rows):
         _copy_row_style(worksheet, insert_at - 1, row, 13)
+
+
+def _ensure_procedure_rows(worksheet, attribute_count: int) -> int:
+    header_row = _procedure_header_row(worksheet)
+    first_row = header_row + 1
+    testing_section_row = _find_row_contains(worksheet, "testing (add or subtract", 1) or (first_row + 11)
+    existing_rows = max(0, testing_section_row - first_row - 2)
+    extra_rows = max(0, attribute_count - existing_rows)
+    if extra_rows:
+        insert_at = testing_section_row
+        worksheet.insert_rows(insert_at, extra_rows)
+        for row in range(insert_at, insert_at + extra_rows):
+            _copy_row_style(worksheet, first_row + max(existing_rows - 1, 0), row, worksheet.max_column)
+            try:
+                worksheet.merge_cells(start_row=row, start_column=1, end_row=row, end_column=2)
+                worksheet.merge_cells(start_row=row, start_column=3, end_row=row, end_column=15)
+            except ValueError:
+                pass
+    return first_row
+
+
+def _write_dynamic_test_steps(worksheet, steps: list[dict]) -> None:
+    first_row = _ensure_procedure_rows(worksheet, len(steps))
+    existing_last_row = (_find_row_contains(worksheet, "testing (add or subtract", 1) or first_row + len(steps) + 2) - 3
+    for row in range(first_row, max(existing_last_row, first_row + len(steps) - 1) + 1):
+        worksheet[f"A{row}"] = None
+        worksheet[f"C{row}"] = None
+
+    for index, step in enumerate(steps, start=1):
+        row = first_row + index - 1
+        worksheet[f"A{row}"] = _step_label(step, index)
+        procedure = step.get("description", "")
+        attribute = step.get("test_attribute", "")
+        evidence = step.get("evidence_required", "")
+        parts = [
+            _safe_cell_text(procedure, limit=12000),
+            f"Attribute: {_safe_cell_text(attribute, limit=12000)}" if attribute else "",
+            f"Evidence: {_safe_cell_text(evidence, limit=12000)}" if evidence else "",
+        ]
+        worksheet[f"C{row}"] = "\n".join(part for part in parts if part)
+        worksheet[f"C{row}"].alignment = Alignment(wrap_text=True, vertical="top")
+
+
+def _write_testing_grid_header(worksheet, labels: list[str]) -> tuple[int, int]:
+    header_row = _testing_header_row(worksheet)
+    sample_start_row = header_row + 1
+    max_header_col = max(_notes_column(len(labels)), 13)
+    for column in range(4, max_header_col + 1):
+        worksheet.cell(header_row, column).value = None
+
+    for offset, label in enumerate(labels, start=4):
+        worksheet.cell(header_row, offset).value = label
+    notes_col = _notes_column(len(labels))
+    worksheet.cell(header_row, notes_col).value = "Notes (Define any sample exceptions)"
+    return header_row, sample_start_row
 
 
 def _write_testing_sheet(worksheet, session: dict, control: dict) -> None:
@@ -386,15 +475,18 @@ def _write_testing_sheet(worksheet, session: dict, control: dict) -> None:
     worksheet["C23"] = _testing_method_value(control, "inspection")
     worksheet["C24"] = _testing_method_value(control, "reperformance")
     worksheet["M21"] = _safe_cell_text(sampling.get("population_description", ""), limit=12000)
-    worksheet["M22"] = sampling.get("population_count") or ""
+    worksheet["M22"] = sampling.get("adjusted_population_count") or sampling.get("population_count") or ""
     worksheet["M23"] = sampling.get("selected_size") or len(control.get("sample_results", [])) or ""
     worksheet["M24"] = _safe_cell_text(sampling.get("selection_strategy") or sampling.get("llm_suggested_strategy") or "")
+    worksheet["M25"] = _safe_cell_text(sampling.get("additional_context", ""), limit=12000)
 
-    for row, step in zip(TEST_STEP_ROWS, control.get("test_steps", [])):
-        worksheet[f"C{row}"] = _safe_cell_text(step.get("description", ""), limit=12000)
+    steps = control.get("test_steps", [])
+    labels = [_step_label(step, index) for index, step in enumerate(steps, start=1)]
+    _write_dynamic_test_steps(worksheet, steps)
+    _, sample_start_row = _write_testing_grid_header(worksheet, labels)
 
     samples = control.get("sample_results", [])
-    _ensure_sample_rows(worksheet, len(samples))
+    _ensure_sample_rows(worksheet, sample_start_row, len(samples))
     exceptions_by_sample: dict[int, list[dict]] = {}
     for exception in control.get("exceptions", []):
         sample_num = exception.get("sample_num")
@@ -402,18 +494,22 @@ def _write_testing_sheet(worksheet, session: dict, control: dict) -> None:
             exceptions_by_sample.setdefault(int(sample_num), []).append(exception)
 
     for offset, sample in enumerate(samples):
-        row = TESTING_GRID_START_ROW + offset
+        row = sample_start_row + offset
         worksheet[f"A{row}"] = sample.get("sample_num") or offset + 1
         worksheet[f"B{row}"] = _safe_cell_text(sample.get("application", ""))
         worksheet[f"C{row}"] = _safe_cell_text(sample.get("item_reference", ""))
-        for step in sample.get("step_results", []):
-            column = TESTING_GRID_STEP_COLUMNS.get(str(step.get("label", "")).upper())
-            if column:
-                worksheet[f"{column}{row}"] = _tickmark(step.get("tickmark", ""))
-        worksheet[f"M{row}"] = _sample_notes(sample, exceptions_by_sample)
+        step_result_by_label = {
+            str(step.get("attribute_id") or step.get("label") or "").upper(): step
+            for step in sample.get("step_results", [])
+        }
+        for index, label in enumerate(labels, start=4):
+            step_result = step_result_by_label.get(label.upper())
+            if step_result:
+                worksheet.cell(row, index).value = _tickmark(step_result.get("tickmark", ""))
+        notes_col = _notes_column(len(labels))
+        worksheet.cell(row, notes_col).value = _sample_notes(sample, exceptions_by_sample)
 
-    conclusion_offset = max(0, len(samples) - TESTING_GRID_DEFAULT_ROWS)
-    conclusion_row = 76 + conclusion_offset
+    conclusion_row = (_conclusions_row(worksheet) or 75) + 3
     worksheet[f"C{conclusion_row}"] = "Yes" if conclusions.get("deficiencies_noted") else "No"
     worksheet[f"C{conclusion_row + 1}"] = _safe_cell_text(conclusions.get("d_and_i") or "")
     worksheet[f"C{conclusion_row + 2}"] = _safe_cell_text(conclusions.get("oe") or "")

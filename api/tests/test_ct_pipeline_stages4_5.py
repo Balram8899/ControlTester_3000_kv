@@ -718,15 +718,15 @@ def test_build_control_workbook_uses_testing_sheet_template_and_visible_cells():
     assert sheet["M22"].value == 24
     assert sheet["M23"].value == 3
     assert sheet["M24"].value == "random"
-    assert sheet["C31"].value == "Inspect policy"
-    assert sheet["B47"].value == "AD"
-    assert sheet["C47"].value == "POL-002"
-    assert sheet["D47"].value == "X1"
-    assert "X1: Password minimum length was below baseline." in sheet["M47"].value
-    assert sheet["C76"].value == "Yes"
-    assert sheet["C77"].value == "Effective"
-    assert sheet["C78"].value == "Ineffective"
-    assert "One exception noted." in sheet["C79"].value
+    assert "Inspect policy" in sheet["C33"].value
+    assert sheet["B49"].value == "AD"
+    assert sheet["C49"].value == "POL-002"
+    assert sheet["D49"].value == "X1"
+    assert "X1: Password minimum length was below baseline." in sheet["E49"].value
+    assert sheet["C78"].value == "Yes"
+    assert sheet["C79"].value == "Effective"
+    assert sheet["C80"].value == "Ineffective"
+    assert "One exception noted." in sheet["C81"].value
 
 
 def test_build_control_workbook_summarises_binary_excel_evidence_without_crashing():
@@ -756,7 +756,7 @@ def test_build_control_workbook_summarises_binary_excel_evidence_without_crashin
     workbook = openpyxl.load_workbook(filename=io.BytesIO(content), data_only=True)
 
     assert workbook.sheetnames == ["Test of controls", "Sample 1", "Sample 2", "Sample 3", "Auditor override"]
-    assert workbook["Test of controls"]["C31"].value == "Inspect policy"
+    assert "Inspect policy" in workbook["Test of controls"]["C33"].value
 
 
 def test_build_control_workbook_expands_dynamic_ta_attributes_and_sampling_guidance():

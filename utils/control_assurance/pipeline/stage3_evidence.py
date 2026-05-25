@@ -340,7 +340,10 @@ def _process_population(session_id: str, control_id: str) -> None:
     )
 
     if result.completeness_passed is True and result.accuracy_passed is True:
-        _recommend_sampling(session_id, control_id, population_meta["row_count"], sampling)
+        effective_population_count = int(
+            sampling.get("adjusted_population_count") or population_meta["row_count"]
+        )
+        _recommend_sampling(session_id, control_id, effective_population_count, sampling)
 
 
 def _select_sample_items(strategy: str, size: int, population_count: int, user_items: list | None = None) -> list:
@@ -372,6 +375,9 @@ def _recommend_sampling(session_id: str, control_id: str, population_count: int,
             "count": population_count,
             "description": sampling.get("population_description", ""),
             "sample_period": sampling.get("sample_period", ""),
+            "additional_context": sampling.get("additional_context", ""),
+            "original_population_count": sampling.get("population_count", population_count),
+            "adjusted_population_count": sampling.get("adjusted_population_count") or population_count,
         },
         sampling.get("mode"),
     )

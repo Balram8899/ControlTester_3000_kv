@@ -4,6 +4,7 @@ import { apiRequest } from "@/lib/queryClient";
 export type CtStage =
   | "input"
   | "analysing"
+  | "control_review"
   | "population"
   | "evidence"
   | "testing"
@@ -62,6 +63,7 @@ export interface CtSession {
     manager: SignOffEntry;
   };
   override_log: OverrideEntry[];
+  controls_finalized?: boolean;
   created_at: string;
   updated_at: string;
   controls?: CtControl[];
@@ -112,7 +114,9 @@ export interface EvidenceFile {
 
 export interface TestStep {
   step_id?: string;
+  attribute_id?: string;
   label: string;
+  test_attribute?: string;
   description: string;
   evidence_required: string;
 }
@@ -153,7 +157,12 @@ export interface CtControl {
   prior_period_result: string;
   walkthrough_performed: boolean;
   risk: string;
+  control_description?: string;
+  test_objectives?: string;
   test_steps: TestStep[];
+  field_sources?: Record<string, string>;
+  controls_finalized?: boolean;
+  finalized_at?: string | null;
   sampling: {
     mode: string;
     population_description: string;
@@ -161,7 +170,9 @@ export interface CtControl {
     population_filename?: string | null;
     population_file_type?: string | null;
     population_count: number;
+    adjusted_population_count?: number;
     sample_period: string;
+    additional_context?: string;
     llm_suggested_strategy: string | null;
     llm_suggested_size: number;
     selection_strategy: string | null;
@@ -227,7 +238,25 @@ export interface CreateControlBody {
   walkthrough_performed?: boolean;
   risk?: string;
   sampling_mode?: string;
+  sampling_additional_context?: string;
   test_steps: TestStep[];
+}
+
+export interface ParseControlBody {
+  control_id: string;
+  risk_statement?: string;
+  control_title: string;
+  control_description?: string;
+  control_type?: string;
+  domain_category?: string;
+  control_owner?: string;
+  frequency?: string;
+  walkthrough_performed?: string;
+  sampling_mode?: string;
+  test_objectives?: string;
+  test_steps: string;
+  evidence_requirements?: string;
+  additional_sampling_context?: string;
 }
 
 export interface SupportUploadBody {
@@ -343,6 +372,41 @@ export async function addCtControls(sessionId: string, controls: CreateControlBo
   return json<CtControl[]>(await apiRequest("POST", `/api/ct/sessions/${sessionId}/controls`, controls));
 }
 
+export function useParseControls(sessionId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (controls: ParseControlBody[]) => parseCtControls(sessionId, controls),
+    onSuccess: () => invalidateSessionSet(qc, sessionId),
+  });
+}
+
+export async function parseCtControls(sessionId: string, controls: ParseControlBody[]) {
+  return json<CtControl[]>(await apiRequest("POST", `/api/ct/sessions/${sessionId}/controls/parse`, controls));
+}
+
+export function useUpdateCtControl(sessionId: string, controlId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: Partial<CtControl> & { sampling_additional_context?: string }) =>
+      json<CtControl>(await apiRequest("PATCH", `/api/ct/sessions/${sessionId}/controls/${controlId}`, body)),
+    onSuccess: () => invalidateSessionSet(qc, sessionId),
+  });
+}
+
+export function useFinalizeControls(sessionId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => finalizeCtControls(sessionId),
+    onSuccess: () => invalidateSessionSet(qc, sessionId),
+  });
+}
+
+export async function finalizeCtControls(sessionId: string) {
+  return json<{ status: string; stage: CtStage }>(
+    await apiRequest("POST", `/api/ct/sessions/${sessionId}/finalize-controls`),
+  );
+}
+
 export function useUploadTemplate(sessionId: string) {
   const qc = useQueryClient();
   return useMutation({
@@ -363,12 +427,15 @@ export function uploadCtTemplate(sessionId: string, file: File) {
 export function useBeginAnalysis(sessionId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async () =>
-      json<{ celery_task_id: string; status: string }>(
-        await apiRequest("POST", `/api/ct/sessions/${sessionId}/begin-analysis`),
-      ),
+    mutationFn: async () => beginCtAnalysis(sessionId),
     onSuccess: () => invalidateSessionSet(qc, sessionId),
   });
+}
+
+export async function beginCtAnalysis(sessionId: string) {
+  return json<{ celery_task_id: string; status: string }>(
+    await apiRequest("POST", `/api/ct/sessions/${sessionId}/begin-analysis`),
+  );
 }
 
 export function useUpdateSuggestion(sessionId: string) {
@@ -545,6 +612,7 @@ export function useUpdateSignOff(sessionId: string) {
 export const STAGE_LABEL: Record<CtStage, string> = {
   input: "Case Setup",
   analysing: "Case Analysis",
+  control_review: "Control Review",
   population: "Population",
   evidence: "Evidence",
   testing: "Testing",
@@ -556,6 +624,7 @@ export const STAGE_LABEL: Record<CtStage, string> = {
 export const STAGE_TAB: Record<CtStage, string> = {
   input: "case",
   analysing: "case",
+  control_review: "case",
   population: "population",
   evidence: "evidence",
   testing: "testing",

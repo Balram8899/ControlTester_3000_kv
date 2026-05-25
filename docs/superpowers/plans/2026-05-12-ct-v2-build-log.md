@@ -378,3 +378,15 @@ Changed: removed the `Framework` field from the Controls Assurance new-assessmen
 Verification: red tests first failed because the field was still visible and the backend required `framework`. After implementation, `node --import tsx .\client\src\controls-assurance.test.ts`, `python -m pytest api/tests/test_ct_models.py::test_create_session_request_defaults_framework_when_omitted -q`, `python -m pytest api/tests -q`, `npm run check`, and `npm run build` passed. `docker compose build fastapi_api web_ui_agent`, `docker compose up -d fastapi_api web_ui_agent`, and `docker compose ps fastapi_api web_ui_agent` passed with both containers healthy. HTTP smoke returned 200 for `/controls-assurance/new` and `/health`; a frameworkless session create returned default framework `Controls Assurance` and the smoke session was deleted.
 
 Next step: continue reviewing the create-case flow for other low-value fields that should be inferred or moved later in the workflow.
+
+### 2026-05-13 - Controls Assurance Frontend Review/Finalization Flow
+
+Status: fixed and tested.
+
+Files changed: `kpmg_ui/client/src/hooks/useControlTesting.ts`, `kpmg_ui/client/src/pages/controls-assurance.tsx`, `kpmg_ui/client/src/pages/controls-assurance-new.tsx`, `kpmg_ui/client/src/pages/controls-assurance-detail.tsx`, `kpmg_ui/client/src/controls-assurance.test.ts`, shared build log, `docs/HANDOFF.md`.
+
+Changed: updated the Controls Assurance frontend for the simplified control-input workflow. The create page now supports either workbook upload or direct screen entry for control title, risk statement, test steps/procedures, evidence requirements, and additional sampling guidance without the old fixed A-F step builder or case framework field. The detail page now shows a Control Finalization Review in Case Analysis, displays LLM Derived/User Provided/User Edited field sources, allows edits to all setup fields and dynamic `TA-*` testing attributes, and requires a Finalize Control Setup confirmation before Confirm Case Analysis can move onward. The Population tab now exposes editable Additional Sampling Guidance, and evidence mapping uses dynamic attribute IDs.
+
+Verification: red frontend source guard first failed on the missing Control Finalization Review. After implementation, `node --import tsx .\client\src\controls-assurance.test.ts` passed, `npm run check` passed, and `npm run build` passed with the existing PostCSS `from` warning and existing large-chunk warning.
+
+Next step: rebuild/recreate `web_ui_agent`, then run the live Controls Assurance create -> review -> finalize -> population flow against the synthetic data.

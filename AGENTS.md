@@ -191,3 +191,5 @@ Controls are scored on Who/What/Where/When/Why/How (each 0 or 1, max score = 6).
 4. **Endpoint naming**: New routers use kebab-case prefixes (`/control-testing`, `/risk-assessment`). Legacy endpoints in `main.py` use snake-case — don't rename them.
 5. **Control testing UI**: The current `control-testing.tsx` page still calls `/audit/*` legacy endpoints. Do not switch to `/control-testing/*` in a UI-only change.
 6. **HANDOFF.md**: Update `docs/HANDOFF.md` after completing any significant feature or fix.
+7. Avoid failing silently and keep adding fallbacks. THe goal is to write good clean code, short and efficient. Fail loudly so we can fix and diagnose the issue. 
+8. Codebase is not to be bloated.

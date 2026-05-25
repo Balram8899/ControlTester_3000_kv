@@ -15,6 +15,7 @@ import { STAGE_LABEL, useCtSessions, type CtSessionSummary, type CtStage } from 
 const ACCENT_BY_STAGE: Record<CtStage, string> = {
   input: "#8492A6",
   analysing: "#1E49E2",
+  control_review: "#7213EA",
   population: "#00B8F5",
   evidence: "#098E7E",
   testing: "#7213EA",

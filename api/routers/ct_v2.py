@@ -9,6 +9,7 @@ from fastapi import APIRouter, File, Form, HTTPException, Response, UploadFile
 from fastapi.responses import StreamingResponse
 
 from utils.control_assurance import ct_db
+from utils.control_assurance.control_setup import build_control_doc, build_test_steps, now_iso
 from utils.control_assurance.ct_gridfs import (
     delete_from_gridfs,
     stream_from_gridfs,
@@ -22,7 +23,7 @@ router = APIRouter(prefix="/ct", tags=["control-testing-v2"])
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return now_iso()
 
 
 def _session_to_response(doc: dict) -> dict:
@@ -210,74 +211,7 @@ def add_controls(session_id: str, controls: list[CreateControlRequest]) -> list:
     now = _now()
     created = []
     for body in controls:
-        doc = {
-            "_id": str(uuid.uuid4()),
-            "session_id": session_id,
-            "control_id": body.control_id,
-            "control_name": body.control_name,
-            "control_type": body.control_type,
-            "domain": body.domain,
-            "framework_reference": body.framework_reference,
-            "inherent_risk_rating": body.inherent_risk_rating,
-            "control_owner": body.control_owner,
-            "frequency": body.frequency,
-            "prior_period_result": body.prior_period_result,
-            "walkthrough_performed": body.walkthrough_performed,
-            "risk": body.risk,
-            "test_steps": [
-                {
-                    "step_id": str(uuid.uuid4()),
-                    "label": step.label,
-                    "description": step.description,
-                    "evidence_required": step.evidence_required,
-                }
-                for step in body.test_steps
-            ],
-            "sampling": {
-                "mode": body.sampling_mode,
-                "population_description": "",
-                "population_file_id": None,
-                "population_filename": None,
-                "population_file_type": None,
-                "population_count": 0,
-                "sample_period": "",
-                "llm_suggested_strategy": None,
-                "llm_suggested_size": 0,
-                "selection_strategy": None,
-                "selected_size": 0,
-                "selected_items": [],
-                "population_support_files": [],
-                "population_ca_verification": {
-                    "completeness_passed": None,
-                    "accuracy_passed": None,
-                    "issues": [],
-                    "overridden": False,
-                    "override_reason": None,
-                },
-            },
-            "evidence_files": [],
-            "sample_results": [],
-            "todi_results": {},
-            "exceptions": [],
-            "conclusions": {
-                "d_and_i": None,
-                "oe": None,
-                "deficiencies_noted": False,
-                "issues_log_refs": [],
-                "rationale": "",
-                "testing_summary": "",
-            },
-            "testing_methods": {
-                "inquiry": False,
-                "observation": False,
-                "inspection": False,
-                "reperformance": False,
-            },
-            "workbook_output_id": None,
-            "status": "pending",
-            "created_at": now,
-            "updated_at": now,
-        }
+        doc = build_control_doc(session_id, body.model_dump(), now=now)
         db.ct_controls.insert_one(doc)
         created.append(_control_to_response(doc))
 
@@ -294,12 +228,132 @@ def list_controls(session_id: str) -> dict:
     return {"controls": [_control_to_response(control) for control in controls]}
 
 
+@router.post("/sessions/{session_id}/controls/parse", status_code=201)
+def parse_controls_from_screen(session_id: str, controls: list[dict]) -> list:
+    db = ct_db._get_db()
+    if not db.ct_sessions.find_one({"_id": session_id}):
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    now = _now()
+    created = []
+    for payload in controls:
+        doc = build_control_doc(session_id, payload, now=now)
+        db.ct_controls.insert_one(doc)
+        created.append(_control_to_response(doc))
+
+    db.ct_sessions.update_one(
+        {"_id": session_id},
+        {
+            "$set": {
+                "stage": "control_review",
+                "controls_finalized": False,
+                "stage_checkpoint": {
+                    "stage": "control_setup",
+                    "step": "awaiting_control_finalization",
+                    "updated_at": _now(),
+                },
+                "updated_at": _now(),
+            }
+        },
+    )
+    return created
+
+
 @router.get("/sessions/{session_id}/controls/{control_id}")
 def get_control(session_id: str, control_id: str) -> dict:
     control = ct_db._get_db().ct_controls.find_one({"_id": control_id, "session_id": session_id})
     if not control:
         raise HTTPException(status_code=404, detail="Control not found")
     return _control_to_response(control)
+
+
+@router.patch("/sessions/{session_id}/controls/{control_id}")
+def update_control(session_id: str, control_id: str, body: dict) -> dict:
+    db = ct_db._get_db()
+    control = db.ct_controls.find_one({"_id": control_id, "session_id": session_id})
+    if not control:
+        raise HTTPException(status_code=404, detail="Control not found")
+
+    editable_fields = {
+        "control_id",
+        "control_name",
+        "control_description",
+        "control_type",
+        "domain",
+        "framework_reference",
+        "inherent_risk_rating",
+        "control_owner",
+        "frequency",
+        "prior_period_result",
+        "walkthrough_performed",
+        "risk",
+        "test_objectives",
+    }
+    updates = {}
+    field_sources = dict(control.get("field_sources", {}))
+    for field in editable_fields:
+        if field in body:
+            updates[field] = body[field]
+            field_sources[field] = "user_edited"
+
+    if "test_steps" in body:
+        steps, _ = build_test_steps(body["test_steps"])
+        updates["test_steps"] = steps
+        for index, _ in enumerate(steps):
+            field_sources[f"test_steps.{index}.test_attribute"] = "user_edited"
+            field_sources[f"test_steps.{index}.evidence_required"] = "user_edited"
+
+    additional_context = body.get("sampling_additional_context", body.get("additional_sampling_context"))
+    if additional_context is not None:
+        updates["sampling.additional_context"] = additional_context
+        field_sources["sampling.additional_context"] = "user_edited"
+
+    if not updates:
+        raise HTTPException(status_code=422, detail="No editable control fields supplied")
+
+    updates["field_sources"] = field_sources
+    updates["updated_at"] = _now()
+    db.ct_controls.update_one({"_id": control_id}, {"$set": updates})
+    updated = db.ct_controls.find_one({"_id": control_id, "session_id": session_id})
+    return _control_to_response(updated)
+
+
+@router.post("/sessions/{session_id}/finalize-controls")
+def finalize_controls(session_id: str) -> dict:
+    db = ct_db._get_db()
+    if not db.ct_sessions.find_one({"_id": session_id}):
+        raise HTTPException(status_code=404, detail="Session not found")
+    if db.ct_controls.count_documents({"session_id": session_id}) == 0:
+        raise HTTPException(status_code=409, detail="No controls available to finalize")
+
+    now = _now()
+    db.ct_controls.update_many(
+        {"session_id": session_id},
+        {
+            "$set": {
+                "controls_finalized": True,
+                "finalized_at": now,
+                "updated_at": now,
+            }
+        },
+    )
+    db.ct_sessions.update_one(
+        {"_id": session_id},
+        {
+            "$set": {
+                "stage": "population",
+                "controls_finalized": True,
+                "controls_finalized_at": now,
+                "stage_checkpoint": {
+                    "stage": "control_review",
+                    "step": "controls_finalized",
+                    "updated_at": now,
+                },
+                "updated_at": now,
+            }
+        },
+    )
+    return {"status": "controls_finalized", "stage": "population"}
 
 
 @router.post("/sessions/{session_id}/controls/{control_id}/population", status_code=201)
@@ -652,11 +706,14 @@ def update_suggestion(session_id: str, suggestion_id: str, body: dict) -> dict:
 @router.post("/sessions/{session_id}/questions/{question_id}/answer")
 def answer_question(session_id: str, question_id: str, body: dict) -> dict:
     db = ct_db._get_db()
+    answer = str(body.get("answer") or "").strip()
+    if not answer:
+        raise HTTPException(status_code=422, detail="Answer is required")
     result = db.ct_sessions.update_one(
         {"_id": session_id, "llm_questions.question_id": question_id},
         {
             "$set": {
-                "llm_questions.$.answer": body.get("answer", ""),
+                "llm_questions.$.answer": answer,
                 "llm_questions.$.answered": True,
                 "updated_at": _now(),
             }
@@ -679,6 +736,17 @@ def confirm_review(session_id: str) -> dict:
         raise HTTPException(
             status_code=409,
             detail=f"{len(unanswered)} question(s) still unanswered. Answer all questions before proceeding.",
+        )
+    pending_suggestions = [s for s in session.get("llm_suggestions", []) if s.get("status") == "pending"]
+    if pending_suggestions:
+        raise HTTPException(
+            status_code=409,
+            detail=f"{len(pending_suggestions)} suggestion(s) still pending. Accept or dismiss all suggestions before proceeding.",
+        )
+    if session.get("controls_finalized") is False:
+        raise HTTPException(
+            status_code=409,
+            detail="Finalize control setup before proceeding to population and evidence setup.",
         )
 
     from utils.control_assurance.pipeline.stage3_evidence import evidence_mapping
@@ -833,7 +901,14 @@ def update_sampling(session_id: str, control_id: str, body: dict) -> dict:
 
     sampling = control.get("sampling", {})
     updates = {}
-    for field in ("population_description", "sample_period", "selected_size", "selected_items"):
+    for field in (
+        "population_description",
+        "sample_period",
+        "selected_size",
+        "selected_items",
+        "additional_context",
+        "adjusted_population_count",
+    ):
         if field in body:
             updates[f"sampling.{field}"] = body[field]
 
@@ -846,7 +921,9 @@ def update_sampling(session_id: str, control_id: str, body: dict) -> dict:
         updates["sampling.selected_items"] = _selected_items(
             strategy, selected_size, population_count, current_items
         )
-        updates["sampling.selected_size"] = len(updates["sampling.selected_items"])
+        updates["sampling.selected_size"] = (
+            len(updates["sampling.selected_items"]) if population_count > 0 else selected_size
+        )
 
         original = sampling.get("selection_strategy")
         reason = body.get("reason", "")

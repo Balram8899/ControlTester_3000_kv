@@ -1630,3 +1630,119 @@ Verification:
 
 Next recommended step:
 - Continue reviewing the create-case flow for other fields that should be inferred or moved to a later workflow step.
+
+Update:
+- Controls Assurance backend now supports the simplified control input shape used by `CT_Input_Template (1).xlsx`.
+- Stage 1 can parse the newer `Control Data` sheet columns, including risk statement, control title, control description, test objectives, test steps, evidence requirements, and additional sampling guidance.
+- Added shared control setup normalization in `utils/control_assurance/control_setup.py` so Excel upload and on-screen entry use the same backend parsing behavior.
+- Test procedures now produce dynamic `TA-001`, `TA-002`, etc. attributes. There is no fixed A-I limit in the backend or generated workbook.
+- Evidence requirements can be derived from test-step wording when not provided, e.g. `Review the AD configuration screenshot` derives `AD configuration screenshot`.
+- Stage 2 LLM review can now return derived setup fields for auditor review: risk, domain, control type, control description, objectives, test attributes, and evidence requirements.
+- Added editable draft/finalization API flow:
+  - `POST /ct/sessions/{session_id}/controls/parse` creates reviewable draft controls from screen-entered fields.
+  - `PATCH /ct/sessions/{session_id}/controls/{control_id}` saves user edits to all control setup fields and marks edited sources.
+  - `POST /ct/sessions/{session_id}/finalize-controls` marks controls finalized and moves the session to population setup.
+- `POST /ct/sessions/{session_id}/confirm-review` now blocks if LLM-derived control setup has not been finalized.
+- Sampling now stores `additional_context` and can use `adjusted_population_count` as the effective sampling base.
+- Workbook generation now writes dynamic `TA-*` rows/columns and the new `Additional Sampling guidance` value from `utils/Testing sheet.xlsx`.
+
+Verification:
+- Added red/green tests for new template parsing, LLM-derived fields, editable finalization, sampling guidance, and dynamic workbook attributes.
+- `python -m pytest api/tests -v` passed: 99 passed, existing warnings only.
+
+Next recommended step:
+- Build the frontend review/finalization screen: upload or enter controls, show LLM-derived fields, allow edits, confirmation popup, then move to population setup.
+
+Update:
+- Built the frontend review/finalization flow for the simplified Controls Assurance setup.
+- `/controls-assurance/new` now supports workbook upload or direct screen entry for control title, risk statement, test steps/procedures, evidence requirements, and additional sampling guidance.
+- The create screen no longer exposes the old fixed A-F step builder and still does not ask for case framework.
+- The Case Analysis tab now includes `Control Finalization Review`, showing LLM Derived/User Provided/User Edited source pills for setup fields.
+- Users can edit control metadata, risk, description, objectives, sampling guidance, and any number of dynamic `TA-*` testing attributes before finalization.
+- `Finalize Control Setup` opens a confirmation dialog; `Confirm Case Analysis` is disabled until `controls_finalized` is true.
+- Population now includes editable `Additional Sampling Guidance`, and evidence mapping uses dynamic attribute IDs instead of old fixed step labels.
+
+Verification:
+- Red frontend source guard first failed on the missing finalization review.
+- `node --import tsx .\client\src\controls-assurance.test.ts`
+- `npm run check`
+- `npm run build` passed with existing PostCSS `from` and large-chunk warnings.
+
+Next recommended step:
+- Rebuild/recreate `web_ui_agent`, then run a live Controls Assurance create -> review -> finalize -> population smoke flow with the synthetic data.
+
+Update:
+- Controls Assurance workbook upload on `/controls-assurance/new` now parses the selected `.xlsx` in the browser and immediately populates the on-screen control rows below the upload card.
+- Added a shared frontend parser for both the simplified `Control Data` workbook and the legacy step A-F template layout.
+- Creating the assessment now submits the visible/editable control rows through the screen-entry parse path, so workbook-populated fields can be reviewed and corrected before the case is created.
+- The upload pill shows the loaded workbook name and the page scrolls down to the populated control-entry section after parsing.
+
+Verification:
+- Added red/green parser coverage in `kpmg_ui/client/src/controls-assurance-template.test.ts`.
+- `node --import tsx .\client\src\controls-assurance-template.test.ts`
+- `node --import tsx .\client\src\controls-assurance.test.ts`
+- `npm run check`
+- `npm run build` passed with existing PostCSS `from` and large-chunk warnings.
+- `docker compose build web_ui_agent`
+- `docker compose up -d --force-recreate web_ui_agent`
+- `docker compose ps web_ui_agent` showed the web UI healthy on port 5000.
+
+Next recommended step:
+- In the browser, upload a real completed CT input workbook on `/controls-assurance/new`, confirm the rows populate, make one edit, and create the assessment to verify the downstream control review reflects the edited value.
+
+Update:
+- Debugged Controls Assurance case `f8b3e656-5e37-42d3-bf25-a613c70246ea`; the original low-quality questions were caused mainly by a stale `ct_worker` image parsing the new workbook layout as the old legacy layout.
+- The bad parse shifted fields (`risk statement` became `control_name`, `control title` became `control_type`, etc.), which produced noisy LLM questions.
+- Rebuilt/recreated `fastapi_api` and `ct_worker`; the live worker now contains `_is_new_control_input`, reads Settings-backed LLM config from MongoDB, and has the improved question prompt.
+- Improved Stage 2 case-analysis prompt inputs to include control description, test objectives, sampling guidance, test attributes, and evidence requirements instead of only step labels/descriptions.
+- Added prompt instructions and deterministic post-processing limits: at most 3 case questions and 4 control questions per control.
+- Stage 2 now stores `last_llm_review_config` and `stage_checkpoint.llm` so future case reviews show the provider/model used.
+- Repaired the affected case from its original uploaded workbook after storing a backup in `ct_debug_backups`, then regenerated review questions under `gemini:gemini-3-flash-preview`.
+- The regenerated case now has 4 focused questions and 2 suggestions, with corrected control fields and Settings model metadata on the session.
+
+Verification:
+- Added red/green tests for prompt context, question volume limits, and active LLM config recording.
+- `python -m pytest api/tests/test_ct_prompts.py::test_case_analysis_prompt_is_string_with_json_schema -q`
+- `python -m pytest api/tests/test_ct_pipeline_stages1_3.py::test_llm_review_records_active_llm_config api/tests/test_ct_pipeline_stages1_3.py::test_llm_review_limits_question_volume -q`
+- `python -m pytest api/tests/test_ct_prompts.py api/tests/test_ct_pipeline_stages1_3.py api/tests/test_ct_worker_config.py -q` passed: 42 passed, existing warnings only.
+- `python -m pytest tests/test_settings.py::test_get_active_llm_config_returns_db_config_when_present tests/test_settings.py::test_get_llm_uses_db_provider_over_env -q`
+- `python -m pytest api/tests/test_ct_v2.py::test_parse_controls_from_screen_creates_reviewable_draft -q`
+- `docker compose build fastapi_api ct_worker`
+- `docker compose up -d --force-recreate fastapi_api ct_worker`
+- `docker compose ps fastapi_api ct_worker` showed API healthy and CT worker running.
+
+Next recommended step:
+- Review whether `_apply_derived_fields` should replace existing test steps or only fill missing test attributes/evidence fields; today Stage 2 can rewrite the step list during control setup review.
+
+Update:
+- Completed Controls Assurance case `f8b3e656-5e37-42d3-bf25-a613c70246ea` after the user had answered all LLM questions and dismissed both suggestions. The remaining gate was `controls_finalized: false`, not unresolved LLM review items.
+- Finalized the control setup through `POST /ct/sessions/{id}/finalize-controls`, then confirmed the case analysis through `POST /ct/sessions/{id}/confirm-review`.
+- The live case is now at `stage: evidence`, `controls_finalized: true`, with `stage_checkpoint.stage: evidence_mapping` and `stage_checkpoint.step: complete`.
+- Updated `kpmg_ui/client/src/pages/controls-assurance-detail.tsx` so the Case Analysis footer explains blocked confirmation states (`Finalize Control Setup First`, `Answer Questions First`, or ready), shows suggestion resolution status, and changes answered question actions from `Save` to `Update`.
+- Rebuilt and recreated `web_ui_agent`; localhost:5000 is serving the updated UI.
+
+Verification:
+- `node --import tsx .\client\src\controls-assurance.test.ts`
+- `npm run check`
+- `npm run build` passed with existing PostCSS `from` and large-chunk warnings.
+- `docker compose build web_ui_agent`
+- `docker compose up -d --force-recreate web_ui_agent`
+- `docker compose ps web_ui_agent fastapi_api` showed both services healthy.
+- `GET http://localhost:5000/api/ct/sessions/f8b3e656-5e37-42d3-bf25-a613c70246ea` confirmed `stage: evidence` and `controls_finalized: true`.
+
+Update:
+- Tightened the Controls Assurance review gate to fail loudly instead of relying on quiet client-side blocking.
+- `POST /ct/sessions/{session_id}/questions/{question_id}/answer` now rejects blank answers with `422 Answer is required` and does not mark the question answered.
+- `POST /ct/sessions/{session_id}/confirm-review` now rejects pending suggestions with a `409` until each suggestion is accepted or dismissed.
+- The Case Analysis UI now calls the backend even when local state indicates a blocked gate, then surfaces the backend `detail` in a destructive toast. Suggestion, answer, control-save, finalization, begin-analysis, and template-upload mutation failures also surface explicit backend details.
+- Rebuilt and recreated `fastapi_api` and `web_ui_agent`; both are healthy.
+
+Verification:
+- `python -m pytest api/tests/test_ct_pipeline_stages1_3.py::test_answer_question_rejects_blank_answer api/tests/test_ct_pipeline_stages1_3.py::test_confirm_review_blocks_pending_suggestions api/tests/test_ct_pipeline_stages1_3.py::test_answer_question_marks_answered api/tests/test_ct_pipeline_stages1_3.py::test_confirm_review_blocks_until_controls_finalized api/tests/test_ct_pipeline_stages1_3.py::test_confirm_review_queues_evidence_mapping -q`
+- `python -m pytest api/tests/test_ct_pipeline_stages1_3.py -q` passed: 34 passed, existing warnings only.
+- `node --import tsx .\client\src\controls-assurance.test.ts`
+- `npm run check`
+- `npm run build` passed with existing PostCSS `from` and large-chunk warnings.
+- `docker compose build fastapi_api web_ui_agent`
+- `docker compose up -d --force-recreate fastapi_api web_ui_agent`
+- `docker compose ps fastapi_api web_ui_agent` showed both services healthy.

@@ -13,6 +13,7 @@ Consider:
 - Frequency: continuous or daily -> larger population, statistical sampling preferred.
 - Prior period: prior ineffective result -> increase sample size.
 - Population size below 52 -> consider full population for annual controls.
+- Additional sampling context may include auditor-approved exclusions. Treat the adjusted population count as the sampling base when supplied.
 
 Return valid JSON only. Do not include prose outside the JSON object.
 

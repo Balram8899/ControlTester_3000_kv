@@ -6,10 +6,15 @@ from datetime import datetime, timezone
 from pydantic import BaseModel, Field
 
 from utils.control_assurance.celery_app import celery_app
+from utils.control_assurance.control_setup import build_test_steps
 from utils.control_assurance.ct_db import _get_db
 from utils.control_assurance.pipeline.llm_json import invoke_json_with_retry
 from utils.control_assurance.prompts.case_analysis import build_case_analysis_prompt
+from utils.llm_config_store import get_active_llm_config
 from utils.llm_provider import get_llm
+
+MAX_CASE_QUESTIONS = 3
+MAX_CONTROL_QUESTIONS = 4
 
 
 class CaseQuestion(BaseModel):
@@ -27,10 +32,28 @@ class ControlQuestion(BaseModel):
     question: str
 
 
+class DerivedControlStep(BaseModel):
+    attribute_id: str = ""
+    label: str = ""
+    test_attribute: str = ""
+    description: str = ""
+    evidence_required: str = ""
+
+
+class DerivedControlFields(BaseModel):
+    risk: str = ""
+    domain: str = ""
+    control_type: str = ""
+    control_description: str = ""
+    test_objectives: str = ""
+    test_steps: list[DerivedControlStep] = Field(default_factory=list)
+
+
 class ControlReview(BaseModel):
     control_id: str
     suggestions: list[ControlSuggestion] = Field(default_factory=list)
     questions: list[ControlQuestion] = Field(default_factory=list)
+    derived_fields: DerivedControlFields | None = None
 
 
 class CaseReviewResponse(BaseModel):
@@ -49,13 +72,44 @@ def _control_for_prompt(control: dict) -> dict:
         "type": control["control_type"],
         "risk": control.get("risk", ""),
         "domain": control.get("domain", ""),
+        "control_description": control.get("control_description", ""),
+        "test_objectives": control.get("test_objectives", ""),
         "frequency": control.get("frequency", ""),
         "inherent_risk_rating": control.get("inherent_risk_rating", ""),
         "prior_period_result": control.get("prior_period_result", ""),
         "walkthrough_performed": control.get("walkthrough_performed", False),
         "sampling_mode": control.get("sampling", {}).get("mode", "sample"),
+        "sampling_additional_context": control.get("sampling", {}).get("additional_context", ""),
         "test_steps": control.get("test_steps", []),
     }
+
+
+def _apply_derived_fields(db, control: dict, derived_fields: DerivedControlFields | None) -> None:
+    if not derived_fields:
+        return
+
+    data = derived_fields.model_dump()
+    updates = {}
+    field_sources = dict(control.get("field_sources", {}))
+    for field in ("risk", "domain", "control_type", "control_description", "test_objectives"):
+        value = str(data.get(field) or "").strip()
+        current = str(control.get(field) or "").strip()
+        if value and not current:
+            updates[field] = value
+            field_sources[field] = "llm_derived"
+
+    if data.get("test_steps"):
+        steps, _ = build_test_steps(data["test_steps"])
+        if steps:
+            updates["test_steps"] = steps
+            for index, _ in enumerate(steps):
+                field_sources[f"test_steps.{index}.test_attribute"] = "llm_derived"
+                field_sources[f"test_steps.{index}.evidence_required"] = "llm_derived"
+
+    if updates:
+        updates["field_sources"] = field_sources
+        updates["updated_at"] = _now()
+        db.ct_controls.update_one({"_id": control["_id"]}, {"$set": updates})
 
 
 def _run_llm_review(session_id: str) -> None:
@@ -79,6 +133,7 @@ def _run_llm_review(session_id: str) -> None:
 
     controls = list(db.ct_controls.find({"session_id": session_id}))
     prompt = build_case_analysis_prompt(session, [_control_for_prompt(control) for control in controls])
+    llm_config = get_active_llm_config()
     llm = get_llm()
     data = invoke_json_with_retry(
         llm=llm,
@@ -93,7 +148,7 @@ def _run_llm_review(session_id: str) -> None:
     questions = []
     control_id_to_mongo_id = {control["control_id"]: control["_id"] for control in controls}
 
-    for case_question in data.case_questions:
+    for case_question in data.case_questions[:MAX_CASE_QUESTIONS]:
         questions.append(
             {
                 "question_id": case_question.question_id,
@@ -107,6 +162,9 @@ def _run_llm_review(session_id: str) -> None:
 
     for control_review in data.controls:
         control_mongo_id = control_id_to_mongo_id.get(control_review.control_id)
+        control_doc = next((control for control in controls if control["control_id"] == control_review.control_id), None)
+        if control_doc:
+            _apply_derived_fields(db, control_doc, control_review.derived_fields)
         for suggestion in control_review.suggestions:
             suggestions.append(
                 {
@@ -116,7 +174,7 @@ def _run_llm_review(session_id: str) -> None:
                     "status": "pending",
                 }
             )
-        for question in control_review.questions:
+        for question in control_review.questions[:MAX_CONTROL_QUESTIONS]:
             questions.append(
                 {
                     "question_id": question.question_id,
@@ -132,13 +190,17 @@ def _run_llm_review(session_id: str) -> None:
         {"_id": session_id},
         {
             "$set": {
+                "stage": "control_review",
+                "controls_finalized": False,
                 "llm_suggestions": suggestions,
                 "llm_questions": questions,
                 "stage_checkpoint": {
                     "stage": "llm_review",
-                    "step": "awaiting_review",
+                    "step": "awaiting_control_finalization",
+                    "llm": llm_config,
                     "updated_at": _now(),
                 },
+                "last_llm_review_config": {**llm_config, "updated_at": _now()},
                 "updated_at": _now(),
             }
         },
