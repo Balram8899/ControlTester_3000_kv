@@ -81,7 +81,7 @@ export default function RegulationControlsCoveragePage() {
       {isLocked ? (
         <TraceLockedState
           title="Diagnostics Not Yet Run"
-          description="Run Controls Diagnostics first so TRACE can assemble the obligation coverage register and regulation views."
+          description="Run Controls Diagnostics first so Apex can assemble the obligation coverage register and regulation views."
           action={
             <button
               onClick={() => navigate("/controls-diagnostics")}

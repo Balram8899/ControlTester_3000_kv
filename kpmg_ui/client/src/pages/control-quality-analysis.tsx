@@ -283,7 +283,7 @@ export default function ControlQualityAnalysisPage() {
       ) : controls.length === 0 ? (
         <TraceLockedState
           title="No Controls Available"
-          description="Upload policy documents to the Controls Library so TRACE can extract controls and run the 5W1H quality assessment."
+          description="Upload policy documents to the Controls Library so Apex can extract controls and run the 5W1H quality assessment."
           action={
             <button
               onClick={() => navigate("/controls-library")}

@@ -916,7 +916,7 @@ export default function ControlsLibraryPage() {
                   <h3 className="text-[17px] font-bold text-[#0C233C]">Policy Documents</h3>
                   <p className="mt-1 text-[13px] text-[#8492A6]">PDF / Word / Excel / CSV / TXT / MD / Image</p>
                   <p className="mt-5 text-[13px] leading-relaxed text-[#5A6478]">
-                    Upload one or more company policy documents. TRACE will extract controls, classify them by domain, and map each one to regulatory obligations.
+                    Upload one or more company policy documents. Apex will extract controls, classify them by domain, and map each one to regulatory obligations.
                   </p>
                 </div>
               </div>

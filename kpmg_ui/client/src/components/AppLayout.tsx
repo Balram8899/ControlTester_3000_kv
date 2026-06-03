@@ -109,7 +109,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
             <div className="flex items-center gap-2 pr-10">
               <span className="text-[16px] font-bold tracking-tight text-white">KPMG</span>
               <span className="text-[#1E49E2] text-[18px] font-light select-none">|</span>
-              <span className="text-[16px] font-bold tracking-tight text-[#00B8F5]">TRACE</span>
+              <span className="text-[16px] font-bold tracking-tight text-[#00B8F5]">Apex</span>
             </div>
           )}
 

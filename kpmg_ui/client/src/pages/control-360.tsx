@@ -263,7 +263,7 @@ export default function Control360Page() {
     const pkg = {
       exportVersion: "1.0",
       exportTimestamp: new Date().toISOString(),
-      source: "KPMG TRACE",
+      source: "KPMG Apex",
       control: {
         id: C.id,
         name: C.name,
@@ -643,7 +643,7 @@ export default function Control360Page() {
         {/* Recommendations */}
         <div className="bg-white rounded-2xl border border-[#E2E6EF] border-l-[4px] border-l-[#00338D] shadow-sm p-8 mb-12">
           <p className="text-[11px] font-bold text-[#00338D] tracking-[2.5px] uppercase mb-2">AI-Generated</p>
-          <h2 className="font-bold text-[#0C233C] text-[20px] tracking-tight mb-6">KPMG TRACE Recommendations</h2>
+          <h2 className="font-bold text-[#0C233C] text-[20px] tracking-tight mb-6">KPMG Apex Recommendations</h2>
           <div className="overflow-auto mb-6">
             <table className="w-full border-collapse min-w-[680px]">
               <thead>

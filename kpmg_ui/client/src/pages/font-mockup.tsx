@@ -796,12 +796,12 @@ export default function FontMockupPage() {
               <CheckCircle2 size={14} />
               Preview active
             </span>
-            <span className="dtlh-mono text-[12px] text-[#5B6B82]">TRACE-UI-3000</span>
+            <span className="dtlh-mono text-[12px] text-[#5B6B82]">Apex-UI-3000</span>
           </header>
 
           <div className="dtlh-page">
             <section className="dtlh-hero">
-              <p className="dtlh-eyebrow">KPMG TRACE workspace</p>
+              <p className="dtlh-eyebrow">KPMG Apex workspace</p>
               <h2>Control testing with the DTLH Apex font system.</h2>
               <p>
                 A mock workspace showing how the local ControlTester experience reads when the GitHub

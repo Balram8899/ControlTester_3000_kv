@@ -242,7 +242,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-3">
             <span className="text-[18px] font-bold tracking-tight text-white">KPMG</span>
             <span className="text-[#1E49E2] text-[20px] font-light select-none">|</span>
-            <span className="text-[18px] font-bold tracking-tight text-[#00B8F5]">TRACE</span>
+            <span className="text-[18px] font-bold tracking-tight text-[#00B8F5]">Apex</span>
             <span className="hidden sm:flex items-center gap-1.5 ml-1 text-white/40 text-[13px]">
               <span>/</span>
               <span className="text-white/60">Agentic Controls Platform</span>
@@ -273,7 +273,7 @@ export default function LandingPage() {
               Automate. Detect. Act. Your agentic insight & command centre for control risk and regulatory exposure.
             </h1>
             <p className="mt-6 max-w-2xl text-[15px] leading-7 text-[#E4EEFB]">
-              TRACE deploys autonomous agents across your control environment — continuously surfacing imminent risks,
+              Apex deploys autonomous agents across your control environment — continuously surfacing imminent risks,
               closing regulatory gaps before they escalate, and generating audit-ready evidence at machine speed.
               Move into any workspace to orchestrate testing, assessment, and reporting through a single agentic operating shell.
             </p>
@@ -367,7 +367,7 @@ export default function LandingPage() {
 
           <div className="flex items-center justify-between border-t border-[#00338D]/8 pt-6 pb-2">
             <p className="text-[11px] text-slate-400 uppercase tracking-[0.22em] font-semibold">
-              KPMG TRACE - Agentic Controls Platform
+              KPMG Apex - Agentic Controls Platform
             </p>
             <p className="text-[11px] text-slate-400">
               {FEATURE_CARDS.length} modules - centralized operating environment

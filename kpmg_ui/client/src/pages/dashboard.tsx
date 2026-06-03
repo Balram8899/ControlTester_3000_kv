@@ -657,7 +657,7 @@ export default function DashboardPage() {
     <div className="flex h-full flex-col overflow-hidden bg-[#F0F2F7]">
       <HeroSection
         title="Dashboard"
-        subtitle="Monitor TRACE libraries, workflows, issues, and generated outputs."
+        subtitle="Monitor Apex libraries, workflows, issues, and generated outputs."
         icon={Grid2X2}
       />
 

@@ -214,7 +214,7 @@ export default function LoginPage() {
         <div className="flex items-center gap-3">
           <span className="text-[18px] font-bold tracking-tight text-white">KPMG</span>
           <span className="text-[#1E49E2] text-[20px] font-light select-none">|</span>
-          <span className="text-[18px] font-bold tracking-tight text-[#00B8F5]">TRACE</span>
+          <span className="text-[18px] font-bold tracking-tight text-[#00B8F5]">Apex</span>
           <span className="hidden sm:flex items-center gap-1.5 ml-1 text-white/40 text-[13px]">
             <span>/</span>
             <span className="text-white/60">Agentic Controls Platform</span>
@@ -249,7 +249,7 @@ export default function LoginPage() {
               <div className="mb-8">
                 <div className="inline-flex items-center gap-2 rounded-full border border-[#E2EBF8] bg-[#F3F7FF] px-3 py-1.5 mb-5">
                   <Cpu className="h-3.5 w-3.5 text-[#1E49E2]" />
-                  <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#1E49E2]">TRACE workspace</span>
+                  <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#1E49E2]">Apex workspace</span>
                 </div>
                 <h1 className="text-[36px] font-bold leading-none tracking-[-0.02em] text-[#0C233C]">Sign In</h1>
                 <p className="mt-3 text-[14px] leading-6 text-[#5A6B82]">
@@ -318,7 +318,7 @@ export default function LoginPage() {
             </div>
 
             <p className="mt-6 text-center text-[11px] text-white/40">
-              © 2026 KPMG India — TRACE confidential · Unauthorised access is prohibited
+              © 2026 KPMG India — Apex confidential · Unauthorised access is prohibited
             </p>
           </div>
         </div>

@@ -26,8 +26,8 @@ export default function TraceNavBar({ breadcrumb, actions }: TraceNavBarProps) {
         <div className="flex min-w-0 items-center gap-3">
           <button
             onClick={() => setLocation("/landing")}
-            aria-label="Back to TRACE landing"
-            title="Back to TRACE landing"
+            aria-label="Back to Apex landing"
+            title="Back to Apex landing"
             className="trace-top-ribbon__brand flex min-w-0 items-center gap-3 transition-opacity hover:opacity-90"
           >
             <span className="trace-top-ribbon__back" aria-hidden="true">
@@ -35,7 +35,7 @@ export default function TraceNavBar({ breadcrumb, actions }: TraceNavBarProps) {
             </span>
             <span className="text-[18px] font-bold tracking-tight text-white">KPMG</span>
             <span className="text-[#1E49E2] text-[20px] font-light select-none">|</span>
-            <span className="text-[18px] font-bold tracking-tight text-[#00B8F5]">TRACE</span>
+            <span className="text-[18px] font-bold tracking-tight text-[#00B8F5]">Apex</span>
           </button>
           {breadcrumb && (
             <span className="hidden min-w-0 items-center gap-1.5 text-white/40 sm:flex text-[13px]">
