@@ -522,6 +522,255 @@ def test_analyze_treats_ad_hoc_cia_total_12_as_critical():
     assert "CIA Total: 12/15 (Band: Critical)" in prompt
 
 
+def test_update_assessment_context_200():
+    with patch("api.routers.risk_assessment.get_store") as gs:
+        from api.routers.risk_assessment import RiskAssessment
+        ra = RiskAssessment(
+            id="ra1", title="Test", description="desc",
+            status="draft", asset_ids=["a1"],
+            responses=[], risks=[], applied_controls=[],
+            suggested_controls=[], report_markdown=None,
+            created_at="2026-01-01", updated_at="2026-01-01",
+        )
+        updated_ra = RiskAssessment(
+            id="ra1", title="Test", description="desc",
+            status="draft", asset_ids=["a1"],
+            responses=[], risks=[], applied_controls=[],
+            suggested_controls=[], report_markdown=None,
+            context_profile={"project_context": "GDPR payment platform", "business_impact": "High"},
+            created_at="2026-01-01", updated_at="2026-01-01",
+        )
+        gs.return_value.get.side_effect = [ra, updated_ra]
+        gs.return_value.update_context_profile.return_value = True
+        r = client.put("/risk-assessment/ra1/context", json={
+            "context_profile": {
+                "project_context": "GDPR payment platform",
+                "business_impact": "High",
+                "overall_project_summary": "",
+                "regulatory_context": "",
+                "security_requirements": "",
+                "jira_context": "",
+                "free_text_context": "",
+            }
+        })
+    assert r.status_code == 200
+    assert r.json()["context_profile"]["project_context"] == "GDPR payment platform"
+    gs.return_value.update_context_profile.assert_called_once()
+
+
+def test_update_assessment_context_404_unknown():
+    with patch("api.routers.risk_assessment.get_store") as gs:
+        gs.return_value.get.return_value = None
+        r = client.put("/risk-assessment/missing/context", json={
+            "context_profile": {"project_context": "test"}
+        })
+    assert r.status_code == 404
+
+
+def test_upload_context_file_201():
+    with patch("api.routers.risk_assessment.get_store") as gs:
+        from api.routers.risk_assessment import RiskAssessment
+        ra = RiskAssessment(
+            id="ra1", title="Test", description="desc",
+            status="draft", asset_ids=["a1"],
+            responses=[], risks=[], applied_controls=[],
+            suggested_controls=[], report_markdown=None,
+            created_at="2026-01-01", updated_at="2026-01-01",
+        )
+        gs.return_value.get.return_value = ra
+        gs.return_value.add_context_source.return_value = True
+        r = client.post(
+            "/risk-assessment/ra1/context-files",
+            files={"file": ("requirements.txt", b"GDPR compliance project with personal data", "text/plain")},
+            data={"source_type": "document"},
+        )
+    assert r.status_code == 201
+    body = r.json()
+    assert body["ok"] is True
+    assert body["source"]["filename"] == "requirements.txt"
+    assert body["chunks_created"] >= 1
+    gs.return_value.add_context_source.assert_called_once()
+
+
+def test_upload_context_file_404_unknown_assessment():
+    with patch("api.routers.risk_assessment.get_store") as gs:
+        gs.return_value.get.return_value = None
+        r = client.post(
+            "/risk-assessment/missing/context-files",
+            files={"file": ("test.txt", b"content", "text/plain")},
+        )
+    assert r.status_code == 404
+
+
+def test_suggest_questions_uses_llm():
+    with (
+        patch("api.routers.risk_assessment.get_store") as gs,
+        patch("utils.llm_provider.get_llm") as mock_get_llm,
+    ):
+        from api.routers.risk_assessment import RiskAssessment
+        ra = RiskAssessment(
+            id="ra1", title="GDPR payment project", description="Processing EU personal data",
+            status="draft", asset_ids=["a1"],
+            responses=[], risks=[], applied_controls=[],
+            suggested_controls=[], report_markdown=None,
+            context_profile={"regulatory_context": "GDPR"},
+            created_at="2026-01-01", updated_at="2026-01-01",
+        )
+        gs.return_value.get.return_value = ra
+        gs.return_value.find_similar_assessments.return_value = []
+        gs.return_value.set_historical_matches.return_value = True
+        gs.return_value.get_context_chunks.return_value = []
+        gs.return_value.set_suggested_questions.return_value = True
+        mock_get_llm.return_value.invoke.return_value.content = """[
+          {
+            "question_id": "dyn_gdpr_001",
+            "section_id": "privacy_regulatory",
+            "section_title": "Context Driven Questions",
+            "text": "Does the project process personal data for EU or UK data subjects?",
+            "question_type": "Exposure",
+            "priority": "high",
+            "source": "llm_context",
+            "rationale": "GDPR context detected",
+            "status": "suggested"
+          }
+        ]"""
+        r = client.post("/risk-assessment/ra1/suggest-questions")
+    assert r.status_code == 200
+    body = r.json()
+    assert len(body["suggested_questions"]) == 1
+    assert body["suggested_questions"][0]["question_id"] == "dyn_gdpr_001"
+    assert body["suggested_questions"][0]["question_type"] == "Exposure"
+    gs.return_value.set_suggested_questions.assert_called_once()
+
+
+def test_suggest_questions_falls_back_on_llm_error():
+    with (
+        patch("api.routers.risk_assessment.get_store") as gs,
+        patch("utils.llm_provider.get_llm", side_effect=EnvironmentError("no llm config")),
+    ):
+        from api.routers.risk_assessment import RiskAssessment
+        ra = RiskAssessment(
+            id="ra1", title="GDPR project", description="EU personal data processing",
+            status="draft", asset_ids=["a1"],
+            responses=[], risks=[], applied_controls=[],
+            suggested_controls=[], report_markdown=None,
+            context_profile={"project_context": "gdpr personal data pii"},
+            created_at="2026-01-01", updated_at="2026-01-01",
+        )
+        gs.return_value.get.return_value = ra
+        gs.return_value.find_similar_assessments.return_value = []
+        gs.return_value.set_historical_matches.return_value = True
+        gs.return_value.get_context_chunks.return_value = []
+        gs.return_value.set_suggested_questions.return_value = True
+        r = client.post("/risk-assessment/ra1/suggest-questions")
+    assert r.status_code == 200
+    body = r.json()
+    assert len(body["suggested_questions"]) >= 1
+    assert all(q["status"] == "suggested" for q in body["suggested_questions"])
+    gs.return_value.set_suggested_questions.assert_called_once()
+
+
+def test_update_suggested_question_status_accepted():
+    with patch("api.routers.risk_assessment.get_store") as gs:
+        from api.routers.risk_assessment import RiskAssessment
+        ra = RiskAssessment(
+            id="ra1", title="Test", description="desc",
+            status="draft", asset_ids=["a1"],
+            responses=[], risks=[], applied_controls=[],
+            suggested_controls=[], report_markdown=None,
+            suggested_questions=[{
+                "question_id": "dyn_001",
+                "section_id": "privacy_regulatory",
+                "section_title": "Context Driven Questions",
+                "text": "Is EU personal data processed?",
+                "question_type": "Exposure",
+                "priority": "high",
+                "source": "context_rule",
+                "rationale": "GDPR detected",
+                "status": "suggested",
+            }],
+            created_at="2026-01-01", updated_at="2026-01-01",
+        )
+        updated_ra = RiskAssessment(
+            id="ra1", title="Test", description="desc",
+            status="draft", asset_ids=["a1"],
+            responses=[], risks=[], applied_controls=[],
+            suggested_controls=[], report_markdown=None,
+            suggested_questions=[{
+                "question_id": "dyn_001",
+                "section_id": "privacy_regulatory",
+                "section_title": "Context Driven Questions",
+                "text": "Is EU personal data processed?",
+                "question_type": "Exposure",
+                "priority": "high",
+                "source": "context_rule",
+                "rationale": "GDPR detected",
+                "status": "accepted",
+            }],
+            created_at="2026-01-01", updated_at="2026-01-01",
+        )
+        gs.return_value.get.side_effect = [ra, updated_ra]
+        gs.return_value.update_suggested_question_status.return_value = True
+        r = client.patch("/risk-assessment/ra1/suggest-questions", json={
+            "question_id": "dyn_001",
+            "status": "accepted",
+        })
+    assert r.status_code == 200
+    body = r.json()
+    assert body["suggested_questions"][0]["status"] == "accepted"
+
+
+def test_update_suggested_question_404_if_question_not_found():
+    with patch("api.routers.risk_assessment.get_store") as gs:
+        from api.routers.risk_assessment import RiskAssessment
+        ra = RiskAssessment(
+            id="ra1", title="Test", description="desc",
+            status="draft", asset_ids=["a1"],
+            responses=[], risks=[], applied_controls=[],
+            suggested_controls=[], report_markdown=None,
+            created_at="2026-01-01", updated_at="2026-01-01",
+        )
+        gs.return_value.get.return_value = ra
+        gs.return_value.update_suggested_question_status.return_value = False
+        r = client.patch("/risk-assessment/ra1/suggest-questions", json={
+            "question_id": "nonexistent_q",
+            "status": "accepted",
+        })
+    assert r.status_code == 404
+
+
+def test_refresh_historical_context_returns_matches():
+    with patch("api.routers.risk_assessment.get_store") as gs:
+        from api.routers.risk_assessment import RiskAssessment
+        ra = RiskAssessment(
+            id="ra1", title="Cloud security review", description="AWS assets",
+            status="draft", asset_ids=["a1"],
+            responses=[], risks=[], applied_controls=[],
+            suggested_controls=[], report_markdown=None,
+            created_at="2026-01-01", updated_at="2026-01-01",
+        )
+        gs.return_value.get.return_value = ra
+        gs.return_value.find_similar_assessments.return_value = [
+            {
+                "ra_id": "ra0",
+                "title": "Cloud security review 2025",
+                "similarity_score": 0.62,
+                "matched_terms": ["cloud", "security", "aws"],
+                "prior_risks": [],
+                "prior_questions": [],
+            }
+        ]
+        gs.return_value.set_historical_matches.return_value = True
+        r = client.post("/risk-assessment/ra1/historical-context")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["assessment_id"] == "ra1"
+    assert len(body["matches"]) == 1
+    assert body["matches"][0]["title"] == "Cloud security review 2025"
+    assert body["matches"][0]["similarity_score"] == 0.62
+    gs.return_value.set_historical_matches.assert_called_once()
+
+
 def test_generate_report_normalizes_mojibake_in_risk_titles():
     with (
         patch("api.routers.risk_assessment.get_store") as gs,

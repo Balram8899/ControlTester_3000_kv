@@ -2,8 +2,11 @@
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
+import json
 import os
 import re as _re
+import tempfile
 import uuid
 import logging
 from collections import Counter
@@ -11,7 +14,7 @@ from datetime import datetime
 from typing import Any, Literal, Optional
 
 import pymongo
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from utils.assessment_questions import get_sections
@@ -50,11 +53,50 @@ class AdHocApplication(BaseModel):
     key_integrations: str = ""
 
 
+class RiskAssessmentContextProfile(BaseModel):
+    project_context: str = ""
+    business_impact: str = ""
+    overall_project_summary: str = ""
+    regulatory_context: str = ""
+    security_requirements: str = ""
+    jira_context: str = ""
+    free_text_context: str = ""
+
+
+class RiskAssessmentContextUpdate(BaseModel):
+    context_profile: RiskAssessmentContextProfile
+
+
+class SuggestedQuestion(BaseModel):
+    question_id: str
+    section_id: str = "dynamic_context"
+    section_title: str = "Context Driven Questions"
+    text: str
+    question_type: Literal["Exposure", "Control", "Context"] = "Context"
+    priority: Literal["low", "medium", "high"] = "medium"
+    source: str = "context"
+    rationale: str = ""
+    status: Literal["suggested", "accepted", "rejected"] = "suggested"
+
+
+class SuggestedQuestionDecision(BaseModel):
+    question_id: str
+    status: Literal["accepted", "rejected"]
+
+
 class RiskAssessmentCreate(BaseModel):
     title: str
     description: str
     asset_ids: list[str] = []
     ad_hoc_applications: list[AdHocApplication] = []
+    context_profile: RiskAssessmentContextProfile = Field(default_factory=RiskAssessmentContextProfile)
+    project_context: str = ""
+    business_impact: str = ""
+    overall_project_summary: str = ""
+    regulatory_context: str = ""
+    security_requirements: str = ""
+    jira_context: str = ""
+    free_text_context: str = ""
 
     @model_validator(mode="after")
     def _at_least_one_subject(self) -> "RiskAssessmentCreate":
@@ -103,6 +145,10 @@ class RiskAssessment(BaseModel):
     risks: list[dict]
     applied_controls: list[dict]
     suggested_controls: list[dict] = []
+    suggested_questions: list[dict] = []
+    context_profile: dict = {}
+    context_sources: list[dict] = []
+    historical_matches: list[dict] = []
     report_markdown: Optional[str] = None
     created_at: str
     updated_at: str
@@ -110,14 +156,36 @@ class RiskAssessment(BaseModel):
 
 # ── MongoDB store ────────────────────────────────────────────────────────────
 
+def _context_profile_from_create(data: RiskAssessmentCreate) -> dict[str, str]:
+    profile = data.context_profile.model_dump()
+    for key in (
+        "project_context",
+        "business_impact",
+        "overall_project_summary",
+        "regulatory_context",
+        "security_requirements",
+        "jira_context",
+        "free_text_context",
+    ):
+        value = str(getattr(data, key, "") or "").strip()
+        if value:
+            profile[key] = value
+    return profile
+
+
 class MongoRiskAssessmentStore:
     def __init__(self, mongo_uri: str | None = None):
         uri = mongo_uri or os.environ.get("MONGO_URI", "mongodb://localhost:27017")
         client = pymongo.MongoClient(uri)
         db = client["trace_db"]
         self._col = db["risk_assessments"]
+        self._context_chunks = db["risk_assessment_context_chunks"]
         self._col.create_index("status")
         self._col.create_index("created_at")
+        self._col.create_index("context_profile.regulatory_context")
+        self._col.create_index("context_profile.security_requirements")
+        self._context_chunks.create_index("ra_id")
+        self._context_chunks.create_index("source_id")
 
     def _to_ra(self, doc: dict) -> RiskAssessment:
         doc = dict(doc)
@@ -126,6 +194,10 @@ class MongoRiskAssessmentStore:
         doc.setdefault("risks", [])
         doc.setdefault("applied_controls", [])
         doc.setdefault("suggested_controls", [])
+        doc.setdefault("suggested_questions", [])
+        doc.setdefault("context_profile", {})
+        doc.setdefault("context_sources", [])
+        doc.setdefault("historical_matches", [])
         doc.setdefault("report_markdown", None)
         doc.setdefault("ad_hoc_applications", [])
         doc.setdefault("asset_ids", [])
@@ -153,6 +225,10 @@ class MongoRiskAssessmentStore:
             "risks": [],
             "applied_controls": [],
             "suggested_controls": [],
+            "suggested_questions": [],
+            "context_profile": _context_profile_from_create(data),
+            "context_sources": [],
+            "historical_matches": [],
             "report_markdown": None,
             "created_at": now,
             "updated_at": now,
@@ -206,6 +282,100 @@ class MongoRiskAssessmentStore:
             {"$set": {"suggested_controls": suggestions, "updated_at": datetime.utcnow().isoformat()}},
         )
         return result.modified_count == 1
+
+    def update_context_profile(self, ra_id: str, context_profile: dict) -> bool:
+        result = self._col.update_one(
+            {"_id": ra_id},
+            {"$set": {"context_profile": context_profile, "updated_at": datetime.utcnow().isoformat()}},
+        )
+        return result.modified_count == 1
+
+    def add_context_source(self, ra_id: str, source: dict, chunks: list[dict]) -> bool:
+        now = datetime.utcnow().isoformat()
+        source = {**source, "uploaded_at": now}
+        if chunks:
+            self._context_chunks.insert_many([
+                {**chunk, "ra_id": ra_id, "source_id": source["id"], "created_at": now}
+                for chunk in chunks
+            ])
+        result = self._col.update_one(
+            {"_id": ra_id},
+            {"$push": {"context_sources": source}, "$set": {"updated_at": now}},
+        )
+        return result.modified_count == 1
+
+    def get_context_chunks(self, ra_id: str, limit: int = 30) -> list[dict]:
+        return list(self._context_chunks.find({"ra_id": ra_id}, {"_id": 0}).limit(limit))
+
+    def set_suggested_questions(self, ra_id: str, questions: list[dict]) -> bool:
+        result = self._col.update_one(
+            {"_id": ra_id},
+            {"$set": {"suggested_questions": questions, "updated_at": datetime.utcnow().isoformat()}},
+        )
+        return result.modified_count == 1
+
+    def set_historical_matches(self, ra_id: str, matches: list[dict]) -> bool:
+        result = self._col.update_one(
+            {"_id": ra_id},
+            {"$set": {"historical_matches": matches, "updated_at": datetime.utcnow().isoformat()}},
+        )
+        return result.modified_count == 1
+
+    def update_suggested_question_status(self, ra_id: str, question_id: str, status: str) -> bool:
+        ra = self.get(ra_id)
+        if not ra:
+            return False
+        questions: list[dict] = []
+        changed = False
+        for question in ra.suggested_questions:
+            item = dict(question)
+            if item.get("question_id") == question_id:
+                item["status"] = status
+                changed = True
+            questions.append(item)
+        if not changed:
+            return False
+        return self.set_suggested_questions(ra_id, questions)
+
+    def find_similar_assessments(self, ra: RiskAssessment, limit: int = 5) -> list[dict]:
+        query_text = " ".join([
+            ra.title,
+            ra.description,
+            json.dumps(ra.context_profile, sort_keys=True),
+            json.dumps(ra.ad_hoc_applications, sort_keys=True),
+        ])
+        query_tokens = _tokenize_match_text(query_text)
+        if not query_tokens:
+            return []
+
+        matches: list[dict] = []
+        cursor = self._col.find({"_id": {"$ne": ra.id}}).sort("created_at", -1).limit(100)
+        for doc in cursor:
+            candidate_text = " ".join([
+                str(doc.get("title", "")),
+                str(doc.get("description", "")),
+                json.dumps(doc.get("context_profile", {}), sort_keys=True),
+                json.dumps(doc.get("ad_hoc_applications", []), sort_keys=True),
+                json.dumps(doc.get("risks", []), sort_keys=True),
+                json.dumps(doc.get("suggested_questions", []), sort_keys=True),
+            ])
+            candidate_tokens = _tokenize_match_text(candidate_text)
+            if not candidate_tokens:
+                continue
+            overlap = query_tokens.intersection(candidate_tokens)
+            score = len(overlap) / max(len(query_tokens), 1)
+            if score <= 0:
+                continue
+            matches.append({
+                "ra_id": str(doc.get("_id")),
+                "title": doc.get("title", ""),
+                "similarity_score": round(score, 3),
+                "matched_terms": sorted(overlap)[:20],
+                "prior_risks": doc.get("risks", [])[:5],
+                "prior_questions": doc.get("suggested_questions", [])[:10],
+            })
+
+        return sorted(matches, key=lambda item: item["similarity_score"], reverse=True)[:limit]
 
     def add_responses_batch(self, ra_id: str, asset_id: str, new_responses: list[dict]) -> bool:
         ra = self.get(ra_id)
@@ -401,6 +571,122 @@ _RISK_KEYWORD_DOMAIN_HINTS: dict[str, list[str]] = {
 def _tokenize_match_text(text: str) -> set[str]:
     cleaned = _clean_report_text(str(text or "")).lower()
     return {token for token in _re.findall(r"[a-z0-9]+", cleaned) if len(token) > 2}
+
+
+def _extract_context_text(filename: str, content: bytes, source_type: str = "document") -> tuple[str, dict]:
+    suffix = os.path.splitext(filename.lower())[1]
+    if suffix in {".txt", ".md", ".log", ".csv", ".json"}:
+        return content.decode("utf-8", errors="ignore"), {"extractor": "utf-8", "suffix": suffix}
+
+    try:
+        from utils.document_ingestion import load_documents
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            tmp.write(content)
+            tmp_path = tmp.name
+        try:
+            docs = load_documents(
+                tmp_path,
+                filename=filename,
+                extra_metadata={"risk_assessment_source_type": source_type},
+            )
+        finally:
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+        return "\n\n".join(doc.page_content for doc in docs), {
+            "extractor": "utils.document_ingestion",
+            "suffix": suffix,
+            "documents": len(docs),
+        }
+    except Exception as exc:
+        logger.warning(f"Context extraction failed for {filename}: {exc}")
+        return content.decode("utf-8", errors="ignore"), {
+            "extractor": "utf-8-fallback",
+            "suffix": suffix,
+            "warning": str(exc),
+        }
+
+
+def _chunk_context_text(text: str, chunk_size: int = 2500) -> list[str]:
+    clean = _clean_report_text(text or "").strip()
+    if not clean:
+        return []
+    return [
+        clean[index:index + chunk_size]
+        for index in range(0, len(clean), chunk_size)
+        if clean[index:index + chunk_size].strip()
+    ]
+
+
+def _build_ra_context_pack(ra: RiskAssessment, chunks: list[dict]) -> str:
+    context_profile = json.dumps(ra.context_profile or {}, indent=2, sort_keys=True)
+    source_summary = "\n".join(
+        f"- {source.get('source_type', 'document')}: {source.get('filename', 'source')} | {source.get('summary', '')[:300]}"
+        for source in (ra.context_sources or [])[:10]
+    )
+    chunk_summary = "\n".join(
+        f"- {str(chunk.get('text', ''))[:1000]}"
+        for chunk in chunks[:10]
+    )
+    historical_summary = "\n".join(
+        f"- {match.get('title', '')} ({match.get('similarity_score', 0)}): {', '.join(match.get('matched_terms', [])[:8])}"
+        for match in (ra.historical_matches or [])[:5]
+    )
+    return f"""Context profile:
+{context_profile}
+
+Uploaded or embedded sources:
+{source_summary or "None"}
+
+Source excerpts:
+{chunk_summary or "None"}
+
+Similar historical assessments:
+{historical_summary or "None"}""".strip()
+
+
+def _fallback_suggested_questions(ra: RiskAssessment, chunks: list[dict]) -> list[dict]:
+    context_text = " ".join([
+        ra.title,
+        ra.description,
+        json.dumps(ra.context_profile or {}, sort_keys=True),
+        " ".join(str(chunk.get("text", "")) for chunk in chunks[:10]),
+    ]).lower()
+    questions: list[dict] = []
+
+    def add(question_id: str, section_id: str, text: str, question_type: str, priority: str, rationale: str) -> None:
+        questions.append({
+            "question_id": question_id,
+            "section_id": section_id,
+            "section_title": "Context Driven Questions",
+            "text": text,
+            "question_type": question_type,
+            "priority": priority,
+            "source": "context_rule",
+            "rationale": rationale,
+            "status": "suggested",
+        })
+
+    if any(term in context_text for term in ["gdpr", "personal data", "pii", "data subject", "privacy"]):
+        add("dyn_gdpr_001", "privacy_regulatory", "Does the project process personal data for EU or UK data subjects?", "Exposure", "high", "Privacy or GDPR context was detected.")
+        add("dyn_gdpr_002", "privacy_regulatory", "Has the lawful basis for personal data processing been documented?", "Control", "high", "GDPR requires a documented lawful basis.")
+        add("dyn_gdpr_003", "privacy_regulatory", "Are data retention, subprocessors, and cross-border transfers documented?", "Control", "high", "GDPR obligations may apply to retention and third-party processing.")
+
+    if any(term in context_text for term in ["jira", "ticket", "defect", "bug", "incident", "backlog"]):
+        add("dyn_jira_001", "delivery_risk", "Are unresolved high-priority Jira items relevant to security, privacy, or availability?", "Exposure", "medium", "Jira or delivery issue context was detected.")
+        add("dyn_jira_002", "delivery_risk", "Are owners and due dates assigned for open remediation or security tickets?", "Control", "medium", "Open delivery items may affect the current risk posture.")
+
+    if any(term in context_text for term in ["mfa", "encryption", "logging", "vulnerability", "secrets", "iam", "authentication"]):
+        add("dyn_sec_001", "security_requirements", "Are explicit security requirements mapped to implemented controls and evidence?", "Control", "high", "Security requirements were detected in the context.")
+        add("dyn_sec_002", "security_requirements", "Are logging, monitoring, encryption, secrets management, and access controls covered by the design?", "Control", "high", "Core security-control topics were detected.")
+
+    if not questions:
+        add("dyn_context_001", "business_context", "What business outcome would be impacted if this project or application failed?", "Context", "medium", "Additional impact context improves risk scoring.")
+        add("dyn_context_002", "business_context", "Are there regulatory, privacy, security, or contractual requirements that must be considered?", "Context", "medium", "No specific compliance trigger was detected yet.")
+
+    return questions
 
 
 def _normalize_controls_for_suggestion(raw_controls: list[dict]) -> list[dict]:
@@ -780,6 +1066,136 @@ def get_assessment(ra_id: str):
     return ra
 
 
+@router.put("/{ra_id}/context", response_model=RiskAssessment)
+def update_assessment_context(ra_id: str, body: RiskAssessmentContextUpdate):
+    ra = get_store().get(ra_id)
+    if not ra:
+        raise HTTPException(404, "Assessment not found")
+    get_store().update_context_profile(ra_id, body.context_profile.model_dump())
+    updated = get_store().get(ra_id)
+    if not updated:
+        raise HTTPException(404, "Assessment not found")
+    return updated
+
+
+@router.post("/{ra_id}/context-files", status_code=201)
+async def upload_assessment_context_file(
+    ra_id: str,
+    file: UploadFile = File(...),
+    source_type: str = Form("document"),
+):
+    ra = get_store().get(ra_id)
+    if not ra:
+        raise HTTPException(404, "Assessment not found")
+
+    content = await file.read()
+    if not content:
+        raise HTTPException(400, "Uploaded file is empty")
+
+    filename = file.filename or "context-upload"
+    text, metadata = _extract_context_text(filename, content, source_type=source_type)
+    chunks = [
+        {
+            "id": str(uuid.uuid4()),
+            "chunk_index": index,
+            "text": chunk,
+            "metadata": metadata,
+        }
+        for index, chunk in enumerate(_chunk_context_text(text))
+    ]
+    source = {
+        "id": str(uuid.uuid4()),
+        "filename": filename,
+        "content_type": file.content_type,
+        "source_type": source_type,
+        "sha256": hashlib.sha256(content).hexdigest(),
+        "summary": _clean_report_text(text)[:500],
+        "metadata": metadata,
+    }
+    get_store().add_context_source(ra_id, source, chunks)
+    return {"ok": True, "source": source, "chunks_created": len(chunks)}
+
+
+@router.post("/{ra_id}/historical-context")
+def refresh_historical_context(ra_id: str):
+    ra = get_store().get(ra_id)
+    if not ra:
+        raise HTTPException(404, "Assessment not found")
+    matches = get_store().find_similar_assessments(ra)
+    get_store().set_historical_matches(ra_id, matches)
+    return {"assessment_id": ra_id, "matches": matches}
+
+
+@router.post("/{ra_id}/suggest-questions")
+def suggest_context_questions(ra_id: str):
+    from langchain.schema import HumanMessage
+    from utils.llm_provider import get_llm
+    import json as _json
+
+    ra = get_store().get(ra_id)
+    if not ra:
+        raise HTTPException(404, "Assessment not found")
+
+    matches = get_store().find_similar_assessments(ra)
+    get_store().set_historical_matches(ra_id, matches)
+    ra = get_store().get(ra_id) or ra
+    chunks = get_store().get_context_chunks(ra_id)
+    context_pack = _build_ra_context_pack(ra, chunks)
+
+    prompt = f"""You are a technology risk assessment advisor.
+
+Generate additional assessment questions from the project context, impact, uploaded documents, Jira/log context, GDPR/compliance signals, security requirements, and similar historical risk assessments.
+
+{context_pack}
+
+Return ONLY a valid JSON array. Each item must be:
+{{"question_id":"dyn_unique_id","section_id":"privacy_regulatory|security_requirements|delivery_risk|business_context|architecture","section_title":"...","text":"...","question_type":"Exposure|Control|Context","priority":"low|medium|high","source":"llm_context","rationale":"...","status":"suggested"}}"""
+
+    try:
+        llm = get_llm()
+        response = llm.invoke([HumanMessage(content=prompt)])
+        content = response.content.strip()
+        content = _re.sub(r"^```[a-zA-Z]*\n?", "", content)
+        content = _re.sub(r"\n?```$", "", content).strip()
+        raw_questions = _json.loads(content)
+        if not isinstance(raw_questions, list):
+            raise ValueError(f"Expected JSON array, got {type(raw_questions).__name__}")
+    except Exception as exc:
+        logger.error(f"Question suggestion failed for {ra_id}: {exc}")
+        raw_questions = _fallback_suggested_questions(ra, chunks)
+
+    normalized: list[dict] = []
+    seen_ids: set[str] = set()
+    for index, item in enumerate(raw_questions[:25], start=1):
+        if not isinstance(item, dict):
+            continue
+        candidate = dict(item)
+        candidate.setdefault("question_id", f"dyn_context_{index:03d}")
+        candidate.setdefault("text", "")
+        if not str(candidate.get("text", "")).strip():
+            continue
+        candidate["question_id"] = str(candidate["question_id"]).strip() or f"dyn_context_{index:03d}"
+        if candidate["question_id"] in seen_ids:
+            candidate["question_id"] = f"{candidate['question_id']}_{index}"
+        seen_ids.add(candidate["question_id"])
+        normalized.append(SuggestedQuestion(**candidate).model_dump())
+
+    get_store().set_suggested_questions(ra_id, normalized)
+    return {"assessment_id": ra_id, "suggested_questions": normalized}
+
+
+@router.patch("/{ra_id}/suggest-questions")
+def update_suggested_question_status(ra_id: str, body: SuggestedQuestionDecision):
+    ra = get_store().get(ra_id)
+    if not ra:
+        raise HTTPException(404, "Assessment not found")
+    ok = get_store().update_suggested_question_status(ra_id, body.question_id, body.status)
+    if not ok:
+        raise HTTPException(404, "Suggested question not found")
+    updated = get_store().get(ra_id)
+    return {"assessment_id": ra_id, "suggested_questions": updated.suggested_questions if updated else []}
+
+
 @router.post("/{ra_id}/respond", status_code=201)
 def submit_response(ra_id: str, body: ResponseSubmit):
     ra = get_store().get(ra_id)
@@ -925,6 +1341,11 @@ def analyze_assessment(ra_id: str):
     all_risks: list[dict] = []
 
     ad_hoc_map = {a["id"]: a for a in ra.ad_hoc_applications}
+    context_chunks = get_store().get_context_chunks(ra_id)
+    if not ra.historical_matches:
+        get_store().set_historical_matches(ra_id, get_store().find_similar_assessments(ra))
+        ra = get_store().get(ra_id) or ra
+    context_pack = _build_ra_context_pack(ra, context_chunks)
 
     for asset_id, asset_responses in by_asset.items():
         asset = asset_store.get(asset_id)
@@ -954,6 +1375,12 @@ def analyze_assessment(ra_id: str):
 
 Application: {asset_name}
 CIA Total: {cia_total}/15 (Band: {cia_band})
+
+Additional Risk Assessment Context:
+{context_pack}
+
+Suggested Context Questions:
+{json.dumps(ra.suggested_questions or [], indent=2)}
 
 Assessment Responses (section | question | answer | details):
 {qa_text}
