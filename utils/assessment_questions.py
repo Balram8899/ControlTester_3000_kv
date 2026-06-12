@@ -94,6 +94,9 @@ SECTIONS: list[dict] = [
             {"id": "sr_3", "text": "Are there open high or critical severity audit findings or remediation actions against this application?", "question_type": "Exposure"},
             {"id": "sr_4", "text": "Is this application managed or hosted entirely by a third-party vendor with limited internal oversight?", "question_type": "Exposure"},
             {"id": "sr_5", "text": "Is there an active and tracked remediation plan for known risks associated with this application?", "question_type": "Control"},
+            {"id": "sr_6", "text": "Does this application process personal data for EU or UK data subjects requiring GDPR consideration?", "question_type": "Exposure"},
+            {"id": "sr_7", "text": "Are explicit security requirements documented and mapped to implementation evidence?", "question_type": "Control"},
+            {"id": "sr_8", "text": "Are unresolved Jira issues, defects, incidents, or delivery risks relevant to this assessment?", "question_type": "Exposure"},
         ],
     },
 ]

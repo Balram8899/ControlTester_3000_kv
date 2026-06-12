@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
@@ -7,6 +7,7 @@ import {
   ChevronDown,
   ChevronRight,
   FileBarChart,
+  FileUp,
   Layers3,
   Loader2,
   Play,
@@ -36,11 +37,13 @@ import { useAssetRegistry } from "@/contexts/AssetRegistryContext";
 import {
   type AdHocApplication,
   type AnswerType,
+  type ContextProfile,
   type ResidualResult,
   type Risk,
   type RiskAssessment,
   type Section,
   type SuggestedControl,
+  type SuggestedQuestion,
   useRiskAssessment,
 } from "@/contexts/RiskAssessmentContext";
 
@@ -67,13 +70,19 @@ const BAND_CLASS: Record<string, string> = {
   Low: "border-[#BFE7D1] bg-[#EDFBF5] text-[#009A44]",
 };
 
+const PRIORITY_CLASS: Record<string, string> = {
+  high: "border-[#F3C6CF] bg-[#FEEBED] text-[#E5001B]",
+  medium: "border-[#F6D3A0] bg-[#FFF4E8] text-[#AB5C00]",
+  low: "border-[#BFE7D1] bg-[#EDFBF5] text-[#009A44]",
+};
+
 const ANSWER_CLASS: Record<AnswerType, string> = {
   yes: "border-[#F3C6CF] bg-[#FEEBED] text-[#E5001B]",
   no: "border-[#BFE7D1] bg-[#EDFBF5] text-[#009A44]",
   na: "border-[#DCE3EE] bg-[#F3F6FA] text-[#6A748A]",
 };
 
-const WIZARD_STEPS = ["Create", "Questionnaire", "Analyse", "Risks", "Controls", "Residual", "Report"];
+const WIZARD_STEPS = ["Create", "Context", "Questionnaire", "Analyse", "Risks", "Controls", "Residual", "Report"];
 
 const PRIMARY_BUTTON =
   "inline-flex items-center justify-center gap-2 rounded-[16px] bg-[#1E49E2] px-5 py-3 text-[14px] font-bold text-white transition-transform hover:-translate-y-px disabled:cursor-not-allowed disabled:bg-[#8EA4D9]";
@@ -81,6 +90,16 @@ const SECONDARY_BUTTON =
   "inline-flex items-center justify-center gap-2 rounded-[16px] border border-[#DCE3EE] bg-white px-5 py-3 text-[14px] font-bold text-[#0C233C] transition-colors hover:bg-[#F7F9FC] disabled:cursor-not-allowed disabled:text-[#9AA8BC]";
 const SOFT_BUTTON =
   "inline-flex items-center justify-center gap-2 rounded-[16px] bg-[#EEF2FF] px-4 py-2.5 text-[13px] font-bold text-[#1E49E2] transition-colors hover:bg-[#E3EBFF] disabled:cursor-not-allowed disabled:text-[#93A6D8]";
+
+const EMPTY_CONTEXT_PROFILE: ContextProfile = {
+  project_context: "",
+  business_impact: "",
+  overall_project_summary: "",
+  regulatory_context: "",
+  security_requirements: "",
+  jira_context: "",
+  free_text_context: "",
+};
 
 interface LocalAnswer {
   answer: AnswerType;
@@ -92,13 +111,13 @@ function statusToStep(status: RiskAssessment["status"]) {
     case "draft":
       return 0;
     case "in_progress":
-      return 1;
+      return 2;
     case "risks_identified":
-      return 3;
+      return 4;
     case "controls_applied":
-      return 5;
-    case "complete":
       return 6;
+    case "complete":
+      return 7;
     default:
       return 0;
   }
@@ -130,7 +149,7 @@ function sectionProgress(
 
 function getAssessmentRiskSummary(assessment: RiskAssessment | null) {
   if (!assessment) return "Select or create a risk assessment to begin the workflow.";
-  if (assessment.status === "draft") return "Assessment scope is set. Start the questionnaire when the selected applications are confirmed.";
+  if (assessment.status === "draft") return "Assessment scope is set. Add context and start the questionnaire when ready.";
   if (assessment.status === "in_progress") return "Questionnaire responses are being captured across the applications in scope.";
   if (assessment.status === "risks_identified") return "Inherent risks are available and ready for control application.";
   if (assessment.status === "controls_applied") return "Controls have been applied and the residual view is available for review.";
@@ -345,6 +364,7 @@ export default function RiskAssessmentPage() {
     isLoading,
     isAnalyzing,
     isGeneratingReport,
+    isSuggestingQuestions,
     error,
     report,
     fetchAssessments,
@@ -357,6 +377,10 @@ export default function RiskAssessmentPage() {
     fetchResidual,
     suggestControls,
     generateReport,
+    updateContextProfile,
+    uploadContextFile,
+    suggestContextQuestions,
+    answerContextQuestion,
   } = useRiskAssessment();
   const { assets, fetchAssets } = useAssetRegistry();
   const { toast } = useToast();
@@ -383,6 +407,11 @@ export default function RiskAssessmentPage() {
   const [answers, setAnswers] = useState<Record<string, Record<string, Record<string, LocalAnswer>>>>({});
   const [submittingQa, setSubmittingQa] = useState(false);
 
+  const [contextProfile, setContextProfile] = useState<ContextProfile>(EMPTY_CONTEXT_PROFILE);
+  const [savingContext, setSavingContext] = useState(false);
+  const [contextFileUploading, setContextFileUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     fetchAssessments();
     fetchAssets();
@@ -390,23 +419,38 @@ export default function RiskAssessmentPage() {
   }, [fetchAssessments, fetchAssets, fetchSections]);
 
   useEffect(() => {
-    if (wizardStep !== 2 || !selectedAssessment || isAnalyzing) return;
+    if (!selectedAssessment) return;
+    const cp = selectedAssessment.context_profile;
+    if (!cp) return;
+    setContextProfile({
+      project_context: cp.project_context || "",
+      business_impact: cp.business_impact || "",
+      overall_project_summary: cp.overall_project_summary || "",
+      regulatory_context: cp.regulatory_context || "",
+      security_requirements: cp.security_requirements || "",
+      jira_context: cp.jira_context || "",
+      free_text_context: cp.free_text_context || "",
+    });
+  }, [selectedAssessment?.id]);
+
+  useEffect(() => {
+    if (wizardStep !== 3 || !selectedAssessment || isAnalyzing) return;
     if (selectedAssessment.risks.length > 0) {
-      setWizardStep(3);
+      setWizardStep(4);
       return;
     }
-    analyzeAssessment(selectedAssessment.id).then(() => setWizardStep(3)).catch(() => {});
+    analyzeAssessment(selectedAssessment.id).then(() => setWizardStep(4)).catch(() => {});
   }, [analyzeAssessment, isAnalyzing, selectedAssessment, wizardStep]);
 
   useEffect(() => {
-    if (wizardStep !== 4 || !selectedAssessment) return;
+    if (wizardStep !== 5 || !selectedAssessment) return;
     if ((selectedAssessment.suggested_controls ?? []).length === 0) {
       suggestControls(selectedAssessment.id).catch(() => {});
     }
   }, [selectedAssessment, suggestControls, wizardStep]);
 
   useEffect(() => {
-    if (wizardStep !== 5 || !selectedAssessment) return;
+    if (wizardStep !== 6 || !selectedAssessment) return;
     fetchResidual(selectedAssessment.id).catch(() => {});
   }, [fetchResidual, selectedAssessment, wizardStep]);
 
@@ -496,7 +540,7 @@ export default function RiskAssessmentPage() {
       });
       selectAssessment(assessment);
       setShowCreate(false);
-      setWizardStep(statusToStep(assessment.status));
+      setWizardStep(0);
       setQaAssetIdx(0);
       setExpandedSection(sections[0]?.id ?? null);
       resetCreateState();
@@ -518,6 +562,49 @@ export default function RiskAssessmentPage() {
       availability: 3,
     });
     setShowAdHocForm(false);
+  }
+
+  async function handleSaveContextAndSuggest() {
+    if (!selectedAssessment) return;
+    setSavingContext(true);
+    try {
+      await updateContextProfile(selectedAssessment.id, contextProfile);
+      await suggestContextQuestions(selectedAssessment.id);
+      setWizardStep(2); // Proceed to Questionnaire (questions are now inline there)
+      setExpandedSection(sections[0]?.id ?? null);
+      toast({ title: "Context saved. AI questions generated and added to questionnaire." });
+    } catch {
+      toast({ title: "Failed to save context or generate questions", variant: "destructive" });
+    } finally {
+      setSavingContext(false);
+    }
+  }
+
+  async function handleContextFileUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    if (!selectedAssessment || !event.target.files?.[0]) return;
+    setContextFileUploading(true);
+    try {
+      const updated = await uploadContextFile(selectedAssessment.id, event.target.files[0]);
+      // Sync AI-extracted context fields into the form
+      if (updated?.context_profile) {
+        const cp = updated.context_profile;
+        setContextProfile((prev) => ({
+          project_context: cp.project_context || prev.project_context,
+          business_impact: cp.business_impact || prev.business_impact,
+          overall_project_summary: cp.overall_project_summary || prev.overall_project_summary,
+          regulatory_context: cp.regulatory_context || prev.regulatory_context,
+          security_requirements: cp.security_requirements || prev.security_requirements,
+          jira_context: cp.jira_context || prev.jira_context,
+          free_text_context: cp.free_text_context || prev.free_text_context,
+        }));
+      }
+      toast({ title: "Document uploaded — context fields auto-filled from document" });
+    } catch {
+      toast({ title: "File upload failed", variant: "destructive" });
+    } finally {
+      setContextFileUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   }
 
   async function handleSubmitQa() {
@@ -545,7 +632,7 @@ export default function RiskAssessmentPage() {
         setExpandedSection(sections[0]?.id ?? null);
         toast({ title: "Responses saved for this application" });
       } else {
-        setWizardStep(2);
+        setWizardStep(3);
         toast({ title: "All responses submitted. Starting analysis." });
       }
     } catch {
@@ -605,6 +692,9 @@ export default function RiskAssessmentPage() {
     setQaAssetIdx(0);
     setExpandedSection(sections[0]?.id ?? null);
   }
+
+  const suggestedQuestions: SuggestedQuestion[] = (selectedAssessment?.suggested_questions ?? []) as SuggestedQuestion[];
+  const answeredContextQuestions = suggestedQuestions.filter((q) => q.status === "answered").length;
 
   return (
     <div className="h-full overflow-auto bg-[#F0F2F7]" data-risk-assessment-page="true">
@@ -718,14 +808,14 @@ export default function RiskAssessmentPage() {
                   steps={[
                     {
                       number: 1,
-                      title: "Define Assessment Scope",
-                      desc: "Name the session, select applications from the Asset Registry, and add ad hoc systems where required.",
+                      title: "Define Scope & Context",
+                      desc: "Name the session, select applications, add context fields and upload relevant documents so the LLM can suggest targeted questions.",
                       color: "#7213EA",
                     },
                     {
                       number: 2,
-                      title: "Run The Questionnaire",
-                      desc: "Capture exposure, control, and context responses for each in-scope application in a guided sequence.",
+                      title: "Answer All Questions",
+                      desc: "Respond to both the static questionnaire and the LLM-suggested context-driven questions with evidence.",
                       color: "#1E49E2",
                     },
                     {
@@ -1060,9 +1150,9 @@ export default function RiskAssessmentPage() {
                       detail="Mapped during the control response step"
                     />
                     <CommandDeckMetric
-                      label="Residual Reviews"
-                      value={residualResults.length}
-                      detail="Generated after control application"
+                      label="Context Questions"
+                      value={`${answeredContextQuestions}/${suggestedQuestions.length}`}
+                      detail="LLM-suggested questions answered"
                     />
                   </div>
 
@@ -1076,23 +1166,19 @@ export default function RiskAssessmentPage() {
                   </div>
                 </section>
 
+                {/* Step 0 — Assessment Summary */}
                 {wizardStep === 0 ? (
                   <SurfaceSection
                     eyebrow="Scope"
                     title="Assessment Summary"
                     action={
-                      selectedAssessment.asset_ids.length > 0 ? (
-                        <button
-                          className={PRIMARY_BUTTON}
-                          onClick={() => {
-                            setWizardStep(1);
-                            setExpandedSection(sections[0]?.id ?? null);
-                          }}
-                        >
-                          Start Questionnaire
-                          <ArrowRight className="h-4 w-4" />
-                        </button>
-                      ) : null
+                      <button
+                        className={PRIMARY_BUTTON}
+                        onClick={() => setWizardStep(1)}
+                      >
+                        Add Context
+                        <ArrowRight className="h-4 w-4" />
+                      </button>
                     }
                   >
                     <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -1133,7 +1219,7 @@ export default function RiskAssessmentPage() {
                         ) : null}
                       </TracePanel>
 
-                      <TracePanel title="Readiness" subtitle="Questionnaire can begin once at least one registry application is in scope.">
+                      <TracePanel title="Readiness" subtitle="Add context and generate questions before starting the questionnaire.">
                         <div className="space-y-3">
                           <div className="rounded-[18px] bg-[#F7F9FC] px-4 py-4">
                             <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#8492A6]">Registry Applications</div>
@@ -1142,23 +1228,115 @@ export default function RiskAssessmentPage() {
                             </div>
                           </div>
                           <div className="rounded-[18px] bg-[#F7F9FC] px-4 py-4">
-                            <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#8492A6]">Ad Hoc Context Entries</div>
+                            <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#8492A6]">Context Questions</div>
                             <div className="mt-2 text-[28px] font-bold tracking-[-0.03em] text-[#0C233C]">
-                              {selectedAssessment.ad_hoc_applications?.length ?? 0}
+                              {suggestedQuestions.length}
                             </div>
                           </div>
-                          {selectedAssessment.asset_ids.length === 0 ? (
-                            <div className="rounded-[16px] border border-[#F6D3A0] bg-[#FFF9E8] px-4 py-3 text-[12px] leading-6 text-[#8A6A00]">
-                              Questionnaire capture currently runs against Asset Registry applications only.
-                            </div>
-                          ) : null}
                         </div>
                       </TracePanel>
                     </div>
                   </SurfaceSection>
                 ) : null}
 
+                {/* Step 1 — Context */}
                 {wizardStep === 1 ? (
+                  <SurfaceSection
+                    eyebrow="Context"
+                    title="Assessment Context"
+                    action={
+                      <div className="flex flex-wrap gap-2">
+                        <button className={SECONDARY_BUTTON} onClick={() => { setWizardStep(2); setExpandedSection(sections[0]?.id ?? null); }}>
+                          Skip to Questionnaire
+                        </button>
+                        <button
+                          className={PRIMARY_BUTTON}
+                          onClick={() => void handleSaveContextAndSuggest()}
+                          disabled={savingContext || isSuggestingQuestions}
+                        >
+                          {savingContext || isSuggestingQuestions ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Sparkles className="h-4 w-4" />
+                          )}
+                          {savingContext || isSuggestingQuestions ? "Analysing documents…" : "Save & Generate Questions"}
+                        </button>
+                      </div>
+                    }
+                  >
+                    {/* Upload first — primary action */}
+                    <div className="mb-6 rounded-[20px] border border-[#C9D7FF] bg-[#EEF2FF] p-5">
+                      <div className="mb-3 flex items-center gap-2">
+                        <FileUp className="h-4 w-4 text-[#1E49E2]" />
+                        <p className="text-[13px] font-bold text-[#1E49E2]">Upload Project Documents</p>
+                        <span className="rounded-full border border-[#C9D7FF] bg-white px-2 py-0.5 text-[10px] font-bold text-[#1E49E2]">Optional</span>
+                      </div>
+                      <p className="mb-4 text-[12px] leading-5 text-[#5A6EA8]">
+                        Upload architecture diagrams, project plans, Jira exports, or any reference document. The AI reads them and auto-fills the context fields below, then generates targeted evidence-request questions for the questionnaire.
+                      </p>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".pdf,.docx,.doc,.xlsx,.xls,.csv,.txt,.md,.png,.jpg,.jpeg"
+                        className="hidden"
+                        onChange={(e) => void handleContextFileUpload(e)}
+                      />
+                      <div className="flex flex-wrap items-center gap-3">
+                        <button
+                          className={PRIMARY_BUTTON}
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={contextFileUploading}
+                        >
+                          {contextFileUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileUp className="h-4 w-4" />}
+                          {contextFileUploading ? "Uploading & Extracting…" : "Upload Document"}
+                        </button>
+                        <p className="text-[11px] text-[#7E91AE]">PDF, DOCX, XLSX, CSV, TXT, PNG, JPG</p>
+                      </div>
+                      {(selectedAssessment.context_sources ?? []).length > 0 ? (
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {selectedAssessment.context_sources.map((source) => (
+                            <div
+                              key={String((source as Record<string, unknown>).id ?? (source as Record<string, unknown>).filename)}
+                              className="inline-flex items-center gap-2 rounded-full border border-[#BFE7D1] bg-white px-3 py-1.5 text-[11px] font-bold text-[#009A44]"
+                            >
+                              <CheckCircle2 className="h-3.5 w-3.5" />
+                              {String((source as Record<string, unknown>).filename ?? "Document")}
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+
+                    {/* Context fields — review / edit AI-extracted values */}
+                    <p className="mb-4 text-[12px] font-bold uppercase tracking-[0.18em] text-[#7E91AE]">
+                      Review & Edit Context — AI fills these from your documents. You can add or correct anything.
+                    </p>
+                    <div className="space-y-5">
+                      {([
+                        ["project_context", "Project Context", "What is this project about? Tech stack, architecture, deployment environment, scope."],
+                        ["business_impact", "Business Impact", "Impact of a breach, outage, or compliance failure — affected users, financial exposure, reputational risk."],
+                        ["overall_project_summary", "Project Summary", "2–3 sentence executive summary for the risk assessment header."],
+                        ["free_text_context", "Additional Context", "Optional — anything not captured above: architecture decisions, known gaps, third-party integrations, delivery constraints."],
+                      ] as [keyof ContextProfile, string, string][]).map(([field, label, placeholder]) => (
+                        <div key={field}>
+                          <label className="mb-2 block text-[11px] font-bold uppercase tracking-[0.22em] text-[#7E91AE]">
+                            {label}
+                          </label>
+                          <Textarea
+                            value={contextProfile[field]}
+                            onChange={(e) => setContextProfile((prev) => ({ ...prev, [field]: e.target.value }))}
+                            placeholder={placeholder}
+                            rows={3}
+                            className="rounded-[16px] border-[#DCE3EE]"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </SurfaceSection>
+                ) : null}
+
+                {/* Step 2 — Questionnaire */}
+                {wizardStep === 2 ? (
                   <div className="space-y-5" data-risk-assessment-questionnaire="true">
                     <SurfaceSection
                       eyebrow="Questionnaire"
@@ -1172,6 +1350,72 @@ export default function RiskAssessmentPage() {
                         ) : null
                       }
                     >
+                      {/* AI Context Questions — inline section within the questionnaire */}
+                      {suggestedQuestions.length > 0 ? (
+                        <div className="mb-6 overflow-hidden rounded-[20px] border border-[#C9D7FF] bg-[#F7F9FF]">
+                          <div className="flex items-center justify-between gap-3 border-b border-[#C9D7FF] px-5 py-4">
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex items-center gap-1 rounded-full border border-[#C9D7FF] bg-[#EEF2FF] px-2.5 py-1 text-[10px] font-bold text-[#1E49E2]">
+                                <Sparkles className="h-3 w-3" />
+                                AI Context
+                              </span>
+                              <span className="text-[14px] font-bold text-[#0C233C]">Evidence Requests from Document Analysis</span>
+                            </div>
+                            <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-bold ${answeredContextQuestions === suggestedQuestions.length ? "border-[#BFE7D1] bg-[#EDFBF5] text-[#009A44]" : "border-[#DCE3EE] bg-[#F3F6FA] text-[#6A748A]"}`}>
+                              {answeredContextQuestions}/{suggestedQuestions.length} answered
+                            </span>
+                          </div>
+                          <div className="space-y-0 divide-y divide-[#E2EBFF]">
+                            {suggestedQuestions.map((question) => (
+                              <div key={question.question_id} className="px-5 py-5">
+                                <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-bold ${PRIORITY_CLASS[question.priority] ?? PRIORITY_CLASS.medium}`}>
+                                      {question.priority.charAt(0).toUpperCase() + question.priority.slice(1)} Priority
+                                    </span>
+                                    <span className="text-[11px] text-[#9AA8BC]">{question.section_title}</span>
+                                  </div>
+                                  {question.status === "answered" ? (
+                                    <span className="inline-flex items-center gap-1 rounded-full border border-[#BFE7D1] bg-[#EDFBF5] px-3 py-1 text-[11px] font-bold text-[#009A44]">
+                                      <CheckCircle2 className="h-3.5 w-3.5" />
+                                      Answered
+                                    </span>
+                                  ) : null}
+                                </div>
+                                <p className="mb-1 text-[14px] font-bold leading-7 text-[#0C233C]">{question.text}</p>
+                                {question.rationale ? (
+                                  <p className="mb-4 text-[12px] leading-6 text-[#9AA8BC]">{question.rationale}</p>
+                                ) : null}
+                                <div className="mb-3 flex flex-wrap gap-2">
+                                  {(["yes", "no", "na"] as AnswerType[]).map((ans) => (
+                                    <button
+                                      key={ans}
+                                      className={`rounded-full border px-4 py-2 text-[12px] font-bold transition-colors ${question.answer === ans ? ANSWER_CLASS[ans] : "border-[#DCE3EE] bg-white text-[#6A748A] hover:bg-[#F7F9FC]"}`}
+                                      onClick={() => void answerContextQuestion(selectedAssessment.id, question.question_id, ans, question.details ?? "")}
+                                    >
+                                      {ans === "na" ? "N/A" : ans.toUpperCase()}
+                                    </button>
+                                  ))}
+                                </div>
+                                {question.answer && question.answer !== "na" ? (
+                                  <Textarea
+                                    defaultValue={question.details ?? ""}
+                                    onBlur={(e) => {
+                                      if (e.target.value !== (question.details ?? "")) {
+                                        void answerContextQuestion(selectedAssessment.id, question.question_id, question.answer!, e.target.value);
+                                      }
+                                    }}
+                                    placeholder="Add evidence, artefact reference, or supporting detail"
+                                    rows={2}
+                                    className="rounded-[14px] border-[#DCE3EE]"
+                                  />
+                                ) : null}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
+
                       {selectedAssessment.asset_ids.length === 0 ? (
                         <div className="rounded-[18px] border border-dashed border-[#DCE3EE] bg-[#FBFCFE] px-4 py-8 text-center text-[13px] leading-6 text-[#7388A8]">
                           No Asset Registry applications were selected for questionnaire capture.
@@ -1308,7 +1552,8 @@ export default function RiskAssessmentPage() {
                   </div>
                 ) : null}
 
-                {wizardStep === 2 ? (
+                {/* Step 3 — Analyse */}
+                {wizardStep === 3 ? (
                   <SurfaceSection eyebrow="Analysis" title="Running Risk Analysis" data-risk-assessment-analysis="true">
                     <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
                       <div className="rounded-[22px] border border-[#E2E6EF] bg-white px-8 py-10 text-center shadow-[0_18px_42px_-34px_rgba(12,35,60,0.26)]">
@@ -1319,7 +1564,7 @@ export default function RiskAssessmentPage() {
                           Scoring Inherent Risk Across Selected Applications
                         </h3>
                         <p className="mx-auto mt-3 max-w-[520px] text-[15px] leading-7 text-[#7388A8]">
-                          Applying rule-based scoring and the current risk assessment analysis flow to turn questionnaire responses into structured risk candidates.
+                          Applying rule-based scoring and LLM analysis — including context profile and answered context questions — to generate structured risk candidates.
                         </p>
                         <div className="mx-auto mt-7 max-w-[420px] overflow-hidden rounded-full bg-[#DCE3EE]">
                           <div className="h-3 w-[58%] rounded-full bg-[linear-gradient(90deg,#1E49E2_0%,#00B8F5_100%)]" />
@@ -1334,6 +1579,7 @@ export default function RiskAssessmentPage() {
                         <div className="space-y-3">
                           {[
                             ["Responses validated", "Done", "done"],
+                            ["Context pack assembled", "Done", "done"],
                             ["Exposure patterns grouped", "Running", "running"],
                             ["Draft risks generated", "Queued", "queued"],
                             ["Bands assigned", "Queued", "queued"],
@@ -1359,12 +1605,13 @@ export default function RiskAssessmentPage() {
                   </SurfaceSection>
                 ) : null}
 
-                {wizardStep === 3 ? (
+                {/* Step 4 — Risks */}
+                {wizardStep === 4 ? (
                   <SurfaceSection
                     eyebrow="Risks"
                     title={`Identified Risks (${selectedAssessment.risks.length})`}
                     action={
-                      <button className={PRIMARY_BUTTON} onClick={() => setWizardStep(4)} data-risk-assessment-risks="true">
+                      <button className={PRIMARY_BUTTON} onClick={() => setWizardStep(5)} data-risk-assessment-risks="true">
                         Apply Controls
                         <ArrowRight className="h-4 w-4" />
                       </button>
@@ -1384,7 +1631,8 @@ export default function RiskAssessmentPage() {
                   </SurfaceSection>
                 ) : null}
 
-                {wizardStep === 4 ? (
+                {/* Step 5 — Controls */}
+                {wizardStep === 5 ? (
                   <SurfaceSection
                     eyebrow="Controls"
                     title="Apply Controls To Risks"
@@ -1401,7 +1649,7 @@ export default function RiskAssessmentPage() {
                           <RefreshCw className="h-4 w-4" />
                           Refresh Suggestions
                         </button>
-                        <button className={PRIMARY_BUTTON} onClick={() => setWizardStep(5)}>
+                        <button className={PRIMARY_BUTTON} onClick={() => setWizardStep(6)}>
                           Calculate Residual
                           <ArrowRight className="h-4 w-4" />
                         </button>
@@ -1470,7 +1718,8 @@ export default function RiskAssessmentPage() {
                   </SurfaceSection>
                 ) : null}
 
-                {wizardStep === 5 ? (
+                {/* Step 6 — Residual */}
+                {wizardStep === 6 ? (
                   <SurfaceSection
                     eyebrow="Residual"
                     title="Residual Risk Review"
@@ -1480,7 +1729,7 @@ export default function RiskAssessmentPage() {
                           <RefreshCw className="h-4 w-4" />
                           Refresh
                         </button>
-                        <button className={PRIMARY_BUTTON} onClick={() => setWizardStep(6)}>
+                        <button className={PRIMARY_BUTTON} onClick={() => setWizardStep(7)}>
                           Generate Report
                           <ArrowRight className="h-4 w-4" />
                         </button>
@@ -1502,7 +1751,8 @@ export default function RiskAssessmentPage() {
                   </SurfaceSection>
                 ) : null}
 
-                {wizardStep === 6 ? (
+                {/* Step 7 — Report */}
+                {wizardStep === 7 ? (
                   <SurfaceSection
                     eyebrow="Report"
                     title="Risk Assessment Report"
