@@ -76,12 +76,14 @@ class SuggestedQuestion(BaseModel):
     priority: Literal["low", "medium", "high"] = "medium"
     source: str = "context"
     rationale: str = ""
-    status: Literal["suggested", "accepted", "rejected"] = "suggested"
+    status: Literal["suggested", "answered"] = "suggested"
+    answer: Optional[Literal["yes", "no", "na"]] = None
+    details: str = ""
 
 
-class SuggestedQuestionDecision(BaseModel):
-    question_id: str
-    status: Literal["accepted", "rejected"]
+class SuggestedQuestionAnswer(BaseModel):
+    answer: Literal["yes", "no", "na"]
+    details: str = ""
 
 
 class RiskAssessmentCreate(BaseModel):
@@ -321,7 +323,7 @@ class MongoRiskAssessmentStore:
         )
         return result.modified_count == 1
 
-    def update_suggested_question_status(self, ra_id: str, question_id: str, status: str) -> bool:
+    def answer_suggested_question(self, ra_id: str, question_id: str, answer: str, details: str = "") -> bool:
         ra = self.get(ra_id)
         if not ra:
             return False
@@ -330,7 +332,9 @@ class MongoRiskAssessmentStore:
         for question in ra.suggested_questions:
             item = dict(question)
             if item.get("question_id") == question_id:
-                item["status"] = status
+                item["answer"] = answer
+                item["details"] = details
+                item["status"] = "answered"
                 changed = True
             questions.append(item)
         if not changed:
@@ -574,10 +578,37 @@ def _tokenize_match_text(text: str) -> set[str]:
 
 
 def _extract_context_text(filename: str, content: bytes, source_type: str = "document") -> tuple[str, dict]:
+    """Convert uploaded document bytes to plain text using the best available extractor.
+
+    Priority:
+    1. convert_document() from utils.services.conversion — tested against large PDFs, Excel,
+       DOCX and produces clean markdown. Used for pdf/docx/xlsx/xls/txt/md.
+    2. utils.document_ingestion.load_documents — handles images (OCR), CSV, and other types.
+    3. UTF-8 decode fallback.
+    """
     suffix = os.path.splitext(filename.lower())[1]
-    if suffix in {".txt", ".md", ".log", ".csv", ".json"}:
+    clean_suffix = suffix.lstrip(".").lower()
+
+    # Primary: use the battle-tested convert_document service for supported binary formats
+    if clean_suffix in {"pdf", "docx", "doc", "xlsx", "xls"}:
+        try:
+            from utils.services.conversion import convert_document
+            result = convert_document(content, filename, str(uuid.uuid4()), "risk_data")
+            if result.status in ("success", "partial") and result.markdown:
+                return result.markdown, {
+                    "extractor": "convert_document",
+                    "suffix": suffix,
+                    "page_count": result.page_count,
+                    "looks_corrupt": result.looks_corrupt,
+                }
+        except Exception as exc:
+            logger.warning(f"convert_document failed for {filename}: {exc}")
+
+    # Plain text / markdown — decode directly
+    if clean_suffix in {"txt", "md", "log", "json"}:
         return content.decode("utf-8", errors="ignore"), {"extractor": "utf-8", "suffix": suffix}
 
+    # Fallback: document_ingestion handles images (OCR), CSV, and anything else
     try:
         from utils.document_ingestion import load_documents
 
@@ -609,6 +640,63 @@ def _extract_context_text(filename: str, content: bytes, source_type: str = "doc
         }
 
 
+def _llm_extract_context_from_document(markdown: str) -> dict:
+    """Extract context profile fields AND structured document metadata from document text.
+
+    Returns a combined dict. Callers use:
+      - _CONTEXT_PROFILE_FIELDS keys → context_profile auto-fill
+      - _DOC_METADATA_FIELDS keys    → source["doc_metadata"] storage
+    """
+    from langchain.schema import HumanMessage
+    from utils.llm_provider import get_llm
+
+    doc_excerpt = markdown[:10000]
+
+    prompt = f"""You are a senior security risk assessor. Analyse this document and extract structured information for a risk assessment.
+
+Document content:
+{doc_excerpt}
+
+Return ONLY a valid JSON object with ALL of these exact fields:
+{{
+  "project_context": "Technical description: what the project/system is, its architecture, tech stack, deployment environment, and in-scope components",
+  "business_impact": "Business criticality, data sensitivity, types of users affected, and financial/reputational impact of a breach or outage",
+  "overall_project_summary": "2-3 sentence executive summary of this project suitable for a risk assessment header",
+  "regulatory_context": "Applicable regulations, compliance frameworks, or standards detected (e.g. GDPR, DPDP Act 2023, RBI PA Guidelines, PCI-DSS, ISO 27001, SOC 2, HIPAA)",
+  "security_requirements": "Key security requirements, constraints, or controls explicitly mentioned or strongly implied",
+  "document_type": "One of: architecture_doc | security_policy | vapt_report | data_flow_diagram | jira_export | compliance_doc | vendor_assessment | threat_model | sow | incident_report | other",
+  "technologies": ["List every specific technology, service, tool, or platform explicitly named, e.g. AWS S3, PostgreSQL 14, OAuth 2.0, Kubernetes, React, Nginx, Redis"],
+  "regulations": ["List every regulation, standard, or clause explicitly named, e.g. GDPR Art.32, PCI-DSS Req 6.3.3, ISO 27001 A.8.24, RBI PA Guidelines Sec 3, DPDP Act S.8"],
+  "data_types": ["List every category of data processed, stored, or transmitted, e.g. PII, financial records, health records, API keys, session tokens, card data, biometric data"],
+  "third_parties": ["List every external vendor, SaaS tool, cloud provider, or integration mentioned, e.g. Stripe, Twilio, SendGrid, AWS, Salesforce"],
+  "risk_flags": ["List specific risk concerns, control gaps, or vulnerabilities identified — be precise, e.g. no MFA for admin console, S3 bucket public-read, TLS 1.0 still supported, secrets in environment variables, no WAF, missing DSAR process"]
+}}
+
+Rules:
+- Use "" for string fields where the document has no evidence
+- Use [] for list fields where nothing was found
+- Do NOT invent items not present or strongly implied in the document
+- Be specific — generic phrases like 'web technologies' or 'standard security' are not useful"""
+
+    try:
+        llm = get_llm()
+        response = llm.invoke([HumanMessage(content=prompt)])
+        raw = response.content.strip()
+        raw = _re.sub(r"^```[a-zA-Z]*\n?", "", raw)
+        raw = _re.sub(r"\n?```$", "", raw).strip()
+        extracted = json.loads(raw)
+        if not isinstance(extracted, dict):
+            return {}
+        return extracted
+    except Exception as exc:
+        logger.warning(f"LLM document extraction failed: {exc}")
+        return {}
+
+
+_CONTEXT_PROFILE_FIELDS = frozenset({"project_context", "business_impact", "overall_project_summary", "regulatory_context", "security_requirements"})
+_DOC_METADATA_FIELDS = frozenset({"document_type", "technologies", "regulations", "data_types", "third_parties", "risk_flags"})
+
+
 def _chunk_context_text(text: str, chunk_size: int = 2500) -> list[str]:
     clean = _clean_report_text(text or "").strip()
     if not clean:
@@ -621,29 +709,67 @@ def _chunk_context_text(text: str, chunk_size: int = 2500) -> list[str]:
 
 
 def _build_ra_context_pack(ra: RiskAssessment, chunks: list[dict]) -> str:
+    """Build a rich context pack for LLM prompts.
+
+    Priority order for document content:
+    1. full_text stored on the source record (first 12 KB of extracted markdown)
+    2. doc_metadata (structured entities — technologies, regulations, risk flags, etc.)
+    3. Stored text chunks (supplement/fallback for multi-sheet Excel, image OCR, etc.)
+    """
     context_profile = json.dumps(ra.context_profile or {}, indent=2, sort_keys=True)
-    source_summary = "\n".join(
-        f"- {source.get('source_type', 'document')}: {source.get('filename', 'source')} | {source.get('summary', '')[:300]}"
-        for source in (ra.context_sources or [])[:10]
+
+    # Per-document blocks: metadata + full extracted text
+    doc_sections: list[str] = []
+    covered_chunk_ids: set[str] = set()
+    for source in (ra.context_sources or [])[:5]:
+        meta = source.get("doc_metadata") or {}
+        src_id = source.get("id", "")
+        lines = [f"=== {source.get('filename', 'document')} (type: {meta.get('document_type', 'unknown')}) ==="]
+        if meta.get("technologies"):
+            lines.append(f"  Technologies/services: {', '.join(meta['technologies'])}")
+        if meta.get("regulations"):
+            lines.append(f"  Regulations & standards: {', '.join(meta['regulations'])}")
+        if meta.get("data_types"):
+            lines.append(f"  Data categories: {', '.join(meta['data_types'])}")
+        if meta.get("third_parties"):
+            lines.append(f"  Third parties/integrations: {', '.join(meta['third_parties'])}")
+        if meta.get("risk_flags"):
+            lines.append(f"  RISK FLAGS — specific gaps found: {'; '.join(meta['risk_flags'])}")
+        full_text = source.get("full_text", "").strip()
+        if full_text:
+            lines.append(f"  Extracted content:\n{full_text[:4000]}")
+            # Mark chunks from this source as covered so we don't duplicate them below
+            for chunk in chunks:
+                if chunk.get("source_id") == src_id:
+                    covered_chunk_ids.add(chunk.get("id", ""))
+        elif source.get("summary"):
+            lines.append(f"  Summary: {source['summary'][:400]}")
+        doc_sections.append("\n".join(lines))
+
+    docs_block = "\n\n".join(doc_sections) if doc_sections else "No documents uploaded yet."
+
+    # Supplementary chunk content for documents without full_text (legacy sources, images, multi-sheet Excel)
+    extra_chunks = [c for c in chunks if c.get("id", "") not in covered_chunk_ids]
+    chunk_supplement = "\n".join(
+        f"- {str(chunk.get('text', ''))[:1500]}"
+        for chunk in extra_chunks[:15]
     )
-    chunk_summary = "\n".join(
-        f"- {str(chunk.get('text', ''))[:1000]}"
-        for chunk in chunks[:10]
-    )
+
     historical_summary = "\n".join(
         f"- {match.get('title', '')} ({match.get('similarity_score', 0)}): {', '.join(match.get('matched_terms', [])[:8])}"
         for match in (ra.historical_matches or [])[:5]
     )
-    return f"""Context profile:
+    supplement_block = (
+        "\n=== ADDITIONAL DOCUMENT EXCERPTS (supplementary) ===\n" + chunk_supplement
+        if chunk_supplement.strip() else ""
+    )
+    return f"""=== CONTEXT PROFILE (AI-extracted + user-edited) ===
 {context_profile}
 
-Uploaded or embedded sources:
-{source_summary or "None"}
-
-Source excerpts:
-{chunk_summary or "None"}
-
-Similar historical assessments:
+=== UPLOADED DOCUMENTS ===
+{docs_block}
+{supplement_block}
+=== SIMILAR HISTORICAL ASSESSMENTS ===
 {historical_summary or "None"}""".strip()
 
 
@@ -1103,6 +1229,23 @@ async def upload_assessment_context_file(
         }
         for index, chunk in enumerate(_chunk_context_text(text))
     ]
+
+    # Run LLM extraction once — captures both context profile fields and document metadata
+    doc_metadata: dict = {}
+    if text.strip():
+        extracted = _llm_extract_context_from_document(text)
+        if extracted:
+            # Split: string fields → context_profile merge; list/type fields → doc_metadata
+            doc_metadata = {k: extracted[k] for k in _DOC_METADATA_FIELDS if k in extracted}
+
+            existing = ra.context_profile or {}
+            existing_dict = existing if isinstance(existing, dict) else (existing.model_dump() if hasattr(existing, "model_dump") else dict(existing))
+            merged = {
+                **existing_dict,
+                **{k: extracted[k] for k in _CONTEXT_PROFILE_FIELDS if k in extracted and isinstance(extracted[k], str) and extracted[k].strip() and not str(existing_dict.get(k, "")).strip()},
+            }
+            get_store().update_context_profile(ra_id, merged)
+
     source = {
         "id": str(uuid.uuid4()),
         "filename": filename,
@@ -1111,9 +1254,15 @@ async def upload_assessment_context_file(
         "sha256": hashlib.sha256(content).hexdigest(),
         "summary": _clean_report_text(text)[:500],
         "metadata": metadata,
+        # Store the full document text (capped) so question generation can reference actual content
+        "full_text": text[:12000],
+        # Structured entities extracted from the document for targeted question generation
+        "doc_metadata": doc_metadata,
     }
     get_store().add_context_source(ra_id, source, chunks)
-    return {"ok": True, "source": source, "chunks_created": len(chunks)}
+
+    updated = get_store().get(ra_id)
+    return {"ok": True, "source": source, "chunks_created": len(chunks), "assessment": updated}
 
 
 @router.post("/{ra_id}/historical-context")
@@ -1142,14 +1291,42 @@ def suggest_context_questions(ra_id: str):
     chunks = get_store().get_context_chunks(ra_id)
     context_pack = _build_ra_context_pack(ra, chunks)
 
-    prompt = f"""You are a technology risk assessment advisor.
+    # Count and list uploaded document types for the prompt header
+    sources = ra.context_sources or []
+    doc_inventory = ", ".join(
+        f"{s.get('filename', 'file')} ({(s.get('doc_metadata') or {}).get('document_type', 'document')})"
+        for s in sources[:5]
+    ) if sources else "no documents uploaded"
 
-Generate additional assessment questions from the project context, impact, uploaded documents, Jira/log context, GDPR/compliance signals, security requirements, and similar historical risk assessments.
+    prompt = f"""You are a senior technology risk assessor conducting a formal risk assessment.
+
+The assessor has uploaded the following documents: {doc_inventory}
+
+YOUR TASK: Generate highly specific, document-derived evidence-request questions.
+
+CRITICAL RULES — failure to follow these makes the questions useless:
+1. Every question MUST be grounded in something specific found in the uploaded documents — a named technology, a stated regulation, a detected risk flag, a mentioned data type, or a named third party. DO NOT write generic questions.
+2. Name the specific thing from the document in the question text (e.g. "Given that the architecture document references AWS S3 for document storage..." or "The VAPT report flagged TLS 1.0 as still supported on the API gateway...").
+3. Ask for a concrete, named artefact as evidence: VAPT report, KMS policy screenshot, IAM role export, DSAR process document, penetration test sign-off, architecture diagram with annotations, etc.
+4. In the rationale, cite BOTH (a) the specific document finding and (b) the applicable regulation/standard/risk framework clause.
+5. Cover different risk areas — do not generate 5 questions all about the same topic.
 
 {context_pack}
 
-Return ONLY a valid JSON array. Each item must be:
-{{"question_id":"dyn_unique_id","section_id":"privacy_regulatory|security_requirements|delivery_risk|business_context|architecture","section_title":"...","text":"...","question_type":"Exposure|Control|Context","priority":"low|medium|high","source":"llm_context","rationale":"...","status":"suggested"}}"""
+Return ONLY a valid JSON array of up to 15 questions. Each item must follow this exact schema:
+{{
+  "question_id": "dyn_<short_snake_case_id>",
+  "section_id": "access_control|data_protection|vulnerability_management|incident_response|third_party_risk|delivery_risk|architecture|compliance|cloud_security|identity_management",
+  "section_title": "Human-readable section name",
+  "text": "Given that [specific finding from the document], please provide [named artefact/evidence] demonstrating [control or requirement]. The evidence should confirm [what it must show].",
+  "question_type": "Exposure|Control|Context",
+  "priority": "low|medium|high",
+  "source": "llm_context",
+  "rationale": "[Document filename + specific finding] — [applicable regulation or standard clause] requires this because [concise reason].",
+  "status": "suggested"
+}}
+
+If no documents were uploaded and only a context profile is available, generate questions based on the stated technologies, data types, and business context — but still be specific, not generic."""
 
     try:
         llm = get_llm()
@@ -1184,16 +1361,16 @@ Return ONLY a valid JSON array. Each item must be:
     return {"assessment_id": ra_id, "suggested_questions": normalized}
 
 
-@router.patch("/{ra_id}/suggest-questions")
-def update_suggested_question_status(ra_id: str, body: SuggestedQuestionDecision):
+@router.post("/{ra_id}/suggest-questions/{question_id}/respond", status_code=201)
+def answer_context_question(ra_id: str, question_id: str, body: SuggestedQuestionAnswer):
     ra = get_store().get(ra_id)
     if not ra:
         raise HTTPException(404, "Assessment not found")
-    ok = get_store().update_suggested_question_status(ra_id, body.question_id, body.status)
+    ok = get_store().answer_suggested_question(ra_id, question_id, body.answer, body.details)
     if not ok:
         raise HTTPException(404, "Suggested question not found")
     updated = get_store().get(ra_id)
-    return {"assessment_id": ra_id, "suggested_questions": updated.suggested_questions if updated else []}
+    return {"ok": True, "suggested_questions": updated.suggested_questions if updated else []}
 
 
 @router.post("/{ra_id}/respond", status_code=201)
@@ -1379,8 +1556,12 @@ CIA Total: {cia_total}/15 (Band: {cia_band})
 Additional Risk Assessment Context:
 {context_pack}
 
-Suggested Context Questions:
-{json.dumps(ra.suggested_questions or [], indent=2)}
+Context-Driven Question Responses (section | question | answer | details):
+{chr(10).join(
+    f"{q.get('section_id','')} | {q.get('text','')} | {q.get('answer','')} | {q.get('details','')}"
+    for q in (ra.suggested_questions or [])
+    if q.get("answer")
+) or "None provided"}
 
 Assessment Responses (section | question | answer | details):
 {qa_text}

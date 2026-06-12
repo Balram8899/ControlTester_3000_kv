@@ -670,7 +670,7 @@ def test_suggest_questions_falls_back_on_llm_error():
     gs.return_value.set_suggested_questions.assert_called_once()
 
 
-def test_update_suggested_question_status_accepted():
+def test_answer_suggested_question_201():
     with patch("api.routers.risk_assessment.get_store") as gs:
         from api.routers.risk_assessment import RiskAssessment
         ra = RiskAssessment(
@@ -688,6 +688,8 @@ def test_update_suggested_question_status_accepted():
                 "source": "context_rule",
                 "rationale": "GDPR detected",
                 "status": "suggested",
+                "answer": None,
+                "details": "",
             }],
             created_at="2026-01-01", updated_at="2026-01-01",
         )
@@ -705,22 +707,30 @@ def test_update_suggested_question_status_accepted():
                 "priority": "high",
                 "source": "context_rule",
                 "rationale": "GDPR detected",
-                "status": "accepted",
+                "status": "answered",
+                "answer": "yes",
+                "details": "All EU cardholders — GDPR applies",
             }],
             created_at="2026-01-01", updated_at="2026-01-01",
         )
         gs.return_value.get.side_effect = [ra, updated_ra]
-        gs.return_value.update_suggested_question_status.return_value = True
-        r = client.patch("/risk-assessment/ra1/suggest-questions", json={
-            "question_id": "dyn_001",
-            "status": "accepted",
+        gs.return_value.answer_suggested_question.return_value = True
+        r = client.post("/risk-assessment/ra1/suggest-questions/dyn_001/respond", json={
+            "answer": "yes",
+            "details": "All EU cardholders — GDPR applies",
         })
-    assert r.status_code == 200
+    assert r.status_code == 201
     body = r.json()
-    assert body["suggested_questions"][0]["status"] == "accepted"
+    assert body["ok"] is True
+    assert body["suggested_questions"][0]["status"] == "answered"
+    assert body["suggested_questions"][0]["answer"] == "yes"
+    assert body["suggested_questions"][0]["details"] == "All EU cardholders — GDPR applies"
+    gs.return_value.answer_suggested_question.assert_called_once_with(
+        "ra1", "dyn_001", "yes", "All EU cardholders — GDPR applies"
+    )
 
 
-def test_update_suggested_question_404_if_question_not_found():
+def test_answer_suggested_question_404_if_question_not_found():
     with patch("api.routers.risk_assessment.get_store") as gs:
         from api.routers.risk_assessment import RiskAssessment
         ra = RiskAssessment(
@@ -731,10 +741,10 @@ def test_update_suggested_question_404_if_question_not_found():
             created_at="2026-01-01", updated_at="2026-01-01",
         )
         gs.return_value.get.return_value = ra
-        gs.return_value.update_suggested_question_status.return_value = False
-        r = client.patch("/risk-assessment/ra1/suggest-questions", json={
-            "question_id": "nonexistent_q",
-            "status": "accepted",
+        gs.return_value.answer_suggested_question.return_value = False
+        r = client.post("/risk-assessment/ra1/suggest-questions/nonexistent_q/respond", json={
+            "answer": "no",
+            "details": "",
         })
     assert r.status_code == 404
 
